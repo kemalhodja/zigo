@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# production
+build/
+dist/
+
+# local env
+.env
+.env*.local
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# native/generated output
+android/**/build/
+android/local.properties
+Zigo-debug.apk
+Zigo-release.aab
+
+# test artifacts
+coverage/
+playwright-report/
+test-results/
+
+# generated migration bundle
+supabase/zigo-full-migrations.sql
+launch-status.json

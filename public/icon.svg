@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Zigo">
+  <defs>
+    <linearGradient id="zigoGradient" x1="72" x2="440" y1="56" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED" />
+      <stop offset="0.52" stop-color="#D946EF" />
+      <stop offset="1" stop-color="#FB7185" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#zigoGradient)" />
+  <circle cx="256" cy="256" r="156" fill="white" fill-opacity="0.16" />
+  <path
+    d="M151 356h213v-58H245l115-145v-45H158v58h109L151 311v45Z"
+    fill="white"
+  />
+  <circle cx="357" cy="141" r="28" fill="#A7F3D0" />
+</svg>

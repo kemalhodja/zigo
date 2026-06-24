@@ -1,0 +1,222 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
+
+import { BottomNav } from "@/components/bottom-nav";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { LegalFooter } from "@/components/legal-footer";
+import type { ViewerRole } from "@/lib/domain/role-theme";
+import { useMessages } from "@/lib/i18n/locale-context";
+import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
+
+type AppShellProps = {
+  canCreateSocialPost: boolean;
+  children: ReactNode;
+  isPreviewMode?: boolean;
+  roleAccentLabel: string;
+  teacherInboxCount?: number;
+  unreadCount: number;
+  viewerRole: ViewerRole;
+};
+
+export function AppShell({
+  canCreateSocialPost,
+  children,
+  isPreviewMode = false,
+  roleAccentLabel,
+  teacherInboxCount = 0,
+  unreadCount,
+  viewerRole,
+}: AppShellProps) {
+  const pathname = usePathname();
+  const m = useMessages();
+  const isStories = pathname.startsWith("/sparks");
+  const isReels = pathname.startsWith("/micro");
+  const isImmersive = isStories || isReels;
+  const isSocialSurface =
+    pathname === "/" ||
+    pathname.startsWith("/explore") ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/post");
+  const hideQuickDock =
+    isImmersive ||
+    isSocialSurface ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/create") ||
+    pathname.startsWith("/questions") ||
+    pathname.startsWith("/setup");
+
+  return (
+    <div
+      className={`safe-screen zigo-shell-bg mx-auto flex w-full max-w-md flex-col md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${
+        isImmersive ? "relative bg-night" : ""
+      }`}
+    >
+      {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
+
+      {!isImmersive ? (
+        <a
+          className="sr-only z-50 rounded-lg bg-night px-4 py-2 text-sm font-black text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
+          data-testid="skip-to-content"
+          href="#main-content"
+        >
+          {m.nav.skipToContent}
+        </a>
+      ) : null}
+
+      {isPreviewMode && !pathname.startsWith("/setup") && !pathname.startsWith("/auth") && !pathname.startsWith("/readiness") ? (
+        <PreviewModeBanner />
+      ) : null}
+
+      <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3"}`} id="main-content">
+        {children}
+      </main>
+
+      {hideQuickDock ? null : <QuickActionDock canCreateSocialPost={canCreateSocialPost} />}
+
+      {isImmersive ? null : <LegalFooter />}
+
+      {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
+
+      {isStories ? null : (
+        <div className={isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}>
+          <BottomNav
+            canCreateSocialPost={canCreateSocialPost}
+            teacherInboxCount={teacherInboxCount}
+            unreadCount={unreadCount}
+            variant={isReels ? "overlay" : "default"}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuickActionDock({ canCreateSocialPost }: { canCreateSocialPost: boolean }) {
+  const m = useMessages();
+  const d = m.dock;
+  const z = m.zigo;
+
+  return (
+    <section className="premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 pl-2">
+          <p className="zigo-eyebrow text-slate-500">
+            {d.shortcuts} <span className="sr-only">{d.dailyActions}</span>
+          </p>
+          <p className="truncate text-zigo-caption font-semibold text-slate-600">
+            {canCreateSocialPost ? d.teacherHint : d.learnerHint}
+          </p>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-wrap justify-end gap-1.5">
+          {canCreateSocialPost ? (
+            <>
+              <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/create?mode=story">
+                {z.spark}
+              </Link>
+              <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/create?mode=reel">
+                {z.micro}
+              </Link>
+            </>
+          ) : (
+            <Link aria-label={d.askSafely} className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/questions">
+              {m.nav.ask}
+            </Link>
+          )}
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/focus">
+            {d.focus}
+          </Link>
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
+            {d.learn}
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Header({
+  canCreateSocialPost,
+  roleAccentLabel,
+  unreadCount,
+  viewerRole,
+}: {
+  canCreateSocialPost: boolean;
+  roleAccentLabel: string;
+  unreadCount: number;
+  viewerRole: ViewerRole;
+}) {
+  const m = useMessages();
+  const h = m.header;
+
+  return (
+    <header className="safe-top zigo-topbar sticky top-0 z-10 px-4 py-2">
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/" className="tap-scale flex min-w-0 items-center gap-2">
+          <span className="zigo-wordmark">Zigo</span>
+          {viewerRole !== "guest" ? (
+            <span className="role-accent-chip hidden rounded-full px-2 py-0.5 uppercase sm:inline">
+              {roleAccentLabel}
+            </span>
+          ) : null}
+        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <LocaleSwitcher compact />
+          <Link
+            aria-label={canCreateSocialPost ? h.create : h.askQuestion}
+            className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-crystal"
+            href={canCreateSocialPost ? "/create" : "/questions"}
+          >
+            {canCreateSocialPost ? (
+              <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect height="18" rx="5" width="18" x="3" y="3" />
+                <path d="M12 8v8" />
+                <path d="M8 12h8" />
+              </svg>
+            ) : (
+              <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M21 12a8.5 8.5 0 0 1-9 8.5 9.6 9.6 0 0 1-4.2-.95L3 20.5l1.3-4A8.5 8.5 0 1 1 21 12z" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+              </svg>
+            )}
+          </Link>
+          <Link aria-label={h.notifications} className="tap-scale relative flex size-9 items-center justify-center text-night transition hover:text-berry" href="/notifications">
+            <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5" />
+              <path d="M9.5 17a2.5 2.5 0 0 0 5 0" />
+            </svg>
+            {unreadCount > 0 ? (
+              <span className="zigo-badge-count absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-rose-500 text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            ) : null}
+          </Link>
+          <Link aria-label={h.switchProfile} className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-aqua" href="/profiles">
+            <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20a8 8 0 0 1 16 0" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function PreviewModeBanner() {
+  const p = useMessages().preview;
+
+  return (
+    <div className="-mx-4 border-b border-amber-100 bg-amber-50 px-4 py-2.5">
+      <p className="text-center text-xs font-bold leading-5 text-amber-900">
+        {p.message}{" "}
+        <Link className="font-black text-crystal" href="/setup">
+          {p.setup}
+        </Link>
+      </p>
+    </div>
+  );
+}

@@ -1,0 +1,71 @@
+name: Bug Report
+description: Report a Zigo platform defect (role, area, RLS)
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Include enough detail to reproduce authorization and Match-Feed issues.
+        See `docs/qa-coverage-map.md` for related automated tests.
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: User role
+      options:
+        - student
+        - parent
+        - teacher
+        - admin
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: area_id
+    attributes:
+      label: Education area ID (if Match-Feed related)
+      placeholder: e.g. 1
+    validations:
+      required: false
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as student@zigo.test
+        2. Open /
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_rls
+    attributes:
+      label: Expected behavior (incl. RLS / Match-Feed rule)
+      placeholder: Parent should only see posts where posts.area_id is in user_interests
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: local Supabase / staging URL / production
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / API response (optional)
+      render: shell

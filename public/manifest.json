@@ -1,0 +1,55 @@
+{
+  "name": "Zigo",
+  "short_name": "Zigo",
+  "description": "The Smart, Verified, and Gamified Social Feed for Education.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#101828",
+  "categories": ["education", "social", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Open Micro",
+      "short_name": "Micro",
+      "description": "Watch verified micro lessons.",
+      "url": "/micro",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Create",
+      "short_name": "Create",
+      "description": "Publish a verified post as a teacher.",
+      "url": "/create",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Student Progress",
+      "short_name": "Progress",
+      "description": "Open learning points and avatar progress.",
+      "url": "/student",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

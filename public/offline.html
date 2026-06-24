@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#7C3AED" />
+    <title>Zigo offline</title>
+    <style>
+      body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at 16% 0%, rgb(236 72 153 / 0.22), transparent 18rem),
+          radial-gradient(circle at 86% 10%, rgb(6 182 212 / 0.18), transparent 18rem),
+          linear-gradient(180deg, #fff7fb, #f8fbff);
+        color: #101828;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      main {
+        width: min(22rem, calc(100% - 2rem));
+        text-align: center;
+      }
+      .logo {
+        width: 5rem;
+        height: 5rem;
+        margin: 0 auto 1rem;
+        display: grid;
+        place-items: center;
+        border-radius: 1.25rem;
+        background: linear-gradient(135deg, #7c3aed, #ec4899, #06b6d4);
+        color: white;
+        font-size: 2rem;
+        font-weight: 900;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.4rem;
+      }
+      p {
+        margin: 0.6rem 0 0;
+        color: #667085;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="logo">Z</div>
+      <h1>You are offline</h1>
+      <p>Zigo needs a connection for fresh posts, comments and safety checks. Reconnect and refresh to continue.</p>
+    </main>
+  </body>
+</html>

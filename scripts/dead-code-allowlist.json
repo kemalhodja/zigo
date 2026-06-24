@@ -1,0 +1,22 @@
+{
+  "scripts": [
+    "analyze-bundle.mjs",
+    "bundle-migrations.mjs",
+    "clean-next.mjs",
+    "dependency-audit.mjs",
+    "dead-code-audit.mjs",
+    "typescript-audit.mjs",
+    "sync-database-types.mjs",
+    "visual-regression-probe.mjs",
+    "test-release-gate.mjs",
+    "offline-probe.mjs",
+    "test-scorecard.mjs",
+    "live-test-utils.mjs",
+    "ensure-app-server.mjs"
+  ],
+  "components": [
+    "social-primitives.tsx",
+    "social-media-scenes.tsx",
+    "state-card.tsx"
+  ]
+}

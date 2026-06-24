@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Zigo</string>
+    <string name="title_activity_main">Zigo</string>
+    <string name="package_name">com.zigo.education</string>
+    <string name="custom_url_scheme">com.zigo.education</string>
+</resources>

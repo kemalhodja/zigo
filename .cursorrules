@@ -1,0 +1,181 @@
+# Zigo / Eduspire Software Blueprint
+
+Build Zigo as a mobile-first verified education media platform.
+
+Global slogan: The Smart, Verified, and Gamified Social Feed for Education.
+Concept: Eduspire / EduAg, a verified education media network.
+
+## 1. Technical Stack
+
+- Platform: mobile-first web app / PWA.
+- Frontend default: React/Next.js.
+- Backend default: Supabase.
+- Alternative backend: Node.js/Express only when custom server logic is necessary.
+- Database: PostgreSQL.
+- Authorization: Supabase/PostgreSQL Row Level Security. Never rely on frontend-only permission checks.
+
+Core philosophy: turn TikTok/Instagram-like feed habits into a useful educational habit through verified education content, questions, micro learning, and gamification. The product should feel like LinkedIn + Quora + gamified micro learning + short-form learning video, not a generic social network.
+
+## 2. PostgreSQL Schema Contract
+
+The implementation must preserve these core tables and relationships. Supabase projects should use `auth.users(id)` as the source auth identity and mirror profile data in `public.users`.
+
+```sql
+create type user_role as enum ('teacher', 'parent', 'student');
+
+create table users (
+  id uuid primary key default gen_random_uuid(),
+  email varchar(255) unique not null,
+  full_name varchar(100) not null,
+  role user_role not null,
+  is_verified boolean default false,
+  avatar_assets jsonb default '{"hat": null, "suit": null, "pet": null}',
+  total_points int default 0,
+  created_at timestamp default current_timestamp
+);
+
+create table education_areas (
+  id serial primary key,
+  area_name varchar(100) unique not null,
+  age_group varchar(50)
+);
+
+create table user_interests (
+  user_id uuid references users(id) on delete cascade,
+  area_id int references education_areas(id) on delete cascade,
+  primary key (user_id, area_id)
+);
+
+create table posts (
+  id uuid primary key default gen_random_uuid(),
+  teacher_id uuid references users(id) on delete cascade,
+  title varchar(255),
+  content text,
+  media_url varchar(255),
+  area_id int references education_areas(id),
+  created_at timestamp default current_timestamp
+);
+
+create table questions (
+  id uuid primary key default gen_random_uuid(),
+  author_id uuid references users(id) on delete cascade,
+  area_id int references education_areas(id),
+  title varchar(255) not null,
+  description text not null,
+  is_resolved boolean default false,
+  created_at timestamp default current_timestamp
+);
+
+create table answers (
+  id uuid primary key default gen_random_uuid(),
+  question_id uuid references questions(id) on delete cascade,
+  teacher_id uuid references users(id) on delete cascade,
+  content text not null,
+  is_approved_by_parent boolean default false,
+  created_at timestamp default current_timestamp
+);
+```
+
+## 3. Role And Authorization Rules
+
+User roles are exactly `teacher`, `parent`, and `student`.
+
+- `teacher`: verified education content creator.
+- `parent`: supervision, analytics, questions, child progress, and reward approval.
+- `student`: gamified learner with micro learning, quizzes, duels, points, Zigo Crystals, and avatar customization.
+
+Hard rules:
+
+- Only `role = 'teacher'` and `is_verified = true` users can create posts.
+- Teachers can create posts only in education areas assigned to them through `user_interests`.
+- Teachers can answer questions only in assigned areas.
+- Parents and students can never create posts.
+- Parents and students can create questions only in selected areas.
+- Parents and students can read posts only when `posts.area_id` matches their `user_interests.area_id`.
+- Students cannot send direct messages.
+- Student-visible text must pass profanity and cyberbullying moderation before display.
+
+## 4. Match-Feed Algorithm
+
+The main feed invariant is:
+
+> A post appears in a user's feed only when `posts.area_id` exists in that user's `user_interests`.
+
+Use this Supabase-style query shape for the personalized feed:
+
+```ts
+const getPersonalizedFeed = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("posts")
+    .select(`
+      id,
+      title,
+      content,
+      media_url,
+      created_at,
+      users:teacher_id (
+        full_name,
+        is_verified
+      )
+    `)
+    .in(
+      "area_id",
+      supabase.from("user_interests").select("area_id").eq("user_id", userId),
+    );
+
+  if (error) throw error;
+  return data;
+};
+```
+
+## 5. UI/UX Rules
+
+Entry can use a Netflix-style profile selection model under one account.
+
+Parent profile:
+
+- Serious, calm, analytics-focused.
+- LinkedIn/Quora-like visual tone.
+- Shows child progress, time spent, teacher answers, selected areas, and reward approvals.
+
+Student profile:
+
+- Fully gamified, colorful, and mobile-first.
+- Playful, game-like energy.
+- Shows avatar, level, league, crystal balance, streaks, micro videos, quizzes, and duels.
+
+Teacher profile:
+
+- Verified creator dashboard.
+- Shows assigned education areas, post composer, question inbox, and answer history.
+
+## 6. Positive Social Media Engine
+
+- No student-to-student DM.
+- Use a safety wall for comments and open text.
+- Add regex-based profanity filtering first; design the moderation layer so AI moderation can be added later.
+- Award points only for verified learning actions.
+- Watching a verified one-minute micro lesson grants `+10` education points.
+- Completing a mini quiz grants `+10` education points.
+- Winning a duel grants a configurable reward.
+- Store earned points in `users.total_points`.
+- Store avatar equipment in `users.avatar_assets`.
+- Build a Kumbara Store for hats, capes, suits, pets, frames, and parent-approved real-world rewards such as book coupons.
+
+## 7. Initial Implementation Prompt
+
+When implementing from scratch, start with this instruction:
+
+```text
+Yukarıdaki PostgreSQL şemasını, Supabase Row Level Security kurallarını ve Zigo iş kurallarını temel alarak mobil öncelikli bir eğitim platformu geliştir.
+
+Öğretmenler sadece `role = 'teacher'` ve `is_verified = true` ise, ayrıca sadece kendi `user_interests` uzmanlık alanlarında post paylaşabilmeli ve gelen soruları cevaplayabilmeli.
+
+Veliler ve öğrenciler sadece seçtikleri alanlardaki öğretmen gönderilerini görebilmeli.
+
+Öğrenciler için `total_points`, Zigo Kristali ve `avatar_assets` tabanlı mini avatar özelleştirme sistemi oluştur.
+
+Veli ve öğrenci asla bağımsız içerik postu paylaşamasın; sadece soru sorabilsin.
+
+İlk olarak Supabase entegrasyonunu, veritabanı bağlantı fonksiyonlarını, typed data access helpers, Match-Feed sorgusunu, role-aware auth profil yüklemeyi ve temel backend/API rotalarını oluştur.
+```
