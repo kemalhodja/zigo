@@ -40,3 +40,5 @@ test-results/
 # generated migration bundle
 supabase/zigo-full-migrations.sql
 launch-status.json
+.vercel
+.env*
