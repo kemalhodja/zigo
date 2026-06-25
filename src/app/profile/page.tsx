@@ -7,6 +7,7 @@ import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getProfileBillingSection } from "@/lib/domain/profile-billing";
 import { getCurrentProfile, getUserInterestAreaNames, type UserProfile } from "@/lib/domain/profiles";
 import {
@@ -501,9 +502,39 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
     isSignedOut: false,
   };
 
-  if (!hasSupabaseEnv()) return fallback;
+  if (!hasSupabaseEnv()) {
+    if (allowDemoContent()) return fallback;
+    const signedOutMessages = await getServerMessages();
+    return {
+      name: signedOutMessages.common.signIn,
+      handle: "signin",
+      bio: signedOutMessages.profile.signInDesc,
+      role: "guest" as const,
+      isVerified: false,
+      branches: [],
+      stats: { posts: 0, followers: 0, following: 0 },
+      posts: [],
+      suggestedCreators: [],
+      isPreview: false,
+      isSignedOut: true,
+    };
+  }
 
-  const previewFallback: Awaited<ReturnType<typeof getProfileData>> = fallback;
+  const previewFallback: Awaited<ReturnType<typeof getProfileData>> = allowDemoContent()
+    ? fallback
+    : {
+        name: (await getServerMessages()).common.signIn,
+        handle: "signin",
+        bio: (await getServerMessages()).profile.signInDesc,
+        role: "guest" as const,
+        isVerified: false,
+        branches: [],
+        stats: { posts: 0, followers: 0, following: 0 },
+        posts: [],
+        suggestedCreators: [],
+        isPreview: false,
+        isSignedOut: true,
+      };
 
   return withSupabaseFallback(async () => {
   const supabase = await createClient();
@@ -542,11 +573,11 @@ async function getProfileSuggestedCreators(
   try {
     const creators = await getSuggestedCreators(supabase, userId, 6);
     if (creators.length === 0) {
-      return demoSuggestedCreators.map((creator) => ({ ...creator, isFollowing: false }));
+      return [];
     }
     return mapSuggestedCreators(creators);
   } catch {
-    return demoSuggestedCreators.map((creator) => ({ ...creator, isFollowing: false }));
+    return [];
   }
 }
 

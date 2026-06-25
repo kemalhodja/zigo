@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ModerationQueueItem } from "@/components/moderation-queue-item";
 import { SocialPill } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
@@ -208,15 +209,17 @@ async function getModerationData(messages: Messages): Promise<{
   safetyQueue: DisplaySafetyItem[];
   adminAlerts: ModerationAdminAlert[];
 }> {
+  const emptyFallback = { reports: [] as DisplayReport[], safetyQueue: [] as DisplaySafetyItem[], adminAlerts: [] as ModerationAdminAlert[] };
+
   if (!hasSupabaseEnv()) {
-    return { reports: demoReports, safetyQueue: demoSafetyQueue, adminAlerts: [] };
+    return allowDemoContent()
+      ? { reports: demoReports, safetyQueue: demoSafetyQueue, adminAlerts: [] }
+      : emptyFallback;
   }
 
-  const previewFallback = {
-    reports: demoReports,
-    safetyQueue: demoSafetyQueue,
-    adminAlerts: [] as ModerationAdminAlert[],
-  };
+  const previewFallback = allowDemoContent()
+    ? { reports: demoReports, safetyQueue: demoSafetyQueue, adminAlerts: [] as ModerationAdminAlert[] }
+    : emptyFallback;
 
   return withSupabaseFallback(async () => {
   const supabase = await createClient();
@@ -240,7 +243,7 @@ async function getModerationData(messages: Messages): Promise<{
     safetyQueue: safetyQueue.map(toDisplaySafetyItem),
     adminAlerts,
   };
-  }, previewFallback);
+  }, previewFallback, emptyFallback);
 }
 
 function toDisplayReport(report: UserContentReport, messages: Messages): DisplayReport {

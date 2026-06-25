@@ -7,6 +7,7 @@ import { ReelVideoPlayer } from "@/components/reel-video-player";
 import { SocialMediaScene } from "@/components/social-media-scenes";
 import { SocialPill, VerifiedBadge } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getFollowingFeed, getReelFeed, isFollowing, type SocialFeedPost } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -293,6 +294,7 @@ async function getReels(activeFeed: "for-you" | "following"): Promise<ReelItem[]
   const m = await getServerMessages();
 
   if (!hasSupabaseEnv()) {
+    if (!allowDemoContent()) return [];
     return buildDemoReels(m.demo).map((reel) => ({
       ...reel,
       id: reel.creator,
@@ -307,18 +309,20 @@ async function getReels(activeFeed: "for-you" | "following"): Promise<ReelItem[]
     }));
   }
 
-  const demoFallback = buildDemoReels(m.demo).map((reel) => ({
-    ...reel,
-    id: reel.creator,
-    mediaType: "preview" as const,
-    verified: true,
-    likesCount: Number.parseFloat(reel.likes) * 1000,
-    commentsCount: 24,
-    isLiked: false,
-    isSaved: false,
-    isFollowingCreator: false,
-    isOwnCreator: false,
-  }));
+  const demoFallback = allowDemoContent()
+    ? buildDemoReels(m.demo).map((reel) => ({
+        ...reel,
+        id: reel.creator,
+        mediaType: "preview" as const,
+        verified: true,
+        likesCount: Number.parseFloat(reel.likes) * 1000,
+        commentsCount: 24,
+        isLiked: false,
+        isSaved: false,
+        isFollowingCreator: false,
+        isOwnCreator: false,
+      }))
+    : [];
 
   return withSupabaseFallback(async () => {
   const supabase = await createClient();
@@ -342,7 +346,7 @@ async function getReels(activeFeed: "for-you" | "following"): Promise<ReelItem[]
     isFollowingCreator: followingByReel[index] ?? false,
     viewerId: profile?.id,
   }));
-  }, demoFallback);
+  }, demoFallback, []);
 }
 
 function toReelItem(

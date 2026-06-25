@@ -1,5 +1,6 @@
 import { StoryViewer, type StoryViewerItem } from "@/components/story-viewer";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { type ActiveStory,getActiveStories } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
@@ -41,14 +42,15 @@ export default async function StoriesPage({ searchParams }: StoriesPageProps) {
 }
 
 async function getStories(creatorId?: string): Promise<StoryViewerItem[]> {
-  if (!hasSupabaseEnv()) return demoStories;
+  const emptyStories: StoryViewerItem[] = [];
+  if (!hasSupabaseEnv()) return allowDemoContent() ? demoStories : emptyStories;
 
   const m = await getServerMessages();
   return withSupabaseFallback(async () => {
     const supabase = await createClient();
     const stories = await getActiveStories(supabase);
 
-    if (stories.length === 0) return demoStories;
+    if (stories.length === 0) return emptyStories;
     const filteredStories = creatorId
       ? stories.filter((story) => story.author?.id === creatorId)
       : stories;
@@ -56,7 +58,7 @@ async function getStories(creatorId?: string): Promise<StoryViewerItem[]> {
     return (filteredStories.length > 0 ? filteredStories : stories).map((story) =>
       toStoryItem(story, m.sparkViewer.newStory),
     );
-  }, demoStories);
+  }, allowDemoContent() ? demoStories : emptyStories);
 }
 
 function toStoryItem(story: ActiveStory, newStoryLabel: string): StoryViewerItem {

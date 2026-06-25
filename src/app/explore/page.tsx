@@ -5,6 +5,7 @@ import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
   getMatchedTeachers,
@@ -56,7 +57,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const demoTiles = buildExploreDemoTiles(m.exploreDemo);
   const categories = [
     { label: e.forYou, query: "" },
-    { label: m.zigo.micro, query: "Micro" },
+    { label: m.zigo.micro, query: "Kısa ders" },
     { label: e.teachers, query: "Öğretmen" },
     { label: e.preschool, query: "Okul Öncesi" },
     { label: e.primaryGrades, query: "1-4. Sınıf" },
@@ -89,7 +90,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const filteredPosts = filterExploreTiles(posts, activeFormat);
   const hasResults = filteredPosts.length > 0;
   const hasQuery = query.trim().length > 0;
-  const isPreview = !hasSupabaseEnv();
+  const isPreview = !hasSupabaseEnv() && allowDemoContent();
   const previewTiles = filterExploreTiles(demoTiles, activeFormat);
   const tilesToRender = hasResults ? filteredPosts : hasQuery || activeFormat === "teachers" ? [] : isPreview ? previewTiles : [];
   const showSuggestedCreators = !hasQuery && creators.length === 0 && activeFormat !== "teachers";
@@ -141,11 +142,16 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
       {hasQuery ? <p className="zigo-body px-0 font-black text-night">{e.matchedResults}: “{query}”</p> : null}
 
-      <ExploreTrendRadar activeFormat={activeFormat} messages={m} query={query} tileCount={tilesToRender.length} />
+      <ExploreTrendRadar messages={m} query={query} />
 
-      {showSuggestedCreators ? (
+      {showSuggestedCreators && (suggestedRail.length > 0 || allowDemoContent()) ? (
         <section className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto border-y border-slate-100 bg-white px-4 py-3">
-          {(suggestedRail.length > 0 ? suggestedRail : suggestedCreatorRail(m.exploreDemo).map((creator) => ({ ...creator, id: undefined, isFollowing: false }))).map((creator, index) => (
+          {(suggestedRail.length > 0
+            ? suggestedRail
+            : allowDemoContent()
+              ? suggestedCreatorRail(m.exploreDemo).map((creator) => ({ ...creator, id: undefined, isFollowing: false }))
+              : []
+          ).map((creator, index) => (
             <div className="tap-scale min-w-24 text-center text-night" key={creator.id ?? creator.handle}>
               <Link href={creator.href}>
                 <SocialAvatar
@@ -304,22 +310,14 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 }
 
 function ExploreTrendRadar({
-  activeFormat,
   messages,
   query,
-  tileCount,
 }: {
-  activeFormat: ExploreFormat;
   messages: Messages;
   query: string;
-  tileCount: number;
 }) {
   const e = messages.explore;
-  const radarTitle = query.trim()
-    ? `${e.trendRadar}: ${query.trim()}`
-    : activeFormat === "all"
-      ? e.trendRadar
-      : `${activeFormat} ${e.trendRadar.toLowerCase()}`;
+  const radarTitle = query.trim() ? `${e.trendRadar}: ${query.trim()}` : e.trendRadar;
   const radarCards = [
     { href: "/explore?q=Kesir&format=micro", label: e.fractions, metric: e.hotMicro, accent: "from-crystal to-berry" },
     { href: "/explore?q=Fen&format=lessons", label: e.scienceLabs, metric: e.parentSafe, accent: "from-aqua to-mint" },
@@ -329,16 +327,8 @@ function ExploreTrendRadar({
   return (
     <section className="-mx-4 space-y-0">
       <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-5 text-white">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-white/65">{e.smartDiscovery}</p>
-        <h1 className="mt-2 text-2xl font-black leading-tight">{radarTitle}</h1>
-        <p className="mt-2 text-sm font-bold leading-6 text-white/75">
-          {e.trendDesc}
-        </p>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <RadarStat label="format" value={activeFormat} />
-          <RadarStat label="tiles" value={tileCount} />
-          <RadarStat label="safe" value="RLS" />
-        </div>
+        <h1 className="text-2xl font-black leading-tight">{radarTitle}</h1>
+        <p className="mt-2 text-sm font-bold leading-6 text-white/75">{e.trendDesc}</p>
       </div>
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3">
         {radarCards.map((card) => (
@@ -356,15 +346,6 @@ function ExploreTrendRadar({
   );
 }
 
-function RadarStat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="zigo-stat-chip rounded-xl bg-white/14 px-2 py-2 backdrop-blur">
-      <p className="text-sm font-black">{value}</p>
-      <p className="zigo-fit-text mt-0.5 text-[0.65rem] font-black uppercase tracking-[0.08em] text-white/75">{label}</p>
-    </div>
-  );
-}
-
 function ExploreTopicBridges({ messages }: { messages: Messages }) {
   const e = messages.explore;
   const topicBridges = [
@@ -377,10 +358,7 @@ function ExploreTopicBridges({ messages }: { messages: Messages }) {
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{e.topicBridges}</p>
-          <h2 className="mt-1 text-base font-black text-night">{e.jumpLoop}</h2>
-        </div>
+        <h2 className="text-base font-black text-night">{e.topicBridges}</h2>
         <Link className="text-xs font-black text-crystal" href="/onboarding">
           {e.pickAreas}
         </Link>

@@ -24,7 +24,7 @@ type AppShellProps = {
 export function AppShell({
   canCreateSocialPost,
   children,
-  isPreviewMode = false,
+  isPreviewMode: _isPreviewMode = false,
   roleAccentLabel,
   teacherInboxCount = 0,
   unreadCount,
@@ -66,10 +66,6 @@ export function AppShell({
         </a>
       ) : null}
 
-      {isPreviewMode && !pathname.startsWith("/setup") && !pathname.startsWith("/auth") && !pathname.startsWith("/readiness") ? (
-        <PreviewModeBanner />
-      ) : null}
-
       <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3"}`} id="main-content">
         {children}
       </main>
@@ -101,37 +97,27 @@ function QuickActionDock({ canCreateSocialPost }: { canCreateSocialPost: boolean
 
   return (
     <section className="premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 pl-2">
-          <p className="zigo-eyebrow text-slate-500">
-            {d.shortcuts} <span className="sr-only">{d.dailyActions}</span>
-          </p>
-          <p className="truncate text-zigo-caption font-semibold text-slate-600">
-            {canCreateSocialPost ? d.teacherHint : d.learnerHint}
-          </p>
-        </div>
-        <div className="flex min-w-0 flex-1 flex-wrap justify-end gap-1.5">
-          {canCreateSocialPost ? (
-            <>
-              <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/create?mode=story">
-                {z.spark}
-              </Link>
-              <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/create?mode=reel">
-                {z.micro}
-              </Link>
-            </>
-          ) : (
-            <Link aria-label={d.askSafely} className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/questions">
-              {m.nav.ask}
+      <div className="flex flex-wrap justify-center gap-1.5">
+        {canCreateSocialPost ? (
+          <>
+            <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/create?mode=story">
+              {z.spark}
             </Link>
-          )}
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/focus">
-            {d.focus}
+            <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/create?mode=reel">
+              {z.micro}
+            </Link>
+          </>
+        ) : (
+          <Link aria-label={d.askSafely} className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/questions">
+            {m.nav.ask}
           </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
-            {d.learn}
-          </Link>
-        </div>
+        )}
+        <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/focus">
+          {d.focus}
+        </Link>
+        <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
+          {d.learn}
+        </Link>
       </div>
     </section>
   );
@@ -206,17 +192,3 @@ function Header({
   );
 }
 
-function PreviewModeBanner() {
-  const p = useMessages().preview;
-
-  return (
-    <div className="-mx-4 border-b border-amber-100 bg-amber-50 px-4 py-2.5">
-      <p className="text-center text-xs font-bold leading-5 text-amber-900">
-        {p.message}{" "}
-        <Link className="font-black text-crystal" href="/setup">
-          {p.setup}
-        </Link>
-      </p>
-    </div>
-  );
-}

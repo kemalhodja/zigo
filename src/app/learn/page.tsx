@@ -5,6 +5,7 @@ import { LearnQuizCard } from "@/components/learn-quiz-card";
 import { LearnVideoCard } from "@/components/learn-video-card";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getChildPersonalizedFeed, getChildProfiles } from "@/lib/domain/children";
 import { getPersonalizedFeed } from "@/lib/domain/feed";
 import { getChildMatchedQuizzes } from "@/lib/domain/learning";
@@ -19,11 +20,26 @@ export default async function LearnPage() {
   const demoLessons = buildDemoLessons(messages.demo);
 
   if (!hasSupabaseEnv()) {
-    return <LearnPreview mode="preview" demoLessons={demoLessons} messages={messages} />;
+    if (allowDemoContent()) {
+      return <LearnPreview mode="preview" demoLessons={demoLessons} messages={messages} />;
+    }
+    return (
+      <StateCard
+        action={<Link className="font-black text-crystal" href="/setup">{messages.preview.setup}</Link>}
+        description={messages.preview.message}
+        title={messages.common.signIn}
+      />
+    );
   }
 
-  const previewFallback = (
+  const previewFallback = allowDemoContent() ? (
     <LearnPreview mode="preview" demoLessons={demoLessons} messages={messages} />
+  ) : (
+    <StateCard
+      action={<Link className="font-black text-crystal" href="/auth?next=/learn">{messages.common.signIn}</Link>}
+      description={messages.learnPage.signInProgressDesc}
+      title={messages.learnPage.signInProgress}
+    />
   );
 
   return withSupabaseFallback(async () => {
@@ -31,7 +47,13 @@ export default async function LearnPage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    return <LearnPreview mode="signed-out" demoLessons={demoLessons} messages={messages} />;
+    return (
+      <StateCard
+        action={<Link className="font-black text-crystal" href="/auth?next=/learn">{messages.common.signIn}</Link>}
+        description={messages.learnPage.signInProgressDesc}
+        title={messages.learnPage.signInProgress}
+      />
+    );
   }
 
   if (profile.role === "teacher") {

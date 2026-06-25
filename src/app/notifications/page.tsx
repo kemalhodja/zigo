@@ -4,6 +4,7 @@ import { MarkNotificationsReadButton } from "@/components/mark-notifications-rea
 import { PushNotificationPanel } from "@/components/push-notification-panel";
 import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getNotifications, type SocialNotification } from "@/lib/domain/social";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
@@ -281,29 +282,36 @@ function getNotificationFilter(value?: string): NotificationFilter {
 async function getNotificationItems(): Promise<{ isSignedOut: boolean; profileRole: UserRole; notifications: NotificationItem[] }> {
   const m = await getServerMessages();
 
+  const emptyFallback = { isSignedOut: true, profileRole: "student" as const, notifications: [] as NotificationItem[] };
+
   if (!hasSupabaseEnv()) {
-    return {
-      isSignedOut: false,
-      profileRole: "student" as const,
-      notifications: buildDemoNotifications(m).map((notification) => ({
-        ...notification,
-        category: getNotificationCategory(notification.title, notification.detail),
-        id: notification.title,
-        isRead: false,
-      })),
-    };
+    if (allowDemoContent()) {
+      return {
+        isSignedOut: false,
+        profileRole: "student" as const,
+        notifications: buildDemoNotifications(m).map((notification) => ({
+          ...notification,
+          category: getNotificationCategory(notification.title, notification.detail),
+          id: notification.title,
+          isRead: false,
+        })),
+      };
+    }
+    return emptyFallback;
   }
 
-  const demoFallback: Awaited<ReturnType<typeof getNotificationItems>> = {
-    isSignedOut: false,
-    profileRole: "student" as const,
-    notifications: buildDemoNotifications(m).map((notification) => ({
-      ...notification,
-      category: getNotificationCategory(notification.title, notification.detail),
-      id: notification.title,
-      isRead: false,
-    })),
-  };
+  const demoFallback: Awaited<ReturnType<typeof getNotificationItems>> = allowDemoContent()
+    ? {
+        isSignedOut: false,
+        profileRole: "student" as const,
+        notifications: buildDemoNotifications(m).map((notification) => ({
+          ...notification,
+          category: getNotificationCategory(notification.title, notification.detail),
+          id: notification.title,
+          isRead: false,
+        })),
+      }
+    : emptyFallback;
 
   return withSupabaseFallback(async () => {
   const supabase = await createClient();
@@ -313,7 +321,7 @@ async function getNotificationItems(): Promise<{ isSignedOut: boolean; profileRo
 
   const notifications = await getNotifications(supabase, profile.id);
   return { isSignedOut: false, profileRole: profile.role, notifications: notifications.map((item) => toNotificationItem(item, m)) };
-  }, demoFallback);
+  }, demoFallback, emptyFallback);
 }
 
 function toNotificationItem(notification: SocialNotification, m: Messages): NotificationItem {

@@ -8,6 +8,7 @@ import { RecentLearningCard } from "@/components/recent-learning-card";
 import { StateCard } from "@/components/state-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getStudentFocusAnalytics } from "@/lib/domain/focus-analytics";
 import {
@@ -136,50 +137,78 @@ async function getStudentDashboardData(): Promise<{
   planGroups: ReturnType<typeof resolveProfilePlanGroups>;
 }> {
   if (!hasSupabaseEnv()) {
-    return {
-      history: [],
-      stats: fallbackStats,
-      isSignedOut: false,
-      showPreview: true,
-      streakDays: 3,
-      totalPoints: 240,
-      focusAnalytics: {
-        completedSessions: 4,
-        focusMinutesWeek: 100,
-        sharedMoments: 2,
-        weeklyGoal: 5,
-        weeklyCompleted: 4,
-        pointsFromFocus: 60,
-        activeSession: null,
-      },
-      isPremium: false,
-      allowDevActivate: canUseDevBillingBypass(),
-      gradeLevel: null,
-      planGroups: resolveProfilePlanGroups("student"),
-    };
+    return allowDemoContent()
+      ? {
+          history: [],
+          stats: fallbackStats,
+          isSignedOut: false,
+          showPreview: true,
+          streakDays: 3,
+          totalPoints: 240,
+          focusAnalytics: {
+            completedSessions: 4,
+            focusMinutesWeek: 100,
+            sharedMoments: 2,
+            weeklyGoal: 5,
+            weeklyCompleted: 4,
+            pointsFromFocus: 60,
+            activeSession: null,
+          },
+          isPremium: false,
+          allowDevActivate: canUseDevBillingBypass(),
+          gradeLevel: null,
+          planGroups: resolveProfilePlanGroups("student"),
+        }
+      : {
+          history: [],
+          stats: emptyStats,
+          isSignedOut: true,
+          showPreview: false,
+          streakDays: 0,
+          totalPoints: 0,
+          focusAnalytics: null,
+          isPremium: false,
+          allowDevActivate: false,
+          gradeLevel: null,
+          planGroups: [],
+        };
   }
 
-  const previewFallback: Awaited<ReturnType<typeof getStudentDashboardData>> = {
-    history: [] as LearningHistoryItem[],
-    stats: fallbackStats,
-    isSignedOut: false,
-    showPreview: true,
-    streakDays: 3,
-    totalPoints: 240,
-    focusAnalytics: {
-      completedSessions: 4,
-      focusMinutesWeek: 100,
-      sharedMoments: 2,
-      weeklyGoal: 5,
-      weeklyCompleted: 4,
-      pointsFromFocus: 60,
-      activeSession: null,
-    },
-    isPremium: false,
-    allowDevActivate: canUseDevBillingBypass(),
-    gradeLevel: null as string | null,
-    planGroups: resolveProfilePlanGroups("student"),
-  };
+  const previewFallback: Awaited<ReturnType<typeof getStudentDashboardData>> = allowDemoContent()
+    ? {
+        history: [] as LearningHistoryItem[],
+        stats: fallbackStats,
+        isSignedOut: false,
+        showPreview: true,
+        streakDays: 3,
+        totalPoints: 240,
+        focusAnalytics: {
+          completedSessions: 4,
+          focusMinutesWeek: 100,
+          sharedMoments: 2,
+          weeklyGoal: 5,
+          weeklyCompleted: 4,
+          pointsFromFocus: 60,
+          activeSession: null,
+        },
+        isPremium: false,
+        allowDevActivate: canUseDevBillingBypass(),
+        gradeLevel: null as string | null,
+        planGroups: resolveProfilePlanGroups("student"),
+      }
+    : {
+        history: [] as LearningHistoryItem[],
+        stats: emptyStats,
+        isSignedOut: true,
+        showPreview: false,
+        streakDays: 0,
+        totalPoints: 0,
+        focusAnalytics: null,
+        isPremium: false,
+        allowDevActivate: false,
+        gradeLevel: null,
+        planGroups: [],
+      };
 
   return withSupabaseFallback(async () => {
   const supabase = await createClient();

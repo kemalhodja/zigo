@@ -4,7 +4,6 @@ import { DismissibleFeedPost } from "@/components/dismissible-feed-post";
 import { DoubleTapLikeLink } from "@/components/double-tap-like-link";
 import { FeedEducationBadges } from "@/components/feed-education-badges";
 import { FeedRefreshControl } from "@/components/feed-refresh-control";
-import { FeedTrustStrip } from "@/components/feed-trust-strip";
 import { FollowButton } from "@/components/follow-button";
 import { PostOptionsButton } from "@/components/post-options-button";
 import { PremiumPrepLink } from "@/components/premium-prep-link";
@@ -19,6 +18,7 @@ import { TeacherHomeInsights } from "@/components/teacher-home-insights";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { TodayLearningCard } from "@/components/today-learning-card";
 import { hasSupabaseEnv } from "@/lib/config";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getDailyMissionProgress } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
@@ -33,7 +33,7 @@ import {
 import { getMatchedStudyMoments } from "@/lib/domain/study-moments";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { formatFeedTimestamp } from "@/lib/format-time";
-import { buildDemoPosts, buildDemoSuggestedCreators, buildDemoTrendingTopics } from "@/lib/i18n/demo-feed";
+import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -181,24 +181,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     getHomeStudyMoments(),
     getHomeTeacherInsights(),
   ]);
-  const reelSpotlights = buildReelSpotlights(
-    posts,
-    buildDemoPosts(m.demo).slice(0, 3).map((post) => ({
-      title: post.area,
-      creator: post.handle,
-      gradient: post.gradient,
-      scene: post.scene ?? "math",
-      href: "/micro",
-      mediaUrl: null,
-      mediaType: "image",
-    })),
-  );
-  const trendingTopics = buildDemoTrendingTopics(m.demo, m.nav.ask);
+  const reelDemoFallback = allowDemoContent()
+    ? buildDemoPosts(m.demo).slice(0, 3).map((post) => ({
+        title: post.area,
+        creator: post.handle,
+        gradient: post.gradient,
+        scene: post.scene ?? "math",
+        href: "/micro",
+        mediaUrl: null,
+        mediaType: "image",
+      }))
+    : [];
+  const reelSpotlights = buildReelSpotlights(posts, reelDemoFallback);
 
   return (
     <div className="space-y-4 pb-3">
-      <FeedTrustStrip />
-
       {teacherInsights ? (
         <TeacherHomeInsights
           copy={m.feedEnhancements}
@@ -219,19 +216,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {viewer.showStudentStrip ? <StudentSocialStrip points={viewer.points} streakDays={viewer.streakDays} /> : null}
 
-      {viewer.showStudentStrip ? <StudyWithMeRail moments={studyMoments} showPreview={!hasSupabaseEnv()} /> : null}
+      {viewer.showStudentStrip ? <StudyWithMeRail moments={studyMoments} showPreview={false} /> : null}
 
       <FeedRefreshControl activeFeed={activeFeed} />
 
       <TodayLearningCard copy={m.feedEnhancements} />
-
-      <HomeLearningPulse
-        activeFeed={activeFeed}
-        messages={m}
-        postCount={posts.length}
-        storyCount={stories.length}
-        trendingTopics={trendingTopics}
-      />
 
       {posts.length > 0 ? <ReelSpotlightRail messages={m} spotlights={reelSpotlights} /> : null}
 
@@ -345,71 +334,6 @@ function StoryTrayItem({
   );
 }
 
-function HomeLearningPulse({
-  activeFeed,
-  messages,
-  postCount,
-  storyCount,
-  trendingTopics,
-}: {
-  activeFeed: "following" | "for-you";
-  messages: Messages;
-  postCount: number;
-  storyCount: number;
-  trendingTopics: Array<{ href: string; label: string; meta: string }>;
-}) {
-  const f = messages.feed;
-  const z = messages.zigo;
-
-  return (
-    <section className="-mx-4 space-y-0">
-      <div className="feed-pulse-hero px-4 py-4 text-white">
-        <p className="zigo-eyebrow text-white/75">{f.feedPulse}</p>
-        <h2 className="zigo-section-title mt-1.5 text-white">
-          {activeFeed === "following" ? f.followingCreators : f.freshInAreas}
-        </h2>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-white">
-          <PulseStat label={f.posts} value={postCount} />
-          <PulseStat label={f.sparks} value={storyCount} />
-          <PulseStat label={f.boost} value="+10" />
-        </div>
-      </div>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-slate-100 bg-white px-4 py-2.5">
-        {trendingTopics.map((topic) => (
-          <Link
-            className="tap-scale zigo-topic-chip min-w-[4.75rem] max-w-[7rem] shrink-0 rounded-xl px-2.5 py-2"
-            href={topic.href}
-            key={topic.label}
-          >
-            <p className="zigo-fit-text text-zigo-body font-bold text-night">{topic.label}</p>
-            <p className="zigo-fit-text mt-1 text-zigo-meta font-semibold text-crystal">{topic.meta}</p>
-          </Link>
-        ))}
-      </div>
-      <div className="zigo-action-grid border-b border-slate-100 bg-white px-4 pb-3 pt-2.5 text-center">
-        <Link className="zigo-action-chip zigo-quick-action-primary tap-scale rounded-xl !text-white" href="/micro">
-          {z.micro}
-        </Link>
-        <Link className="zigo-action-chip zigo-quick-action-secondary tap-scale rounded-xl" href="/learn">
-          {f.quiz}
-        </Link>
-        <Link className="zigo-action-chip zigo-quick-action-secondary tap-scale rounded-xl" href="/collections">
-          {f.saved}
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-function PulseStat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="zigo-stat-chip rounded-lg bg-white/18 px-2 py-2 backdrop-blur">
-      <p className="text-zigo-title font-bold text-white">{value}</p>
-      <p className="zigo-fit-text zigo-eyebrow mt-0.5 text-white/85">{label}</p>
-    </div>
-  );
-}
-
 function ReelSpotlightRail({ messages, spotlights }: { messages: Messages; spotlights: ReelSpotlightItem[] }) {
   const f = messages.feed;
 
@@ -458,7 +382,7 @@ async function getHomePosts(activeFeed: "for-you" | "following"): Promise<Displa
   const m = await getServerMessages();
 
   if (!hasSupabaseEnv()) {
-    return buildDemoPosts(m.demo) as DisplayPost[];
+    return allowDemoContent() ? (buildDemoPosts(m.demo) as DisplayPost[]) : [];
   }
 
   try {
@@ -487,7 +411,7 @@ async function getHomePosts(activeFeed: "for-you" | "following"): Promise<Displa
       }),
     );
   } catch {
-    return buildDemoPosts(m.demo) as DisplayPost[];
+    return allowDemoContent() ? (buildDemoPosts(m.demo) as DisplayPost[]) : [];
   }
 }
 
@@ -498,6 +422,7 @@ async function getHomeStories(viewer: { showStudentStrip: boolean; missionDone: 
   let stories: DisplayStory[] = [];
 
   if (!hasSupabaseEnv()) {
+    if (!allowDemoContent()) return [];
     stories = demoStories.map((story) => ({
       ...story,
       name: story.id === "your-story" ? fx.yourSpark : story.name,
@@ -532,6 +457,7 @@ async function getHomeStories(viewer: { showStudentStrip: boolean; missionDone: 
         ...groupStoriesByCreator(activeStories).map((story) => toDisplayStory(story)),
       ];
     } catch {
+      if (!allowDemoContent()) return [];
       stories = demoStories.map((story) => ({
         ...story,
         name: story.id === "your-story" ? fx.yourSpark : story.name,
@@ -675,7 +601,9 @@ async function getHomeViewerContext(): Promise<{
   missionTotal: number;
 }> {
   if (!hasSupabaseEnv()) {
-    return { showStudentStrip: true, points: 240, streakDays: 3, missionDone: 1, missionTotal: 2 };
+    return allowDemoContent()
+      ? { showStudentStrip: true, points: 240, streakDays: 3, missionDone: 1, missionTotal: 2 }
+      : { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2 };
   }
 
   try {
@@ -736,7 +664,7 @@ function buildReelSpotlights(posts: DisplayPost[], fallback: ReelSpotlightItem[]
 async function getSuggestedCreatorsForHome(): Promise<DisplaySuggestedCreator[]> {
   if (!hasSupabaseEnv()) {
     const m = await getServerMessages();
-    return buildDemoSuggestedCreators(m.demo);
+    return allowDemoContent() ? buildDemoSuggestedCreators(m.demo) : [];
   }
 
   try {
@@ -744,8 +672,7 @@ async function getSuggestedCreatorsForHome(): Promise<DisplaySuggestedCreator[]>
     const profile = await getCurrentProfile(supabase);
     const creators = await getSuggestedCreators(supabase, profile?.id);
     if (creators.length === 0) {
-      const m = await getServerMessages();
-      return buildDemoSuggestedCreators(m.demo);
+      return [];
     }
 
     return creators.map((creator) => ({
@@ -757,8 +684,7 @@ async function getSuggestedCreatorsForHome(): Promise<DisplaySuggestedCreator[]>
       isFollowing: creator.is_following,
     }));
   } catch {
-    const m = await getServerMessages();
-    return buildDemoSuggestedCreators(m.demo);
+    return [];
   }
 }
 
