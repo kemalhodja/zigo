@@ -1,26 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export type ShortcutScrollItem = {
-  href: string;
-  label: string;
-  icon: ShortcutScrollIconName;
-  primary?: boolean;
-};
+import type { ShortcutIconName, ShortcutScrollItem } from "@/lib/domain/shortcut-preferences";
 
-type ShortcutScrollIconName =
-  | "hub"
-  | "focus"
-  | "learn"
-  | "duels"
-  | "family"
-  | "requests"
-  | "ask"
-  | "spark"
-  | "micro"
-  | "studio"
-  | "profile"
-  | "store";
+export type { ShortcutScrollItem };
 
 type ShortcutScrollDockProps = {
   items: ShortcutScrollItem[];
@@ -78,11 +61,11 @@ export function ShortcutScrollDock({
   );
 }
 
-function ShortcutScrollIcon({ name, primary }: { name: ShortcutScrollIconName; primary?: boolean }) {
+function ShortcutScrollIcon({ name, primary }: { name: ShortcutIconName; primary?: boolean }) {
   const stroke = primary ? "currentColor" : "#334155";
   const fill = primary ? "currentColor" : "none";
 
-  const icons: Record<ShortcutScrollIconName, ReactNode> = {
+  const icons: Record<ShortcutIconName, ReactNode> = {
     hub: (
       <svg aria-hidden="true" className="size-5" fill={fill} stroke={stroke} strokeWidth="2" viewBox="0 0 24 24">
         <path d="M3 11l9-8 9 8" />

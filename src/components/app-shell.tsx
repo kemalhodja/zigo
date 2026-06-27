@@ -11,13 +11,9 @@ import { FloatingWhatsAppSupport } from "@/components/floating-whatsapp-support"
 import { LegalFooter } from "@/components/legal-footer";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleWelcomeStrip } from "@/components/role-welcome-strip";
-import { ShortcutScrollDock, type ShortcutScrollItem } from "@/components/shortcut-scroll-dock";
-import { useShortcutDockItems } from "@/lib/client/shortcut-preferences";
+import { ShortcutDock, useShortcutDockVisible } from "@/components/shortcut-dock";
 import {
   getHeaderPrimaryAction,
-  isParentSupervisionRole,
-  isStudentGamificationRole,
-  isTeacherStudioRole,
 } from "@/lib/domain/role-navigation";
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -55,13 +51,8 @@ export function AppShell({
     pathname.startsWith("/create") ||
     pathname.startsWith("/questions") ||
     pathname.startsWith("/setup");
-  const { items: shortcutItems } = useShortcutDockItems(viewerRole, {
-    canCreateSocialPost,
-    hidden: hideQuickDock,
-    messages: m,
-  });
   const showBottomNav = !isStories;
-  const showShortcutDock = shortcutItems.length > 0;
+  const showShortcutDock = useShortcutDockVisible(viewerRole, canCreateSocialPost, hideQuickDock);
   const shellFloatClass = [
     showBottomNav ? "zigo-shell--with-nav" : "",
     showShortcutDock ? "zigo-shell--with-dock" : "",
@@ -111,7 +102,7 @@ export function AppShell({
         <div className="zigo-float-bottom-bar pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md">
           <div className="pointer-events-auto">
             {showShortcutDock ? (
-              <QuickActionDock floating items={shortcutItems} viewerRole={viewerRole} />
+              <ShortcutDock canCreateSocialPost={canCreateSocialPost} floating viewerRole={viewerRole} />
             ) : null}
             {showBottomNav ? (
               <BottomNav
@@ -146,36 +137,6 @@ function PreviewModeBanner() {
       {m.preview.message}{" "}
       <span className="font-black underline">{m.preview.setup}</span>
     </Link>
-  );
-}
-
-function QuickActionDock({
-  floating = false,
-  items,
-  viewerRole,
-}: {
-  floating?: boolean;
-  items: ShortcutScrollItem[];
-  viewerRole: ViewerRole;
-}) {
-  const m = useMessages();
-  const roleClassName = isStudentGamificationRole(viewerRole)
-    ? "role-dock-student border-violet-100"
-    : isParentSupervisionRole(viewerRole)
-      ? "role-dock-parent border-cyan-100"
-      : isTeacherStudioRole(viewerRole)
-        ? "role-dock-teacher border-slate-200"
-        : "border-violet-100";
-
-  if (items.length === 0) return null;
-
-  return (
-    <ShortcutScrollDock
-      floating={floating}
-      items={items}
-      roleClassName={roleClassName}
-      title={m.dock.shortcuts}
-    />
   );
 }
 

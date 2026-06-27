@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ExpertiseMatrixForm } from "@/components/expertise-matrix-form";
 import { ProfessionalProfileWizard } from "@/components/professional-profile-wizard";
+import { ProfileShortcutSettings } from "@/components/profile-shortcut-settings";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getTeacherExpertiseMatrix } from "@/lib/domain/platform-activity";
@@ -67,6 +68,10 @@ export default async function ProfileEditPage() {
           description="Sınıf, hedef sınav ve ilgi alanlarınızı güncelleyin."
           title={profile.full_name}
         />
+        <ProfileShortcutSettings
+          canCreateSocialPost={false}
+          viewerRole={profile.role}
+        />
       </div>
     );
   }
@@ -90,6 +95,10 @@ export default async function ProfileEditPage() {
         }}
       />
       {kind === "teacher" ? <ExpertiseMatrixForm initialSlugs={expertise.map((row) => row.track_slug)} /> : null}
+      <ProfileShortcutSettings
+        canCreateSocialPost={profile.is_verified}
+        viewerRole="teacher"
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { FollowButton } from "@/components/follow-button";
 import { ProfileHighlights } from "@/components/profile-highlights";
-import { ShortcutPreferencesPanel } from "@/components/shortcut-preferences-panel";
+import { ProfileShortcutSettings } from "@/components/profile-shortcut-settings";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
@@ -142,14 +142,16 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
       </section>
 
-      {!profile.isSignedOut ? (
-        <ShortcutPreferencesPanel
-          canCreateSocialPost={profile.role === "teacher" && profile.isVerified}
-          viewerRole={profile.role}
-        />
-      ) : null}
-
       <ProfileHighlights />
+
+      {!profile.isSignedOut ? (
+        <section className="-mx-4 px-4 pt-4">
+          <ProfileShortcutSettings
+            canCreateSocialPost={profile.role === "teacher" && profile.isVerified}
+            viewerRole={profile.role}
+          />
+        </section>
+      ) : null}
 
       <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} role={profile.role} />
       <ProfileInsightCard

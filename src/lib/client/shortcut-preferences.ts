@@ -2,19 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { buildShortcutCatalog, resolveShortcutItems } from "@/lib/client/shortcut-catalog";
-import type { ViewerRole } from "@/lib/domain/role-theme";
 import {
   getAvailableShortcutIds,
   getDefaultShortcutPreferences,
   normalizeShortcutPreferences,
   parseShortcutPreferencesJson,
   SHORTCUT_PREFS_CHANGED_EVENT,
+  shortcutPreferencesStorageKey,
   type ShortcutId,
   type ShortcutPreferences,
-  shortcutPreferencesStorageKey,
 } from "@/lib/domain/shortcut-preferences";
-import type { Messages } from "@/lib/i18n/types";
+import type { ViewerRole } from "@/lib/domain/role-theme";
 
 type ShortcutOptions = {
   canCreateSocialPost: boolean;
@@ -104,17 +102,4 @@ export function useShortcutPreferences(role: ViewerRole, options: ShortcutOption
     setEnabled,
     toggleShortcut,
   };
-}
-
-export function useShortcutDockItems(
-  role: ViewerRole,
-  options: ShortcutOptions & { messages: Messages; hidden: boolean },
-) {
-  const { prefs } = useShortcutPreferences(role, options);
-  const catalog = buildShortcutCatalog(options.messages, role, options);
-  const items = options.hidden || !prefs.enabled
-    ? []
-    : resolveShortcutItems(catalog, prefs.selectedIds);
-
-  return { items, prefs };
 }

@@ -75,14 +75,17 @@ export const messagesEn: Messages = {
     focus: "Focus",
     learn: "Learn",
     spark: "Story",
-    shortcutSettings: {
-      eyebrow: "Personalization",
-      title: "Bottom shortcuts",
-      description: "Turn the floating shortcut bar on or off and choose which icons appear.",
-      enabled: "Show shortcut bar",
-      pick: "Visible shortcuts",
-      reset: "Reset to default",
-    },
+  },
+  shortcutPrefs: {
+    eyebrow: "Personalization",
+    title: "Bottom shortcut bar",
+    description: "Choose which quick actions appear at the bottom, remove items, or hide the bar entirely.",
+    showBar: "Show shortcut bar",
+    enabledHint: "Turn shortcuts on or off. At least one shortcut must stay selected.",
+    disabledHint: "The shortcut bar is hidden. You can turn it back on anytime.",
+    selected: "Selected",
+    add: "Add",
+    reset: "Reset to default",
   },
   dockByRole: {
     student: {

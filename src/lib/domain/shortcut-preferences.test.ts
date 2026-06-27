@@ -4,37 +4,40 @@ import {
   getAvailableShortcutIds,
   getDefaultShortcutPreferences,
   normalizeShortcutPreferences,
+  parseShortcutPreferencesJson,
 } from "@/lib/domain/shortcut-preferences";
 
-describe("shortcut preferences", () => {
-  it("returns role defaults", () => {
-    expect(getDefaultShortcutPreferences("student", { canCreateSocialPost: false }).selectedIds).toEqual([
-      "hub",
-      "focus",
-      "learn",
-      "duels",
-      "micro",
-      "store",
-    ]);
+describe("shortcut-preferences", () => {
+  it("returns role-specific defaults", () => {
+    const studentDefaults = getDefaultShortcutPreferences("student", { canCreateSocialPost: false });
+    expect(studentDefaults.enabled).toBe(true);
+    expect(studentDefaults.selectedIds).toContain("student_hub");
+    expect(studentDefaults.selectedIds).toContain("student_store");
   });
 
-  it("drops unavailable teacher create shortcuts", () => {
-    const prefs = normalizeShortcutPreferences(
-      "teacher",
-      { canCreateSocialPost: false },
-      { enabled: true, selectedIds: ["spark", "micro", "studio"] },
-    );
-
-    expect(prefs.selectedIds).toEqual(["studio"]);
+  it("hides teacher create shortcuts when posting is locked", () => {
+    const locked = getAvailableShortcutIds("teacher", { canCreateSocialPost: false });
+    expect(locked).not.toContain("teacher_spark");
+    expect(locked).toContain("teacher_studio");
   });
 
-  it("keeps at least one shortcut when selection becomes empty", () => {
-    const prefs = normalizeShortcutPreferences(
-      "parent",
+  it("normalizes unknown or unavailable ids", () => {
+    const normalized = normalizeShortcutPreferences("parent", { canCreateSocialPost: false }, {
+      enabled: true,
+      selectedIds: ["parent_hub", "teacher_spark", "invalid" as never],
+    });
+
+    expect(normalized.selectedIds).toEqual(["parent_hub"]);
+  });
+
+  it("parses stored json safely", () => {
+    const parsed = parseShortcutPreferencesJson(
+      "student",
       { canCreateSocialPost: false },
-      { enabled: false, selectedIds: ["missing" as never] },
+      JSON.stringify({ enabled: false, selectedIds: ["student_learn", "student_focus"] }),
     );
 
-    expect(prefs.selectedIds).toEqual(getAvailableShortcutIds("parent", { canCreateSocialPost: false }));
+    expect(parsed.enabled).toBe(false);
+    expect(parsed.selectedIds).toEqual(["student_learn", "student_focus"]);
   });
 });

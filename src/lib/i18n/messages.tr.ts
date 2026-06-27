@@ -74,14 +74,18 @@ export const messagesTr = {
     focus: "Odak",
     learn: "Öğren",
     spark: "Spark",
-    shortcutSettings: {
-      eyebrow: "Kişiselleştirme",
-      title: "Alt kısayollar",
-      description: "Alttaki kaydırmalı kısayol çubuğunu açıp kapatabilir ve hangi simgelerin görüneceğini seçebilirsin.",
-      enabled: "Kısayol çubuğunu göster",
-      pick: "Görünecek kısayollar",
-      reset: "Varsayılana dön",
-    },
+  },
+  shortcutPrefs: {
+    eyebrow: "Kişiselleştirme",
+    title: "Alt kısayol çubuğu",
+    description:
+      "Ana ekranın altındaki hızlı erişim simgelerini seçin, çıkarın veya çubuğu tamamen kapatın.",
+    showBar: "Kısayol çubuğunu göster",
+    enabledHint: "Listeden istediğiniz kısayolları ekleyip çıkarabilirsiniz. En az bir kısayol seçili kalmalıdır.",
+    disabledHint: "Kısayol çubuğu kapalı. İstediğiniz zaman tekrar açabilirsiniz.",
+    selected: "Seçili",
+    add: "Ekle",
+    reset: "Varsayılana dön",
   },
   dockByRole: {
     student: {
