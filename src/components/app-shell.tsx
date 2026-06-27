@@ -10,6 +10,7 @@ import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
 import { LegalFooter } from "@/components/legal-footer";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleWelcomeStrip } from "@/components/role-welcome-strip";
+import { ShortcutScrollDock } from "@/components/shortcut-scroll-dock";
 import {
   getHeaderPrimaryAction,
   getRoleDashboardHref,
@@ -20,6 +21,7 @@ import {
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
+import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;
@@ -47,14 +49,8 @@ export function AppShell({
   const isStories = pathname.startsWith("/sparks");
   const isReels = pathname.startsWith("/micro");
   const isImmersive = isStories || isReels;
-  const isSocialSurface =
-    pathname === "/" ||
-    pathname.startsWith("/explore") ||
-    pathname.startsWith("/profile") ||
-    pathname.startsWith("/post");
   const hideQuickDock =
     isImmersive ||
-    isSocialSurface ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/create") ||
     pathname.startsWith("/questions") ||
@@ -90,11 +86,11 @@ export function AppShell({
         {children}
       </main>
 
+      {isImmersive ? null : <LegalFooter />}
+
       {hideQuickDock ? null : (
         <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
       )}
-
-      {isImmersive ? null : <LegalFooter />}
 
       {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
 
@@ -145,93 +141,70 @@ function QuickActionDock({
 
   if (isStudentGamificationRole(viewerRole)) {
     return (
-      <section className="role-dock-student premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
-        <p className="sr-only">{d.dailyActions}</p>
-        <div className="flex flex-wrap justify-center gap-1.5">
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/student">
-            {dock.student.hub}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/focus">
-            {dock.student.focus}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
-            {dock.student.learn}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/duels">
-            {dock.student.duels}
-          </Link>
-        </div>
-      </section>
+      <ShortcutScrollDock
+        items={[
+          { href: "/student", label: dock.student.hub, icon: "hub", primary: true },
+          { href: "/focus", label: dock.student.focus, icon: "focus" },
+          { href: "/learn", label: dock.student.learn, icon: "learn" },
+          { href: "/duels", label: dock.student.duels, icon: "duels" },
+          { href: ZIGO_PATHS.micro, label: m.navByRole.student.micro, icon: "micro" },
+          { href: "/store", label: m.dashboard.student.store, icon: "store" },
+        ]}
+        roleClassName="role-dock-student border-violet-100"
+        title={d.shortcuts}
+      />
     );
   }
 
   if (isParentSupervisionRole(viewerRole)) {
     return (
-      <section className="role-dock-parent premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-cyan-100 bg-white/95 p-2 backdrop-blur">
-        <div className="flex flex-wrap justify-center gap-1.5">
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-aqua to-cyan-600 text-white" href="/parent">
-            {dock.parent.hub}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/family">
-            {dock.parent.family}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
-            {dock.parent.learn}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/parent/requests">
-            {dock.parent.requests}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/questions">
-            {dock.parent.ask}
-          </Link>
-        </div>
-      </section>
+      <ShortcutScrollDock
+        items={[
+          { href: "/parent", label: dock.parent.hub, icon: "hub", primary: true },
+          { href: "/family", label: dock.parent.family, icon: "family" },
+          { href: "/learn", label: dock.parent.learn, icon: "learn" },
+          { href: "/parent/requests", label: dock.parent.requests, icon: "requests" },
+          { href: "/questions", label: dock.parent.ask, icon: "ask" },
+        ]}
+        roleClassName="role-dock-parent border-cyan-100"
+        title={d.shortcuts}
+      />
     );
   }
 
   if (isTeacherStudioRole(viewerRole)) {
+    const items = [
+      ...(canCreateSocialPost
+        ? [
+            { href: "/create?mode=story", label: dock.teacher.spark, icon: "spark" as const, primary: true },
+            { href: "/create?mode=reel", label: dock.teacher.micro, icon: "micro" as const, primary: true },
+          ]
+        : []),
+      { href: "/teacher", label: dock.teacher.studio, icon: "studio" as const, primary: !canCreateSocialPost },
+      { href: "/teacher#lesson-requests", label: dock.teacher.requests, icon: "requests" as const },
+      { href: "/questions", label: dock.teacher.ask, icon: "ask" as const },
+      { href: "/learn", label: m.nav.learn, icon: "learn" as const },
+    ];
+
     return (
-      <section className="role-dock-teacher premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-2 backdrop-blur">
-        <div className="flex flex-wrap justify-center gap-1.5">
-          {canCreateSocialPost ? (
-            <>
-              <Link className="zigo-compact-pill tap-scale rounded-xl bg-night text-white" href="/create?mode=story">
-                {dock.teacher.spark}
-              </Link>
-              <Link className="zigo-compact-pill tap-scale rounded-xl bg-night text-white" href="/create?mode=reel">
-                {dock.teacher.micro}
-              </Link>
-            </>
-          ) : null}
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/teacher">
-            {dock.teacher.studio}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/teacher#lesson-requests">
-            {dock.teacher.requests}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/questions">
-            {dock.teacher.ask}
-          </Link>
-        </div>
-      </section>
+      <ShortcutScrollDock
+        items={items}
+        roleClassName="role-dock-teacher border-slate-200"
+        title={d.shortcuts}
+      />
     );
   }
 
   return (
-    <section className="premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
-      <p className="sr-only">{d.dailyActions}</p>
-      <div className="flex flex-wrap justify-center gap-1.5">
-        <Link aria-label={d.askSafely} className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/questions">
-          {m.nav.ask}
-        </Link>
-        <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
-          {d.learn}
-        </Link>
-        <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href={dashboardHref}>
-          {m.nav.profile}
-        </Link>
-      </div>
-    </section>
+    <ShortcutScrollDock
+      items={[
+        { href: "/questions", label: m.nav.ask, icon: "ask", primary: true },
+        { href: "/learn", label: d.learn, icon: "learn" },
+        { href: dashboardHref, label: m.nav.profile, icon: "profile" },
+        { href: ZIGO_PATHS.micro, label: m.nav.micro, icon: "micro" },
+      ]}
+      title={d.shortcuts}
+    />
   );
 }
 

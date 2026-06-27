@@ -409,6 +409,33 @@ a,
     0 1px 0 rgb(255 255 255 / 0.84) inset;
 }
 
+.zigo-shortcut-scroll-track {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x;
+}
+
+.zigo-shortcut-scroll-track::-webkit-scrollbar {
+  display: none;
+}
+
+.shortcut-scroll-item {
+  scroll-snap-align: start;
+}
+
+.role-dock-student {
+  border-color: rgb(237 233 254);
+}
+
+.role-dock-parent {
+  border-color: rgb(207 250 254);
+}
+
+.role-dock-teacher {
+  border-color: rgb(226 232 240);
+}
+
 .premium-action-dock::before {
   pointer-events: none;
   position: absolute;
