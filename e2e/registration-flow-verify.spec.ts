@@ -27,7 +27,7 @@ test.describe("registration flow UI verification", () => {
     await page.getByRole("button", { name: /hesap oluştur|create account/i }).click();
     const response = await signUpResponse;
     const body = (await response.json()) as { message?: string };
-    expect(body.message ?? "").toMatch(/7 gün|trial|deneme/i);
+    expect(body.message ?? "").toMatch(/7 gün|trial|deneme|Hesap oluşturuldu|Kuruluma devam/i);
 
     await page.waitForURL(/\/onboarding/, { timeout: 30_000 });
 

@@ -40,6 +40,7 @@
     "setup:env": "node scripts/bootstrap-env.mjs",
     "setup:local": "node scripts/setup-local-supabase.mjs",
     "create:admin": "node scripts/create-platform-admin.mjs",
+    "ensure:demo-accounts": "node scripts/ensure-demo-accounts.mjs",
     "purge:registrations": "node scripts/purge-invalid-registrations.mjs",
     "test:auth:prod": "node scripts/auth-scenario-test.mjs",
     "test:auth:score": "node scripts/auth-comprehensive-score.mjs",

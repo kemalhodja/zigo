@@ -3,6 +3,8 @@
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
+import { loadProjectEnv } from "./live-test-utils.mjs";
+
 const root = process.cwd();
 const scripts = [
   "manual-student-journey.mjs",
@@ -22,6 +24,7 @@ function runScript(name) {
 }
 
 function main() {
+  loadProjectEnv();
   const outcomes = scripts.map((script) => ({ script, ok: runScript(script) }));
   const failed = outcomes.filter((item) => !item.ok);
 

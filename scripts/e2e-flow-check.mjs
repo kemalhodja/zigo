@@ -1,13 +1,10 @@
 /* global console, process, fetch, setImmediate */
 
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
 import { detectBaseUrl } from "./journey-utils.mjs";
-import { resetDemoSocialAccounts } from "./live-test-utils.mjs";
+import { loadProjectEnv, resetDemoSocialAccounts } from "./live-test-utils.mjs";
 
-const root = process.cwd();
 const DEMO_PASSWORD = "ZigoTest123!";
 
 const ACCOUNTS = {
@@ -26,21 +23,6 @@ const KNOWN_IDS = {
   admin: "00000000-0000-4000-8000-000000000401",
   seededQuestion: "00000000-0000-4000-8000-000000000501",
 };
-
-function loadEnvFile(name) {
-  const filePath = join(root, name);
-  if (!existsSync(filePath)) return;
-
-  for (const line of readFileSync(filePath, "utf8").split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const separator = trimmed.indexOf("=");
-    if (separator === -1) continue;
-    const key = trimmed.slice(0, separator).trim();
-    const value = trimmed.slice(separator + 1).trim().replace(/^['"]|['"]$/g, "");
-    if (!process.env[key]) process.env[key] = value;
-  }
-}
 
 function check(name, ok, message = "") {
   const item = { name, ok, message };
@@ -133,10 +115,7 @@ async function apiPost(baseUrl, path, cookieHeader, payload) {
 }
 
 async function main() {
-  loadEnvFile(".env.vercel.production.local");
-  loadEnvFile(".env.production.local");
-  loadEnvFile(".env.local");
-  loadEnvFile(".env");
+  loadProjectEnv();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

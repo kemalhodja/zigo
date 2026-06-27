@@ -86,14 +86,30 @@ export async function demoLogin(page: Page, role: DemoRole) {
 
   if (!response.ok()) {
     await page.goto("/auth");
-    await page.getByTestId(`demo-login-${role}`).waitFor();
-    await Promise.all([
-      page.waitForResponse(
-        (signIn) => signIn.url().includes("/api/auth/sign-in") && signIn.ok(),
-        { timeout: 30_000 },
-      ),
-      page.getByTestId(`demo-login-${role}`).click(),
-    ]);
+    const demoButton = page.getByTestId(`demo-login-${role}`);
+    if ((await demoButton.count()) > 0) {
+      await Promise.all([
+        page.waitForResponse(
+          (signIn) => signIn.url().includes("/api/auth/sign-in") && signIn.ok(),
+          { timeout: 30_000 },
+        ),
+        demoButton.click(),
+      ]);
+    } else {
+      const signInMode = page.getByTestId("auth-mode-sign-in");
+      if ((await signInMode.count()) > 0) {
+        await signInMode.click();
+      }
+      await page.locator('input[name="email"], input[type="email"]').first().fill(DEMO_ACCOUNTS[role]);
+      await page.locator('input[name="password"], input[type="password"]').first().fill(DEMO_PASSWORD);
+      await Promise.all([
+        page.waitForResponse(
+          (signIn) => signIn.url().includes("/api/auth/sign-in") && signIn.ok(),
+          { timeout: 30_000 },
+        ),
+        page.getByRole("button", { name: /sign in|giriş yap/i }).click(),
+      ]);
+    }
   }
 
   await page.goto("/");

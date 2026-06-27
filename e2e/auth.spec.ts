@@ -12,6 +12,10 @@ test.describe("demo auth flows", () => {
   });
 
   test("auth page shows demo login panel for local demo", async ({ page }) => {
+    test.skip(
+      Boolean(process.env.E2E_BASE_URL && !process.env.E2E_BASE_URL.includes("localhost") && !process.env.E2E_BASE_URL.includes("127.0.0.1")),
+      "Demo login panel is only shown for local Supabase demo mode.",
+    );
     await page.goto("/auth");
     await expect(page.getByTestId("demo-login-panel")).toBeVisible();
     await expect(page.getByTestId("demo-login-student")).toBeVisible();

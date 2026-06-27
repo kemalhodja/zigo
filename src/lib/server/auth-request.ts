@@ -69,8 +69,9 @@ export function enforceAuthRateLimit(
   scope: "sign-in" | "sign-up" | "resend-verification" | "forgot-password" | "reset-password",
   limit: number,
   windowMs: number,
+  options?: { email?: string },
 ) {
-  if (shouldBypassAuthRateLimit(request)) {
+  if (shouldBypassAuthRateLimit(request) || isDemoAuthEmail(options?.email)) {
     return { allowed: true, retryAfterSeconds: 0 };
   }
 

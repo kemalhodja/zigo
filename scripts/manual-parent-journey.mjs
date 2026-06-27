@@ -8,16 +8,15 @@ import {
   apiSignIn,
   detectBaseUrl,
   journeyStep,
-  loadEnvFile,
   pageOk,
   printJourneySummary,
 } from "./journey-utils.mjs";
+import { loadProjectEnv } from "./live-test-utils.mjs";
 
 const PARENT_EMAIL = "parent@zigo.test";
 
 async function main() {
-  loadEnvFile(".env.local");
-  loadEnvFile(".env");
+  loadProjectEnv();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

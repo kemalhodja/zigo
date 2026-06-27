@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const rawBody = await request.json();
     const body = authSchema.parse(rawBody);
 
-    const rateLimit = enforceAuthRateLimit(request, "sign-in", 12, 15 * 60_000);
+    const rateLimit = enforceAuthRateLimit(request, "sign-in", 12, 15 * 60_000, { email: body.email });
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         "Çok fazla giriş denemesi. Bir süre bekleyip tekrar dene.",

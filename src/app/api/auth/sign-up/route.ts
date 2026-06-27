@@ -44,7 +44,7 @@ export async function POST(request: Request) {
           organizationType: body.organizationType ?? null,
         };
 
-    const rateLimit = enforceAuthRateLimit(request, "sign-up", 6, 60 * 60_000);
+    const rateLimit = enforceAuthRateLimit(request, "sign-up", 6, 60 * 60_000, { email: body.email });
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         "Çok fazla kayıt denemesi. Lütfen daha sonra tekrar dene.",

@@ -9,16 +9,15 @@ import {
   DEMO_PASSWORD,
   detectBaseUrl,
   journeyStep as step,
-  loadEnvFile,
   pageOk,
 } from "./journey-utils.mjs";
+import { loadProjectEnv } from "./live-test-utils.mjs";
 
 const STUDENT_EMAIL = "student@zigo.test";
 const DUEL_TOPIC_ID = "00000000-0000-4000-8000-000000000602";
 
 async function main() {
-  loadEnvFile(".env.local");
-  loadEnvFile(".env");
+  loadProjectEnv();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
