@@ -1,4 +1,4 @@
-/* global console, process, fetch */
+/* global console, fetch */
 
 const BASE = "https://zigo-kohl.vercel.app";
 

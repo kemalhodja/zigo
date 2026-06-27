@@ -1,10 +1,10 @@
-import { isErrorResponse, jsonError, jsonNotFound, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { getUserInterestAreaIds } from "@/features/profile/services";
 import {
   createAnswerBodySchema,
   createTeacherAnswer,
 } from "@/features/questions";
+import { isErrorResponse, jsonError, jsonNotFound, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
 export const POST = withApiHandler(async (request: Request) => {

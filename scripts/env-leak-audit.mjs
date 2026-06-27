@@ -16,6 +16,7 @@ const SECRET_PATTERNS = [
 const SKIP_DIRS = new Set(["node_modules", ".next", "out", "dist", "android", ".git"]);
 const SKIP_FILES = new Set([
   ".env.example",
+  ".env.production.example",
   ".env.staging.example",
   "supabase/zigo-full-migrations.sql",
 ]);
@@ -76,7 +77,12 @@ try {
     .filter(Boolean);
 
   for (const file of tracked) {
-    if (/^\.env(\.|$)/.test(file) && file !== ".env.example" && file !== ".env.staging.example") {
+    if (
+      /^\.env(\.|$)/.test(file) &&
+      file !== ".env.example" &&
+      file !== ".env.staging.example" &&
+      file !== ".env.production.example"
+    ) {
       failures.push(`Tracked env file must not be committed: ${file}`);
     }
   }

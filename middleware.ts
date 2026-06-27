@@ -2,6 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 import {
+  getRoleRedirectForPath,
+  isAdminPath,
+  resolveAdminPageRedirect,
+  resolveDashboardAliasRedirect,
+} from "@/features/shared/middleware/role-guards";
+import {
   authGateRedirectPath,
   isEmailConfirmed,
   isPublicAuthCheckpointPath,
@@ -9,12 +15,6 @@ import {
   requiresEmailConfirmation,
   resolveAuthGate,
 } from "@/lib/domain/auth-gates";
-import {
-  getRoleRedirectForPath,
-  isAdminPath,
-  resolveAdminPageRedirect,
-  resolveDashboardAliasRedirect,
-} from "@/features/shared/middleware/role-guards";
 import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
 import {
   isSupabaseAuthCookie,

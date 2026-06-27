@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 
 type CalendarAgendaViewProps = {
   empty?: ReactNode;
@@ -9,14 +9,20 @@ type CalendarAgendaViewProps = {
 };
 
 export function CalendarAgendaView({ empty, children, label }: CalendarAgendaViewProps) {
+  const hasChildren = Children.count(children) > 0;
+
   return (
     <div className="mt-3">
       {label ? (
         <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
       ) : null}
-      <div aria-label={label} className="zigo-calendar-agenda no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
-        {children}
-      </div>
+      {hasChildren ? (
+        <div aria-label={label} className="zigo-calendar-agenda no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
+          {children}
+        </div>
+      ) : (
+        empty ?? null
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { setOrganizationTypeSchema } from "@/features/profile/types";
 import { setUserOrganizationType } from "@/features/profile/services";
+import { setOrganizationTypeSchema } from "@/features/profile/types";
 import { isErrorResponse, jsonSuccess, requireAuthUser } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";

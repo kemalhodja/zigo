@@ -1,11 +1,12 @@
+import { NextResponse } from "next/server";
+
+import { markLessonRequestThreadRead } from "@/features/lesson/services";
 import {
   assertNotStudentRole,
   requireLessonRequestParticipant,
 } from "@/features/lesson/services/lesson-access.service";
-import { markLessonRequestThreadRead } from "@/features/lesson/services";
 import { isErrorResponse, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {

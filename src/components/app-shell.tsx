@@ -35,6 +35,7 @@ type AppShellProps = {
 export function AppShell({
   canCreateSocialPost,
   children,
+  isPreviewMode = false,
   roleAccentLabel,
   teacherInboxCount = 0,
   lessonRequestBadgeCount = 0,
@@ -66,6 +67,8 @@ export function AppShell({
       }`}
     >
       {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
+
+      {isPreviewMode ? <PreviewModeBanner /> : null}
 
       {!isImmersive ? (
         <a
@@ -114,6 +117,20 @@ export function AppShell({
   );
 }
 
+function PreviewModeBanner() {
+  const m = useMessages();
+
+  return (
+    <Link
+      className="mx-3 mt-2 block rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-bold text-amber-900"
+      href="/setup"
+    >
+      {m.preview.message}{" "}
+      <span className="font-black underline">{m.preview.setup}</span>
+    </Link>
+  );
+}
+
 function QuickActionDock({
   canCreateSocialPost,
   viewerRole,
@@ -129,6 +146,7 @@ function QuickActionDock({
   if (isStudentGamificationRole(viewerRole)) {
     return (
       <section className="role-dock-student premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
+        <p className="sr-only">{d.dailyActions}</p>
         <div className="flex flex-wrap justify-center gap-1.5">
           <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/student">
             {dock.student.hub}
@@ -201,9 +219,13 @@ function QuickActionDock({
 
   return (
     <section className="premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
+      <p className="sr-only">{d.dailyActions}</p>
       <div className="flex flex-wrap justify-center gap-1.5">
         <Link aria-label={d.askSafely} className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/questions">
           {m.nav.ask}
+        </Link>
+        <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
+          {d.learn}
         </Link>
         <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href={dashboardHref}>
           {m.nav.profile}

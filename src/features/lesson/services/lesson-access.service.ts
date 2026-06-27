@@ -1,9 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { NextResponse } from "next/server";
 
 import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { getLessonRequestById, type LessonRequestRow } from "@/lib/domain/lesson-requests/queries";
 import type { Database, UserRole } from "@/lib/supabase/database.types";
-import type { NextResponse } from "next/server";
 
 export function assertNotStudentRole(role: UserRole): NextResponse | null {
   if (role === "student") {

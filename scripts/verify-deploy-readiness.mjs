@@ -33,6 +33,8 @@ function check(name, ok, message = "") {
 }
 
 function main() {
+  loadEnvFile(".env.vercel.production.local");
+  loadEnvFile(".env.production.local");
   loadEnvFile(".env.local");
   loadEnvFile(".env");
 

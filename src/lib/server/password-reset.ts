@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getSiteUrl } from "@/lib/domain/deploy-config";
-import type { Database } from "@/lib/supabase/database.types";
 import { buildRecoveryUrl, sendRecoveryEmail } from "@/lib/server/recovery-email";
+import type { Database } from "@/lib/supabase/database.types";
 
 export const FORGOT_PASSWORD_SUCCESS =
   "Şifre sıfırlama bağlantısı e-posta adresine gönderildi. Gelen kutunu ve spam klasörünü kontrol et.";

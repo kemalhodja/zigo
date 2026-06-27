@@ -62,12 +62,13 @@ vi.mock("@/lib/domain/live-gates", () => ({
 
 import { submitQuizAttempt } from "@/lib/domain/learning";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
-import { createTeacherAnswer } from "@/lib/domain/questions/mutations";
+import { createTeacherAnswer } from "@/lib/domain/questions";
 import { createSocialPost } from "@/lib/domain/social";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 const sampleQuestionId = "33333333-3333-4333-8333-333333333333";
+const routeContext = {} as never;
 
 describe("API route handlers", () => {
   beforeEach(() => {
@@ -130,7 +131,7 @@ describe("API route handlers", () => {
 
   it("GET /api/social/posts returns feed meta", async () => {
     vi.mocked(getCurrentProfile).mockResolvedValue(null);
-    const response = await socialPostsGet(new Request("http://localhost/api/social/posts"));
+    const response = await socialPostsGet(new Request("http://localhost/api/social/posts"), routeContext);
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.meta).toEqual(expect.objectContaining({ limit: 30, offset: 0 }));
@@ -143,6 +144,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ caption: "Test", areaId: 1 }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(401);
   });
@@ -158,6 +160,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ caption: "Test", areaId: 1 }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(403);
   });
@@ -174,6 +177,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ caption: "Test", areaId: 1 }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(403);
   });
@@ -193,6 +197,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ caption: "Test", areaId: 1 }),
       }),
+      routeContext,
     );
 
     expect(response.status).toBe(201);
@@ -206,6 +211,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ quizId: "00000000-0000-4000-8000-000000000701" }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(401);
   });
@@ -217,6 +223,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ quizId: "00000000-0000-4000-8000-000000000701" }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(403);
   });
@@ -228,6 +235,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ quizId: "00000000-0000-4000-8000-000000000701" }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(400);
   });
@@ -244,6 +252,7 @@ describe("API route handlers", () => {
           selectedOption: 1,
         }),
       }),
+      routeContext,
     );
 
     expect(response.status).toBe(201);
@@ -257,6 +266,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ questionId: sampleQuestionId, content: "A long enough answer." }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(401);
   });
@@ -282,6 +292,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ questionId: sampleQuestionId, content: "A long enough answer." }),
       }),
+      routeContext,
     );
     expect(response.status).toBe(403);
   });
@@ -309,6 +320,7 @@ describe("API route handlers", () => {
         method: "POST",
         body: JSON.stringify({ questionId: sampleQuestionId, content: "A long enough answer." }),
       }),
+      routeContext,
     );
 
     expect(response.status).toBe(201);

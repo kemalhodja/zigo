@@ -1,3 +1,4 @@
+export { getChildProfiles } from "@/lib/domain/children";
 export {
   createProfile,
   getCurrentProfile,
@@ -8,5 +9,3 @@ export {
   updateUserGradeLevel,
   updateUserProfile,
 } from "@/lib/domain/profiles";
-
-export { getChildProfiles } from "@/lib/domain/children";

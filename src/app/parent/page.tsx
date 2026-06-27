@@ -1,36 +1,36 @@
 import Link from "next/link";
 
-import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
-import { ParentEcosystemHub } from "@/features/booking/components/parent-ecosystem-hub";
 import { ChildActivityTimeline } from "@/components/child-activity-timeline";
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
 import { ParentChildrenFocusCard } from "@/components/parent-children-focus-card";
 import { ParentFocusOverviewCard } from "@/components/parent-focus-overview-card";
-import { SocialAvatar, SocialPill } from "@/components/social-primitives";
+import { SocialPill } from "@/components/social-primitives";
 import { StateCard } from "@/components/state-card";
+import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
+import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
+import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
+import { ParentEcosystemHub } from "@/features/booking/components/parent-ecosystem-hub";
 import { ParentDevelopmentDashboard } from "@/features/dashboard/components/parent-development-dashboard";
 import {
   getParentDevelopmentDashboardData,
   type ParentDevelopmentDashboardData,
 } from "@/features/dashboard/services/development-dashboard.service";
 import { RecommendedTeachersPanel } from "@/features/matching/components/recommended-teachers-panel";
-import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
-import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
+import { getParentWeeklyProgressSummary } from "@/lib/domain/ecosystem";
 import { getParentChildrenFocusStats, getParentFocusOverview } from "@/lib/domain/focus-analytics";
-import { getParentWeeklyProgressSummary } from "@/lib/domain/ecosystem/reporting";
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { getServerMessages } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
 import type { AvatarAssets } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 type ParentDashboardChild = {
   id: string;

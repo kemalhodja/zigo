@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  LESSON_COMPLETION_REWARD_POINTS,
   describeLessonCompletionReward,
+  LESSON_COMPLETION_REWARD_POINTS,
 } from "@/features/booking/services/lesson-completion-rewards.service";
 
 describe("lesson completion rewards", () => {

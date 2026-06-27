@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { DEMO_ACCOUNTS, DEMO_PASSWORD, demoLogin, isDemoAuthAvailable } from "./helpers";
+import { demoLogin, isDemoAuthAvailable } from "./helpers";
 
 test.describe("Billing — Havale / EFT", () => {
   test.beforeEach(async ({ request }) => {

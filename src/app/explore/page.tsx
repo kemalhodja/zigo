@@ -327,6 +327,7 @@ function ExploreTrendRadar({
   return (
     <section className="-mx-4 space-y-0">
       <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-5 text-white">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-white/70">{e.smartDiscovery}</p>
         <h1 className="text-2xl font-black leading-tight">{radarTitle}</h1>
         <p className="mt-2 text-sm font-bold leading-6 text-white/75">{e.trendDesc}</p>
       </div>
@@ -358,7 +359,10 @@ function ExploreTopicBridges({ messages }: { messages: Messages }) {
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-black text-night">{e.topicBridges}</h2>
+        <div>
+          <h2 className="text-base font-black text-night">{e.topicBridges}</h2>
+          <p className="mt-0.5 text-xs font-bold text-slate-500">{e.jumpLoop}</p>
+        </div>
         <Link className="text-xs font-black text-crystal" href="/onboarding">
           {e.pickAreas}
         </Link>

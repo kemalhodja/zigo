@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export {
-  upsertStudentNeedSchema,
   type MatchedTeacher,
+  upsertStudentNeedSchema,
 } from "@/lib/domain/ecosystem/matching";
 
 export const matchingQuerySchema = z.object({

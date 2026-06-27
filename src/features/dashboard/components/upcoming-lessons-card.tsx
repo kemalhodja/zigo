@@ -2,8 +2,8 @@ import {
   CalendarAgendaCard,
   CalendarAgendaView,
 } from "@/features/booking/components/calendar-agenda-view";
-import { LiveLessonActions } from "@/features/live-lessons/components/live-lesson-actions";
 import type { UpcomingLessonItem } from "@/features/dashboard/services/development-dashboard.service";
+import { LiveLessonActions } from "@/features/live-lessons/components/live-lesson-actions";
 
 type UpcomingLessonsCardProps = {
   lessons: UpcomingLessonItem[];

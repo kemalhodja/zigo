@@ -1,17 +1,17 @@
 import {
-  createLessonRequestMessageBodySchema,
-  updateLessonRequestBodySchema,
-} from "@/features/lesson/types";
-import {
-  assertNotStudentRole,
-  requireLessonRequestParticipant,
-} from "@/features/lesson/services/lesson-access.service";
-import {
   createLessonRequestMessage,
   getLessonRequestThread,
   markLessonRequestThreadRead,
   updateLessonRequestStatus,
 } from "@/features/lesson/services";
+import {
+  assertNotStudentRole,
+  requireLessonRequestParticipant,
+} from "@/features/lesson/services/lesson-access.service";
+import {
+  createLessonRequestMessageBodySchema,
+  updateLessonRequestBodySchema,
+} from "@/features/lesson/types";
 import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";

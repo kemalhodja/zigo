@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 
 import {
   handleApiError,
-  jsonError,
-  jsonSuccess,
   mapToStandardError,
 } from "@/features/shared/errors/global-error-handler";
 
@@ -42,7 +40,6 @@ export function respondWithDomainError(error: unknown, fallbackMessage: string, 
 
 export {
   DomainForbiddenError,
-  RateLimitExceededError,
   handleApiError,
   jsonError,
   jsonGone,
@@ -50,4 +47,5 @@ export {
   jsonSuccess,
   jsonSuccessWithMeta,
   mapToStandardError,
+  RateLimitExceededError,
 } from "@/features/shared/errors/global-error-handler";

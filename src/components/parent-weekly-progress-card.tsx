@@ -1,4 +1,4 @@
-import type { WeeklyProgressSummary } from "@/lib/domain/ecosystem/reporting";
+import type { WeeklyProgressSummary } from "@/lib/domain/ecosystem";
 
 type ParentWeeklyProgressCardProps = {
   summary: WeeklyProgressSummary;

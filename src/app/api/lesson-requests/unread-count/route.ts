@@ -1,7 +1,8 @@
+import { NextResponse } from "next/server";
+
 import { getLessonRequestUnreadCount } from "@/features/lesson/services";
 import { isErrorResponse, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export const GET = withApiHandler(async () => {

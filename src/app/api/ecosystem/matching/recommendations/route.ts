@@ -1,8 +1,8 @@
-import { recommendationsQuerySchema } from "@/features/matching/types/recommendations.schemas";
 import {
   getSmartRecommendations,
   getTeachersForSubject,
 } from "@/features/matching/services/recommendations.service";
+import { recommendationsQuerySchema } from "@/features/matching/types/recommendations.schemas";
 import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";

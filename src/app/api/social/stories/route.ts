@@ -1,10 +1,10 @@
+import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import {
   createStory,
   createStorySchema,
   getActiveStories,
 } from "@/features/social";
-import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
 export const GET = withApiHandler(async () => {

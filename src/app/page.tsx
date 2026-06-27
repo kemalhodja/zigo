@@ -219,6 +219,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       {viewer.showStudentStrip ? <StudyWithMeRail moments={studyMoments} showPreview={false} /> : null}
 
+      {showStudentHomeModules ? <HomeLearningPulse messages={m} /> : null}
+
       <FeedRefreshControl activeFeed={activeFeed} />
 
       {showStudentHomeModules ? <TodayLearningCard copy={m.feedEnhancements} /> : null}
@@ -332,6 +334,40 @@ function StoryTrayItem({
         <span className="zigo-fit-text block max-w-[4.5rem] text-center text-zigo-micro font-semibold text-crystal">{story.missionMeta}</span>
       ) : null}
     </Link>
+  );
+}
+
+function HomeLearningPulse({ messages }: { messages: Messages }) {
+  const f = messages.feed;
+  const z = messages.zigo;
+  const trendingTopics = [
+    { href: "/micro", label: f.microToWatch },
+    { href: "/learn", label: f.quiz },
+    { href: "/explore", label: f.fastVerified },
+  ];
+
+  return (
+    <section className="-mx-4 border-b border-violet-100 bg-gradient-to-r from-violet-50 to-pink-50 px-4 py-3">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{f.feedPulse}</p>
+      <div className="mt-2 zigo-action-grid text-center font-black">
+        <Link className="zigo-action-chip zigo-quick-action-primary tap-scale rounded-xl text-white" href="/micro">
+          {z.micro}
+        </Link>
+        <Link className="zigo-action-chip zigo-quick-action-secondary tap-scale rounded-xl text-violet-700" href="/learn">
+          {f.quiz}
+        </Link>
+        <Link className="zigo-action-chip tap-scale rounded-xl border border-slate-200 bg-white text-night" href="/questions">
+          {f.askSafely}
+        </Link>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {trendingTopics.map((topic) => (
+          <Link className="zigo-stat-chip rounded-full bg-white px-3 py-1 text-crystal" href={topic.href} key={topic.href}>
+            {topic.label}
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 

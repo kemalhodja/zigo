@@ -1,11 +1,11 @@
-import { RateLimitExceededError, isErrorResponse, jsonError, jsonSuccess, jsonSuccessWithMeta, requireAuthenticatedProfile } from "@/features/shared";
+import { isErrorResponse, jsonError, jsonSuccess, jsonSuccessWithMeta, RateLimitExceededError, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import {
   contentReportSchema,
   contentReportStatusSchema,
   reportSocialPost,
   updateContentReportStatus,
 } from "@/features/social";
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";

@@ -25,7 +25,7 @@ npm run test:acceptance    # platform score ≥95
 
 ## Migration target
 
-Current bundle: **001–056** (`MIGRATION_TARGET = 56` on `/api/setup/health`).
+Current bundle: **001–055** (`MIGRATION_TARGET = 55` on `/api/setup/health`). Latest migrations may extend to **056+** during active development.
 
 Apply on every hosted Supabase project before launch:
 

@@ -9,8 +9,8 @@ const failures = [];
 const required = [
   ["supabase/migrations/006_platform_admin_ops.sql", "verify_teacher"],
   ["src/app/api/admin/teachers/verify/route.ts", "verifyTeacher"],
-  ["src/app/api/social/posts/route.ts", "is_verified"],
-  ["src/app/api/answers/route.ts", "is_verified"],
+  ["src/app/api/social/posts/route.ts", ["is_verified", "requireVerified: true"]],
+  ["src/app/api/answers/route.ts", ["is_verified", "requireVerified: true"]],
   ["src/app/api/interests/route.ts", "403"],
   ["src/components/admin-teacher-actions.tsx", "verify"],
 ];
@@ -22,8 +22,9 @@ for (const [relativePath, marker] of required) {
     continue;
   }
   const source = readFileSync(path, "utf8");
-  if (!source.includes(marker)) {
-    failures.push(`${relativePath} missing marker ${marker}`);
+  const markers = Array.isArray(marker) ? marker : [marker];
+  if (!markers.some((entry) => source.includes(entry))) {
+    failures.push(`${relativePath} missing marker ${markers.join(" or ")}`);
   }
 }
 

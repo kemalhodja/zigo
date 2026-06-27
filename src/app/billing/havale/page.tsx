@@ -12,8 +12,8 @@ import {
   hasBankTransferConfigured,
   resolveBankTransferPlan,
 } from "@/lib/domain/bank-transfer";
-import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 

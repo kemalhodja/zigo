@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import {
   createAvailabilitySlot,
   deleteAvailabilitySlot,
@@ -11,7 +13,6 @@ import {
 import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
 
 export const GET = withApiHandler(async (request: Request) => {
   const supabase = await createClient();

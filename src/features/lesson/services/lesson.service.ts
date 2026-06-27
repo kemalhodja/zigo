@@ -3,7 +3,7 @@ export {
   createLessonRequestMessage,
   updateLessonRequestStatus,
 } from "@/lib/domain/lesson-requests/mutations";
-
+export { notifyLessonRequestEvent } from "@/lib/domain/lesson-requests/notify";
 export {
   getLessonRequestById,
   getLessonRequestsForUser,
@@ -13,5 +13,3 @@ export {
   getVerifiedTeachersForParentLessonRequest,
   markLessonRequestThreadRead,
 } from "@/lib/domain/lesson-requests/queries";
-
-export { notifyLessonRequestEvent } from "@/lib/domain/lesson-requests/notify";

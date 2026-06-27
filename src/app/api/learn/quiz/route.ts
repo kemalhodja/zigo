@@ -1,7 +1,4 @@
 import {
-  completeVideoBodySchema,
-  completeVideoPost,
-  getQuizQuestionsForPlay,
   submitQuizAttempt,
   submitQuizBodySchema,
 } from "@/features/learning";

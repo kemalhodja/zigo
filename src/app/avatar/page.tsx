@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { AvatarStore } from "@/components/avatar-store";
-import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
 import { StateCard } from "@/components/state-card";
+import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getLearningProgressStats } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";

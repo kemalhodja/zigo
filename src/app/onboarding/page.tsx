@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 import { InterestSelector } from "@/components/interest-selector";
-import { SponsoredCampaignsRail } from "@/components/sponsored-campaigns-rail";
 import { ProfileForm } from "@/components/profile-form";
 import { SignOutButton } from "@/components/sign-out-button";
+import { SponsoredCampaignsRail } from "@/components/sponsored-campaigns-rail";
 import { StateCard } from "@/components/state-card";
 import { SupabaseSetupCard } from "@/components/supabase-setup-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";

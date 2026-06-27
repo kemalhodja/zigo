@@ -1,4 +1,4 @@
-/* global console, process, fetch */
+/* global console, process, fetch, FormData */
 
 /**
  * Production billing & role scenario probe for zigo-kohl.vercel.app

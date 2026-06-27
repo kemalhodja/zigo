@@ -1,13 +1,12 @@
 import { z } from "zod";
 
+export type { LessonRequestRow } from "@/lib/domain/lesson-requests/queries";
 export {
-  createLessonRequestSchema,
   createLessonRequestMessageSchema,
+  createLessonRequestSchema,
   lessonRequestStatusSchema,
   updateLessonRequestStatusSchema,
 } from "@/lib/domain/lesson-requests/schemas";
-
-export type { LessonRequestRow } from "@/lib/domain/lesson-requests/queries";
 
 export const createLessonRequestBodySchema = z.object({
   receiverId: z.string().uuid(),

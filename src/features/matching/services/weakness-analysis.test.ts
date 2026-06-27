@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  type AssessmentSession,
   detectWeaknessesFromSessions,
   mergeRecentAssessmentSessions,
   scoreToWeaknessLevel,
-  type AssessmentSession,
 } from "./weakness-analysis.service";
 
 const sessions: AssessmentSession[] = [

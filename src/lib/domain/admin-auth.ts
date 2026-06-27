@@ -1,5 +1,5 @@
-import { isErrorResponse } from "@/features/shared/api/require-auth";
 import { requirePlatformAdminAccess } from "@/features/shared/api/rbac";
+import { isErrorResponse } from "@/features/shared/api/require-auth";
 import { createClient } from "@/lib/supabase/server";
 
 /** @deprecated Prefer `withAdminApiHandler` or `requirePlatformAdminAccess` from `@/features/shared/api/rbac`. */

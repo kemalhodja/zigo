@@ -12,7 +12,7 @@ npm run setup:env          # copy .env.local template
 npm run dev                # http://localhost:3000
 ```
 
-Apply database migrations **001–044** via Supabase SQL Editor (`supabase/zigo-full-migrations.sql`) or `npm run migrations:cloud`.
+Apply database migrations **001–055** via Supabase SQL Editor (`supabase/zigo-full-migrations.sql`) or `npm run migrations:cloud`.
 
 ## Quality gates
 

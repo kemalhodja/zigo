@@ -12,11 +12,19 @@
     "offline-probe.mjs",
     "test-scorecard.mjs",
     "live-test-utils.mjs",
-    "ensure-app-server.mjs"
+    "ensure-app-server.mjs",
+    "enable-supabase-recovery-email.mjs",
+    "lesson-request-safety-audit.mjs",
+    "set-bank-env-production.mjs",
+    "test-forgot-password-production.mjs"
   ],
   "components": [
     "social-primitives.tsx",
     "social-media-scenes.tsx",
-    "state-card.tsx"
+    "state-card.tsx",
+    "feed-trust-strip.tsx",
+    "parent-ecosystem-hub.tsx",
+    "teacher-bookings-panel.tsx",
+    "teacher-slot-selector.tsx"
   ]
 }

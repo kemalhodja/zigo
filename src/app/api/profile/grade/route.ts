@@ -1,5 +1,5 @@
-import { updateGradeLevelBodySchema } from "@/features/profile/types";
 import { updateUserGradeLevel } from "@/features/profile/services";
+import { updateGradeLevelBodySchema } from "@/features/profile/types";
 import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";

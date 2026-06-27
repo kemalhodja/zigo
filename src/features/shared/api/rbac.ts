@@ -1,9 +1,9 @@
-import type { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { NextResponse } from "next/server";
 
 import { isErrorResponse, requireAuthenticatedProfile } from "@/features/shared/api/require-auth";
-import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import type { UserProfile } from "@/lib/domain/profiles";
 import type { Database, UserRole } from "@/lib/supabase/database.types";

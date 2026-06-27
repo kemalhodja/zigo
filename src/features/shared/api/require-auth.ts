@@ -1,5 +1,5 @@
-import { NextResponse, type NextResponse as NextResponseType } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { NextResponse, type NextResponse as NextResponseType } from "next/server";
 
 import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { getCurrentProfile, type UserProfile } from "@/lib/domain/profiles";

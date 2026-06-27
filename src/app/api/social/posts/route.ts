@@ -2,6 +2,13 @@ import { revalidateTag } from "next/cache";
 
 import { getUserInterestAreaIds } from "@/features/profile/services";
 import {
+  isErrorResponse,
+  jsonError,
+  jsonSuccessWithMeta,
+  requireAuthenticatedProfile,
+} from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import {
   createSocialPost,
   createSocialPostSchema,
   getSocialFeed,
@@ -9,13 +16,6 @@ import {
   socialFeedCacheTag,
   socialFeedQuerySchema,
 } from "@/features/social";
-import {
-  isErrorResponse,
-  jsonError,
-  jsonSuccessWithMeta,
-  requireAuthenticatedProfile,
-} from "@/features/shared";
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import {
@@ -34,6 +34,7 @@ export const GET = withApiHandler(async (request: Request) => {
     cursor: searchParams.get("cursor") ?? undefined,
     postType: searchParams.get("postType") ?? undefined,
   });
+  const feedLimit = Math.min(50, Math.max(1, parsed.limit ?? 30));
 
   const postTypes = parsed.postType
     ? parsed.postType.split(",").filter((value): value is "normal" | "quiz" | "micro" =>
@@ -42,7 +43,7 @@ export const GET = withApiHandler(async (request: Request) => {
     : undefined;
 
   const page = await getSocialFeed(supabase, profile?.id, {
-    limit: parsed.limit,
+    limit: feedLimit,
     cursor: parsed.cursor,
     offset: parsed.cursor ? undefined : parsed.offset,
     postTypes,

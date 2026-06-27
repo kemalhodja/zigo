@@ -6,7 +6,6 @@ export {
   createQuizSchema,
   submitQuizSchema,
 } from "@/lib/domain/learning/schemas";
-
 export { submitQuizSchema as submitQuizBodySchema } from "@/lib/domain/learning/schemas";
 export { completeVideoSchema as completeVideoBodySchema } from "@/lib/domain/learning/schemas";
 

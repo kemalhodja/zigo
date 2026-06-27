@@ -7,6 +7,7 @@ import { LessonRequestNavBadge } from "@/features/lesson/components/lesson-reque
 import { getBottomNavItems, getRoleNavLabels } from "@/lib/domain/role-navigation";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
+import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
 export function BottomNav({
   canCreateSocialPost = false,
@@ -48,6 +49,7 @@ export function BottomNav({
     >
       {navItems.map((item) => {
         const isActive = item.match(pathname);
+        const isMicroNav = item.href === ZIGO_PATHS.micro;
 
         return (
           <Link
@@ -64,6 +66,7 @@ export function BottomNav({
             }`}
             href={item.href}
             key={item.href}
+            data-nav-micro={isMicroNav ? "true" : undefined}
           >
             <span className={`role-nav-icon flex size-9 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
               <NavIcon active={isActive} name={item.icon} variant={variant} />

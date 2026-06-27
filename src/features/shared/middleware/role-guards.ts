@@ -1,5 +1,5 @@
-import type { UserRole } from "@/lib/supabase/database.types";
 import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 /** Zigo login entry (Supabase session/JWT in cookies — not NextAuth). */
 export const AUTH_LOGIN_PATH = "/auth";

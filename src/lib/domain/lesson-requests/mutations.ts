@@ -1,18 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { z } from "zod";
 
-import { DomainForbiddenError } from "@/lib/domain/domain-errors";
-import { getUserInterestAreaIds } from "@/lib/domain/profiles";
-import { runModeratedSafeTextAction } from "@/lib/domain/moderation-policy";
-import type { Database } from "@/lib/supabase/database.types";
-
-import { getLessonRequestById } from "./queries";
-import { notifyLessonRequestEvent } from "./notify";
 import {
   notifyLessonRequestCreated,
   notifyLessonRequestSentConfirmation,
   notifyLessonRequestStatusChange,
 } from "@/features/notifications/services/dispatch.service";
+import { DomainForbiddenError } from "@/lib/domain/domain-errors";
+import { runModeratedSafeTextAction } from "@/lib/domain/moderation-policy";
+import { getUserInterestAreaIds } from "@/lib/domain/profiles";
+import type { Database } from "@/lib/supabase/database.types";
+
+import { notifyLessonRequestEvent } from "./notify";
+import { getLessonRequestById } from "./queries";
 import {
   createLessonRequestMessageSchema,
   createLessonRequestSchema,

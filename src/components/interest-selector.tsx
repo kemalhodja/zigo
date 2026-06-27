@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { markRegistrationCampaignAnnouncementPending } from "@/lib/client/registration-campaign-announcement";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { markRegistrationCampaignAnnouncementPending } from "@/lib/client/registration-campaign-announcement";
 import type { GradeCategoryKey } from "@/lib/domain/education-catalog";
 import { groupEducationAreasByGrade, resolveGradeCategory } from "@/lib/domain/education-catalog";
 import {

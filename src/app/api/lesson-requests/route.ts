@@ -1,14 +1,14 @@
-import { RateLimitExceededError } from "@/features/shared/errors/global-error-handler";
-import {
-  createLessonRequestBodySchema,
-} from "@/features/lesson/types";
-import { assertNotStudentRole } from "@/features/lesson/services/lesson-access.service";
 import {
   createLessonRequest,
   getLessonRequestsForUser,
 } from "@/features/lesson/services";
+import { assertNotStudentRole } from "@/features/lesson/services/lesson-access.service";
+import {
+  createLessonRequestBodySchema,
+} from "@/features/lesson/types";
 import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { RateLimitExceededError } from "@/features/shared/errors/global-error-handler";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 

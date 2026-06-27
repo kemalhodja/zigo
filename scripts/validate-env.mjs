@@ -31,11 +31,17 @@ function isSet(value) {
 }
 
 function main() {
+  loadEnvFile(".env.vercel.production.local");
+  loadEnvFile(".env.production.local");
   const hasLocal = loadEnvFile(".env.local");
   loadEnvFile(".env");
 
   const checks = [
-    check(".env.local exists", hasLocal, hasLocal ? "" : "Run npm run setup:env first"),
+    check(
+      ".env.local exists",
+      hasLocal || existsSync(join(root, ".env.production.local")) || existsSync(join(root, ".env.vercel.production.local")),
+      hasLocal ? "" : "Using production env fallback",
+    ),
     check(
       "NEXT_PUBLIC_SUPABASE_URL",
       isSet(process.env.NEXT_PUBLIC_SUPABASE_URL),

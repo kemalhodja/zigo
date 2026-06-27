@@ -9,8 +9,8 @@ import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getProfileBillingSection } from "@/lib/domain/profile-billing";
-import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
 import { getCurrentProfile, getUserInterestAreaNames, type UserProfile } from "@/lib/domain/profiles";
+import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
 import {
   getProfileSocialStats,
   getSavedSocialPosts,

@@ -1,12 +1,12 @@
 import { RateLimitExceededError } from "@/features/shared";
+import { isErrorResponse, jsonSuccessWithMeta, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import {
   commentSchema,
   commentsQuerySchema,
   createComment,
   getPostComments,
 } from "@/features/social";
-import { isErrorResponse, jsonSuccessWithMeta, requireAuthenticatedProfile } from "@/features/shared";
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 

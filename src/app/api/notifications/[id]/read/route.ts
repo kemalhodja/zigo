@@ -1,7 +1,7 @@
 import { markNotificationRead } from "@/features/notifications/services";
-import { jsonNotFound } from "@/features/shared/errors/global-error-handler";
 import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { jsonNotFound } from "@/features/shared/errors/global-error-handler";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = { params: Promise<{ id: string }> };

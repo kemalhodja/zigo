@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
-import { getChildProfiles } from "@/lib/domain/children";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
+import { getChildProfiles } from "@/lib/domain/children";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";

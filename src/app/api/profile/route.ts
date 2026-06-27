@@ -1,9 +1,9 @@
+import { createProfile, updateUserProfile } from "@/features/profile/services";
 import {
   createProfileBodySchema,
   parseRegistrationAccountKind,
   updateProfileBodySchema,
 } from "@/features/profile/types";
-import { createProfile, updateUserProfile } from "@/features/profile/services";
 import { isErrorResponse, jsonSuccess, requireAuthUser } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";

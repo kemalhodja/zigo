@@ -204,6 +204,7 @@ export function AuthPanel() {
               ? "bg-white text-crystal shadow-sm ring-1 ring-crystal/25"
               : "text-slate-500"
           }`}
+          data-testid="auth-mode-sign-in"
           onClick={() => {
             setMode("sign-in");
             setStatus("idle");
@@ -219,6 +220,7 @@ export function AuthPanel() {
               ? "bg-gradient-to-r from-crystal to-berry text-white shadow-sm"
               : "text-slate-500"
           }`}
+          data-testid="auth-mode-sign-up"
           onClick={() => {
             setMode("sign-up");
             setStatus("idle");

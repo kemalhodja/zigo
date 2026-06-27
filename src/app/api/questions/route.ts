@@ -1,12 +1,12 @@
-import { RateLimitExceededError } from "@/features/shared/errors/global-error-handler";
-import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { getUserInterestAreaIds } from "@/features/profile/services";
 import {
   createQuestion,
   createQuestionBodySchema,
   getMatchedQuestions,
 } from "@/features/questions";
+import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { RateLimitExceededError } from "@/features/shared/errors/global-error-handler";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 

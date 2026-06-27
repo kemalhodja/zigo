@@ -1,13 +1,12 @@
 export {
+  type AuthGate,
   authGateRedirectPath,
   isEmailConfirmed,
   isPublicAuthCheckpointPath,
   isSessionRequiredAuthCheckpointPath,
   requiresEmailConfirmation,
   resolveAuthGate,
-  type AuthGate,
 } from "@/lib/domain/auth-gates";
-
 export {
   createProfileSchema,
   setInterestsSchema,

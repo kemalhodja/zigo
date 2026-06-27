@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ZodError, z } from "zod";
+import { z,type ZodError } from "zod";
 
 import {
   handleApiError,

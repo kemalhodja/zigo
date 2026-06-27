@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
 import { ChildAreaSelector } from "@/components/child-area-selector";
 import { ChildFocusPanel } from "@/components/child-focus-panel";
 import { ChildGradeLevelForm } from "@/components/child-grade-level-form";
@@ -8,6 +7,7 @@ import { ChildProfileForm } from "@/components/child-profile-form";
 import { ChildQuizActivityPanel } from "@/components/child-quiz-activity-panel";
 import { ChildRewardPanel } from "@/components/child-reward-panel";
 import { StateCard } from "@/components/state-card";
+import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getChildInterestAreaIds, getChildPersonalizedFeed, getChildProfiles } from "@/lib/domain/children";
 import { getChildQuizActivity } from "@/lib/domain/parent-dashboard";

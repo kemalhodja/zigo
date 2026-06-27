@@ -38,7 +38,10 @@ const required = [
   [moderationPolicy.includes("recordModerationStrike"), "strike + admin alert policy exists"],
   [migration053.includes("record_moderation_violation"), "DB strike function migration exists"],
   [reportsRoute.includes("updateContentReportStatus"), "reports PATCH updates status"],
-  [reportsRoute.includes("export async function PATCH"), "reports route exports PATCH"],
+  [
+    reportsRoute.includes("export async function PATCH") || reportsRoute.includes("export const PATCH"),
+    "reports route exports PATCH",
+  ],
   [keywords.includes("KEYWORD_LIST_VERSION"), "keyword list version constant exists"],
   [migration043.includes("moderation_status in ('approved', 'pending')"), "RLS allows pending for non-students"],
   [migration043.includes("Platform admins can update content reports"), "report update RLS for admins"],

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { ApiClientError, fetchJson } from "@/features/shared/api/client-fetch";
+import { type ApiClientError, fetchJson } from "@/features/shared/api/client-fetch";
 
 describe("fetchJson", () => {
   it("throws ApiClientError with code on failed responses", async () => {

@@ -133,6 +133,8 @@ async function apiPost(baseUrl, path, cookieHeader, payload) {
 }
 
 async function main() {
+  loadEnvFile(".env.vercel.production.local");
+  loadEnvFile(".env.production.local");
   loadEnvFile(".env.local");
   loadEnvFile(".env");
 

@@ -1,5 +1,6 @@
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import type { UserRole } from "@/lib/supabase/database.types";
+import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
 export type BottomNavItem = {
   href: string;
@@ -83,10 +84,10 @@ export function getBottomNavItems(
         match: (path) => path.startsWith("/learn") || path.startsWith("/student"),
       },
       {
-        href: "/micro",
+        href: ZIGO_PATHS.micro,
         icon: "micro",
         label: labels.micro,
-        match: (path) => path.startsWith("/micro"),
+        match: (path) => path.startsWith(ZIGO_PATHS.micro),
       },
       profile,
     ];
@@ -151,10 +152,10 @@ export function getBottomNavItems(
       match: (path) => path.startsWith("/questions"),
     },
     {
-      href: "/micro",
+      href: ZIGO_PATHS.micro,
       icon: "micro",
       label: labels.micro,
-      match: (path) => path.startsWith("/micro"),
+      match: (path) => path.startsWith(ZIGO_PATHS.micro),
     },
     profile,
   ];

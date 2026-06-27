@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { isDemoAuthEmail } from "@/lib/domain/demo-env";
 import { validateRegistrationPassword } from "@/lib/domain/password-policy";
 import {
   getRecaptchaFailureMessage,
@@ -25,7 +26,15 @@ export const registrationPasswordSchema = authPasswordSchema.superRefine((passwo
   }
 });
 
-export async function verifyAuthRecaptcha(request: Request, token?: string) {
+export async function verifyAuthRecaptcha(
+  request: Request,
+  token?: string,
+  options?: { email?: string },
+) {
+  if (isDemoAuthEmail(options?.email)) {
+    return { ok: true as const, skipped: true as const };
+  }
+
   if (!isRecaptchaRequired()) {
     return { ok: true as const };
   }

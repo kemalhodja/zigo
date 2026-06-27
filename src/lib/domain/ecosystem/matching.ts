@@ -153,8 +153,3 @@ export async function findTeachersBySubject(
 
   return [...uniqueTeachers.values()].slice(0, Math.max(1, Math.min(limit, 20)));
 }
-
-function normalizeRelation<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}

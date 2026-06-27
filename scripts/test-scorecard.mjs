@@ -4,6 +4,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { loadProjectEnv } from "./live-test-utils.mjs";
+
 const root = process.cwd();
 
 const STATIC_PILLARS = [
@@ -63,8 +65,26 @@ function runScript(relativePath) {
 }
 
 function runShell(cmd) {
-  const result = spawnSync(cmd, { cwd: root, stdio: "pipe", encoding: "utf8", shell: true, env: process.env });
+  const env = { ...process.env };
+  if (env.E2E_BASE_URL?.trim()) {
+    env.E2E_SKIP_WEBSERVER = "1";
+  }
+  const result = spawnSync(cmd, { cwd: root, stdio: "pipe", encoding: "utf8", shell: true, env });
   return { ok: result.status === 0, status: result.status ?? 1, stderr: result.stderr?.slice(-400) ?? "" };
+}
+
+function parseSetCookie(headers) {
+  const getSetCookie = headers.getSetCookie?.bind(headers);
+  if (getSetCookie) return getSetCookie();
+  const raw = headers.get("set-cookie");
+  return raw ? [raw] : [];
+}
+
+function cookieHeaderFrom(setCookies) {
+  return setCookies
+    .map((entry) => entry.split(";")[0])
+    .filter(Boolean)
+    .join("; ");
 }
 
 async function detectBaseUrl() {
@@ -110,9 +130,11 @@ async function runtimeChecks(baseUrl) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: "student@zigo.test", password: "ZigoTest123!" }),
         });
-        const cookies = signIn.headers.getSetCookie?.()?.map((c) => c.split(";")[0]).join("; ")
-          ?? signIn.headers.get("set-cookie")?.split(";")[0] ?? "";
-        const exp = await fetch(`${baseUrl}/api/account/export`, { headers: cookies ? { Cookie: cookies } : {} });
+        if (!signIn.ok) return false;
+        const cookieHeader = cookieHeaderFrom(parseSetCookie(signIn.headers));
+        const exp = await fetch(`${baseUrl}/api/account/export`, {
+          headers: cookieHeader ? { Cookie: cookieHeader } : {},
+        });
         const body = await exp.json().catch(() => ({}));
         return exp.ok && Boolean(body?.data?.profile);
       },
@@ -140,6 +162,7 @@ async function runtimeChecks(baseUrl) {
 }
 
 async function main() {
+  loadProjectEnv();
   console.log("=== Zigo full test scorecard ===\n");
 
   let totalEarned = 0;

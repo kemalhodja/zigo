@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const recaptcha = await verifyAuthRecaptcha(request, body.recaptchaToken);
+    const recaptcha = await verifyAuthRecaptcha(request, body.recaptchaToken, { email: body.email });
     if (!recaptcha.ok) {
       return NextResponse.json({ error: recaptcha.message }, { status: recaptcha.status });
     }

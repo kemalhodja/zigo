@@ -6,11 +6,11 @@ import {
   cancelBookingAsParent,
   createAvailabilitySlot,
   deleteAvailabilitySlot,
+  type LessonBookingListItem,
   listBookingsForUser,
   listTeacherOpenSlots,
   listTeacherOwnSlots,
   updateBookingStatus,
-  type LessonBookingListItem,
 } from "@/lib/domain/ecosystem/calendar";
 import type { Database, UserRole } from "@/lib/supabase/database.types";
 

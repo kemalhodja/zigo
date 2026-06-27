@@ -6,11 +6,11 @@ import { GradeLevelForm } from "@/components/grade-level-form";
 import { LearningProgressCard } from "@/components/learning-progress-card";
 import { RecentLearningCard } from "@/components/recent-learning-card";
 import { StateCard } from "@/components/state-card";
-import { RecommendedTeachersPanel } from "@/features/matching/components/recommended-teachers-panel";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
+import { RecommendedTeachersPanel } from "@/features/matching/components/recommended-teachers-panel";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
-import { allowDemoContent } from "@/lib/domain/demo-env";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getStudentFocusAnalytics } from "@/lib/domain/focus-analytics";
 import {
   getDailyMissionProgress,

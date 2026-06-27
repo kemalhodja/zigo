@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { listBookingsForUser, type LessonBookingListItem } from "@/lib/domain/ecosystem/calendar";
-import { getParentWeeklyProgressSummary, type WeeklyProgressSummary } from "@/lib/domain/ecosystem/reporting";
 import { getChildProfiles } from "@/lib/domain/children";
+import { type LessonBookingListItem,listBookingsForUser } from "@/lib/domain/ecosystem/calendar";
+import { getParentWeeklyProgressSummary, type WeeklyProgressSummary } from "@/lib/domain/ecosystem/reporting";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type TopicSuccessPoint = {

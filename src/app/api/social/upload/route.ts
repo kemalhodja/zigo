@@ -1,8 +1,8 @@
 import { randomUUID } from "crypto";
 
-import { cleanupUploadSchema } from "@/features/social/types";
 import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { cleanupUploadSchema } from "@/features/social/types";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_TYPES = new Set([

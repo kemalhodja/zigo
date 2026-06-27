@@ -1,6 +1,6 @@
-import { socialPostActionSchema, toggleLike } from "@/features/social";
 import { isErrorResponse, jsonSuccessWithMeta, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { socialPostActionSchema, toggleLike } from "@/features/social";
 import { createClient } from "@/lib/supabase/server";
 
 export const POST = withApiHandler(async (request: Request) => {

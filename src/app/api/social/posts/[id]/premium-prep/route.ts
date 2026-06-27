@@ -1,6 +1,6 @@
-import { openPremiumPrepUrl } from "@/lib/domain/premium-prep";
 import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { openPremiumPrepUrl } from "@/lib/domain/premium-prep";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {

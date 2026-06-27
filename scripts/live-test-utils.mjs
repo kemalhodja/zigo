@@ -10,7 +10,12 @@ export function liveTestsForced() {
 }
 
 export function loadProjectEnv() {
-  for (const name of [".env.local", ".env"]) {
+  for (const name of [
+    ".env.vercel.production.local",
+    ".env.production.local",
+    ".env.local",
+    ".env",
+  ]) {
     const filePath = join(process.cwd(), name);
     if (!existsSync(filePath)) continue;
     for (const line of readFileSync(filePath, "utf8").split("\n")) {

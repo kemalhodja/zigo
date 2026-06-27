@@ -737,7 +737,7 @@ check("Uploaded media is cleaned after failed publish", () => {
   const storyComposer = read("src/components/story-create-form.tsx");
   const setupPage = read("src/app/setup/page.tsx");
   return (
-    uploadRoute.includes("export async function DELETE") &&
+    uploadRoute.includes("export async function DELETE") || uploadRoute.includes("export const DELETE") &&
     uploadRoute.includes("Uploaded media can be cleaned only by its owner") &&
     cleanupHelper.includes("cleanupUploadedMedia") &&
     postComposer.includes("await cleanupUploadedMedia(uploadedObjectPath)") &&

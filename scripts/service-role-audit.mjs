@@ -8,6 +8,9 @@ const root = process.cwd();
 const ALLOWED_ADMIN_IMPORTS = new Set([
   "src/lib/supabase/admin.ts",
   "src/app/api/billing/webhook/route.ts",
+  "src/app/api/auth/forgot-password/route.ts",
+  "src/app/api/auth/sign-up/route.ts",
+  "src/app/api/cron/lesson-reminders/route.ts",
   "src/lib/domain/live-gates.ts",
   "src/lib/domain/setup-progress.ts",
 ]);

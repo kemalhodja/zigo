@@ -3,8 +3,8 @@ import Link from "next/link";
 import { ModerationQueueItem } from "@/components/moderation-queue-item";
 import { SocialPill } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
-import { allowDemoContent } from "@/lib/domain/demo-env";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
   getCreatorSafetyQueue,

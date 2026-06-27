@@ -2,12 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { isLocalDemoSupabase } from "@/lib/domain/demo-env";
 import { getSiteUrl } from "@/lib/domain/deploy-config";
-import { findPlanGroup, resolveStripePriceId } from "@/lib/domain/subscription-plans";
+import { ensureStripeCampaignCoupon } from "@/lib/domain/stripe-campaign-provision";
 import {
   getSubscriptionCampaignStripeCouponId,
   isSubscriptionCampaignActive,
 } from "@/lib/domain/subscription-campaign";
-import { ensureStripeCampaignCoupon } from "@/lib/domain/stripe-campaign-provision";
+import { findPlanGroup, resolveStripePriceId } from "@/lib/domain/subscription-plans";
 import type { Database, SubscriptionTier } from "@/lib/supabase/database.types";
 
 export function hasStripeConfigured() {

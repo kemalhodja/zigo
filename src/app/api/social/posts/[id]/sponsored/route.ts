@@ -1,6 +1,6 @@
 import { isErrorResponse, jsonError, jsonGone, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
-import { openSponsoredAdUrl } from "@/features/social/services";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { openSponsoredAdUrl } from "@/features/social/services";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {

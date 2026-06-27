@@ -4,7 +4,6 @@ import {
 } from "@/lib/domain/education-organization";
 import { ZIGO_PLUS_BENEFITS } from "@/lib/domain/focus-gamification";
 import {
-  isSubscriptionCampaignActive,
   resolveSubscriptionPlanPricing,
 } from "@/lib/domain/subscription-campaign";
 import { TEACHER_CREATOR_PLUS_BENEFITS } from "@/lib/domain/teacher-creator-plus";
