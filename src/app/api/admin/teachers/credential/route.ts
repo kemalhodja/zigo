@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { isErrorResponse, requireAuthenticatedProfile } from "@/features/shared/api/require-auth";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { isCurrentUserPlatformAdmin, reviewTeacherCredential } from "@/lib/domain/admin";
 import { createClient } from "@/lib/supabase/server";
 

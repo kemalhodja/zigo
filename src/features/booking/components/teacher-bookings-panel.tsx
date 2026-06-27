@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { LessonTrustPanel } from "@/components/lesson-trust-panel";
 import { useBookings, useUpdateBookingStatus } from "@/features/booking/hooks";
 import { LiveLessonActions } from "@/features/live-lessons/components/live-lesson-actions";
-import { LessonTrustPanel } from "@/components/lesson-trust-panel";
 
 type TeacherBookingsPanelProps = {
   labels: {
