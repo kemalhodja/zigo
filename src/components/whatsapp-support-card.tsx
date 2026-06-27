@@ -1,7 +1,5 @@
 import {
   buildWhatsAppSupportUrl,
-  formatSupportPhoneDisplay,
-  getSupportWhatsAppPhone,
   isWhatsAppSupportVisible,
   type WhatsAppSupportContext,
 } from "@/lib/domain/support-contact";
@@ -34,23 +32,17 @@ export function WhatsAppSupportCard({
 }: WhatsAppSupportCardProps) {
   if (!isWhatsAppSupportVisible(role, context)) return null;
 
-  const phone = getSupportWhatsAppPhone();
   const href = buildWhatsAppSupportUrl(prefilledMessage);
-  if (!phone || !href) return null;
-
-  const displayPhone = formatSupportPhoneDisplay(phone);
+  if (!href) return null;
 
   if (compact) {
     return (
-      <a
-        className="tap-scale inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-3 text-sm font-black text-white"
+      <WhatsAppSupportLink
+        ariaLabel={buttonLabel}
+        className="tap-scale inline-flex size-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-md ring-4 ring-emerald-100"
         href={href}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <WhatsAppIcon className="size-5" />
-        {buttonLabel}
-      </a>
+        iconClassName="size-6"
+      />
     );
   }
 
@@ -60,18 +52,42 @@ export function WhatsAppSupportCard({
       <h2 className="mt-2 text-lg font-black text-night">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
       <p className="mt-2 text-xs font-semibold text-slate-500">{hoursLabel}</p>
-      <p className="mt-1 text-sm font-black text-night">{displayPhone}</p>
-      <a
-        className="tap-scale mt-4 inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-3 text-sm font-black text-white"
-        href={href}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <WhatsAppIcon className="size-5" />
-        {buttonLabel}
-      </a>
+      <div className="mt-4 flex items-center gap-3">
+        <WhatsAppSupportLink
+          ariaLabel={buttonLabel}
+          className="tap-scale inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg ring-4 ring-emerald-100 transition hover:scale-105"
+          href={href}
+          iconClassName="size-7"
+        />
+        <p className="text-sm font-semibold text-slate-600">{buttonLabel}</p>
+      </div>
       <p className="mt-3 text-xs leading-5 text-slate-500">{privacyNote}</p>
     </section>
+  );
+}
+
+function WhatsAppSupportLink({
+  ariaLabel,
+  className,
+  href,
+  iconClassName,
+}: {
+  ariaLabel: string;
+  className: string;
+  href: string;
+  iconClassName: string;
+}) {
+  return (
+    <a
+      aria-label={ariaLabel}
+      className={className}
+      href={href}
+      rel="noopener noreferrer"
+      target="_blank"
+      title={ariaLabel}
+    >
+      <WhatsAppIcon className={iconClassName} />
+    </a>
   );
 }
 
