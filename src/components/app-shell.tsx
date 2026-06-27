@@ -10,7 +10,6 @@ import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
 import { LegalFooter } from "@/components/legal-footer";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleWelcomeStrip } from "@/components/role-welcome-strip";
-import { StickyLessonRequestBar } from "@/features/lesson/components/sticky-lesson-request-bar";
 import {
   getHeaderPrimaryAction,
   getRoleDashboardHref,
@@ -59,10 +58,6 @@ export function AppShell({
     pathname.startsWith("/create") ||
     pathname.startsWith("/questions") ||
     pathname.startsWith("/setup");
-  const showStickyLessonBar =
-    !isImmersive &&
-    !pathname.startsWith("/auth") &&
-    (viewerRole === "parent" || viewerRole === "student" || viewerRole === "teacher");
 
   return (
     <div
@@ -83,14 +78,13 @@ export function AppShell({
       ) : null}
 
       <main
-        className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : `px-4 py-3 ${showStickyLessonBar ? "zigo-page-with-sticky-cta" : ""}`}`}
+        className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3"}`}
         id="main-content"
       >
         {!isImmersive && !pathname.startsWith("/auth") ? (
           <RoleWelcomeStrip viewerRole={viewerRole} />
         ) : null}
         {children}
-        {showStickyLessonBar ? <StickyLessonRequestBar viewerRole={viewerRole} /> : null}
       </main>
 
       {hideQuickDock ? null : (
