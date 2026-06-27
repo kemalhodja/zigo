@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 
 import { activateZigoPlus, deactivateZigoPlus } from "@/lib/domain/billing";
 import {
-  handleLessonPackageCheckoutCompleted,
-  type LessonPackagePlanId,
-} from "@/lib/domain/lesson-packages";
-import {
   resolveUserIdByStripeCustomer,
   resolveUserIdByStripeSubscription,
   verifyStripeWebhookSignature,
@@ -57,15 +53,7 @@ export async function POST(request: Request) {
   try {
     if (event.type === "checkout.session.completed" && object?.client_reference_id) {
       const purchaseType = object.metadata?.purchase_type;
-      const planId = object.metadata?.plan_id as LessonPackagePlanId | undefined;
-
-      if (purchaseType === "lesson_package" && planId) {
-        await handleLessonPackageCheckoutCompleted(admin, {
-          userId: object.client_reference_id,
-          planId,
-          stripeCheckoutSessionId: object.id,
-        });
-      } else {
+      if (purchaseType !== "lesson_package") {
         await activateZigoPlus(admin, object.client_reference_id, {
           stripeCustomerId: typeof object.customer === "string" ? object.customer : undefined,
           stripeSubscriptionId: typeof object.subscription === "string" ? object.subscription : undefined,

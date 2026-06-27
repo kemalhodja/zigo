@@ -8,7 +8,6 @@ import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { RequestLessonCTA } from "@/features/lesson/components/request-lesson-cta";
 import { hasSupabaseEnv } from "@/lib/config";
-import { getParentLessonPackageAccess } from "@/lib/domain/lesson-packages";
 import { getChildProfiles } from "@/lib/domain/children";
 import { getCurrentProfile, getUserInterestAreaNames } from "@/lib/domain/profiles";
 import {
@@ -49,16 +48,13 @@ export default async function PublicProfilePage({ params, searchParams }: Public
   const branches =
     profile.role === "teacher" ? await getUserInterestAreaNames(supabase, profile.id) : [];
 
-  const [stats, posts, following, parentChildren, packageAccess] = await Promise.all([
+  const [stats, posts, following, parentChildren] = await Promise.all([
     getProfileSocialStats(supabase, profile.id),
     activeTab === "reels"
       ? getUserSocialReels(supabase, profile.id)
       : getUserSocialPosts(supabase, profile.id),
     viewer ? isFollowing(supabase, viewer.id, profile.id) : Promise.resolve(false),
     viewer?.role === "parent" ? getChildProfiles(supabase) : Promise.resolve([]),
-    viewer?.role === "parent"
-      ? getParentLessonPackageAccess(supabase, viewer.id)
-      : Promise.resolve({ hasAccess: false, planType: null, lessonsRemaining: 0, endsAt: null, expired: true }),
   ]);
   const isOwnProfile = viewer?.id === profile.id;
   const handle = profile.full_name.toLowerCase().replaceAll(" ", "");
@@ -141,7 +137,6 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           {canRequestLesson ? (
             <RequestLessonCTA
               childrenOptions={parentChildren.map((child) => ({ id: child.id, name: child.display_name }))}
-              hasPackageAccess={packageAccess.hasAccess}
               teacherId={profile.id}
               teacherName={profile.full_name}
             />

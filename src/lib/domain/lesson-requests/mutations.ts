@@ -2,7 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { z } from "zod";
 
 import { DomainForbiddenError } from "@/lib/domain/domain-errors";
-import { parentHasActiveLessonPackage } from "@/lib/domain/lesson-packages";
 import { getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { runModeratedSafeTextAction } from "@/lib/domain/moderation-policy";
 import type { Database } from "@/lib/supabase/database.types";
@@ -40,13 +39,6 @@ export async function createLessonRequest(
 
   if (sender.role !== "parent") {
     throw new DomainForbiddenError("Only parents can create lesson requests.", "STUDENT_MESSAGING_BLOCKED");
-  }
-
-  if (!(await parentHasActiveLessonPackage(supabase, parsed.senderId))) {
-    throw new DomainForbiddenError(
-      "An active lesson package is required before sending lesson requests.",
-      "LESSON_PACKAGE_REQUIRED",
-    );
   }
 
   const { data: receiver, error: receiverError } = await supabase

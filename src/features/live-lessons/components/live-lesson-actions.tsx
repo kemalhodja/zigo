@@ -1,8 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
-import Link from "next/link";
-
 import { isLiveLessonJoinWindow } from "@/lib/domain/live-lessons/types";
 
 type LiveLessonActionsProps = {
@@ -52,28 +49,5 @@ export function LiveLessonActions({
     >
       {label}
     </a>
-  );
-}
-
-type LessonPackageGateProps = {
-  hasAccess: boolean;
-  labels: {
-    expired: string;
-    renew: string;
-  };
-  children: React.ReactNode;
-};
-
-export function LessonPackageGate({ hasAccess, labels, children }: LessonPackageGateProps) {
-  if (hasAccess) return <>{children}</>;
-
-  return (
-    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-      <p className="text-base font-black text-amber-900">{labels.expired}</p>
-      <p className="mt-2 text-sm font-semibold text-amber-800">{labels.renew}</p>
-      <Link className="zigo-mobile-cta tap-scale mt-4 inline-flex rounded-2xl px-5 py-3" href="/parent/packages">
-        {labels.renew}
-      </Link>
-    </div>
   );
 }

@@ -110,19 +110,6 @@ export default async function ParentPage() {
         />
       ) : null}
 
-      {mode === "parent" ? (
-        <section className="-mx-4 border-y border-amber-100 bg-amber-50 px-4 py-4">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-700">
-            {messages.lessonPackages.eyebrow}
-          </p>
-          <h2 className="mt-2 text-lg font-black text-night">{messages.lessonPackages.title}</h2>
-          <p className="mt-2 text-sm font-semibold text-amber-900">{messages.lessonPackages.desc}</p>
-          <Link className="zigo-mobile-cta tap-scale mt-4 inline-flex rounded-2xl px-5 py-3" href="/parent/packages">
-            {messages.lessonPackages.buyPackage}
-          </Link>
-        </section>
-      ) : null}
-
       {mode === "parent" && children.length > 0 ? (
         <RecommendedTeachersPanel
           childrenOptions={children.map((child) => ({ id: child.id, name: child.name }))}

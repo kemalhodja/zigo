@@ -1,8 +1,22 @@
 -- Parent lesson packages (Basic/Pro/Premium), live lessons (Jitsi), reminders.
 
-create type public.lesson_package_plan_type as enum ('basic', 'pro', 'premium');
-create type public.lesson_package_status as enum ('pending', 'active', 'expired', 'canceled');
-create type public.live_lesson_status as enum ('scheduled', 'live', 'completed', 'canceled');
+do $$ begin
+  create type public.lesson_package_plan_type as enum ('basic', 'pro', 'premium');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.lesson_package_status as enum ('pending', 'active', 'expired', 'canceled');
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.live_lesson_status as enum ('scheduled', 'live', 'completed', 'canceled');
+exception
+  when duplicate_object then null;
+end $$;
 
 create table if not exists public.lesson_package_subscriptions (
   id uuid primary key default gen_random_uuid(),
@@ -297,9 +311,11 @@ declare
   parent_name text;
 begin
   select * into booking from public.lesson_bookings where id = target_booking_id;
-  if booking.id is null then return;
+  if not found then
+    return;
+  end if;
 
-  select * into live_row from public.live_lessons where booking_id = target_booking_id;
+  select * into live_row from public.live_lessons ll where ll.booking_id = target_booking_id;
 
   select full_name into teacher_name from public.users where id = booking.teacher_id;
   select full_name into parent_name from public.users where id = booking.parent_id;

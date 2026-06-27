@@ -19,6 +19,7 @@ const MIGRATIONS = [
   "069_notifications_realtime.sql",
   "070_lesson_completion_child_rewards.sql",
   "071_lesson_packages_and_live_lessons.sql",
+  "072_remove_lesson_package_gating.sql",
 ];
 
 function loadEnvFile(name) {
@@ -141,6 +142,14 @@ async function probe(admin, migrationId) {
       points_awarded: 0,
     });
     return Boolean(constraintError?.message?.includes("violates foreign key"));
+  }
+  if (migrationId === "071") {
+    const { error } = await admin.from("lesson_package_subscriptions").select("id").limit(1);
+    return !error;
+  }
+  if (migrationId === "072") {
+    const { data, error } = await admin.rpc("lesson_package_booking_gating_removed");
+    return !error && data === true;
   }
   return false;
 }
