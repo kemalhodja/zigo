@@ -11,10 +11,10 @@ import { FloatingWhatsAppSupport } from "@/components/floating-whatsapp-support"
 import { LegalFooter } from "@/components/legal-footer";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleWelcomeStrip } from "@/components/role-welcome-strip";
-import { ShortcutScrollDock } from "@/components/shortcut-scroll-dock";
+import { ShortcutScrollDock, type ShortcutScrollItem } from "@/components/shortcut-scroll-dock";
+import { useShortcutDockItems } from "@/lib/client/shortcut-preferences";
 import {
   getHeaderPrimaryAction,
-  getRoleDashboardHref,
   isParentSupervisionRole,
   isStudentGamificationRole,
   isTeacherStudioRole,
@@ -22,7 +22,6 @@ import {
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
-import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;
@@ -56,8 +55,13 @@ export function AppShell({
     pathname.startsWith("/create") ||
     pathname.startsWith("/questions") ||
     pathname.startsWith("/setup");
+  const { items: shortcutItems } = useShortcutDockItems(viewerRole, {
+    canCreateSocialPost,
+    hidden: hideQuickDock,
+    messages: m,
+  });
   const showBottomNav = !isStories;
-  const showShortcutDock = !hideQuickDock;
+  const showShortcutDock = shortcutItems.length > 0;
   const shellFloatClass = [
     showBottomNav ? "zigo-shell--with-nav" : "",
     showShortcutDock ? "zigo-shell--with-dock" : "",
@@ -107,7 +111,7 @@ export function AppShell({
         <div className="zigo-float-bottom-bar pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md">
           <div className="pointer-events-auto">
             {showShortcutDock ? (
-              <QuickActionDock canCreateSocialPost={canCreateSocialPost} floating viewerRole={viewerRole} />
+              <QuickActionDock floating items={shortcutItems} viewerRole={viewerRole} />
             ) : null}
             {showBottomNav ? (
               <BottomNav
@@ -146,88 +150,31 @@ function PreviewModeBanner() {
 }
 
 function QuickActionDock({
-  canCreateSocialPost,
   floating = false,
+  items,
   viewerRole,
 }: {
-  canCreateSocialPost: boolean;
   floating?: boolean;
+  items: ShortcutScrollItem[];
   viewerRole: ViewerRole;
 }) {
   const m = useMessages();
-  const d = m.dock;
-  const dock = m.dockByRole;
-  const dashboardHref = getRoleDashboardHref(viewerRole);
+  const roleClassName = isStudentGamificationRole(viewerRole)
+    ? "role-dock-student border-violet-100"
+    : isParentSupervisionRole(viewerRole)
+      ? "role-dock-parent border-cyan-100"
+      : isTeacherStudioRole(viewerRole)
+        ? "role-dock-teacher border-slate-200"
+        : "border-violet-100";
 
-  if (isStudentGamificationRole(viewerRole)) {
-    return (
-      <ShortcutScrollDock
-        items={[
-          { href: "/student", label: dock.student.hub, icon: "hub", primary: true },
-          { href: "/focus", label: dock.student.focus, icon: "focus" },
-          { href: "/learn", label: dock.student.learn, icon: "learn" },
-          { href: "/duels", label: dock.student.duels, icon: "duels" },
-          { href: ZIGO_PATHS.micro, label: m.navByRole.student.micro, icon: "micro" },
-          { href: "/store", label: m.dashboard.student.store, icon: "store" },
-        ]}
-        roleClassName="role-dock-student border-violet-100"
-        title={d.shortcuts}
-        floating={floating}
-      />
-    );
-  }
-
-  if (isParentSupervisionRole(viewerRole)) {
-    return (
-      <ShortcutScrollDock
-        items={[
-          { href: "/parent", label: dock.parent.hub, icon: "hub", primary: true },
-          { href: "/family", label: dock.parent.family, icon: "family" },
-          { href: "/learn", label: dock.parent.learn, icon: "learn" },
-          { href: "/parent/requests", label: dock.parent.requests, icon: "requests" },
-          { href: "/questions", label: dock.parent.ask, icon: "ask" },
-        ]}
-        roleClassName="role-dock-parent border-cyan-100"
-        title={d.shortcuts}
-        floating={floating}
-      />
-    );
-  }
-
-  if (isTeacherStudioRole(viewerRole)) {
-    const items = [
-      ...(canCreateSocialPost
-        ? [
-            { href: "/create?mode=story", label: dock.teacher.spark, icon: "spark" as const, primary: true },
-            { href: "/create?mode=reel", label: dock.teacher.micro, icon: "micro" as const, primary: true },
-          ]
-        : []),
-      { href: "/teacher", label: dock.teacher.studio, icon: "studio" as const, primary: !canCreateSocialPost },
-      { href: "/teacher#lesson-requests", label: dock.teacher.requests, icon: "requests" as const },
-      { href: "/questions", label: dock.teacher.ask, icon: "ask" as const },
-      { href: "/learn", label: m.nav.learn, icon: "learn" as const },
-    ];
-
-    return (
-      <ShortcutScrollDock
-        items={items}
-        roleClassName="role-dock-teacher border-slate-200"
-        title={d.shortcuts}
-        floating={floating}
-      />
-    );
-  }
+  if (items.length === 0) return null;
 
   return (
     <ShortcutScrollDock
-      items={[
-        { href: "/questions", label: m.nav.ask, icon: "ask", primary: true },
-        { href: "/learn", label: d.learn, icon: "learn" },
-        { href: dashboardHref, label: m.nav.profile, icon: "profile" },
-        { href: ZIGO_PATHS.micro, label: m.nav.micro, icon: "micro" },
-      ]}
-      title={d.shortcuts}
       floating={floating}
+      items={items}
+      roleClassName={roleClassName}
+      title={m.dock.shortcuts}
     />
   );
 }

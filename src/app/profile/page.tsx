@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { FollowButton } from "@/components/follow-button";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { ShortcutPreferencesPanel } from "@/components/shortcut-preferences-panel";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
@@ -140,6 +141,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </Link>
         </div>
       </section>
+
+      {!profile.isSignedOut ? (
+        <ShortcutPreferencesPanel
+          canCreateSocialPost={profile.role === "teacher" && profile.isVerified}
+          viewerRole={profile.role}
+        />
+      ) : null}
 
       <ProfileHighlights />
 

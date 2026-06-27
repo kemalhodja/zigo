@@ -75,6 +75,14 @@ export const messagesEn: Messages = {
     focus: "Focus",
     learn: "Learn",
     spark: "Story",
+    shortcutSettings: {
+      eyebrow: "Personalization",
+      title: "Bottom shortcuts",
+      description: "Turn the floating shortcut bar on or off and choose which icons appear.",
+      enabled: "Show shortcut bar",
+      pick: "Visible shortcuts",
+      reset: "Reset to default",
+    },
   },
   dockByRole: {
     student: {

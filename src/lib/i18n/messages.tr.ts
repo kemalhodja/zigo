@@ -74,6 +74,14 @@ export const messagesTr = {
     focus: "Odak",
     learn: "Öğren",
     spark: "Spark",
+    shortcutSettings: {
+      eyebrow: "Kişiselleştirme",
+      title: "Alt kısayollar",
+      description: "Alttaki kaydırmalı kısayol çubuğunu açıp kapatabilir ve hangi simgelerin görüneceğini seçebilirsin.",
+      enabled: "Kısayol çubuğunu göster",
+      pick: "Görünecek kısayollar",
+      reset: "Varsayılana dön",
+    },
   },
   dockByRole: {
     student: {
