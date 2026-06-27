@@ -1,49 +1,33 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
-import { getCurrentProfile } from "@/lib/domain/profiles";
-import { createStory, createStorySchema, getActiveStories } from "@/lib/domain/social";
+import {
+  createStory,
+  createStorySchema,
+  getActiveStories,
+} from "@/features/social";
+import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET() {
-  try {
-    const supabase = await createClient();
-    const stories = await getActiveStories(supabase);
-    return NextResponse.json({ data: stories });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Stories could not be loaded.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
-}
+export const GET = withApiHandler(async () => {
+  const supabase = await createClient();
+  const stories = await getActiveStories(supabase);
+  return jsonSuccess(stories);
+}, { fallbackMessage: "Stories could not be loaded." });
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const POST = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase, {
+    roles: ["teacher"],
+    requireVerified: true,
+  });
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const body = createStorySchema.parse(await request.json());
+  const story = await createStory(supabase, {
+    areaId: body.areaId,
+    authorId: profileOrError.id,
+    caption: body.caption,
+    mediaUrl: body.mediaUrl,
+  });
 
-    if (profile.role !== "teacher" || !profile.is_verified) {
-      return NextResponse.json({ error: "Only verified teachers can create stories." }, { status: 403 });
-    }
-
-    const body = createStorySchema.parse(await request.json());
-    const story = await createStory(supabase, {
-      areaId: body.areaId,
-      authorId: profile.id,
-      caption: body.caption,
-      mediaUrl: body.mediaUrl,
-    });
-
-    return NextResponse.json({ data: story }, { status: 201 });
-  } catch (error) {
-    const message = error instanceof z.ZodError
-      ? "Choose an assigned area, keep the story caption under 500 characters, and use a valid media URL."
-      : error instanceof Error
-        ? error.message
-        : "Story could not be created.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
-}
+  return jsonSuccess(story, 201);
+}, { fallbackMessage: "Story could not be created." });

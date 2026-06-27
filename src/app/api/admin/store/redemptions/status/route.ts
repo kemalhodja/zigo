@@ -1,30 +1,13 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
+import { jsonSuccess } from "@/features/shared";
+import { withAdminApiHandler } from "@/features/shared/api/rbac";
 import { updateStoreRedemptionStatus } from "@/lib/domain/admin";
-import { requirePlatformAdmin } from "@/lib/domain/admin-auth";
 
-export async function PATCH(request: Request) {
-  try {
-    const auth = await requirePlatformAdmin();
+export const PATCH = withAdminApiHandler(async (request, _context, auth) => {
+  const body = await request.json();
+  const redemption = await updateStoreRedemptionStatus(auth.supabase, {
+    redemptionId: body.redemptionId,
+    status: body.status,
+  });
 
-    if ("error" in auth) {
-      return auth.error;
-    }
-
-    const body = await request.json();
-    const redemption = await updateStoreRedemptionStatus(auth.supabase, {
-      redemptionId: body.redemptionId,
-      status: body.status,
-    });
-
-    return NextResponse.json({ data: redemption });
-  } catch (error) {
-    const message = error instanceof z.ZodError
-      ? "Choose a valid redemption and status."
-      : error instanceof Error
-        ? error.message
-        : "Redemption status could not be updated.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
-}
+  return jsonSuccess(redemption);
+}, { fallbackMessage: "Redemption status could not be updated." });

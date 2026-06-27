@@ -28,6 +28,11 @@ export async function getOnboardingReadyState(
   supabase: SupabaseClient<Database>,
   userId: string,
 ) {
+  const { data: isPlatformAdmin, error: adminError } = await supabase.rpc("current_user_is_platform_admin");
+  if (!adminError && isPlatformAdmin) {
+    return true;
+  }
+
   const { data: profile, error: profileError } = await supabase
     .from("users")
     .select("id, role, is_verified")
@@ -64,7 +69,11 @@ export async function resolveAuthGate(
   return "ready";
 }
 
-export function authGateRedirectPath(gate: AuthGate) {
+export function authGateRedirectPath(gate: AuthGate, options?: { isPlatformAdmin?: boolean }) {
+  if (gate === "ready" && options?.isPlatformAdmin) {
+    return "/admin";
+  }
+
   switch (gate) {
     case "email":
       return "/auth/verify-email";
@@ -77,13 +86,16 @@ export function authGateRedirectPath(gate: AuthGate) {
   }
 }
 
+export function isPublicAuthCheckpointPath(pathname: string) {
+  return pathname === "/auth/verify-email" || pathname.startsWith("/auth/verify-email/");
+}
+
+export function isSessionRequiredAuthCheckpointPath(pathname: string) {
+  return pathname === "/auth/verify-student" || pathname.startsWith("/auth/verify-student/");
+}
+
 export function isAuthCheckpointPath(pathname: string) {
-  return (
-    pathname === "/auth/verify-email" ||
-    pathname === "/auth/verify-student" ||
-    pathname.startsWith("/auth/verify-email/") ||
-    pathname.startsWith("/auth/verify-student/")
-  );
+  return isPublicAuthCheckpointPath(pathname) || isSessionRequiredAuthCheckpointPath(pathname);
 }
 
 export function roleRequiresStudentDocument(role: UserRole | null | undefined) {

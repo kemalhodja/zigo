@@ -430,6 +430,7 @@ export async function getNotifications(
       kind,
       message,
       post_id,
+      lesson_request_id,
       is_read,
       created_at,
       actor:actor_id!notifications_actor_id_fkey (

@@ -18,6 +18,7 @@ describe("auth-gates", () => {
     expect(authGateRedirectPath("email")).toBe("/auth/verify-email");
     expect(authGateRedirectPath("student-document")).toBe("/auth/verify-student");
     expect(authGateRedirectPath("ready")).toBe("/");
+    expect(authGateRedirectPath("ready", { isPlatformAdmin: true })).toBe("/admin");
   });
 
   it("requires student document only for student role", () => {

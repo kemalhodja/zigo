@@ -1,43 +1,33 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
-import { respondWithDomainError } from "@/lib/domain/api-errors";
-import { submitQuizAttempt } from "@/lib/domain/learning";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import {
+  completeVideoBodySchema,
+  completeVideoPost,
+  getQuizQuestionsForPlay,
+  submitQuizAttempt,
+  submitQuizBodySchema,
+} from "@/features/learning";
+import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const POST = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase, {
+    excludeRoles: ["teacher"],
+  });
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const body = submitQuizBodySchema.parse(await request.json());
 
-    if (profile.role === "teacher") {
-      return NextResponse.json({ error: "Teachers cannot earn student quiz rewards." }, { status: 403 });
-    }
-
-    const body = await request.json();
-
-    if (profile.role === "parent" && !body.childProfileId) {
-      return NextResponse.json({ error: "Parent quiz attempts require a child profile." }, { status: 400 });
-    }
-
-    const attempt = await submitQuizAttempt(supabase, {
-      quizId: body.quizId,
-      selectedOption: body.selectedOption,
-      answers: body.answers,
-      childProfileId: profile.role === "parent" ? body.childProfileId : undefined,
-    });
-
-    return NextResponse.json({ data: attempt }, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Choose a valid quiz and answer option." }, { status: 400 });
-    }
-
-    return respondWithDomainError(error, "Quiz attempt could not be saved.");
+  if (profileOrError.role === "parent" && !body.childProfileId) {
+    return jsonError("Parent quiz attempts require a child profile.", 400, "VALIDATION_ERROR");
   }
-}
+
+  const attempt = await submitQuizAttempt(supabase, {
+    quizId: body.quizId,
+    selectedOption: body.selectedOption,
+    answers: body.answers,
+    childProfileId: profileOrError.role === "parent" ? body.childProfileId : undefined,
+  });
+
+  return jsonSuccess(attempt, 201);
+}, { fallbackMessage: "Quiz attempt could not be saved." });

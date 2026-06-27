@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AvatarStore } from "@/components/avatar-store";
+import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getLearningProgressStats } from "@/lib/domain/learning";
@@ -44,17 +45,22 @@ export default async function AvatarPage() {
             @{profile.full_name.toLowerCase().replaceAll(" ", "")}
           </p>
           <div className="mt-5 flex items-end justify-between">
-            <div>
-              <div className="story-ring flex size-24 items-center justify-center rounded-full bg-gradient-to-br from-crystal to-fuchsia-500 text-4xl font-black text-white">
-                Z
-              </div>
-              <h2 className="mt-4 text-2xl font-black text-night">{profile.full_name}</h2>
+            <div className="flex items-center gap-4">
+              <GamifiedChildAvatar
+                avatarAssets={profile.avatar_assets}
+                badgeLabel={a.liveLessonStarBadge}
+                label={profile.full_name}
+                size="lg"
+              />
+              <div>
+              <h2 className="text-2xl font-black text-night">{profile.full_name}</h2>
               <p className="mt-1 text-sm font-semibold text-slate-500">
                 {a.levelGems
                   .replace("{level}", String(gamification.level))
                   .replace("{league}", compactLeague.label)
                   .replace("{gems}", String(gamification.gems))}
               </p>
+              </div>
             </div>
             <div className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-black text-night">
               Lv {gamification.level}

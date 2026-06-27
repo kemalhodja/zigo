@@ -101,6 +101,16 @@ export async function demoLogin(page: Page, role: DemoRole) {
   await page.locator("#main-content").waitFor({ timeout: 30_000 });
 }
 
+export async function dismissAppIntro(page: Page) {
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem("zigo:app-intro-seen", "1");
+    } catch {
+      // ignore
+    }
+  });
+}
+
 export const PUBLIC_APP_ROUTES = [
   "/",
   "/auth",

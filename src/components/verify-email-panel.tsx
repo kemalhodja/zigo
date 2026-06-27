@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 
 import { useMessages } from "@/lib/i18n/locale-context";
 
@@ -9,12 +10,16 @@ type Status = "idle" | "loading" | "success" | "error";
 export function VerifyEmailPanel() {
   const m = useMessages();
   const a = m.auth;
+  const searchParams = useSearchParams();
+  const defaultEmail = searchParams.get("email") ?? "";
+  const submittingRef = useRef(false);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState(a.verifyEmailDesc);
 
   async function resendVerification(formData: FormData) {
-    if (status === "loading") return;
+    if (submittingRef.current || status === "loading") return;
 
+    submittingRef.current = true;
     setStatus("loading");
     setMessage(a.sendingVerification);
 
@@ -26,11 +31,21 @@ export function VerifyEmailPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      const result = (await response.json()) as { error?: string; message?: string };
+      const result = (await response.json()) as {
+        error?: string;
+        message?: string;
+        code?: string;
+        retryAfterSeconds?: number;
+      };
 
       if (!response.ok) {
         setStatus("error");
-        setMessage(result.error ?? a.resendFailed);
+        if (result.code === "RATE_LIMITED" && result.retryAfterSeconds) {
+          const minutes = Math.max(1, Math.ceil(result.retryAfterSeconds / 60));
+          setMessage(`${result.error ?? a.resendFailed} (${minutes} dk sonra tekrar dene)`);
+        } else {
+          setMessage(result.error ?? a.resendFailed);
+        }
         return;
       }
 
@@ -39,6 +54,8 @@ export function VerifyEmailPanel() {
     } catch {
       setStatus("error");
       setMessage(a.connectionFailed);
+    } finally {
+      submittingRef.current = false;
     }
   }
 
@@ -51,6 +68,8 @@ export function VerifyEmailPanel() {
           <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{a.email}</label>
           <input
             className="zigo-input mt-2 w-full rounded-xl px-4 py-3 text-sm outline-none"
+            defaultValue={defaultEmail}
+            key={defaultEmail}
             name="email"
             placeholder="sen@ornek.com"
             required

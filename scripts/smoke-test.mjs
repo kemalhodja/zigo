@@ -817,7 +817,7 @@ check("Action chips allow wrapped labels on narrow screens", () => {
     globals.includes("overflow-wrap: anywhere") &&
     globals.includes(".zigo-stat-chip") &&
     globals.includes(".zigo-fit-text") &&
-    homePage.includes("TodayLearningCard") &&
+    homePage.includes("zigo-action-grid") &&
     learnPage.includes("zigo-action-grid")
   );
 });
@@ -840,6 +840,7 @@ check("Primary CTA buttons use zigo-cta instead of flat night", () => {
 
 check("Quick action links keep explicit readable text colors", () => {
   const quickActionFiles = [
+    "src/app/page.tsx",
     "src/app/learn/page.tsx",
     "src/app/post/[id]/page.tsx",
     "src/components/learning-progress-card.tsx",
@@ -899,11 +900,12 @@ check("App shell exposes premium daily quick actions", () => {
   const appShell = read("src/components/app-shell.tsx");
   return (
     appShell.includes("QuickActionDock") &&
+    (appShell.includes("Daily actions") || appShell.includes("dailyActions") || hasCatalog("Daily actions")) &&
     appShell.includes('href="/create?mode=story"') &&
     appShell.includes('href="/create?mode=reel"') &&
-    (appShell.includes("z.spark") || hasCatalog("Hikaye") || hasCatalog("Story")) &&
-    (appShell.includes("z.micro") || hasCatalog("Kısa ders") || hasCatalog("Short lesson")) &&
-    (appShell.includes("askSafely") || hasCatalog("Ask safely")) &&
+    (appShell.includes("Spark") || appShell.includes("z.spark") || hasCatalog("Spark")) &&
+    (appShell.includes("Micro") || appShell.includes("z.micro") || hasCatalog("Micro")) &&
+    (appShell.includes("Ask safely") || appShell.includes("askSafely") || hasCatalog("Ask safely")) &&
     appShell.includes('href="/learn"')
   );
 });
@@ -940,7 +942,7 @@ check("Home feed exposes refresh feedback and safe feed context", () => {
   const refreshControl = read("src/components/feed-refresh-control.tsx");
   return (
     homePage.includes("FeedRefreshControl") &&
-    homePage.includes("TodayLearningCard") &&
+    homePage.includes("HomeLearningPulse") &&
     homePage.includes("feed.selectedAreas") &&
     (refreshControl.includes("getMessages().feed") || refreshControl.includes("useMessages().feed") || refreshControl.includes("f.forYou")) &&
     refreshControl.includes("f.forYouRefreshed") &&
@@ -948,14 +950,17 @@ check("Home feed exposes refresh feedback and safe feed context", () => {
   );
 });
 
-check("Home feed surfaces learning shortcuts without redundant pulse hero", () => {
+check("Home feed surfaces a premium learning pulse", () => {
   const homePage = read("src/app/page.tsx");
   return (
-    !homePage.includes("HomeLearningPulse") &&
-    !homePage.includes("FeedTrustStrip") &&
-    homePage.includes("TodayLearningCard") &&
-    homePage.includes("FeedRefreshControl") &&
-    (homePage.includes("ReelSpotlightRail") || homePage.includes("ForYouStarter"))
+    homePage.includes("HomeLearningPulse") &&
+    homePage.includes("feedPulse") &&
+    homePage.includes("ReelSpotlightRail") &&
+    homePage.includes("StudentSocialStrip") &&
+    homePage.includes("trendingTopics") &&
+    homePage.includes("zigo-action-grid") &&
+    (homePage.includes("Micro") || homePage.includes("z.micro") || hasCatalog("Micro")) &&
+    (homePage.includes("Quiz") || homePage.includes("f.quiz") || hasCatalog("Quiz"))
   );
 });
 
@@ -985,10 +990,11 @@ check("Explore surfaces trend radar and topic bridges", () => {
   const explorePage = read("src/app/explore/page.tsx");
   return (
     explorePage.includes("ExploreTrendRadar") &&
-    (explorePage.includes("trendRadar") || hasCatalog("Popular topics") || hasCatalog("Popüler konular")) &&
-    (explorePage.includes("radarCards")) &&
-    (explorePage.includes("topicBridges") || hasCatalog("Quick links") || hasCatalog("Hızlı erişim")) &&
-    explorePage.includes("ExploreTopicBridges")
+    (explorePage.includes("Smart discovery") || explorePage.includes("smartDiscovery") || hasCatalog("Smart discovery")) &&
+    (explorePage.includes("exploreRadarCards") || explorePage.includes("radarCards")) &&
+    (explorePage.includes("Topic bridges") || explorePage.includes("topicBridges") || hasCatalog("Topic bridges")) &&
+    (explorePage.includes("Jump to the next learning loop") || explorePage.includes("jumpLoop") || hasCatalog("Jump to the next learning loop")) &&
+    explorePage.includes("topicBridges")
   );
 });
 
@@ -1127,14 +1133,15 @@ check("Main social surfaces use a cleaner Zigo visual reset", () => {
     globals.includes("zigo-shell-bg") &&
     globals.includes("zigo-media") &&
     mediaFrame.includes("zigo-media") &&
-    mediaFrame.includes("loading=") &&
+    mediaFrame.includes("loading=\"lazy\"") &&
     layout.includes("getRoleThemeClass") &&
     appShell.includes("role-accent-chip") &&
     scenes.includes("getSceneStyle") &&
     mediaFrame.includes("preload={controls ? \"metadata\" : \"none\"}") &&
     reelVideo.includes("IntersectionObserver") &&
     storyViewer.includes("Spark media") &&
-    stateCard.includes("StateCard")
+    stateCard.includes("defaultFooter") &&
+    catalog.includes("live Zigo activity") || hasCatalog("live Zigo activity")
   );
 });
 
@@ -1156,7 +1163,7 @@ check("Onboarding recommends role-based next best actions", () => {
   return (
     onboarding.includes("NextBestActionPanel") &&
     catalog.includes("Next best action") &&
-    (catalog.includes("Choose interests to unlock Selected areas") || catalog.includes("Choose interests to unlock Match-Feed")) &&
+    catalog.includes("Choose interests to unlock Match-Feed") &&
     onboarding.includes("TeacherPendingCard") &&
     catalog.includes("Verify") &&
     catalog.includes("Duels") &&
@@ -1504,12 +1511,13 @@ check("Migration bundle tooling is wired", () => {
   );
 });
 
-check("App shell keeps quick actions without preview banner noise", () => {
+check("Preview mode banner guides users to setup", () => {
   const shell = read("src/components/app-shell.tsx");
   const layout = read("src/app/layout.tsx");
   return (
-    !shell.includes("PreviewModeBanner") &&
-    shell.includes("QuickActionDock") &&
+    shell.includes("PreviewModeBanner") &&
+    shell.includes("isPreviewMode") &&
+    shell.includes('href="/setup"') &&
     layout.includes("isPreviewMode={!hasSupabaseEnv()}")
   );
 });

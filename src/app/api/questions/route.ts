@@ -1,80 +1,52 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
-import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api-errors";
-import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
-import { createQuestion, getMatchedQuestions } from "@/lib/domain/questions";
+import { RateLimitExceededError } from "@/features/shared/errors/global-error-handler";
+import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { getUserInterestAreaIds } from "@/features/profile/services";
+import {
+  createQuestion,
+  createQuestionBodySchema,
+  getMatchedQuestions,
+} from "@/features/questions";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET() {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const GET = withApiHandler(async () => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase);
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const questions = await getMatchedQuestions(supabase, profileOrError.id);
+  return jsonSuccess(questions);
+}, { fallbackMessage: "Questions could not be loaded." });
 
-    const questions = await getMatchedQuestions(supabase, profile.id);
-    return NextResponse.json({ data: questions });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Questions could not be loaded.";
-    return NextResponse.json({ error: message }, { status: 400 });
+export const POST = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase, {
+    excludeRoles: ["teacher"],
+  });
+  if (isErrorResponse(profileOrError)) return profileOrError;
+
+  const rateLimit = checkRateLimit(`question:${profileOrError.id}`, 8, 60 * 60_000);
+  if (!rateLimit.allowed) {
+    throw new RateLimitExceededError(
+      "Çok fazla soru gönderdin. Bir süre bekleyip tekrar dene.",
+      rateLimit.retryAfterSeconds,
+    );
   }
-}
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+  const body = createQuestionBodySchema.parse(await request.json());
+  const areaIds = await getUserInterestAreaIds(supabase, profileOrError.id);
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (profile.role === "teacher") {
-      return NextResponse.json({ error: "Teachers answer questions instead of asking them." }, { status: 403 });
-    }
-
-    const rateLimit = checkRateLimit(`question:${profile.id}`, 8, 60 * 60_000);
-    if (!rateLimit.allowed) {
-      throw new RateLimitExceededError(
-        "Çok fazla soru gönderdin. Bir süre bekleyip tekrar dene.",
-        rateLimit.retryAfterSeconds,
-      );
-    }
-
-    const body = await request.json();
-    const areaId = Number(body.areaId);
-    const areaIds = await getUserInterestAreaIds(supabase, profile.id);
-
-    if (!areaIds.includes(areaId)) {
-      return NextResponse.json(
-        { error: "Questions can only be asked in your selected education areas." },
-        { status: 403 },
-      );
-    }
-
-    const question = await createQuestion(supabase, {
-      authorId: profile.id,
-      areaId,
-      title: body.title,
-      description: body.description,
-    });
-
-    return NextResponse.json({ data: question }, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error:
-            "Choose a valid education area, add a title of at least 3 characters and details of at least 10 characters.",
-        },
-        { status: 400 },
-      );
-    }
-
-    return respondWithDomainError(error, "Question could not be created.");
+  if (!areaIds.includes(body.areaId)) {
+    return jsonError("Questions can only be asked in your selected education areas.", 403, "FORBIDDEN");
   }
-}
+
+  const question = await createQuestion(supabase, {
+    authorId: profileOrError.id,
+    areaId: body.areaId,
+    title: body.title,
+    description: body.description,
+  });
+
+  return jsonSuccess(question, 201);
+}, { fallbackMessage: "Question could not be created." });

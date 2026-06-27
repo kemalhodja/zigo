@@ -11,10 +11,10 @@ export const FOCUS_PRODUCT_POSITIONING = {
 } as const;
 
 export const ZIGO_PLUS_BENEFITS = [
-  "Advanced learning analytics for parents and students",
-  "Custom study plans matched to education areas",
-  "Ad-free, distraction-free focus mode",
-  "Written exam prep links from verified teachers",
+  "Veli ve öğrenci için gelişmiş öğrenme analitiği",
+  "Eğitim alanlarına uygun kişisel çalışma planları",
+  "Reklamsız, dikkat dağıtmayan odak modu",
+  "Doğrulanmış öğretmenlerden YKS/LGS yazılı hazırlık kaynakları",
 ] as const;
 
 export function formatPomodoroCountdown(totalSeconds: number) {

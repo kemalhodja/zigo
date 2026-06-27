@@ -1,28 +1,15 @@
-import { NextResponse } from "next/server";
-
-import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { isErrorResponse } from "@/features/shared/api/require-auth";
+import { requirePlatformAdminAccess } from "@/features/shared/api/rbac";
 import { createClient } from "@/lib/supabase/server";
 
+/** @deprecated Prefer `withAdminApiHandler` or `requirePlatformAdminAccess` from `@/features/shared/api/rbac`. */
 export async function requirePlatformAdmin() {
   const supabase = await createClient();
-  const profile = await getCurrentProfile(supabase);
+  const result = await requirePlatformAdminAccess(supabase);
 
-  if (!profile) {
-    return {
-      error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-      supabase,
-    };
+  if (isErrorResponse(result)) {
+    return { error: result, supabase };
   }
 
-  const isAdmin = await isCurrentUserPlatformAdmin(supabase);
-
-  if (!isAdmin) {
-    return {
-      error: NextResponse.json({ error: "Platform admin access is required." }, { status: 403 }),
-      supabase,
-    };
-  }
-
-  return { profile, supabase };
+  return { profile: result.profile, supabase: result.supabase };
 }

@@ -9,6 +9,7 @@ import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getProfileBillingSection } from "@/lib/domain/profile-billing";
+import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
 import { getCurrentProfile, getUserInterestAreaNames, type UserProfile } from "@/lib/domain/profiles";
 import {
   getProfileSocialStats,
@@ -117,9 +118,23 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/onboarding"}>
             {profile.isSignedOut ? m.common.signIn : m.common.edit}
           </Link>
-          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/setup" : "/create"}>
-            {profile.isSignedOut ? m.common.setup : m.header.create}
-          </Link>
+          {profile.role === "teacher" ? (
+            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/setup" : "/create"}>
+              {profile.isSignedOut ? m.common.setup : m.header.create}
+            </Link>
+          ) : profile.role === "student" ? (
+            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/student"}>
+              {m.dashboard.student.mode}
+            </Link>
+          ) : profile.role === "parent" ? (
+            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/parent"}>
+              {m.dashboard.parent.mode}
+            </Link>
+          ) : (
+            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/questions"}>
+              {m.nav.ask}
+            </Link>
+          )}
           <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
             {profile.isSignedOut ? p.feed : p.saved}
           </Link>
@@ -128,7 +143,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
       <ProfileHighlights />
 
-      <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} />
+      <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} role={profile.role} />
       <ProfileInsightCard
         activeTabLabel={activeTabLabel}
         followers={profile.stats.followers}
@@ -274,6 +289,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         <ZigoPlusPlansSection
           allowDevActivate={billingSection.allowDevActivate}
           groups={billingSection.groups}
+          hidePrices={billingSection.hidePrices}
           isPremium={billingSection.isPremium}
         />
       ) : null}
@@ -382,12 +398,40 @@ function ProfileCreatorDiscovery({
   );
 }
 
-function ProfileActionBar({ isSignedOut, messages }: { isSignedOut: boolean; messages: Messages }) {
-  const actions = [
-    { href: isSignedOut ? "/auth" : "/create?mode=story", label: messages.zigo.spark, tone: "from-crystal to-berry" },
-    { href: isSignedOut ? "/auth" : "/create?mode=reel", label: messages.zigo.micro, tone: "from-aqua to-mint" },
-    { href: "/collections", label: messages.profile.saved, tone: "from-sun to-peach" },
-  ];
+function ProfileActionBar({
+  isSignedOut,
+  messages,
+  role,
+}: {
+  isSignedOut: boolean;
+  messages: Messages;
+  role: UserProfile["role"] | "guest";
+}) {
+  const dashboardHref = getRoleDashboardHref(role);
+  const actions =
+    role === "teacher"
+      ? [
+          { href: isSignedOut ? "/auth" : "/create?mode=story", label: messages.zigo.spark, tone: "from-crystal to-berry" },
+          { href: isSignedOut ? "/auth" : "/create?mode=reel", label: messages.zigo.micro, tone: "from-aqua to-mint" },
+          { href: isSignedOut ? "/auth" : "/teacher", label: messages.dashboard.teacher.studio, tone: "from-sun to-peach" },
+        ]
+      : role === "student"
+        ? [
+            { href: isSignedOut ? "/auth" : "/student", label: messages.dashboard.student.mode, tone: "from-crystal to-berry" },
+            { href: isSignedOut ? "/auth" : "/focus", label: messages.zigo.focusMode, tone: "from-aqua to-mint" },
+            { href: isSignedOut ? "/auth" : "/learn", label: messages.dock.learn, tone: "from-sun to-peach" },
+          ]
+        : role === "parent"
+          ? [
+              { href: isSignedOut ? "/auth" : "/parent", label: messages.dashboard.parent.mode, tone: "from-crystal to-berry" },
+              { href: isSignedOut ? "/auth" : "/family", label: messages.profilesPage.familySetup, tone: "from-aqua to-mint" },
+              { href: isSignedOut ? "/auth" : "/questions", label: messages.nav.ask, tone: "from-sun to-peach" },
+            ]
+          : [
+              { href: isSignedOut ? "/auth" : "/questions", label: messages.nav.ask, tone: "from-crystal to-berry" },
+              { href: dashboardHref, label: messages.nav.profile, tone: "from-aqua to-mint" },
+              { href: "/collections", label: messages.profile.saved, tone: "from-sun to-peach" },
+            ];
 
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">

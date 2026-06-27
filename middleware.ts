@@ -3,11 +3,25 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import {
   authGateRedirectPath,
-  isAuthCheckpointPath,
   isEmailConfirmed,
+  isPublicAuthCheckpointPath,
+  isSessionRequiredAuthCheckpointPath,
   requiresEmailConfirmation,
   resolveAuthGate,
 } from "@/lib/domain/auth-gates";
+import {
+  getRoleRedirectForPath,
+  isAdminPath,
+  resolveAdminPageRedirect,
+  resolveDashboardAliasRedirect,
+} from "@/features/shared/middleware/role-guards";
+import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
+import {
+  isSupabaseAuthCookie,
+  readRememberMePreference,
+  withAuthPersistence,
+  ZIGO_REMEMBER_ME_COOKIE,
+} from "@/lib/supabase/auth-cookies";
 import type { Database } from "@/lib/supabase/database.types";
 
 const protectedPagePrefixes = [
@@ -29,14 +43,14 @@ const protectedPagePrefixes = [
   "/micro",
   "/store",
   "/sparks",
-  "/reels",
-  "/stories",
   "/student",
   "/teacher",
+  "/dashboard",
 ];
 
 const publicPagePrefixes = [
   "/auth",
+  "/kampanya",
   "/legal",
   "/onboarding",
   "/profiles",
@@ -53,6 +67,7 @@ export async function middleware(request: NextRequest) {
   }
 
   let response = NextResponse.next({ request });
+  const rememberMe = readRememberMePreference(request.cookies.get(ZIGO_REMEMBER_ME_COOKIE)?.value);
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -63,7 +78,11 @@ export async function middleware(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
+          response.cookies.set(
+            name,
+            value,
+            isSupabaseAuthCookie(name) ? withAuthPersistence(options, rememberMe) : options,
+          );
         });
       },
     },
@@ -75,27 +94,45 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  if (pathname === "/login" || pathname.startsWith("/login/")) {
+    const authUrl = new URL("/auth", request.url);
+    const next = request.nextUrl.searchParams.get("next");
+    if (next?.startsWith("/")) authUrl.searchParams.set("next", next);
+    return NextResponse.redirect(authUrl);
+  }
+
+  const dashboardAlias = resolveDashboardAliasRedirect(pathname);
+  if (dashboardAlias && dashboardAlias !== pathname) {
+    const aliasUrl = new URL(dashboardAlias, request.url);
+    aliasUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(aliasUrl);
+  }
+
   if (shouldSkipRoute(pathname)) {
     return response;
   }
 
-  if (isAuthCheckpointPath(pathname)) {
+  if (isPublicAuthCheckpointPath(pathname)) {
+    if (user && isEmailConfirmed(user)) {
+      const gate = await resolveAuthGate(supabase, user);
+      const adminOptions = await getPlatformAdminRedirectOptions(supabase);
+      return NextResponse.redirect(new URL(authGateRedirectPath(gate, adminOptions), request.url));
+    }
+
+    return response;
+  }
+
+  if (isSessionRequiredAuthCheckpointPath(pathname)) {
     if (!user) {
       const authUrl = new URL("/auth", request.url);
       authUrl.searchParams.set("next", pathname);
       return NextResponse.redirect(authUrl);
     }
 
-    if (pathname.startsWith("/auth/verify-email") && isEmailConfirmed(user)) {
-      const gate = await resolveAuthGate(supabase, user);
-      return NextResponse.redirect(new URL(authGateRedirectPath(gate), request.url));
-    }
-
-    if (pathname.startsWith("/auth/verify-student")) {
-      const gate = await resolveAuthGate(supabase, user);
-      if (gate !== "student-document") {
-        return NextResponse.redirect(new URL(authGateRedirectPath(gate), request.url));
-      }
+    const gate = await resolveAuthGate(supabase, user);
+    if (gate !== "student-document") {
+      const adminOptions = await getPlatformAdminRedirectOptions(supabase);
+      return NextResponse.redirect(new URL(authGateRedirectPath(gate, adminOptions), request.url));
     }
 
     return response;
@@ -103,11 +140,15 @@ export async function middleware(request: NextRequest) {
 
   if (pathname === "/auth" && user) {
     const gate = await resolveAuthGate(supabase, user);
+    const adminOptions = await getPlatformAdminRedirectOptions(supabase);
     if (gate !== "ready") {
-      return NextResponse.redirect(new URL(authGateRedirectPath(gate), request.url));
+      return NextResponse.redirect(new URL(authGateRedirectPath(gate, adminOptions), request.url));
     }
 
-    return NextResponse.redirect(new URL("/", request.url));
+    const next = request.nextUrl.searchParams.get("next");
+    const destination =
+      next?.startsWith("/") ? next : authGateRedirectPath("ready", adminOptions);
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   if ((pathname === "/onboarding" || pathname.startsWith("/onboarding/")) && user && requiresEmailConfirmation(user)) {
@@ -127,10 +168,43 @@ export async function middleware(request: NextRequest) {
   const gate = await resolveAuthGate(supabase, user);
 
   if (gate !== "ready") {
-    return NextResponse.redirect(new URL(authGateRedirectPath(gate), request.url));
+    const adminOptions = await getPlatformAdminRedirectOptions(supabase);
+    return NextResponse.redirect(new URL(authGateRedirectPath(gate, adminOptions), request.url));
+  }
+
+  const { data: userProfile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (isAdminPath(pathname)) {
+    const { data: isPlatformAdmin } = await supabase.rpc("current_user_is_platform_admin");
+    const adminRedirect = resolveAdminPageRedirect(Boolean(isPlatformAdmin), userProfile?.role);
+    if (adminRedirect) {
+      return NextResponse.redirect(new URL(adminRedirect, request.url));
+    }
+  }
+
+  if (userProfile?.role) {
+    if (pathname === "/dashboard" || pathname === "/dashboard/") {
+      return NextResponse.redirect(new URL(getRoleDashboardHref(userProfile.role), request.url));
+    }
+
+    const roleRedirect = getRoleRedirectForPath(pathname, userProfile.role);
+    if (roleRedirect) {
+      return NextResponse.redirect(new URL(roleRedirect, request.url));
+    }
   }
 
   return response;
+}
+
+async function getPlatformAdminRedirectOptions(
+  supabase: ReturnType<typeof createServerClient<Database>>,
+) {
+  const { data: isPlatformAdmin } = await supabase.rpc("current_user_is_platform_admin");
+  return { isPlatformAdmin: Boolean(isPlatformAdmin) };
 }
 
 export const config = {

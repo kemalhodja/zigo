@@ -1,0 +1,35 @@
+---
+description: Education Ecosystem modules — reputation, calendar, matching, reporting, urgent support
+globs:
+  - src/lib/domain/ecosystem/**
+  - supabase/migrations/066*.sql
+  - prisma/schema.prisma
+  - src/app/api/ecosystem/**
+  - src/components/teacher-slot-selector.tsx
+  - src/components/parent-weekly-progress-card.tsx
+---
+
+# Education Ecosystem
+
+Implement ecosystem features against **Supabase migrations + RLS**, not Prisma Client.
+
+## Modules (066_education_ecosystem.sql)
+
+1. **Reputation** — `users.reputation_score`, `reputation_events`, RPC `record_reputation_event`
+2. **Calendar** — `teacher_availability`, `lesson_bookings`, RPC `book_availability_slot`
+3. **Matching** — `student_needs`, RPC `find_best_teacher` (matches `user_interests` + reputation)
+4. **Reporting** — `progress_reports`, RPC `get_parent_weekly_progress_summary`
+5. **Urgent support** — `lesson_requests.priority` (`normal`|`urgent`), notify via `ecosystem/notification-service.ts`
+
+## Domain entrypoint
+
+`src/lib/domain/ecosystem/index.ts`
+
+## Rules
+
+- Keep student messaging blocked; bookings/requests are parent↔verified-teacher only.
+- When booking completes, call `recordReputationEvent` (+15 `lesson_completed`) and optionally insert `progress_reports`.
+- Extend types in `database.types.ts` when adding columns/tables; run migration before deploy.
+- UI: teacher slots on `/teacher`, weekly summary on `/parent`.
+
+See `docs/education-ecosystem-master-plan.md` for architecture diagram.

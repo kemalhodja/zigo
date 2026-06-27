@@ -4,10 +4,13 @@ import { getSocialFeed } from "@/lib/domain/social/feed";
 import { createMockSupabase, samplePostRow } from "@/test/mock-supabase";
 
 describe("social feed", () => {
+  const emptyBlocks = { user_blocks: { data: [], error: null } };
+
   it("returns empty feed when viewer has no matched interests", async () => {
     const supabase = createMockSupabase({
       tables: {
         user_interests: { data: [], error: null },
+        ...emptyBlocks,
       },
     });
 
@@ -27,6 +30,7 @@ describe("social feed", () => {
         },
         post_comments: { data: [{ post_id: samplePostRow.id }], error: null },
         saved_posts: { data: [], error: null },
+        ...emptyBlocks,
       },
     });
 
@@ -42,6 +46,7 @@ describe("social feed", () => {
       tables: {
         user_interests: { data: [{ area_id: 1 }], error: null },
         social_posts: { data: [], error: null },
+        ...emptyBlocks,
       },
     });
 
@@ -70,6 +75,7 @@ describe("social feed", () => {
       tables: {
         user_interests: { data: [{ area_id: 1 }], error: null },
         social_posts: { data: [], error: null },
+        ...emptyBlocks,
       },
     });
 

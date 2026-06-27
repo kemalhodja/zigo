@@ -9,16 +9,20 @@ import {
   enforceAuthRateLimit,
   verifyAuthRecaptcha,
 } from "@/lib/server/auth-request";
-import { createClient } from "@/lib/supabase/server";
+import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
 
 const authSchema = z.object({
   email: authEmailSchema,
   password: authPasswordSchema,
+  rememberMe: z.boolean().optional().default(true),
   recaptchaToken: z.string().trim().min(1).optional(),
 });
 
 export async function POST(request: Request) {
   try {
+    const rawBody = await request.json();
+    const body = authSchema.parse(rawBody);
+
     const rateLimit = enforceAuthRateLimit(request, "sign-in", 12, 15 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
@@ -27,13 +31,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = authSchema.parse(await request.json());
     const recaptcha = await verifyAuthRecaptcha(request, body.recaptchaToken);
     if (!recaptcha.ok) {
       return NextResponse.json({ error: recaptcha.message }, { status: recaptcha.status });
     }
 
-    const supabase = await createClient();
+    const rememberMe = body.rememberMe ?? true;
+    const supabase = await createAuthActionClient(rememberMe);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: body.email,
@@ -41,7 +45,10 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      return NextResponse.json({ error: getSignInErrorMessage(error.message) }, { status: 400 });
+      return NextResponse.json(
+        { error: getSignInErrorMessage(error.message, error.status) },
+        { status: getSignInStatus(error.message, error.status) },
+      );
     }
 
     if (data.user && requiresEmailConfirmation(data.user)) {
@@ -55,7 +62,11 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ data });
+    await persistRememberMePreference(rememberMe);
+
+    const { data: isPlatformAdmin } = await supabase.rpc("current_user_is_platform_admin");
+
+    return NextResponse.json({ data, isPlatformAdmin: Boolean(isPlatformAdmin) });
   } catch (error) {
     if (error instanceof RateLimitExceededError) {
       return NextResponse.json(
@@ -73,8 +84,20 @@ export async function POST(request: Request) {
   }
 }
 
-function getSignInErrorMessage(message: string) {
+function getSignInStatus(message: string, status?: number) {
   const normalized = message.toLowerCase();
+  if (status === 429 || normalized.includes("rate limit")) {
+    return 429;
+  }
+  return 400;
+}
+
+function getSignInErrorMessage(message: string, status?: number) {
+  const normalized = message.toLowerCase();
+
+  if (status === 429 || normalized.includes("rate limit")) {
+    return "Çok fazla giriş denemesi. Bir süre bekleyip tekrar dene.";
+  }
 
   if (normalized.includes("invalid") || normalized.includes("credentials")) {
     return "E-posta veya şifre hatalı.";

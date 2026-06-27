@@ -1,35 +1,17 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
-import { respondWithDomainError } from "@/lib/domain/api-errors";
-import { getCurrentProfile, updateUserGradeLevel } from "@/lib/domain/profiles";
+import { updateGradeLevelBodySchema } from "@/features/profile/types";
+import { updateUserGradeLevel } from "@/features/profile/services";
+import { isErrorResponse, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
-export async function PATCH(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const PATCH = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase, {
+    roles: ["student", "parent"],
+  });
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (profile.role !== "student" && profile.role !== "parent") {
-      return NextResponse.json(
-        { error: "Only student and parent accounts can update grade level." },
-        { status: 403 },
-      );
-    }
-
-    const body = await request.json();
-    const updated = await updateUserGradeLevel(supabase, { gradeLevel: body.gradeLevel });
-
-    return NextResponse.json({ data: updated });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Choose a valid grade level." }, { status: 400 });
-    }
-
-    return respondWithDomainError(error, "Grade level could not be updated.");
-  }
-}
+  const body = updateGradeLevelBodySchema.parse(await request.json());
+  const updated = await updateUserGradeLevel(supabase, { gradeLevel: body.gradeLevel });
+  return jsonSuccess(updated);
+}, { fallbackMessage: "Grade level could not be updated." });

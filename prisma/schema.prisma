@@ -1,0 +1,189 @@
+// Zigo — Prisma eşdeğeri (REFERANS)
+// Kaynak gerçeği: supabase/migrations/*.sql + Supabase Auth
+// Bu projede Prisma Client kullanılmaz; auth.users + public.users + RLS ile çalışır.
+//
+// Eğitim Ekosistemi modülleri (066_education_ecosystem.sql):
+// Güven Puanı · Akıllı Takvim · Matching · Veli Raporlama · Acil Destek
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT  @map("student")
+  PARENT   @map("parent")
+  TEACHER  @map("teacher")
+}
+
+enum LessonRequestStatus {
+  PENDING  @map("pending")
+  ACCEPTED @map("accepted")
+  REJECTED @map("rejected")
+  CLOSED   @map("closed")
+}
+
+enum LessonRequestPriority {
+  NORMAL @map("normal")
+  URGENT @map("urgent")
+}
+
+enum BookingStatus {
+  BOOKED    @map("booked")
+  COMPLETED @map("completed")
+  CANCELLED @map("cancelled")
+}
+
+enum ReputationEventKind {
+  LESSON_COMPLETED   @map("lesson_completed")
+  POSITIVE_FEEDBACK  @map("positive_feedback")
+  PROMPT_ANSWER      @map("prompt_answer")
+}
+
+/// Supabase auth.users.id ile birebir; passwordHash burada tutulmaz.
+model User {
+  id               String   @id @db.Uuid
+  email            String   @unique
+  fullName         String   @map("full_name")
+  role             UserRole
+  isVerified       Boolean  @default(false) @map("is_verified")
+  organizationType String?  @map("organization_type")
+  totalPoints      Int      @default(0) @map("total_points")
+  reputationScore  Int      @default(100) @map("reputation_score")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  sentLessonRequests     LessonRequest[]        @relation("LessonRequestSender")
+  receivedLessonRequests LessonRequest[]        @relation("LessonRequestReceiver")
+  lessonRequestMessages  LessonRequestMessage[]
+  reputationEvents       ReputationEvent[]      @relation("ReputationSubject")
+  reputationEventsActor  ReputationEvent[]      @relation("ReputationActor")
+  teacherAvailability    TeacherAvailability[]
+  teacherBookings        LessonBooking[]        @relation("BookingTeacher")
+  parentBookings         LessonBooking[]        @relation("BookingParent")
+  studentNeedsAsStudent  StudentNeed[]          @relation("StudentNeedUser")
+  progressReportsAsStudent ProgressReport[]     @relation("ProgressReportStudent")
+
+  @@map("users")
+}
+
+/// Veli → doğrulanmış öğretmen/kurum talebi. Serbest DM yok.
+model LessonRequest {
+  id             String                @id @default(uuid()) @db.Uuid
+  senderId       String                @map("sender_id") @db.Uuid
+  receiverId     String                @map("receiver_id") @db.Uuid
+  childProfileId String?               @map("child_profile_id") @db.Uuid
+  areaId         Int?                  @map("area_id")
+  status         LessonRequestStatus   @default(PENDING)
+  priority       LessonRequestPriority @default(NORMAL)
+  messageBody    String                @map("message_body")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  sender   User                   @relation("LessonRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User                   @relation("LessonRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  messages LessonRequestMessage[]
+
+  @@map("lesson_requests")
+}
+
+model LessonRequestMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  requestId String   @map("request_id") @db.Uuid
+  senderId  String   @map("sender_id") @db.Uuid
+  content   String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  request LessonRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  sender  User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_request_messages")
+}
+
+/// Güven puanı olay günlüğü (öğretmen itibarı).
+model ReputationEvent {
+  id           String              @id @default(uuid()) @db.Uuid
+  userId       String              @map("user_id") @db.Uuid
+  actorId      String?             @map("actor_id") @db.Uuid
+  kind         ReputationEventKind
+  delta        Int
+  referenceId  String?             @map("reference_id") @db.Uuid
+  note         String?
+  createdAt    DateTime            @default(now()) @map("created_at")
+
+  user  User  @relation("ReputationSubject", fields: [userId], references: [id], onDelete: Cascade)
+  actor User? @relation("ReputationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@map("reputation_events")
+}
+
+/// Öğretmen müsaitlik slotları (Akıllı Takvim).
+model TeacherAvailability {
+  id        String   @id @default(uuid()) @db.Uuid
+  teacherId String   @map("teacher_id") @db.Uuid
+  startTime DateTime @map("start_time") @db.Timestamptz
+  endTime   DateTime @map("end_time") @db.Timestamptz
+  isBooked  Boolean  @default(false) @map("is_booked")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  teacher User            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  booking LessonBooking?
+
+  @@map("teacher_availability")
+}
+
+/// Veli rezervasyonu — Availability ile bağlı.
+model LessonBooking {
+  id             String        @id @default(uuid()) @db.Uuid
+  teacherId      String        @map("teacher_id") @db.Uuid
+  parentId       String        @map("parent_id") @db.Uuid
+  childProfileId String?       @map("child_profile_id") @db.Uuid
+  availabilityId String        @unique @map("availability_id") @db.Uuid
+  areaId         Int?          @map("area_id")
+  startTime      DateTime      @map("start_time") @db.Timestamptz
+  endTime        DateTime      @map("end_time") @db.Timestamptz
+  status         BookingStatus @default(BOOKED)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  teacher      User                @relation("BookingTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  parent       User                @relation("BookingParent", fields: [parentId], references: [id], onDelete: Cascade)
+  availability TeacherAvailability @relation(fields: [availabilityId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_bookings")
+}
+
+/// Öğrenci/çocuk ihtiyaç profili (Matching girdisi).
+model StudentNeed {
+  id              String   @id @default(uuid()) @db.Uuid
+  studentUserId   String?  @map("student_user_id") @db.Uuid
+  childProfileId  String?  @map("child_profile_id") @db.Uuid
+  areaId          Int      @map("area_id")
+  weaknessLevel   Int      @map("weakness_level")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  studentUser User? @relation("StudentNeedUser", fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@map("student_needs")
+}
+
+/// Veli raporlama — haftalık gelişim özeti kaynağı.
+model ProgressReport {
+  id             String   @id @default(uuid()) @db.Uuid
+  studentUserId  String?  @map("student_user_id") @db.Uuid
+  childProfileId String?  @map("child_profile_id") @db.Uuid
+  areaId         Int      @map("area_id")
+  score          Int
+  reportDate     DateTime @map("report_date") @db.Date
+  feedback       String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  studentUser User? @relation("ProgressReportStudent", fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@map("progress_reports")
+}

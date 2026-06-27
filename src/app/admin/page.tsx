@@ -1,7 +1,10 @@
 import Link from "next/link";
 
+import { AdminBankTransferActions } from "@/components/admin-bank-transfer-actions";
+import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
 import { AdminRedemptionStatus } from "@/components/admin-redemption-status";
 import { AdminStockForm } from "@/components/admin-stock-form";
+import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
 import { AdminTeacherActions } from "@/components/admin-teacher-actions";
 import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
 import { StateCard } from "@/components/state-card";
@@ -9,12 +12,43 @@ import { hasSupabaseEnv } from "@/lib/config";
 import {
   getAdminStoreProducts,
   getAdminStoreRedemptions,
+  getStudentDocumentQueue,
   getTeacherVerificationQueue,
   isCurrentUserPlatformAdmin,
 } from "@/lib/domain/admin";
+import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
 import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+
+function TeacherRow({
+  teacher,
+  areas,
+  labels,
+}: {
+  teacher: Awaited<ReturnType<typeof getTeacherVerificationQueue>>[number];
+  areas: Awaited<ReturnType<typeof getEducationAreas>>;
+  labels: {
+    verified: string;
+    pendingVerification: string;
+  };
+}) {
+  return (
+    <div className="grid gap-3 border-b border-slate-100 px-4 py-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-black text-night">{teacher.full_name}</p>
+          <p className="text-xs font-bold text-slate-500">{teacher.email}</p>
+          <p className="mt-1 text-xs font-black text-crystal">
+            {teacher.is_verified ? labels.verified : labels.pendingVerification}
+          </p>
+        </div>
+        <AdminTeacherActions isVerified={teacher.is_verified} teacherId={teacher.id} />
+      </div>
+      <AdminTeacherAreaForm areas={areas} teacherId={teacher.id} />
+    </div>
+  );
+}
 
 export default async function AdminPage() {
   const m = await getServerMessages();
@@ -68,15 +102,22 @@ export default async function AdminPage() {
     );
   }
 
-  const [teachers, products, redemptions, areas] = await Promise.all([
+  const [teachers, products, redemptions, areas, studentDocuments, bankTransfers] = await Promise.all([
     getTeacherVerificationQueue(supabase),
     getAdminStoreProducts(supabase),
     getAdminStoreRedemptions(supabase),
     getEducationAreas(supabase),
+    getStudentDocumentQueue(supabase),
+    getPendingBankTransferQueue(supabase),
   ]);
+
+  const pendingTeachers = teachers.filter((teacher) => !teacher.is_verified);
+  const verifiedTeachers = teachers.filter((teacher) => teacher.is_verified);
+
   const auditItems = [
-    { label: a.queueTeacherVerify, value: teachers.length },
-    { label: a.queueTeacherAreas, value: areas.length },
+    { label: a.queueTeacherVerify, value: pendingTeachers.length },
+    { label: a.queueStudentDocs, value: studentDocuments.length },
+    { label: a.queueBankTransfers, value: bankTransfers.length },
     { label: a.queueStoreOrders, value: redemptions.length },
     { label: a.queueStock, value: products.length },
   ];
@@ -87,6 +128,50 @@ export default async function AdminPage() {
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{a.eyebrow}</p>
         <h2 className="mt-1 text-2xl font-black text-night">{a.title}</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">{a.desc}</p>
+        <span className="mt-3 inline-block rounded-lg bg-violet-50 px-3 py-1 text-xs font-black text-crystal">
+          {a.platformFocus}
+        </span>
+      </section>
+
+      <section className="-mx-4 bg-white px-4 py-4">
+        <h3 className="text-sm font-black text-night">{a.quickLinksTitle}</h3>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/moderation">
+            {a.linkModeration}
+          </Link>
+          <Link className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/setup">
+            {a.linkSetup}
+          </Link>
+          <Link className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/explore">
+            {a.linkExplore}
+          </Link>
+        </div>
+      </section>
+
+      <AdminStripeCampaignPanel />
+
+      <section className="-mx-4 bg-white">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <h3 className="text-lg font-black text-night">{a.bankTransferSectionTitle}</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.bankTransferSectionDesc}</p>
+        </div>
+        {bankTransfers.length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <p className="text-sm font-black text-night">{a.noBankTransfersTitle}</p>
+            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noBankTransfersDesc}</p>
+          </div>
+        ) : (
+          bankTransfers.map((transfer) => (
+            <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={transfer.id}>
+              <div>
+                <p className="font-black text-night">{transfer.user?.full_name ?? c.unknownUser}</p>
+                <p className="text-xs font-bold text-slate-500">{transfer.user?.email}</p>
+                <p className="mt-1 text-xs font-black text-crystal">{transfer.reference_code}</p>
+              </div>
+              <AdminBankTransferActions request={transfer} />
+            </div>
+          ))
+        )}
       </section>
 
       <section className="-mx-4 bg-gradient-to-r from-violet-50 via-pink-50 to-cyan-50 px-4 py-4">
@@ -110,32 +195,65 @@ export default async function AdminPage() {
 
       <section className="-mx-4 bg-white">
         <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="text-lg font-black text-night">{a.teacherSectionTitle}</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.teacherSectionDesc}</p>
+          <h3 className="text-lg font-black text-night">{a.studentDocSectionTitle}</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.studentDocSectionDesc}</p>
         </div>
-        {teachers.length === 0 ? (
+        {studentDocuments.length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <p className="text-sm font-black text-night">{a.noStudentDocsTitle}</p>
+            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noStudentDocsDesc}</p>
+          </div>
+        ) : (
+          studentDocuments.map((student) => (
+            <div className="border-b border-slate-100 px-4 py-4" key={student.id}>
+              <AdminStudentDocumentActions
+                documentUrl={student.student_document_url}
+                fullName={student.full_name}
+                gradeLevel={student.grade_level}
+                studentId={student.id}
+              />
+            </div>
+          ))
+        )}
+      </section>
+
+      <section className="-mx-4 bg-white">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <h3 className="text-lg font-black text-night">{a.pendingTeachersTitle}</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.pendingTeachersDesc}</p>
+        </div>
+        {pendingTeachers.length === 0 ? (
           <div className="px-4 py-8 text-center">
             <p className="text-sm font-black text-night">{a.noTeachersTitle}</p>
             <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noTeachersDesc}</p>
           </div>
         ) : (
-          teachers.map((teacher) => (
-            <div className="grid gap-3 border-b border-slate-100 px-4 py-4" key={teacher.id}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-black text-night">{teacher.full_name}</p>
-                  <p className="text-xs font-bold text-slate-500">{teacher.email}</p>
-                  <p className="mt-1 text-xs font-black text-crystal">
-                    {teacher.is_verified ? a.verified : a.pendingVerification}
-                  </p>
-                </div>
-                <AdminTeacherActions isVerified={teacher.is_verified} teacherId={teacher.id} />
-              </div>
-              <AdminTeacherAreaForm areas={areas} teacherId={teacher.id} />
-            </div>
+          pendingTeachers.map((teacher) => (
+            <TeacherRow
+              areas={areas}
+              key={teacher.id}
+              labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
+              teacher={teacher}
+            />
           ))
         )}
       </section>
+
+      {verifiedTeachers.length > 0 ? (
+        <section className="-mx-4 bg-white">
+          <div className="border-b border-slate-100 px-4 py-3">
+            <h3 className="text-lg font-black text-night">{a.allTeachersTitle}</h3>
+          </div>
+          {verifiedTeachers.map((teacher) => (
+            <TeacherRow
+              areas={areas}
+              key={teacher.id}
+              labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
+              teacher={teacher}
+            />
+          ))}
+        </section>
+      ) : null}
 
       <section className="-mx-4 bg-white">
         <h3 className="border-b border-slate-100 px-4 py-3 text-lg font-black text-night">{a.storeOrdersTitle}</h3>

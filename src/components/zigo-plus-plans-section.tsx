@@ -1,24 +1,32 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
+import {
+  isSubscriptionCampaignActive,
+  SUBSCRIPTION_CAMPAIGN,
+} from "@/lib/domain/subscription-campaign";
 import type { SubscriptionPlanGroup } from "@/lib/domain/subscription-plans";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
 
 type ZigoPlusPlansSectionProps = {
   groups: SubscriptionPlanGroup[];
+  hidePrices?: boolean;
   isPremium?: boolean;
   allowDevActivate?: boolean;
 };
 
 export function ZigoPlusPlansSection({
   groups,
+  hidePrices = false,
   isPremium = false,
   allowDevActivate = false,
 }: ZigoPlusPlansSectionProps) {
   const [playStoreOnly, setPlayStoreOnly] = useState(false);
   const [platformMessage, setPlatformMessage] = useState("");
+  const campaignActive = isSubscriptionCampaignActive();
 
   useEffect(() => {
     const android = isCapacitorAndroidClient();
@@ -50,6 +58,15 @@ export function ZigoPlusPlansSection({
 
   return (
     <section className="-mx-4 space-y-4 border-t border-slate-200 bg-slate-950 px-4 py-5 text-white">
+      {campaignActive ? (
+        <div className="rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/20 to-orange-500/20 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">
+            {SUBSCRIPTION_CAMPAIGN.headline} · {SUBSCRIPTION_CAMPAIGN.badgeLabel}
+          </p>
+          <p className="mt-1 text-base font-black leading-snug text-white">{SUBSCRIPTION_CAMPAIGN.description}</p>
+        </div>
+      ) : null}
+
       <div>
         <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">Abone ol</p>
         <h2 className="mt-1 text-xl font-black leading-tight">Zigo Plus planını seç</h2>
@@ -61,7 +78,9 @@ export function ZigoPlusPlansSection({
       {groups.map((group) => (
         <PlanGroupCard
           allowDevActivate={allowDevActivate}
+          campaignActive={campaignActive}
           group={group}
+          hidePrices={hidePrices}
           key={group.id}
           playStoreOnly={playStoreOnly}
           platformMessage={platformMessage}
@@ -74,13 +93,17 @@ export function ZigoPlusPlansSection({
 function PlanGroupCard({
   group,
   allowDevActivate,
+  hidePrices,
   playStoreOnly,
   platformMessage,
+  campaignActive,
 }: {
   group: SubscriptionPlanGroup;
   allowDevActivate: boolean;
+  hidePrices: boolean;
   playStoreOnly: boolean;
   platformMessage: string;
+  campaignActive: boolean;
 }) {
   return (
     <article className="rounded-xl border border-white/15 bg-white/5 p-4">
@@ -106,7 +129,9 @@ function PlanGroupCard({
         {group.plans.map((item) => (
           <PlanPriceRow
             allowDevActivate={allowDevActivate}
+            campaignActive={campaignActive}
             compareAtTry={item.compareAtTry}
+            hidePrices={hidePrices}
             intervalLabel={item.intervalLabel}
             key={item.id}
             planId={item.id}
@@ -125,14 +150,18 @@ function PlanPriceRow({
   priceTry,
   compareAtTry,
   allowDevActivate,
+  hidePrices,
   playStoreOnly,
+  campaignActive,
 }: {
   planId: string;
   intervalLabel: string;
   priceTry: number;
   compareAtTry: number;
   allowDevActivate: boolean;
+  hidePrices: boolean;
   playStoreOnly: boolean;
+  campaignActive: boolean;
 }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -195,23 +224,44 @@ function PlanPriceRow({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-white/10 px-3 py-3">
-      <div>
-        <p className="text-sm font-black text-white">{intervalLabel}</p>
-        <p className="mt-1 flex flex-wrap items-baseline gap-2">
-          <span className="text-xs font-bold text-white/50 line-through">{formatTryPrice(compareAtTry)}</span>
-          <span className="text-lg font-black text-amber-300">{formatTryPrice(priceTry)}</span>
-        </p>
+    <div className="rounded-lg bg-white/10 px-3 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-black text-white">{intervalLabel}</p>
+            {campaignActive ? (
+              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[0.62rem] font-black uppercase tracking-wide text-night">
+                {SUBSCRIPTION_CAMPAIGN.badgeLabel}
+              </span>
+            ) : null}
+          </div>
+          {hidePrices ? null : (
+            <p className="mt-1 flex flex-wrap items-baseline gap-2">
+              <span className="text-xs font-bold text-white/50 line-through">{formatTryPrice(compareAtTry)}</span>
+              <span className="text-lg font-black text-amber-300">{formatTryPrice(priceTry)}</span>
+            </p>
+          )}
+        </div>
+        <div className="flex shrink-0 flex-col gap-2">
+          <button
+            className="tap-scale rounded-lg bg-white px-4 py-2.5 text-xs font-black text-night disabled:opacity-60"
+            disabled={loading || playStoreOnly}
+            onClick={() => void subscribe()}
+            type="button"
+          >
+            {playStoreOnly ? "Kart (web)" : loading ? "..." : "Kart ile öde"}
+          </button>
+          {playStoreOnly ? null : (
+            <Link
+              className="tap-scale rounded-lg border border-white/30 px-4 py-2.5 text-center text-xs font-black text-white"
+              href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
+            >
+              Havale / EFT
+            </Link>
+          )}
+        </div>
       </div>
-      <button
-        className="tap-scale shrink-0 rounded-lg bg-white px-4 py-2.5 text-xs font-black text-night disabled:opacity-60"
-        disabled={loading || playStoreOnly}
-        onClick={() => void subscribe()}
-        type="button"
-      >
-        {playStoreOnly ? "Web'de abone ol" : loading ? "..." : "Abone ol"}
-      </button>
-      {message ? <p className="col-span-full text-xs font-bold text-amber-200">{message}</p> : null}
+      {message ? <p className="mt-2 text-xs font-bold text-amber-200">{message}</p> : null}
     </div>
   );
 }

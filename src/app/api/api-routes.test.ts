@@ -36,8 +36,12 @@ vi.mock("@/lib/domain/learning", () => ({
   submitQuizAttempt: vi.fn(),
 }));
 
-vi.mock("@/lib/domain/questions", () => ({
+vi.mock("@/lib/domain/questions/mutations", () => ({
   createTeacherAnswer: vi.fn(),
+}));
+
+vi.mock("@/lib/domain/questions/queries", () => ({
+  getMatchedQuestions: vi.fn(async () => []),
 }));
 
 vi.mock("@/lib/domain/subscription", () => ({
@@ -58,10 +62,12 @@ vi.mock("@/lib/domain/live-gates", () => ({
 
 import { submitQuizAttempt } from "@/lib/domain/learning";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
-import { createTeacherAnswer } from "@/lib/domain/questions";
+import { createTeacherAnswer } from "@/lib/domain/questions/mutations";
 import { createSocialPost } from "@/lib/domain/social";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
+
+const sampleQuestionId = "33333333-3333-4333-8333-333333333333";
 
 describe("API route handlers", () => {
   beforeEach(() => {
@@ -249,7 +255,7 @@ describe("API route handlers", () => {
     const response = await answersPost(
       new Request("http://localhost/api/answers", {
         method: "POST",
-        body: JSON.stringify({ questionId: "q1", content: "A long enough answer." }),
+        body: JSON.stringify({ questionId: sampleQuestionId, content: "A long enough answer." }),
       }),
     );
     expect(response.status).toBe(401);
@@ -274,7 +280,7 @@ describe("API route handlers", () => {
     const response = await answersPost(
       new Request("http://localhost/api/answers", {
         method: "POST",
-        body: JSON.stringify({ questionId: "q1", content: "A long enough answer." }),
+        body: JSON.stringify({ questionId: sampleQuestionId, content: "A long enough answer." }),
       }),
     );
     expect(response.status).toBe(403);
@@ -301,7 +307,7 @@ describe("API route handlers", () => {
     const response = await answersPost(
       new Request("http://localhost/api/answers", {
         method: "POST",
-        body: JSON.stringify({ questionId: "q1", content: "A long enough answer." }),
+        body: JSON.stringify({ questionId: sampleQuestionId, content: "A long enough answer." }),
       }),
     );
 

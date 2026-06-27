@@ -51,6 +51,16 @@ export default async function DuelsPage() {
     );
   }
 
+  if (data.mode === "parent") {
+    return (
+      <StateCard
+        action={<Link className="font-black text-crystal" href="/parent">{m.dashboard.parent.title}</Link>}
+        description={d.parentDesc}
+        title={d.parentTitle}
+      />
+    );
+  }
+
   return (
     <div className="space-y-5 pb-3">
       <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
@@ -60,7 +70,7 @@ export default async function DuelsPage() {
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           <DuelStat label={d.noDm} value={d.safeStat} />
           <DuelStat label={d.rewardLabel} value="+25" />
-          <DuelStat label="Mode" value={data.mode === "parent" ? d.modeChild : d.modeSolo} />
+          <DuelStat label="Mode" value={d.modeSolo} />
         </div>
       </section>
 

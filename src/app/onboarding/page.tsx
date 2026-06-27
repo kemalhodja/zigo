@@ -1,12 +1,14 @@
 import Link from "next/link";
 
 import { InterestSelector } from "@/components/interest-selector";
+import { SponsoredCampaignsRail } from "@/components/sponsored-campaigns-rail";
 import { ProfileForm } from "@/components/profile-form";
 import { SignOutButton } from "@/components/sign-out-button";
 import { StateCard } from "@/components/state-card";
 import { SupabaseSetupCard } from "@/components/supabase-setup-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrganizationType } from "@/lib/domain/profiles";
+import { listSponsoredTeacherCampaigns } from "@/lib/domain/teacher-campaign";
 import { getServerMessages } from "@/lib/i18n/server";
 import type { Messages } from "@/lib/i18n/types";
 import { createClient } from "@/lib/supabase/server";
@@ -55,9 +57,17 @@ export default async function OnboardingPage() {
     );
   }
 
-  const [areas, selectedAreaIds] = await Promise.all([
+  const [areas, selectedAreaIds, sponsoredCampaigns] = await Promise.all([
     getEducationAreas(supabase),
     getUserInterestAreaIds(supabase, profile.id),
+    getUserInterestAreaIds(supabase, profile.id).then(async (areaIds) => {
+      if (areaIds.length === 0) return [];
+      try {
+        return await listSponsoredTeacherCampaigns(supabase, 6, "explore");
+      } catch {
+        return [];
+      }
+    }),
   ]);
 
   const roleNote =
@@ -105,6 +115,17 @@ export default async function OnboardingPage() {
         messages={m}
         role={profile.role}
       />
+
+      {selectedAreaIds.length > 0 && sponsoredCampaigns.length > 0 ? (
+        <SponsoredCampaignsRail
+          campaigns={sponsoredCampaigns}
+          desc={m.teacherCampaign.registrationAnnounceOnboardingDesc}
+          policyHref="/legal/sponsorship"
+          policyLabel={m.teacherCampaign.policyLink}
+          sponsoredLabel={m.teacherCampaign.sponsoredBadge}
+          title={m.teacherCampaign.registrationAnnounceTitle}
+        />
+      ) : null}
 
       {profile.role === "teacher" && !profile.is_verified && !isOrganizationTeacher ? (
         <TeacherPendingCard messages={m} />

@@ -1,32 +1,18 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
-import { getCurrentProfile } from "@/lib/domain/profiles";
-import { socialPostActionSchema, toggleLike } from "@/lib/domain/social";
+import { socialPostActionSchema, toggleLike } from "@/features/social";
+import { isErrorResponse, jsonSuccessWithMeta, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const POST = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase);
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const body = socialPostActionSchema.parse(await request.json());
+  const data = await toggleLike(supabase, {
+    postId: body.postId,
+    userId: profileOrError.id,
+  });
 
-    const body = socialPostActionSchema.parse(await request.json());
-    const data = await toggleLike(supabase, {
-      postId: body.postId,
-      userId: profile.id,
-    });
-
-    return NextResponse.json({ data, meta: { action: "toggle-like" } });
-  } catch (error) {
-    const message = error instanceof z.ZodError
-      ? "Choose a valid post to like."
-      : error instanceof Error
-        ? error.message
-        : "Like action failed.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
-}
+  return jsonSuccessWithMeta(data, { action: "toggle-like" });
+}, { fallbackMessage: "Like action failed." });

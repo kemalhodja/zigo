@@ -1,42 +1,26 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
-import { completeVideoPost } from "@/lib/domain/learning";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { completeVideoBodySchema, completeVideoPost } from "@/features/learning";
+import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const POST = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase, {
+    excludeRoles: ["teacher"],
+  });
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const body = completeVideoBodySchema.parse(await request.json());
 
-    if (profile.role === "teacher") {
-      return NextResponse.json({ error: "Teachers cannot earn student video rewards." }, { status: 403 });
-    }
-
-    const body = await request.json();
-
-    if (profile.role === "parent" && !body.childProfileId) {
-      return NextResponse.json({ error: "Parent video completion requires a child profile." }, { status: 400 });
-    }
-
-    const completion = await completeVideoPost(supabase, {
-      postId: body.postId,
-      secondsWatched: body.secondsWatched,
-      childProfileId: profile.role === "parent" ? body.childProfileId : undefined,
-    });
-
-    return NextResponse.json({ data: completion }, { status: 201 });
-  } catch (error) {
-    const message = error instanceof z.ZodError
-      ? "Watch at least 60 seconds of a valid video lesson."
-      : error instanceof Error
-        ? error.message
-        : "Video reward could not be saved.";
-    return NextResponse.json({ error: message }, { status: 400 });
+  if (profileOrError.role === "parent" && !body.childProfileId) {
+    return jsonError("Parent video completion requires a child profile.", 400, "VALIDATION_ERROR");
   }
-}
+
+  const completion = await completeVideoPost(supabase, {
+    postId: body.postId,
+    secondsWatched: body.secondsWatched,
+    childProfileId: profileOrError.role === "parent" ? body.childProfileId : undefined,
+  });
+
+  return jsonSuccess(completion, 201);
+}, { fallbackMessage: "Video reward could not be saved." });

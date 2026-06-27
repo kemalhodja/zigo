@@ -6,6 +6,7 @@ import {
   EDUCATION_ORGANIZATION_OPTIONS,
   type EducationOrganizationType,
 } from "@/lib/domain/education-organization";
+import { shouldHideOrganizationPlanPrices } from "@/lib/domain/registration-account";
 import { formatTryPrice, resolveOrganizationPlanGroups } from "@/lib/domain/subscription-plans";
 
 type OrganizationTypeFormProps = {
@@ -20,6 +21,7 @@ export function OrganizationTypeForm({ initialOrganizationType = null }: Organiz
   const [message, setMessage] = useState("");
 
   const organizationPlans = resolveOrganizationPlanGroups(organizationType);
+  const hidePlanPrices = shouldHideOrganizationPlanPrices(organizationType);
   const yearlyPlan = organizationPlans[0]?.plans.find((item) => item.interval === "yearly");
 
   async function saveOrganizationType(nextType: EducationOrganizationType) {
@@ -54,7 +56,7 @@ export function OrganizationTypeForm({ initialOrganizationType = null }: Organiz
       <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Kurum türü</p>
       <h2 className="mt-1 text-lg font-black text-night">Branşlarınızın yanında kurum tipi</h2>
       <p className="mt-1 text-sm font-semibold text-slate-500">
-        Kurs, okul, eğitim kurumu veya eğitim platformu seçerek kurumsal abonelik fiyatını görün.
+        Kurs, okul, eğitim kurumu veya eğitim platformu seçerek kurumsal hesap türünüzü belirleyin.
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -77,11 +79,17 @@ export function OrganizationTypeForm({ initialOrganizationType = null }: Organiz
         })}
       </div>
 
-      {yearlyPlan ? (
+      {yearlyPlan && !hidePlanPrices ? (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
           {organizationPlans[0]?.title}: yıllık{" "}
           <span className="line-through opacity-60">{formatTryPrice(yearlyPlan.compareAtTry)}</span>{" "}
           {formatTryPrice(yearlyPlan.priceTry)}
+        </p>
+      ) : null}
+
+      {organizationType && hidePlanPrices ? (
+        <p className="mt-3 rounded-lg bg-violet-50 px-3 py-2 text-xs font-bold text-violet-900">
+          {organizationPlans[0]?.title}: abonelik detayları profilinizden görüntülenir.
         </p>
       ) : null}
 

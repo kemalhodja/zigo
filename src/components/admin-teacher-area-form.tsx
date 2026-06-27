@@ -27,6 +27,15 @@ export function AdminTeacherAreaForm({ areas, teacherId }: AdminTeacherAreaFormP
     [c.selected, selectedAreaIds.length],
   );
 
+  function applyYksPreset() {
+    const yksAreaIds = areas
+      .filter((area) => /yks|lgs|deneme|koçluk|koçluğu/i.test(area.area_name))
+      .map((area) => area.id);
+    if (yksAreaIds.length === 0) return;
+    setSelectedAreaIds(yksAreaIds);
+    setMessage(a.yksPresetApplied);
+  }
+
   function toggleArea(areaId: number) {
     setSelectedAreaIds((current) =>
       current.includes(areaId)
@@ -77,12 +86,15 @@ export function AdminTeacherAreaForm({ areas, teacherId }: AdminTeacherAreaFormP
       <div className="no-scrollbar flex gap-2 overflow-x-auto">
         {areas.map((area) => {
           const isSelected = selectedAreaIds.includes(area.id);
+          const isYks = /yks|lgs|deneme|koçluk|koçluğu/i.test(area.area_name);
           return (
             <button
               className={`tap-scale shrink-0 rounded-lg border px-3 py-2 text-xs font-black ${
                 isSelected
                   ? "border-transparent bg-gradient-to-r from-crystal to-berry text-white"
-                  : "border-pink-100 bg-white text-slate-600"
+                  : isYks
+                    ? "border-violet-200 bg-violet-50 text-crystal"
+                    : "border-pink-100 bg-white text-slate-600"
               }`}
               key={area.id}
               onClick={() => toggleArea(area.id)}
@@ -93,14 +105,23 @@ export function AdminTeacherAreaForm({ areas, teacherId }: AdminTeacherAreaFormP
           );
         })}
       </div>
-      <button
-        className="tap-scale zigo-cta tap-scale rounded-lg px-3 py-2 text-xs font-black text-white disabled:opacity-50"
-        disabled={isSaving || selectedAreaIds.length === 0}
-        onClick={saveAreas}
-        type="button"
-      >
-        {isSaving ? c.saving : a.saveAreas}
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          className="rounded-lg bg-violet-100 px-3 py-2 text-xs font-black text-crystal"
+          onClick={applyYksPreset}
+          type="button"
+        >
+          {a.yksPreset}
+        </button>
+        <button
+          className="tap-scale zigo-cta tap-scale rounded-lg px-3 py-2 text-xs font-black text-white disabled:opacity-50"
+          disabled={isSaving || selectedAreaIds.length === 0}
+          onClick={saveAreas}
+          type="button"
+        >
+          {isSaving ? c.saving : a.saveAreas}
+        </button>
+      </div>
       {message ? <p className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-600">{message}</p> : null}
     </div>
   );

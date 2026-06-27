@@ -193,6 +193,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       }))
     : [];
   const reelSpotlights = buildReelSpotlights(posts, reelDemoFallback);
+  const showStudentHomeModules = viewer.role === "student" || viewer.role === null;
 
   return (
     <div className="space-y-4 pb-3">
@@ -220,9 +221,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
       <FeedRefreshControl activeFeed={activeFeed} />
 
-      <TodayLearningCard copy={m.feedEnhancements} />
+      {showStudentHomeModules ? <TodayLearningCard copy={m.feedEnhancements} /> : null}
 
-      {posts.length > 0 ? <ReelSpotlightRail messages={m} spotlights={reelSpotlights} /> : null}
+      {showStudentHomeModules && posts.length > 0 ? <ReelSpotlightRail messages={m} spotlights={reelSpotlights} /> : null}
 
       {activeFeed === "following" ? null : (
         <section className="-mx-4 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2">
@@ -599,18 +600,26 @@ async function getHomeViewerContext(): Promise<{
   streakDays: number;
   missionDone: number;
   missionTotal: number;
+  role: "teacher" | "parent" | "student" | null;
 }> {
   if (!hasSupabaseEnv()) {
     return allowDemoContent()
-      ? { showStudentStrip: true, points: 240, streakDays: 3, missionDone: 1, missionTotal: 2 }
-      : { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2 };
+      ? { showStudentStrip: true, points: 240, streakDays: 3, missionDone: 1, missionTotal: 2, role: "student" }
+      : { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2, role: null };
   }
 
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
     if (!profile || profile.role !== "student") {
-      return { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2 };
+      return {
+        showStudentStrip: false,
+        points: 0,
+        streakDays: 0,
+        missionDone: 0,
+        missionTotal: 2,
+        role: profile?.role ?? null,
+      };
     }
 
     const missions = await getDailyMissionProgress(supabase, profile.id);
@@ -623,9 +632,10 @@ async function getHomeViewerContext(): Promise<{
       streakDays: Math.max(0, missions.streakDays),
       missionDone,
       missionTotal,
+      role: "student",
     };
   } catch {
-    return { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2 };
+    return { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2, role: null };
   }
 }
 

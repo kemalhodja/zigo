@@ -1,32 +1,23 @@
-import { NextResponse } from "next/server";
-
 import { openPremiumPrepUrl } from "@/lib/domain/premium-prep";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export const GET = withApiHandler(async (_request: Request, context: RouteContext) => {
+  const { id } = await context.params;
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase, {
+    roles: ["student", "parent"],
+  });
+  if (isErrorResponse(profileOrError)) return profileOrError;
+
   try {
-    const { id } = await context.params;
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
-
-    if (!profile) {
-      return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
-    }
-
-    if (profile.role !== "student" && profile.role !== "parent") {
-      return NextResponse.json(
-        { error: "Yazılı hazırlık kaynakları yalnızca öğrenci ve veli hesapları için açılır." },
-        { status: 403 },
-      );
-    }
-
     const url = await openPremiumPrepUrl(supabase, id);
-    return NextResponse.json({ data: { url } });
+    return jsonSuccess({ url });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Kaynak açılamadı.";
     const needsSubscription =
@@ -34,15 +25,13 @@ export async function GET(_request: Request, context: RouteContext) {
       message.toLowerCase().includes("zigo plus");
 
     if (needsSubscription) {
-      return NextResponse.json(
-        {
-          error: "Bu yazılı hazırlık kaynağı Zigo Plus aboneliği ile açılır.",
-          code: "SUBSCRIPTION_REQUIRED",
-        },
-        { status: 402 },
+      return jsonError(
+        "Bu yazılı hazırlık kaynağı Zigo Plus aboneliği ile açılır.",
+        402,
+        "SUBSCRIPTION_REQUIRED",
       );
     }
 
-    return NextResponse.json({ error: message }, { status: 400 });
+    return jsonError(message, 400, "BAD_REQUEST");
   }
-}
+}, { fallbackMessage: "Kaynak açılamadı." });

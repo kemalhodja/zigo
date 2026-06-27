@@ -1,18 +1,24 @@
 import Link from "next/link";
 
+import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrganizationTypeForm } from "@/components/organization-type-form";
 import { TeacherPostForm } from "@/components/teacher-post-form";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
+import { ParentWeeklyProgressCard } from "@/components/parent-weekly-progress-card";
+import { TeacherBookingsPanel } from "@/features/booking/components/teacher-bookings-panel";
+import { TeacherSlotSelector } from "@/features/booking/components/teacher-slot-selector";
+import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrganizationType } from "@/lib/domain/profiles";
-import { isOrganizationRegistrationType } from "@/lib/domain/registration-account";
+import { isOrganizationRegistrationType, shouldHideOrganizationPlanPrices } from "@/lib/domain/registration-account";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { canTeacherUseCreatorPlusTools } from "@/lib/domain/teacher-creator-plus";
+import { listTeacherOwnSlots } from "@/lib/domain/ecosystem/calendar";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,10 +41,11 @@ export default async function TeacherPage() {
     return <TeacherPreview mode="role-preview" />;
   }
 
-  const [allAreas, areaIds, subscription] = await Promise.all([
+  const [allAreas, areaIds, subscription, availabilitySlots] = await Promise.all([
     getEducationAreas(supabase),
     getUserInterestAreaIds(supabase, profile.id),
     getUserSubscription(supabase, profile.id),
+    listTeacherOwnSlots(supabase, profile.id),
   ]);
   const assignedAreas = allAreas.filter((area) => areaIds.includes(area.id));
   const teacherCreatorPlus = canTeacherUseCreatorPlusTools(subscription, profile.role);
@@ -77,9 +84,48 @@ export default async function TeacherPage() {
         </span>
       </section>
 
+      <LessonRequestsPanel role="teacher" viewerId={profile.id} />
+
+      {profile.is_verified ? (
+        <TeacherSlotSelector
+          initialSlots={availabilitySlots}
+          labels={{
+            title: m.ecosystem.calendarTitle,
+            desc: m.ecosystem.calendarDesc,
+            start: m.ecosystem.slotStart,
+            end: m.ecosystem.slotEnd,
+            add: m.ecosystem.addSlot,
+            empty: m.ecosystem.noOwnSlots,
+            booked: m.ecosystem.slotBooked,
+            open: m.ecosystem.slotOpen,
+          }}
+        />
+      ) : null}
+
+      {profile.is_verified ? (
+        <TeacherBookingsPanel
+          labels={{
+            title: m.ecosystem.bookingsTitle,
+            desc: m.ecosystem.bookingsDesc,
+            empty: m.ecosystem.bookingsEmpty,
+            complete: m.ecosystem.completeBooking,
+            cancel: m.ecosystem.cancelBooking,
+            completed: m.ecosystem.bookingCompleted,
+            cancelled: m.ecosystem.bookingCancelled,
+            statusBooked: m.ecosystem.statusBooked,
+            statusCompleted: m.ecosystem.statusCompleted,
+            statusCancelled: m.ecosystem.statusCancelled,
+            startLesson: m.liveLessons.startLesson,
+            joinLesson: m.liveLessons.joinLesson,
+            notYet: m.liveLessons.notYet,
+            lessonCompleted: m.liveLessons.lessonCompleted,
+          }}
+        />
+      ) : null}
+
       {profile.is_verified ? (
         <>
-          <section className="grid grid-cols-2 gap-2">
+          <section className="zigo-dashboard-grid">
             <TeacherLink accent="from-crystal to-berry" href="/create" label={h.create} text={m.dock.teacherHint} />
             <TeacherLink accent="from-aqua to-mint" href="/profile" label={m.nav.profile} text={d.teacher.creatorGrid} />
           </section>
@@ -93,9 +139,9 @@ export default async function TeacherPage() {
           <TeacherSponsoredAdsPanel canManage={teacherCreatorPlus} />
         </>
       ) : (
-        <VerificationRequired messages={m.teacherPage} />
+        <VerificationRequired messages={m.teacherPage} support={m.support} />
       )}
-      <section className="grid grid-cols-2 gap-2">
+      <section className="zigo-dashboard-grid">
         <TeacherLink accent="from-sun to-peach" href="/moderation" label={d.teacher.moderation} text={d.teacher.reviewComments} />
         <TeacherLink accent="from-berry to-peach" href="/questions" label={d.teacher.qa} text={d.teacher.answerSafely} />
       </section>
@@ -109,7 +155,20 @@ export default async function TeacherPage() {
       <ZigoPlusPlansSection
         allowDevActivate={allowDevActivate}
         groups={planGroups}
+        hidePrices={shouldHideOrganizationPlanPrices(parseOrganizationType(profile.organization_type))}
         isPremium={teacherCreatorPlus}
+      />
+
+      <WhatsAppSupportCard
+        buttonLabel={m.support.button}
+        context="teacher"
+        description={m.support.description}
+        eyebrow={m.support.eyebrow}
+        hoursLabel={m.support.hours}
+        prefilledMessage={m.support.messageTeacher}
+        privacyNote={m.support.privacyNote}
+        role="teacher"
+        title={m.support.title}
       />
     </div>
   );
@@ -134,7 +193,7 @@ async function TeacherPreview({ mode }: { mode: "preview" | "signed-out" | "role
         <h1 className="mt-1 text-2xl font-black leading-tight text-night">{t.verifiedTools}.</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">{note}</p>
       </section>
-      <section className="grid grid-cols-2 gap-2">
+      <section className="zigo-dashboard-grid">
         <TeacherLink accent="from-crystal to-berry" href="/create" label={h.create} text={tp.postOrStory} />
         <TeacherLink accent="from-sun to-peach" href="/moderation" label={messages.dashboard.teacher.moderation} text={tp.safetyQueue} />
         <TeacherLink accent="from-berry to-peach" href="/questions" label={messages.dashboard.teacher.qa} text={tp.teacherAnswers} />
@@ -144,7 +203,13 @@ async function TeacherPreview({ mode }: { mode: "preview" | "signed-out" | "role
   );
 }
 
-function VerificationRequired({ messages: t }: { messages: Awaited<ReturnType<typeof getServerMessages>>["teacherPage"] }) {
+function VerificationRequired({
+  messages: t,
+  support,
+}: {
+  messages: Awaited<ReturnType<typeof getServerMessages>>["teacherPage"];
+  support: Awaited<ReturnType<typeof getServerMessages>>["support"];
+}) {
   const verificationSteps = [
     { label: t.completeProfile, state: t.done },
     { label: t.chooseAreas, state: t.required },
@@ -168,6 +233,20 @@ function VerificationRequired({ messages: t }: { messages: Awaited<ReturnType<ty
         <p className="mt-2 text-sm font-semibold leading-6 text-white/82">
           {t.verificationDesc}
         </p>
+        <div className="mt-4">
+          <WhatsAppSupportCard
+            buttonLabel={support.button}
+            compact
+            context="teacher"
+            description=""
+            eyebrow=""
+            hoursLabel=""
+            prefilledMessage={support.messageTeacher}
+            privacyNote=""
+            role="teacher"
+            title=""
+          />
+        </div>
       </div>
 
       <div className="grid gap-2">

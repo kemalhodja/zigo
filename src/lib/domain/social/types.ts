@@ -35,6 +35,7 @@ export type SocialNotification = {
   kind: string;
   message: string;
   post_id: string | null;
+  lesson_request_id: string | null;
   is_read: boolean;
   created_at: string;
   actor: Pick<UserRow, "id" | "full_name" | "role" | "is_verified"> | null;

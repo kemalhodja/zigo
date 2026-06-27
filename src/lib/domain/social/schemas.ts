@@ -81,3 +81,8 @@ export const contentReportStatusSchema = z.object({
   reportId: z.string().uuid(),
   status: z.enum(["open", "reviewing", "resolved", "dismissed"]),
 });
+
+export const blockSchema = z.object({
+  blockerId: z.string().uuid(),
+  blockedId: z.string().uuid(),
+});

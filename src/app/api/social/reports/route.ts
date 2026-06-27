@@ -1,79 +1,60 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
+import { RateLimitExceededError, isErrorResponse, jsonError, jsonSuccess, jsonSuccessWithMeta, requireAuthenticatedProfile } from "@/features/shared";
+import {
+  contentReportSchema,
+  contentReportStatusSchema,
+  reportSocialPost,
+  updateContentReportStatus,
+} from "@/features/social";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
-import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api-errors";
-import { getCurrentProfile } from "@/lib/domain/profiles";
-import { reportSocialPost, updateContentReportStatus } from "@/lib/domain/social";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const POST = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase);
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const rateLimit = checkRateLimit(`report:${profile.id}`, 5, 60 * 60_000);
-    if (!rateLimit.allowed) {
-      throw new RateLimitExceededError(
-        "Çok fazla bildirim gönderdin. Bir süre bekleyip tekrar dene.",
-        rateLimit.retryAfterSeconds,
-      );
-    }
-
-    const body = await request.json();
-    const data = await reportSocialPost(supabase, {
-      postId: body.postId,
-      reporterId: profile.id,
-      reason: body.reason,
-      details: body.details,
-    });
-
-    return NextResponse.json({ data });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Choose a valid post and report reason." }, { status: 400 });
-    }
-
-    return respondWithDomainError(error, "Report could not be submitted.");
+  const rateLimit = checkRateLimit(`report:${profileOrError.id}`, 5, 60 * 60_000);
+  if (!rateLimit.allowed) {
+    throw new RateLimitExceededError(
+      "Çok fazla bildirim gönderdin. Bir süre bekleyip tekrar dene.",
+      rateLimit.retryAfterSeconds,
+    );
   }
-}
 
-export async function PATCH(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+  const body = contentReportSchema.parse(await request.json());
+  const data = await reportSocialPost(supabase, {
+    postId: body.postId,
+    reporterId: profileOrError.id,
+    reason: body.reason,
+    details: body.details,
+  });
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  return jsonSuccess(data);
+}, { fallbackMessage: "Report could not be submitted." });
 
-    const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
-    if (profile.role !== "teacher" && !isPlatformAdmin) {
-      return NextResponse.json(
-        { error: "Only verified teachers or platform admins can update report status." },
-        { status: 403 },
-      );
-    }
+export const PATCH = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase);
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    const body = await request.json();
-    const data = await updateContentReportStatus(supabase, {
-      reportId: body.reportId,
-      status: body.status,
-      moderatorId: profile.id,
-      isPlatformAdmin,
-    });
-
-    return NextResponse.json({ data, meta: { action: "update-content-report" } });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Choose a valid report and status." }, { status: 400 });
-    }
-
-    return respondWithDomainError(error, "Report status could not be updated.");
+  const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
+  if (profileOrError.role !== "teacher" && !isPlatformAdmin) {
+    return jsonError(
+      "Only verified teachers or platform admins can update report status.",
+      403,
+      "FORBIDDEN",
+    );
   }
-}
+
+  const body = contentReportStatusSchema.parse(await request.json());
+  const data = await updateContentReportStatus(supabase, {
+    reportId: body.reportId,
+    status: body.status,
+    moderatorId: profileOrError.id,
+    isPlatformAdmin,
+  });
+
+  return jsonSuccessWithMeta(data, { action: "update-content-report" });
+}, { fallbackMessage: "Report status could not be updated." });

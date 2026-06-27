@@ -3,6 +3,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isLocalDemoSupabase } from "@/lib/domain/demo-env";
 import { getSiteUrl } from "@/lib/domain/deploy-config";
 import { findPlanGroup, resolveStripePriceId } from "@/lib/domain/subscription-plans";
+import {
+  getSubscriptionCampaignStripeCouponId,
+  isSubscriptionCampaignActive,
+} from "@/lib/domain/subscription-campaign";
+import { ensureStripeCampaignCoupon } from "@/lib/domain/stripe-campaign-provision";
 import type { Database, SubscriptionTier } from "@/lib/supabase/database.types";
 
 export function hasStripeConfigured() {
@@ -42,6 +47,19 @@ export async function createZigoPlusCheckoutSession(
     customer_email: email,
     "metadata[plan_id]": planId,
   });
+
+  if (isSubscriptionCampaignActive()) {
+    try {
+      await ensureStripeCampaignCoupon(secret);
+    } catch {
+      // Checkout can still proceed; coupon may already exist in Stripe.
+    }
+    const couponId = getSubscriptionCampaignStripeCouponId();
+    if (couponId) {
+      body.set("discounts[0][coupon]", couponId);
+      body.set("metadata[campaign_id]", "yaz-2026-75");
+    }
+  }
 
   const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",

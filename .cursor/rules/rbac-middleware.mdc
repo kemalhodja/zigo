@@ -1,0 +1,60 @@
+---
+description: RBAC page guards — role paths, middleware behavior, Supabase session
+globs:
+  - middleware.ts
+  - src/features/shared/middleware/**
+alwaysApply: false
+---
+
+# RBAC Middleware (Zigo)
+
+## Auth source
+
+- **Not NextAuth/JWT middleware parsing.** Supabase SSR session (`supabase.auth.getUser()`) + `public.users.role`.
+- Login entry: `/auth` (alias `/login` redirects here).
+
+## Roles
+
+PostgreSQL `user_role`: `teacher`, `parent`, `student`.
+
+**Institution** is not a separate middleware role — institution accounts register as `teacher` with `organization_type` set. Teacher-only routes cover them.
+
+## Protected path rules
+
+Defined in `src/features/shared/middleware/role-guards.ts` (`ROLE_PATH_RULES`).
+
+| Path prefix | Allowed roles |
+| --- | --- |
+| `/teacher`, `/dashboard/teacher`, `/create` | `teacher` |
+| `/parent`, `/dashboard/parent`, `/family` | `parent` |
+| `/student`, `/dashboard/student` | `student` |
+| `/learn` | `student`, `parent` |
+| `/avatar`, `/sparks` | `student` |
+| `/store` | `student`, `parent` |
+
+Shared routes (`/`, `/feed`, `/explore`, `/profile`, `/questions`) have no strict role prefix rule.
+
+## Platform admin pages
+
+`/admin` is **not** role-based — it requires `current_user_is_platform_admin` RPC.
+
+After auth gate `ready`:
+
+- Non-admin → redirect to role dashboard (`/teacher`, `/parent`, `/student`) or `/auth` if profile missing.
+- Platform admin → allow (any `users.role`).
+
+## Unauthorized behavior
+
+After auth gate `ready`:
+
+1. Wrong role for strict path → redirect to role dashboard (`/teacher`, `/parent`, `/student`).
+2. `/dashboard/teacher` etc. → canonical redirect to `/teacher` then RBAC applies.
+3. Unauthenticated protected page → `/auth?next=...`
+
+API routes enforce RBAC separately via `requireAuthenticatedProfile()` + RLS.
+
+Admin API (`/api/admin/*`) uses `withAdminApiHandler()` → `requirePlatformAdminAccess()` + standard `{ error, code }` responses. Prefix rules live in `src/features/shared/api/rbac.ts` (`API_RBAC_PREFIX_RULES`).
+
+## Tests
+
+`src/features/shared/middleware/role-guards.test.ts` — includes student → `/dashboard/teacher` block scenario.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { VerifyEmailPanel } from "@/components/verify-email-panel";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -15,7 +16,9 @@ export default async function VerifyEmailPage() {
           {a.backToAuth}
         </Link>
       </section>
-      <VerifyEmailPanel />
+      <Suspense fallback={<div className="px-4 text-sm font-bold text-slate-500">{a.loadingAuth}</div>}>
+        <VerifyEmailPanel />
+      </Suspense>
     </div>
   );
 }

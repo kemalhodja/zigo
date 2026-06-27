@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" role="img" aria-label="Zigo feature graphic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5B21B6" />
+      <stop offset="0.45" stop-color="#A855F7" />
+      <stop offset="1" stop-color="#EC4899" />
+    </linearGradient>
+    <linearGradient id="iconBg" x1="120" y1="70" x2="380" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED" />
+      <stop offset="0.52" stop-color="#D946EF" />
+      <stop offset="1" stop-color="#FB7185" />
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)" />
+  <circle cx="860" cy="120" r="180" fill="#FFFFFF" fill-opacity="0.08" />
+  <circle cx="920" cy="420" r="140" fill="#A7F3D0" fill-opacity="0.12" />
+
+  <rect x="72" y="86" width="328" height="328" rx="74" fill="url(#iconBg)" />
+  <circle cx="236" cy="250" r="100" fill="#FFFFFF" fill-opacity="0.16" />
+  <path d="M138 346h136v-37H188l74-93v-29H145v37h70L138 308v38Z" fill="#FFFFFF" />
+  <circle cx="318" cy="118" r="18" fill="#A7F3D0" />
+
+  <text x="460" y="210" fill="#FFFFFF" font-family="Segoe UI, Arial, sans-serif" font-size="92" font-weight="800">Zigo</text>
+  <text x="462" y="278" fill="#F5F3FF" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600">Smart, verified education feed</text>
+  <text x="462" y="332" fill="#EDE9FE" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="500">Micro lessons | Quiz | Parent control | Safe learning</text>
+</svg>

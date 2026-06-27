@@ -41,7 +41,7 @@ export function DemoLoginPanel({ enabled = true }: DemoLoginPanelProps) {
       const response = await fetch("/api/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: DEMO_PASSWORD }),
+        body: JSON.stringify({ email, password: DEMO_PASSWORD, rememberMe: true }),
       });
       const result = (await response.json()) as { error?: string };
 

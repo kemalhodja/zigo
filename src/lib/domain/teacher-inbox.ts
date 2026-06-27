@@ -19,7 +19,6 @@ export async function getTeacherInboxCount(
   if (error) return 0;
   return count ?? 0;
 }
-
 export async function getTeacherFeedInsights(
   supabase: SupabaseClient<Database>,
   teacherId: string,

@@ -1,0 +1,22 @@
+---
+description: Feature-first modular architecture and global API error handling for Zigo SaaS
+globs:
+  - src/features/**
+  - src/app/api/**
+alwaysApply: false
+---
+
+# Features Architecture
+
+- Place new product logic under `src/features/<feature>/` with `types`, `services`, `hooks`, `components`.
+- API routes must use `withApiHandler`, `jsonSuccess`, `jsonError`, and `requireAuthenticatedProfile` from `@/features/shared`.
+- Social and matching routes live under `src/features/social` and `src/features/matching`.
+- Questions and learning routes live under `src/features/questions` and `src/features/learning`.
+- Role page guards: `features/shared/middleware/role-guards.ts` (wired in root `middleware.ts`).
+- DB row Zod mirrors live in `src/features/shared/types/db-schemas.ts`; run `npm run db:schemas:check` after schema changes.
+- Standard error body: `{ error: string, code: string }`.
+- Do not duplicate domain logic: wrap `src/lib/domain/*` inside feature `services/`.
+- Roles are `teacher`, `parent`, `student`. Institution is a registration account kind, not a middleware role.
+- Auth stays on Supabase SSR + RLS; do not introduce NextAuth without an explicit migration plan.
+
+See `docs/features-architecture.md` for module map and migration rules.

@@ -19,7 +19,7 @@ export function MarkNotificationsReadButton({ initialUnreadCount = 0 }: { initia
     setMessage("");
 
     try {
-      const response = await fetch("/api/social/notifications/read", {
+      const response = await fetch("/api/notifications/read", {
         method: "POST",
       });
 
@@ -35,6 +35,7 @@ export function MarkNotificationsReadButton({ initialUnreadCount = 0 }: { initia
       );
       setUnreadCount(0);
       router.refresh();
+      window.dispatchEvent(new Event("zigo:notification-changed"));
     } catch {
       setMessage(a.connectionFailed);
     } finally {

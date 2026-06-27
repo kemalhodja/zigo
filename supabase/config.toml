@@ -26,10 +26,14 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
+site_url = "https://zigo-kohl.vercel.app"
 additional_redirect_urls = [
+  "https://zigo-kohl.vercel.app/auth/callback",
+  "https://zigo-kohl.vercel.app/auth/callback?next=/onboarding",
+  "https://zigo-kohl.vercel.app/auth/callback?next=/auth/reset-password",
   "http://localhost:3000/auth/callback",
-  "http://localhost:3000/auth/callback?next=/onboarding"
+  "http://localhost:3000/auth/callback?next=/onboarding",
+  "http://localhost:3000/auth/callback?next=/auth/reset-password"
 ]
 jwt_expiry = 3600
 enable_signup = true
@@ -37,3 +41,12 @@ enable_signup = true
 [auth.email]
 enable_signup = true
 enable_confirmations = false
+
+[auth.email.template.recovery]
+subject = "Zigo şifre sıfırlama"
+content_path = "./templates/recovery.html"
+
+[auth.hook.send_email]
+enabled = false
+uri = "https://zigo-kohl.vercel.app/api/auth/hooks/send-email"
+secrets = "env(SEND_EMAIL_HOOK_SECRET)"

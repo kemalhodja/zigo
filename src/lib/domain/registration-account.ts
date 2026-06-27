@@ -21,7 +21,7 @@ export const REGISTRATION_ACCOUNT_OPTIONS: readonly RegistrationAccountOption[] 
   {
     id: "student",
     label: "Öğrenci",
-    description: "Match-Feed, quiz, odak ve oyunlaştırılmış öğrenme.",
+    description: "YKS, LGS ve sınav hazırlığı; Match-Feed, quiz, odak ve oyunlaştırılmış öğrenme.",
     role: "student",
     organizationType: null,
     accent: "from-crystal to-berry",
@@ -29,7 +29,7 @@ export const REGISTRATION_ACCOUNT_OPTIONS: readonly RegistrationAccountOption[] 
   {
     id: "parent",
     label: "Veli",
-    description: "Çocuk ilerlemesi, onaylar ve aile paketi.",
+    description: "Öğrenci ilerlemesi, YKS hazırlık takibi, onaylar ve aile paketi.",
     role: "parent",
     organizationType: null,
     accent: "from-aqua to-mint",
@@ -45,7 +45,7 @@ export const REGISTRATION_ACCOUNT_OPTIONS: readonly RegistrationAccountOption[] 
   {
     id: "institution",
     label: "Eğitim kurumu",
-    description: "Kurs, okul ve kurumsal eğitim hesabı — yıllık 5.000 ₺ plan.",
+    description: "Kurs, okul ve kurumsal eğitim hesabı.",
     role: "teacher",
     organizationType: "egitim_kurumu",
     accent: "from-violet-600 to-fuchsia-500",
@@ -53,7 +53,7 @@ export const REGISTRATION_ACCOUNT_OPTIONS: readonly RegistrationAccountOption[] 
   {
     id: "platform",
     label: "Eğitim platformu",
-    description: "Dijital platform ve içerik ağı — yıllık 4.000 ₺ plan.",
+    description: "Dijital platform ve içerik ağı hesabı.",
     role: "teacher",
     organizationType: "egitim_platformu",
     accent: "from-sky-500 to-cyan-500",
@@ -78,4 +78,10 @@ export function isOrganizationRegistrationType(
   organizationType: EducationOrganizationType | null | undefined,
 ) {
   return organizationType === "egitim_kurumu" || organizationType === "egitim_platformu";
+}
+
+export function shouldHideOrganizationPlanPrices(
+  organizationType: EducationOrganizationType | null | undefined,
+) {
+  return isOrganizationRegistrationType(organizationType);
 }

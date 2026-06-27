@@ -3,43 +3,44 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { LessonRequestNavBadge } from "@/features/lesson/components/lesson-request-nav-badge";
+import { getBottomNavItems, getRoleNavLabels } from "@/lib/domain/role-navigation";
+import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
-import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
 export function BottomNav({
   canCreateSocialPost = false,
   unreadCount = 0,
   teacherInboxCount = 0,
+  lessonRequestBadgeCount = 0,
   variant = "default",
+  viewerRole = "guest",
 }: {
   canCreateSocialPost?: boolean;
   unreadCount?: number;
   teacherInboxCount?: number;
+  lessonRequestBadgeCount?: number;
   variant?: "default" | "overlay";
+  viewerRole?: ViewerRole;
 }) {
   const pathname = usePathname();
-  const t = useMessages().nav;
+  const messages = useMessages();
 
-  const baseNavItems = [
-    { href: "/", icon: "home", label: t.home, match: (path: string) => path === "/" },
-    { href: "/explore", icon: "search", label: t.search, match: (path: string) => path.startsWith("/explore") },
-    { href: "/create", icon: "create", label: t.create, match: (path: string) => path.startsWith("/create") },
-    { href: ZIGO_PATHS.micro, icon: "micro", label: t.micro, match: (path: string) => path.startsWith(ZIGO_PATHS.micro) },
-    { href: "/questions", icon: "ask", label: t.ask, match: (path: string) => path.startsWith("/questions") },
-    { href: "/profile", icon: "profile", label: t.profile, match: (path: string) => path.startsWith("/profile") },
-  ];
-
-  const navItems = [
-    baseNavItems[0],
-    baseNavItems[1],
-    canCreateSocialPost ? baseNavItems[2] : { ...baseNavItems[2], href: "/questions", label: t.ask },
-    baseNavItems[3],
-    baseNavItems[5],
-  ];
+  const navItems = getBottomNavItems(viewerRole, getRoleNavLabels(viewerRole, messages), {
+    canCreateSocialPost,
+  });
+  const roleNavClass =
+    viewerRole === "student"
+      ? "role-bottom-nav-student"
+      : viewerRole === "parent"
+        ? "role-bottom-nav-parent"
+        : viewerRole === "teacher"
+          ? "role-bottom-nav-teacher"
+          : "";
 
   return (
     <nav
-      className={`safe-bottom sticky bottom-0 grid grid-cols-5 px-1 pt-1 text-center zigo-nav-label ${
+      className={`safe-bottom sticky bottom-0 grid grid-cols-5 px-1 pt-1 text-center zigo-nav-label ${roleNavClass} ${
         variant === "overlay"
           ? "border-t border-white/10 bg-black/25 text-white backdrop-blur"
           : "zigo-bottom-bar text-slate-500"
@@ -64,7 +65,7 @@ export function BottomNav({
             href={item.href}
             key={item.href}
           >
-            <span className={`flex size-9 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
+            <span className={`role-nav-icon flex size-9 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
               <NavIcon active={isActive} name={item.icon} variant={variant} />
             </span>
             <span className={`max-w-full px-0.5 text-center ${isActive ? "font-bold text-night" : "font-semibold"}`}>
@@ -74,6 +75,12 @@ export function BottomNav({
               <span className="zigo-badge-count absolute right-1 top-0 flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-white">
                 {(unreadCount + teacherInboxCount) > 9 ? "9+" : unreadCount + teacherInboxCount}
               </span>
+            ) : null}
+            {item.href === "/teacher" && viewerRole === "teacher" ? (
+              <LessonRequestNavBadge fallbackCount={lessonRequestBadgeCount} viewerRole={viewerRole} />
+            ) : null}
+            {item.href === "/parent" && viewerRole === "parent" ? (
+              <LessonRequestNavBadge fallbackCount={lessonRequestBadgeCount} viewerRole={viewerRole} />
             ) : null}
             {isActive ? (
               <span
@@ -133,6 +140,37 @@ function NavIcon({
         <path d="M21 12a8.5 8.5 0 0 1-9 8.5 9.6 9.6 0 0 1-4.2-.95L3 20.5l1.3-4A8.5 8.5 0 1 1 21 12z" />
         <path d="M9.5 9.5a2.5 2.5 0 0 1 4.2 1.8c0 1.9-1.7 2.3-1.7 3.7" />
         <path d="M12 18h.01" />
+      </svg>
+    );
+  }
+
+  if (name === "learn") {
+    return (
+      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    );
+  }
+
+  if (name === "parent") {
+    return (
+      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    );
+  }
+
+  if (name === "studio") {
+    return (
+      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+        <rect height="7" rx="1" width="7" x="3" y="3" />
+        <rect height="7" rx="1" width="7" x="14" y="3" />
+        <rect height="7" rx="1" width="7" x="14" y="14" />
+        <rect height="7" rx="1" width="7" x="3" y="14" />
       </svg>
     );
   }

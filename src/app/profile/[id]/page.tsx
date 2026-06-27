@@ -6,7 +6,10 @@ import { ProfileHighlights } from "@/components/profile-highlights";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
+import { RequestLessonCTA } from "@/features/lesson/components/request-lesson-cta";
 import { hasSupabaseEnv } from "@/lib/config";
+import { getParentLessonPackageAccess } from "@/lib/domain/lesson-packages";
+import { getChildProfiles } from "@/lib/domain/children";
 import { getCurrentProfile, getUserInterestAreaNames } from "@/lib/domain/profiles";
 import {
   getProfileSocialStats,
@@ -46,15 +49,24 @@ export default async function PublicProfilePage({ params, searchParams }: Public
   const branches =
     profile.role === "teacher" ? await getUserInterestAreaNames(supabase, profile.id) : [];
 
-  const [stats, posts, following] = await Promise.all([
+  const [stats, posts, following, parentChildren, packageAccess] = await Promise.all([
     getProfileSocialStats(supabase, profile.id),
     activeTab === "reels"
       ? getUserSocialReels(supabase, profile.id)
       : getUserSocialPosts(supabase, profile.id),
     viewer ? isFollowing(supabase, viewer.id, profile.id) : Promise.resolve(false),
+    viewer?.role === "parent" ? getChildProfiles(supabase) : Promise.resolve([]),
+    viewer?.role === "parent"
+      ? getParentLessonPackageAccess(supabase, viewer.id)
+      : Promise.resolve({ hasAccess: false, planType: null, lessonsRemaining: 0, endsAt: null, expired: true }),
   ]);
   const isOwnProfile = viewer?.id === profile.id;
   const handle = profile.full_name.toLowerCase().replaceAll(" ", "");
+  const canRequestLesson =
+    viewer?.role === "parent" &&
+    profile.role === "teacher" &&
+    profile.is_verified &&
+    !isOwnProfile;
 
   return (
     <div className="space-y-0 pb-3">
@@ -108,26 +120,42 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           ) : null}
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-1.5">
-          {isOwnProfile ? (
-            <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/profile">
-              This is you
+        <div className="mt-4 space-y-3">
+          <div className="grid grid-cols-2 gap-1.5">
+            {isOwnProfile ? (
+              <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/profile">
+                This is you
+              </Link>
+            ) : (
+              <FollowButton
+                followingId={profile.id}
+                initialFollowersCount={stats.followers}
+                initialFollowing={following}
+                showCount
+              />
+            )}
+            <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/questions">
+              Ask
             </Link>
-          ) : (
-            <FollowButton
-              followingId={profile.id}
-              initialFollowersCount={stats.followers}
-              initialFollowing={following}
-              showCount
+          </div>
+          {canRequestLesson ? (
+            <RequestLessonCTA
+              childrenOptions={parentChildren.map((child) => ({ id: child.id, name: child.display_name }))}
+              hasPackageAccess={packageAccess.hasAccess}
+              teacherId={profile.id}
+              teacherName={profile.full_name}
             />
-          )}
-          <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/questions">
-            Ask
-          </Link>
+          ) : null}
         </div>
-        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500">
-          Public creator profile. Follow actions are visible; saved posts remain private to each viewer.
-        </p>
+        {canRequestLesson ? (
+          <p className="mt-3 rounded-lg bg-cyan-50 px-3 py-2 text-xs font-bold leading-5 text-cyan-800">
+            {m.lessonRequests.profileRequestHint}
+          </p>
+        ) : (
+          <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500">
+            Public creator profile. Follow actions are visible; saved posts remain private to each viewer.
+          </p>
+        )}
       </section>
 
       <ProfileHighlights />

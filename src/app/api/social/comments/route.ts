@@ -1,68 +1,48 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-
-import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api-errors";
-import { getCurrentProfile } from "@/lib/domain/profiles";
-import { createComment, getPostComments } from "@/lib/domain/social";
+import { RateLimitExceededError } from "@/features/shared";
+import {
+  commentSchema,
+  commentsQuerySchema,
+  createComment,
+  getPostComments,
+} from "@/features/social";
+import { isErrorResponse, jsonSuccessWithMeta, requireAuthenticatedProfile } from "@/features/shared";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+export const GET = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase);
+  if (isErrorResponse(profileOrError)) return profileOrError;
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const query = commentsQuerySchema.parse({
+    postId: new URL(request.url).searchParams.get("postId"),
+  });
 
-    const postId = new URL(request.url).searchParams.get("postId");
-    if (!postId) {
-      return NextResponse.json({ error: "postId is required." }, { status: 400 });
-    }
+  const comments = await getPostComments(supabase, query.postId);
+  return jsonSuccessWithMeta(comments, { count: comments.length });
+}, { fallbackMessage: "Comments could not be loaded." });
 
-    const comments = await getPostComments(supabase, postId);
-    return NextResponse.json({ data: comments, meta: { count: comments.length } });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Comments could not be loaded.";
-    return NextResponse.json({ error: message }, { status: 400 });
+export const POST = withApiHandler(async (request: Request) => {
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase);
+  if (isErrorResponse(profileOrError)) return profileOrError;
+
+  const rateLimit = checkRateLimit(`comment:${profileOrError.id}`, 10, 60_000);
+  if (!rateLimit.allowed) {
+    throw new RateLimitExceededError(
+      `Too many comments. Try again in ${rateLimit.retryAfterSeconds} seconds.`,
+      rateLimit.retryAfterSeconds,
+    );
   }
-}
 
-export async function POST(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+  const body = commentSchema.parse(await request.json());
+  const comment = await createComment(supabase, {
+    postId: body.postId,
+    userId: profileOrError.id,
+    userRole: profileOrError.role,
+    content: body.content,
+  });
 
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const rateLimit = checkRateLimit(`comment:${profile.id}`, 10, 60_000);
-    if (!rateLimit.allowed) {
-      throw new RateLimitExceededError(
-        `Too many comments. Try again in ${rateLimit.retryAfterSeconds} seconds.`,
-        rateLimit.retryAfterSeconds,
-      );
-    }
-
-    const body = await request.json();
-    const comment = await createComment(supabase, {
-      postId: body.postId,
-      userId: profile.id,
-      userRole: profile.role,
-      content: body.content,
-    });
-
-    return NextResponse.json({ data: comment, meta: { action: "create-comment" } }, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Comment must be between 1 and 1000 characters for a valid post." },
-        { status: 400 },
-      );
-    }
-
-    return respondWithDomainError(error, "Comment could not be posted.");
-  }
-}
+  return jsonSuccessWithMeta(comment, { action: "create-comment" }, 201);
+}, { fallbackMessage: "Comment could not be posted." });

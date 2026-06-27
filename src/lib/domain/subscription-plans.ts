@@ -3,6 +3,10 @@ import {
   resolveOrganizationBillingTier,
 } from "@/lib/domain/education-organization";
 import { ZIGO_PLUS_BENEFITS } from "@/lib/domain/focus-gamification";
+import {
+  isSubscriptionCampaignActive,
+  resolveSubscriptionPlanPricing,
+} from "@/lib/domain/subscription-campaign";
 import { TEACHER_CREATOR_PLUS_BENEFITS } from "@/lib/domain/teacher-creator-plus";
 import type { UserRole } from "@/lib/supabase/database.types";
 
@@ -27,9 +31,9 @@ export type SubscriptionPlanGroup = {
 
 const LEARNER_BENEFITS = ZIGO_PLUS_BENEFITS;
 const FAMILY_BENEFITS = [
-  "Bağlı çocuk profilleri tek abonelikte",
+  "Bağlı öğrenci profilleri tek abonelikte",
   "Veli ve öğrenci Zigo Plus özelliklerinin tamamı",
-  "Yazılı hazırlık kaynaklarına erişim",
+  "YKS ve LGS yazılı hazırlık kaynaklarına erişim",
   "Gelişmiş odak analitiği ve reklamsız çalışma",
 ] as const;
 
@@ -37,14 +41,15 @@ function plan(
   id: string,
   interval: SubscriptionBillingInterval,
   intervalLabel: string,
-  priceTry: number,
+  listPriceTry: number,
 ): SubscriptionPlan {
+  const pricing = resolveSubscriptionPlanPricing(listPriceTry);
   return {
     id,
     interval,
     intervalLabel,
-    priceTry,
-    compareAtTry: priceTry * 3,
+    priceTry: pricing.priceTry,
+    compareAtTry: pricing.compareAtTry,
   };
 }
 
@@ -66,7 +71,7 @@ function learnerPlans(prefix: "student" | "parent", cancelPath: string): Subscri
 const FAMILY_PLAN_GROUP: SubscriptionPlanGroup = {
   id: "family",
   title: "Aile Paketi",
-  subtitle: "Veli + bağlı çocuk profilleri için tek abonelik",
+  subtitle: "Veli + bağlı öğrenci profilleri için tek abonelik",
   benefits: FAMILY_BENEFITS,
   cancelPath: "/parent?billing=cancelled",
   plans: [
@@ -132,6 +137,8 @@ const PLATFORM_PLAN_GROUP: SubscriptionPlanGroup = {
 export function formatTryPrice(amount: number) {
   return `${amount.toLocaleString("tr-TR")} ₺`;
 }
+
+export { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
 
 export function resolveOrganizationPlanGroups(
   organizationType: EducationOrganizationType | null | undefined,
@@ -202,4 +209,26 @@ export function findPlanGroup(planId: string) {
     PLATFORM_PLAN_GROUP,
   ];
   return groups.find((group) => group.plans.some((item) => item.id === planId));
+}
+
+export function findPlanById(planId: string) {
+  return findPlanGroup(planId)?.plans.find((item) => item.id === planId);
+}
+
+export function resolveSubscriptionPeriodEnd(planId: string, from = new Date()) {
+  const plan = findPlanById(planId);
+  if (!plan) {
+    throw new Error("Geçersiz abonelik planı.");
+  }
+
+  const end = new Date(from);
+  if (plan.interval === "monthly") {
+    end.setMonth(end.getMonth() + 1);
+  } else if (plan.interval === "semiannual") {
+    end.setMonth(end.getMonth() + 6);
+  } else {
+    end.setFullYear(end.getFullYear() + 1);
+  }
+
+  return end.toISOString();
 }

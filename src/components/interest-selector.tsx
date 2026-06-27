@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { markRegistrationCampaignAnnouncementPending } from "@/lib/client/registration-campaign-announcement";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -15,7 +16,6 @@ import {
   isGeneralInterestArea,
 } from "@/lib/domain/general-interest-areas";
 import { isOrganizationRegistrationType } from "@/lib/domain/registration-account";
-import { formatTryPrice, resolveOrganizationPlanGroups } from "@/lib/domain/subscription-plans";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Database, UserRole } from "@/lib/supabase/database.types";
 
@@ -55,11 +55,6 @@ export function InterestSelector({
   const groupedAreas = useMemo(() => groupEducationAreasByGrade(visibleAreas), [visibleAreas]);
   const isTeacherNiche = role === "teacher";
   const maxSelections = isTeacherNiche ? 1 : 20;
-  const organizationPlans = useMemo(
-    () => resolveOrganizationPlanGroups(organizationType),
-    [organizationType],
-  );
-  const yearlyOrgPlan = organizationPlans[0]?.plans.find((item) => item.interval === "yearly");
   const lockedRegistrationOrg = isOrganizationRegistrationType(initialOrganizationType);
   const registrationOrgLabel = getOrganizationOption(initialOrganizationType)?.label;
   const gradeLabels = m.education.gradeCategories;
@@ -124,6 +119,7 @@ export function InterestSelector({
       if (response.ok) {
         setStatus("saved");
         setMessage(i.saved);
+        markRegistrationCampaignAnnouncementPending();
         router.refresh();
         return;
       }
@@ -172,13 +168,6 @@ export function InterestSelector({
         <section className="rounded-lg border border-violet-200 bg-violet-50 px-4 py-3">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-violet-700">Kayıt türü</p>
           <p className="mt-1 text-sm font-black text-night">{registrationOrgLabel}</p>
-          {yearlyOrgPlan ? (
-            <p className="mt-2 text-xs font-bold text-violet-900">
-              Kurumsal abonelik: yıllık{" "}
-              <span className="line-through opacity-60">{formatTryPrice(yearlyOrgPlan.compareAtTry)}</span>{" "}
-              {formatTryPrice(yearlyOrgPlan.priceTry)}
-            </p>
-          ) : null}
         </section>
       ) : null}
 

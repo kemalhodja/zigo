@@ -320,28 +320,43 @@ async function getNotificationItems(): Promise<{ isSignedOut: boolean; profileRo
   if (!profile) return { isSignedOut: true, profileRole: "student" as const, notifications: [] };
 
   const notifications = await getNotifications(supabase, profile.id);
-  return { isSignedOut: false, profileRole: profile.role, notifications: notifications.map((item) => toNotificationItem(item, m)) };
+  return {
+    isSignedOut: false,
+    profileRole: profile.role,
+    notifications: notifications.map((item) => toNotificationItem(item, m, profile.role)),
+  };
   }, demoFallback, emptyFallback);
 }
 
-function toNotificationItem(notification: SocialNotification, m: Messages): NotificationItem {
+function toNotificationItem(notification: SocialNotification, m: Messages, profileRole: UserRole): NotificationItem {
   const actor = notification.actor?.full_name ?? m.common.someone;
   const isFollow = notification.kind === "follow";
-  const href = isFollow && notification.actor?.id
-    ? `/profile/${notification.actor.id}`
-    : notification.post_id
-      ? `/post/${notification.post_id}`
-      : "/notifications";
+  const isLessonRequest = notification.kind.startsWith("lesson_request");
+  const href = isLessonRequest
+    ? profileRole === "teacher"
+      ? "/teacher"
+      : profileRole === "parent"
+        ? "/parent"
+        : "/notifications"
+    : isFollow && notification.actor?.id
+      ? `/profile/${notification.actor.id}`
+      : notification.post_id
+        ? `/post/${notification.post_id}`
+        : "/notifications";
 
   return {
     id: notification.id,
     title: `${actor} ${notification.message}`,
-    detail: isFollow ? m.notifications.newFollower : m.notifications.openPost,
+    detail: isLessonRequest
+      ? m.common.open
+      : isFollow
+        ? m.notifications.newFollower
+        : m.notifications.openPost,
     time: new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
       Math.round((new Date(notification.created_at).getTime() - Date.now()) / 60000),
       "minute",
     ),
-    action: isFollow ? m.common.view : m.common.open,
+    action: isLessonRequest ? m.common.open : isFollow ? m.common.view : m.common.open,
     category: getNotificationCategory(notification.kind, notification.message),
     href,
     isRead: notification.is_read,
@@ -350,6 +365,7 @@ function toNotificationItem(notification: SocialNotification, m: Messages): Noti
 
 function getNotificationCategory(kindOrTitle: string, detail: string): NotificationItem["category"] {
   const value = `${kindOrTitle} ${detail}`.toLowerCase();
+  if (value.includes("lesson_request") || value.includes("ders taleb")) return "learning";
   if (value.includes("reward") || value.includes("store") || value.includes("coupon") || value.includes("approval")) return "rewards";
   if (value.includes("moderation") || value.includes("safety") || value.includes("report")) return "safety";
   if (value.includes("reel") || value.includes("lesson") || value.includes("quiz") || value.includes("points")) return "learning";

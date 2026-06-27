@@ -13,13 +13,15 @@ test.describe("public app routes", () => {
 });
 
 test.describe("legacy redirects", () => {
-  test("/reels redirects to /micro", async ({ page }) => {
-    await page.goto("/reels");
-    await expect(page).toHaveURL(/\/micro/);
+  test("/reels redirects to /micro", async ({ request }) => {
+    const response = await request.get("/reels", { maxRedirects: 0 });
+    expect(response.status()).toBeGreaterThanOrEqual(300);
+    expect(response.headers().location).toMatch(/\/micro/);
   });
 
-  test("/stories redirects to /sparks", async ({ page }) => {
-    await page.goto("/stories");
-    await expect(page).toHaveURL(/\/sparks/);
+  test("/stories redirects to /sparks", async ({ request }) => {
+    const response = await request.get("/stories", { maxRedirects: 0 });
+    expect(response.status()).toBeGreaterThanOrEqual(300);
+    expect(response.headers().location).toMatch(/\/sparks/);
   });
 });

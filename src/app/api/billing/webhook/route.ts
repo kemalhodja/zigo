@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 import { activateZigoPlus, deactivateZigoPlus } from "@/lib/domain/billing";
 import {
+  handleLessonPackageCheckoutCompleted,
+  type LessonPackagePlanId,
+} from "@/lib/domain/lesson-packages";
+import {
   resolveUserIdByStripeCustomer,
   resolveUserIdByStripeSubscription,
   verifyStripeWebhookSignature,
@@ -18,6 +22,7 @@ type StripeEvent = {
       subscription?: string;
       current_period_end?: number;
       status?: string;
+      metadata?: Record<string, string>;
     };
   };
 };
@@ -51,13 +56,24 @@ export async function POST(request: Request) {
 
   try {
     if (event.type === "checkout.session.completed" && object?.client_reference_id) {
-      await activateZigoPlus(admin, object.client_reference_id, {
-        stripeCustomerId: typeof object.customer === "string" ? object.customer : undefined,
-        stripeSubscriptionId: typeof object.subscription === "string" ? object.subscription : undefined,
-        currentPeriodEnd: object.current_period_end
-          ? new Date(object.current_period_end * 1000).toISOString()
-          : undefined,
-      });
+      const purchaseType = object.metadata?.purchase_type;
+      const planId = object.metadata?.plan_id as LessonPackagePlanId | undefined;
+
+      if (purchaseType === "lesson_package" && planId) {
+        await handleLessonPackageCheckoutCompleted(admin, {
+          userId: object.client_reference_id,
+          planId,
+          stripeCheckoutSessionId: object.id,
+        });
+      } else {
+        await activateZigoPlus(admin, object.client_reference_id, {
+          stripeCustomerId: typeof object.customer === "string" ? object.customer : undefined,
+          stripeSubscriptionId: typeof object.subscription === "string" ? object.subscription : undefined,
+          currentPeriodEnd: object.current_period_end
+            ? new Date(object.current_period_end * 1000).toISOString()
+            : undefined,
+        });
+      }
     }
 
     if (

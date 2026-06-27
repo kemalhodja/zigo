@@ -1,25 +1,21 @@
-import { NextResponse } from "next/server";
-
-import { getCurrentProfile } from "@/lib/domain/profiles";
-import { openSponsoredAdUrl } from "@/lib/domain/sponsored-ads";
+import { isErrorResponse, jsonError, jsonGone, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
+import { openSponsoredAdUrl } from "@/features/social/services";
+import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+export const GET = withApiHandler(async (_request: Request, context: RouteContext) => {
+  const { id } = await context.params;
+  const supabase = await createClient();
+  const profileOrError = await requireAuthenticatedProfile(supabase);
+  if (isErrorResponse(profileOrError)) return profileOrError;
+
   try {
-    const { id } = await context.params;
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
-
-    if (!profile) {
-      return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
-    }
-
     const url = await openSponsoredAdUrl(supabase, id);
-    return NextResponse.json({ data: { url } });
+    return jsonSuccess({ url });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sponsorlu reklam açılamadı.";
     const inactive =
@@ -27,12 +23,9 @@ export async function GET(_request: Request, context: RouteContext) {
       message.toLowerCase().includes("expired");
 
     if (inactive) {
-      return NextResponse.json(
-        { error: "Bu sponsorlu reklam artık aktif değil.", code: "SPONSORED_INACTIVE" },
-        { status: 410 },
-      );
+      return jsonGone("Bu sponsorlu reklam artık aktif değil.", "SPONSORED_INACTIVE");
     }
 
-    return NextResponse.json({ error: message }, { status: 400 });
+    return jsonError(message, 400, "BAD_REQUEST");
   }
-}
+}, { fallbackMessage: "Sponsorlu reklam açılamadı." });

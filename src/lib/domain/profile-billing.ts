@@ -3,12 +3,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
+import { shouldHideOrganizationPlanPrices } from "@/lib/domain/registration-account";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups, type SubscriptionPlanGroup } from "@/lib/domain/subscription-plans";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type ProfileBillingSectionProps = {
   groups: SubscriptionPlanGroup[];
+  hidePrices: boolean;
   isPremium: boolean;
   allowDevActivate: boolean;
 };
@@ -33,6 +35,7 @@ export async function getProfileBillingSection(
       hasLinkedChildren,
       parseOrganizationType(profile.organization_type),
     ),
+    hidePrices: shouldHideOrganizationPlanPrices(parseOrganizationType(profile.organization_type)),
     isPremium: subscription.isPremium,
     allowDevActivate: canUseDevBillingBypass(),
   };

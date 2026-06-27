@@ -29,8 +29,8 @@ export const roleQaContentTr: Record<RoleQaRole, RoleQaSection[]> = {
       items: [
         { id: "parent-register", text: "/auth'tan kayıt ol; paylaşılan eğitim alanıyla /onboarding tamamla.", href: "/auth" },
         { id: "parent-feed", text: "Veli akışı yalnızca seçili alanlarla eşleşir.", href: "/" },
-        { id: "parent-family", text: "/family'den çocuk profili oluştur.", href: "/family" },
-        { id: "parent-areas", text: "Aile kurulumundan çocuk ilgi alanlarını ata.", href: "/family" },
+        { id: "parent-family", text: "/family'den bağlı öğrenci profili oluştur.", href: "/family" },
+        { id: "parent-areas", text: "Aile kurulumundan öğrenci ilgi alanlarını ata.", href: "/family" },
         { id: "parent-questions", text: "Seçili alanlarda soru sor; öğretmen yanıtlarını oku.", href: "/questions" },
       ],
     },

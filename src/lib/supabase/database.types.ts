@@ -7,6 +7,10 @@ export type Json =
   | Json[];
 
 export type UserRole = "teacher" | "parent" | "student";
+export type LessonRequestStatus = "pending" | "accepted" | "rejected" | "closed";
+export type LessonRequestPriority = "normal" | "urgent";
+export type BookingStatus = "booked" | "completed" | "cancelled";
+export type ReputationEventKind = "lesson_completed" | "positive_feedback" | "prompt_answer";
 export type StudentDocumentStatus = "pending" | "approved" | "rejected";
 export type StoreProductCategory =
   | "stationery"
@@ -19,6 +23,13 @@ export type StoreRedemptionStatus =
   | "approved"
   | "fulfilled"
   | "cancelled";
+export type BankTransferRequestStatus = "pending" | "approved" | "rejected" | "cancelled";
+export type LearningActionType =
+  | "reel_watch"
+  | "quiz_complete"
+  | "duel_win"
+  | "focus_session"
+  | "store_visit";
 
 export type AvatarAssets = {
   hat: string | null;
@@ -26,6 +37,7 @@ export type AvatarAssets = {
   pet: string | null;
   cape?: string | null;
   frame?: string | null;
+  achievement_live_lesson?: boolean;
 };
 
 export type UserRow = {
@@ -36,6 +48,7 @@ export type UserRow = {
   is_verified: boolean;
   avatar_assets: AvatarAssets;
   total_points: number;
+  reputation_score: number;
   bio: string | null;
   avatar_url: string | null;
   level: number;
@@ -45,6 +58,7 @@ export type UserRow = {
   student_document_reviewed_at: string | null;
   student_document_reviewed_by: string | null;
   grade_level: string | null;
+  city: string | null;
   organization_type: string | null;
   social_safety_strike_count: number;
   social_interactions_blocked: boolean;
@@ -80,6 +94,78 @@ export type StoreProductRow = {
   requires_parent_approval: boolean;
   is_active: boolean;
   created_at: string;
+};
+
+export type BankTransferRequestRow = {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  amount_try: number;
+  reference_code: string;
+  status: BankTransferRequestStatus;
+  receipt_storage_path: string | null;
+  admin_note: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  period_end: string | null;
+  created_at: string;
+};
+
+export type GooglePlayPurchaseRow = {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  product_id: string;
+  purchase_token: string;
+  order_id: string | null;
+  package_name: string;
+  expiry_time: string | null;
+  verified_at: string;
+  created_at: string;
+};
+
+export type TeacherCampaignRow = {
+  id: string;
+  teacher_id: string;
+  headline: string;
+  tagline: string | null;
+  pitch: string | null;
+  cta_label: string;
+  cta_url: string | null;
+  cover_image_url: string | null;
+  is_published: boolean;
+  is_sponsored: boolean;
+  sponsored_status: "active" | "paused" | "expired" | null;
+  sponsored_package_days: number | null;
+  sponsored_targeting: Json | null;
+  sponsored_expires_at: string | null;
+  sponsored_disclosure: string;
+  view_count: number;
+  click_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TeacherCampaignView = TeacherCampaignRow & {
+  is_sponsored_active: boolean;
+  teacher_name: string;
+  teacher_verified: boolean;
+};
+
+export type SponsoredTeacherCampaignSummary = {
+  teacher_id: string;
+  headline: string;
+  tagline: string | null;
+  cover_image_url: string | null;
+  teacher_name: string;
+  teacher_verified: boolean;
+  click_count: number;
+  view_count: number;
+  sponsored_package_days: number | null;
+  sponsored_targeting: Json | null;
+  sponsored_expires_at: string | null;
+  is_sponsored_active: boolean;
+  updated_at: string;
 };
 
 export type StoreRedemptionRow = {
@@ -156,8 +242,24 @@ export type VideoCompletionRow = {
 export type SocialMediaType = "image" | "video" | "carousel";
 export type ContentPostType = "normal" | "quiz" | "micro";
 export type CommentModerationStatus = "pending" | "approved" | "rejected";
-export type NotificationKind = "like" | "comment" | "follow" | "save" | "story" | "system";
-export type LearningActionType = "reel_watch" | "quiz_complete" | "duel_win" | "focus_session" | "store_visit";
+export type NotificationKind =
+  | "like"
+  | "comment"
+  | "follow"
+  | "save"
+  | "story"
+  | "system"
+  | "lesson_request"
+  | "lesson_request_urgent"
+  | "lesson_request_sent"
+  | "lesson_request_accepted"
+  | "lesson_request_rejected"
+  | "lesson_request_message"
+  | "lesson_booking_confirmed"
+  | "lesson_reminder";
+export type LessonPackagePlanType = "basic" | "pro" | "premium";
+export type LessonPackageStatus = "pending" | "active" | "expired" | "canceled";
+export type LiveLessonStatus = "scheduled" | "live" | "completed" | "canceled";
 
 export type SubscriptionTier = "free" | "zigo_plus";
 export type ContentReportReason =
@@ -207,6 +309,12 @@ export type FollowRow = {
   created_at: string;
 };
 
+export type UserBlockRow = {
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+};
+
 export type StoryRow = {
   id: string;
   author_id: string;
@@ -223,6 +331,8 @@ export type NotificationRow = {
   actor_id: string | null;
   kind: NotificationKind;
   post_id: string | null;
+  lesson_request_id: string | null;
+  lesson_booking_id: string | null;
   message: string;
   is_read: boolean;
   created_at: string;
@@ -862,6 +972,33 @@ export type Database = {
           },
         ];
       };
+      user_blocks: {
+        Row: UserBlockRow;
+        Insert: {
+          blocker_id: string;
+          blocked_id: string;
+          created_at?: string;
+        };
+        Update: {
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey";
+            columns: ["blocker_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey";
+            columns: ["blocked_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       stories: {
         Row: StoryRow;
         Insert: {
@@ -905,6 +1042,7 @@ export type Database = {
           actor_id?: string | null;
           kind: NotificationKind;
           post_id?: string | null;
+          lesson_request_id?: string | null;
           message: string;
           is_read?: boolean;
           created_at?: string;
@@ -934,6 +1072,13 @@ export type Database = {
             columns: ["post_id"];
             isOneToOne: false;
             referencedRelation: "social_posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_lesson_request_id_fkey";
+            columns: ["lesson_request_id"];
+            isOneToOne: false;
+            referencedRelation: "lesson_requests";
             referencedColumns: ["id"];
           },
         ];
@@ -1084,6 +1229,8 @@ export type Database = {
           stripe_customer_id: string | null;
           stripe_subscription_id: string | null;
           current_period_end: string | null;
+          trial_started_at: string | null;
+          trial_ends_at: string | null;
         };
         Insert: {
           user_id: string;
@@ -1092,6 +1239,8 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           current_period_end?: string | null;
+          trial_started_at?: string | null;
+          trial_ends_at?: string | null;
         };
         Update: {
           tier?: SubscriptionTier;
@@ -1099,6 +1248,8 @@ export type Database = {
           stripe_customer_id?: string | null;
           stripe_subscription_id?: string | null;
           current_period_end?: string | null;
+          trial_started_at?: string | null;
+          trial_ends_at?: string | null;
         };
         Relationships: [
           {
@@ -1109,6 +1260,81 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      lesson_package_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          status: LessonPackageStatus;
+          plan_type: LessonPackagePlanType;
+          starts_at: string;
+          ends_at: string;
+          lessons_included: number;
+          lessons_used: number;
+          stripe_checkout_session_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          status?: LessonPackageStatus;
+          plan_type: LessonPackagePlanType;
+          starts_at?: string;
+          ends_at: string;
+          lessons_included: number;
+          lessons_used?: number;
+          stripe_checkout_session_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          status?: LessonPackageStatus;
+          lessons_used?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lesson_package_subscriptions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      live_lessons: {
+        Row: {
+          id: string;
+          booking_id: string;
+          teacher_id: string;
+          parent_id: string;
+          meeting_url: string;
+          provider: string;
+          start_time: string;
+          end_time: string;
+          duration_minutes: number;
+          status: LiveLessonStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          teacher_id: string;
+          parent_id: string;
+          meeting_url: string;
+          provider?: string;
+          start_time: string;
+          end_time: string;
+          duration_minutes?: number;
+          status?: LiveLessonStatus;
+          created_at?: string;
+        };
+        Update: {
+          meeting_url?: string;
+          status?: LiveLessonStatus;
+        };
+        Relationships: [];
       };
       focus_sessions: {
         Row: {
@@ -1242,6 +1468,128 @@ export type Database = {
         };
         Relationships: [];
       };
+      bank_transfer_requests: {
+        Row: BankTransferRequestRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          plan_id: string;
+          amount_try: number;
+          reference_code: string;
+          status?: BankTransferRequestStatus;
+          receipt_storage_path?: string | null;
+          admin_note?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          period_end?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          plan_id?: string;
+          amount_try?: number;
+          reference_code?: string;
+          status?: BankTransferRequestStatus;
+          receipt_storage_path?: string | null;
+          admin_note?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          period_end?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bank_transfer_requests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      google_play_purchases: {
+        Row: GooglePlayPurchaseRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          plan_id: string;
+          product_id: string;
+          purchase_token: string;
+          order_id?: string | null;
+          package_name: string;
+          expiry_time?: string | null;
+          verified_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          plan_id?: string;
+          product_id?: string;
+          order_id?: string | null;
+          package_name?: string;
+          expiry_time?: string | null;
+          verified_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "google_play_purchases_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      teacher_campaigns: {
+        Row: TeacherCampaignRow;
+        Insert: {
+          id?: string;
+          teacher_id: string;
+          headline: string;
+          tagline?: string | null;
+          pitch?: string | null;
+          cta_label?: string;
+          cta_url?: string | null;
+          cover_image_url?: string | null;
+          is_published?: boolean;
+          is_sponsored?: boolean;
+          sponsored_status?: "active" | "paused" | "expired" | null;
+          sponsored_package_days?: number | null;
+          sponsored_targeting?: Json | null;
+          sponsored_expires_at?: string | null;
+          sponsored_disclosure?: string;
+          view_count?: number;
+          click_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          headline?: string;
+          tagline?: string | null;
+          pitch?: string | null;
+          cta_label?: string;
+          cta_url?: string | null;
+          cover_image_url?: string | null;
+          is_published?: boolean;
+          is_sponsored?: boolean;
+          sponsored_status?: "active" | "paused" | "expired" | null;
+          sponsored_package_days?: number | null;
+          sponsored_targeting?: Json | null;
+          sponsored_expires_at?: string | null;
+          sponsored_disclosure?: string;
+          view_count?: number;
+          click_count?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "teacher_campaigns_teacher_id_fkey";
+            columns: ["teacher_id"];
+            isOneToOne: true;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       content_reports: {
         Row: ContentReportRow;
         Insert: {
@@ -1362,6 +1710,236 @@ export type Database = {
           },
         ];
       };
+      lesson_requests: {
+        Row: {
+          id: string;
+          sender_id: string;
+          receiver_id: string;
+          child_profile_id: string | null;
+          area_id: number | null;
+          status: LessonRequestStatus;
+          priority: LessonRequestPriority;
+          message_body: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          sender_id: string;
+          receiver_id: string;
+          child_profile_id?: string | null;
+          area_id?: number | null;
+          status?: LessonRequestStatus;
+          priority?: LessonRequestPriority;
+          message_body: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          child_profile_id?: string | null;
+          area_id?: number | null;
+          status?: LessonRequestStatus;
+          priority?: LessonRequestPriority;
+          message_body?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lesson_requests_sender_id_fkey";
+            columns: ["sender_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_requests_receiver_id_fkey";
+            columns: ["receiver_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_requests_child_profile_id_fkey";
+            columns: ["child_profile_id"];
+            isOneToOne: false;
+            referencedRelation: "child_profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_requests_area_id_fkey";
+            columns: ["area_id"];
+            isOneToOne: false;
+            referencedRelation: "education_areas";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lesson_request_messages: {
+        Row: {
+          id: string;
+          request_id: string;
+          sender_id: string;
+          content: string;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_id: string;
+          sender_id: string;
+          content: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          content?: string;
+          is_read?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lesson_request_messages_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "lesson_requests";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_request_messages_sender_id_fkey";
+            columns: ["sender_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reputation_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          actor_id: string | null;
+          kind: ReputationEventKind;
+          delta: number;
+          reference_id: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          actor_id?: string | null;
+          kind: ReputationEventKind;
+          delta: number;
+          reference_id?: string | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      teacher_availability: {
+        Row: {
+          id: string;
+          teacher_id: string;
+          start_time: string;
+          end_time: string;
+          is_booked: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          teacher_id: string;
+          start_time: string;
+          end_time: string;
+          is_booked?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          is_booked?: boolean;
+        };
+        Relationships: [];
+      };
+      lesson_bookings: {
+        Row: {
+          id: string;
+          teacher_id: string;
+          parent_id: string;
+          child_profile_id: string | null;
+          availability_id: string;
+          area_id: number | null;
+          start_time: string;
+          end_time: string;
+          status: BookingStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          teacher_id: string;
+          parent_id: string;
+          child_profile_id?: string | null;
+          availability_id: string;
+          area_id?: number | null;
+          start_time: string;
+          end_time: string;
+          status?: BookingStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          status?: BookingStatus;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      student_needs: {
+        Row: {
+          id: string;
+          student_user_id: string | null;
+          child_profile_id: string | null;
+          area_id: number;
+          weakness_level: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_user_id?: string | null;
+          child_profile_id?: string | null;
+          area_id: number;
+          weakness_level: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          weakness_level?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      progress_reports: {
+        Row: {
+          id: string;
+          student_user_id: string | null;
+          child_profile_id: string | null;
+          area_id: number;
+          score: number;
+          report_date: string;
+          feedback: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_user_id?: string | null;
+          child_profile_id?: string | null;
+          area_id: number;
+          score: number;
+          report_date?: string;
+          feedback?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       answers: {
         Row: {
           id: string;
@@ -1407,6 +1985,77 @@ export type Database = {
       approve_answer: {
         Args: { answer_id: string };
         Returns: void;
+      };
+      count_lesson_request_unread: {
+        Args: { for_user_id: string };
+        Returns: number;
+      };
+      create_lesson_request_notification: {
+        Args: {
+          recipient_id: string;
+          actor_id: string;
+          request_id: string;
+          kind: string;
+          message: string;
+        };
+        Returns: void;
+      };
+      mark_lesson_request_thread_read: {
+        Args: { target_request_id: string; for_user_id?: string };
+        Returns: number;
+      };
+      record_reputation_event: {
+        Args: {
+          target_user_id: string;
+          event_kind: ReputationEventKind;
+          event_delta: number;
+          event_actor_id?: string;
+          event_reference_id?: string;
+          event_note?: string;
+        };
+        Returns: UserRow;
+      };
+      find_best_teacher: {
+        Args: {
+          for_student_user_id?: string;
+          for_child_profile_id?: string;
+          limit_count?: number;
+        };
+        Returns: {
+          teacher_id: string;
+          full_name: string;
+          reputation_score: number;
+          matched_area_id: number;
+          area_name: string;
+          weakness_level: number;
+          match_score: number;
+        }[];
+      };
+      get_parent_weekly_progress_summary: {
+        Args: { for_parent_id: string; for_child_profile_id?: string };
+        Returns: Json;
+      };
+      book_availability_slot: {
+        Args: {
+          slot_id: string;
+          parent_id: string;
+          child_profile_id?: string;
+          area_id?: number;
+        };
+        Returns: Json;
+      };
+      complete_lesson_booking: {
+        Args: {
+          booking_id: string;
+          teacher_id: string;
+          progress_score?: number;
+          progress_feedback?: string;
+        };
+        Returns: Json;
+      };
+      cancel_lesson_booking: {
+        Args: { booking_id: string; actor_id: string };
+        Returns: Json;
       };
       award_learning_points: {
         Args: {
@@ -1518,6 +2167,7 @@ export type Database = {
         Args: {
           next_bio?: string | null;
           next_avatar_url?: string | null;
+          next_city?: string | null;
         };
         Returns: UserRow;
       };
@@ -1800,6 +2450,62 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["user_subscriptions"]["Row"];
       };
+      parent_has_active_lesson_package: {
+        Args: {
+          for_parent_id: string;
+        };
+        Returns: boolean;
+      };
+      activate_lesson_package_subscription: {
+        Args: {
+          p_user_id: string;
+          p_plan_type: LessonPackagePlanType;
+          p_duration_days?: number;
+          p_stripe_checkout_session_id?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["lesson_package_subscriptions"]["Row"];
+      };
+      process_lesson_reminders: {
+        Args: {
+          window_minutes?: number;
+        };
+        Returns: number;
+      };
+      create_bank_transfer_request: {
+        Args: {
+          p_plan_id: string;
+          p_amount_try: number;
+        };
+        Returns: Database["public"]["Tables"]["bank_transfer_requests"]["Row"];
+      };
+      attach_bank_transfer_receipt: {
+        Args: {
+          p_request_id: string;
+          p_receipt_storage_path: string;
+        };
+        Returns: Database["public"]["Tables"]["bank_transfer_requests"]["Row"];
+      };
+      review_bank_transfer_request: {
+        Args: {
+          p_request_id: string;
+          p_status: BankTransferRequestStatus;
+          p_admin_note?: string | null;
+          p_period_end?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["bank_transfer_requests"]["Row"];
+      };
+      record_google_play_purchase: {
+        Args: {
+          p_user_id: string;
+          p_plan_id: string;
+          p_product_id: string;
+          p_purchase_token: string;
+          p_order_id?: string | null;
+          p_package_name: string;
+          p_expiry_time?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["google_play_purchases"]["Row"];
+      };
       request_account_deletion: {
         Args: {
           p_reason?: string | null;
@@ -1859,9 +2565,57 @@ export type Database = {
           created_at: string;
         }[];
       };
+      upsert_teacher_campaign: {
+        Args: {
+          next_headline: string;
+          next_tagline?: string | null;
+          next_pitch?: string | null;
+          next_cta_label?: string;
+          next_cta_url?: string | null;
+          next_cover_image_url?: string | null;
+          next_is_published?: boolean;
+          next_is_sponsored?: boolean;
+          next_sponsored_package_days?: number | null;
+          next_sponsored_targeting?: Json | null;
+        };
+        Returns: TeacherCampaignRow;
+      };
+      get_teacher_campaign: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: TeacherCampaignView[];
+      };
+      list_sponsored_teacher_campaigns: {
+        Args: {
+          limit_count?: number;
+          placement_key?: string;
+        };
+        Returns: SponsoredTeacherCampaignSummary[];
+      };
+      teacher_campaign_visible_for_viewer: {
+        Args: {
+          target_teacher_id: string;
+          placement_key?: string;
+        };
+        Returns: boolean;
+      };
+      record_teacher_campaign_view: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: undefined;
+      };
+      record_teacher_campaign_click: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       user_role: UserRole;
+      lesson_request_status: LessonRequestStatus;
       store_product_category: StoreProductCategory;
       store_redemption_status: StoreRedemptionStatus;
       subscription_tier: SubscriptionTier;

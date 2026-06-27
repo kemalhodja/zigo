@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getChildProfiles } from "@/lib/domain/children";
+import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
@@ -15,7 +16,7 @@ export default async function ProfilesPage() {
     <div className="space-y-5 pb-3">
       <section className="-mx-4 border-b border-slate-200 bg-white px-4 pb-4">
         <p className="text-sm font-black text-slate-500">{p.eyebrow}</p>
-        <h1 className="mt-1 text-2xl font-black leading-tight text-night">{p.title}</h1>
+        <h1 className="zigo-display mt-1 font-black leading-tight text-night">{p.title}</h1>
         <p className="mt-2 text-sm font-semibold text-slate-500">{p.subtitle}</p>
       </section>
 
@@ -57,20 +58,20 @@ export default async function ProfilesPage() {
         <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{p.familyBridge}</p>
         <h2 className="mt-1 text-xl font-black text-night">{p.familyTitle}</h2>
         <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{p.familyDesc}</p>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <Link className="tap-scale rounded-lg bg-white px-3 py-3 text-center text-[0.68rem] font-black text-slate-700" href="/family">
+        <div className="zigo-dashboard-grid mt-4">
+          <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/family">
             {p.familySetup}
           </Link>
-          <Link className="tap-scale rounded-lg bg-white px-3 py-3 text-center text-[0.68rem] font-black text-slate-700" href="/student">
+          <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/student">
             {p.studentMode}
           </Link>
-          <Link className="tap-scale zigo-cta tap-scale rounded-lg px-3 py-3 text-center text-[0.68rem] font-black text-white" href="/">
+          <Link className="tap-scale zigo-mobile-cta rounded-2xl text-center" href="/">
             {p.continueFeed}
           </Link>
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-2">
+      <section className="zigo-dashboard-grid">
         <Link className="rounded-lg bg-slate-100 px-4 py-3 text-center text-sm font-black text-night" href="/onboarding">
           {p.editSetup}
         </Link>
@@ -161,9 +162,23 @@ async function getProfiles(m: Messages) {
   const profile = await getCurrentProfile(supabase);
   if (!profile) return [];
 
+  const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
+  const adminProfile = isPlatformAdmin
+    ? [
+        {
+          id: "platform-admin",
+          title: m.roles.platformAdmin,
+          subtitle: m.ops.admin.desc,
+          href: "/admin",
+          accent: "from-night to-crystal",
+        },
+      ]
+    : [];
+
   if (profile.role === "parent") {
     const children = await getChildProfiles(supabase);
     return [
+      ...adminProfile,
       {
         id: profile.id,
         title: p.previewParent,
@@ -182,6 +197,7 @@ async function getProfiles(m: Messages) {
   }
 
   return [
+    ...adminProfile,
     {
       id: profile.id,
       title: profile.full_name,

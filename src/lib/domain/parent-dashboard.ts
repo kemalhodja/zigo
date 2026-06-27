@@ -15,7 +15,7 @@ export type ChildQuizActivityItem = {
 
 export type ChildActivityItem = {
   activity_id: string;
-  activity_type: "quiz_complete" | "micro_video_watched" | "mini_quiz_completed" | "duel_won";
+  activity_type: "quiz_complete" | "micro_video_watched" | "mini_quiz_completed" | "duel_won" | "lesson_completed";
   title: string;
   points_awarded: number;
   metadata: Record<string, unknown>;

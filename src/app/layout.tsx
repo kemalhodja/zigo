@@ -4,11 +4,16 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 
+import { NotificationRealtimeBridge } from "@/features/notifications/components/notification-realtime-bridge";
+import { QueryProvider } from "@/features/shared/providers/query-provider";
 import { AppShell } from "@/components/app-shell";
+import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { getRoleAccentLabel, getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
+import { getRoleAccentLabel, getRoleThemeClass, getRoleThemeColor, type ViewerRole } from "@/lib/domain/role-theme";
+import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getUnreadNotificationCount } from "@/lib/domain/social";
+import { getLessonRequestUnreadCount } from "@/lib/domain/lesson-requests/queries";
 import { getTeacherInboxCount } from "@/lib/domain/teacher-inbox";
 import { getHtmlLang } from "@/lib/i18n";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
@@ -53,11 +58,15 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = {
-  themeColor: "#7C3AED",
-  width: "device-width",
-  initialScale: 1,
-};
+export async function generateViewport(): Promise<Viewport> {
+  const shellState = await getShellState();
+
+  return {
+    themeColor: getRoleThemeColor(shellState.viewerRole),
+    width: "device-width",
+    initialScale: 1,
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -72,16 +81,23 @@ export default async function RootLayout({
     <html lang={getHtmlLang(locale)}>
       <body className={`${jakarta.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
         <LocaleProvider initialLocale={locale}>
+          <QueryProvider>
+          <AuthSessionKeepAlive />
+          {shellState.viewerId ? <NotificationRealtimeBridge userId={shellState.viewerId} /> : null}
           <AppShell
           canCreateSocialPost={shellState.canCreateSocialPost}
           isPreviewMode={!hasSupabaseEnv()}
-          roleAccentLabel={getRoleAccentLabel(shellState.viewerRole, messages)}
+          roleAccentLabel={getRoleAccentLabel(shellState.viewerRole, messages, {
+            isPlatformAdmin: shellState.isPlatformAdmin,
+          })}
           teacherInboxCount={shellState.teacherInboxCount}
+          lessonRequestBadgeCount={shellState.lessonRequestBadgeCount}
           unreadCount={shellState.unreadCount}
           viewerRole={shellState.viewerRole}
         >
           {children}
         </AppShell>
+          </QueryProvider>
         </LocaleProvider>
         {process.env.NODE_ENV === "production" ? (
           <Script id="zigo-service-worker" strategy="afterInteractive">
@@ -101,26 +117,34 @@ export default async function RootLayout({
 
 async function getShellState() {
   if (!hasSupabaseEnv()) {
-    return { canCreateSocialPost: true, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole };
+    return { canCreateSocialPost: true, unreadCount: 0, teacherInboxCount: 0, lessonRequestBadgeCount: 0, viewerId: null, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
   }
 
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
     if (!profile) {
-      return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole };
+      return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, lessonRequestBadgeCount: 0, viewerId: null, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
     }
 
     const teacherInboxCount =
       profile.role === "teacher" ? await getTeacherInboxCount(supabase, profile.id) : 0;
+    const lessonRequestBadgeCount =
+      profile.role === "parent" || profile.role === "teacher"
+        ? await getLessonRequestUnreadCount(supabase, profile.id, profile.role)
+        : 0;
+    const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
 
     return {
       canCreateSocialPost: profile.role === "teacher" && profile.is_verified,
       unreadCount: await getUnreadNotificationCount(supabase, profile.id),
       teacherInboxCount,
+      lessonRequestBadgeCount,
+      viewerId: profile.id,
       viewerRole: profile.role as ViewerRole,
+      isPlatformAdmin,
     };
   } catch {
-    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole };
+    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, lessonRequestBadgeCount: 0, viewerId: null, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
   }
 }

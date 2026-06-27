@@ -46,7 +46,7 @@ export function ChildGradeLevelForm({
       }
 
       setStatus("saved");
-      setMessage("Çocuk sınıfı kaydedildi.");
+      setMessage("Öğrenci sınıfı kaydedildi.");
       router.refresh();
     } catch {
       setStatus("error");

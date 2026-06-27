@@ -6,6 +6,7 @@ import { GradeLevelForm } from "@/components/grade-level-form";
 import { LearningProgressCard } from "@/components/learning-progress-card";
 import { RecentLearningCard } from "@/components/recent-learning-card";
 import { StateCard } from "@/components/state-card";
+import { RecommendedTeachersPanel } from "@/features/matching/components/recommended-teachers-panel";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
@@ -44,9 +45,31 @@ const emptyStats: LearningProgressStats = {
 
 export default async function StudentPage() {
   const data = await getStudentDashboardData();
-  const gamification = buildStudentGamification(data.totalPoints);
   const m = await getServerMessages();
   const d = m.dashboard;
+
+  if (data.mode === "role-preview") {
+    return (
+      <div className="space-y-4 pb-3">
+        <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
+          <p className="zigo-eyebrow text-slate-500">{d.student.mode}</p>
+          <h1 className="zigo-display mt-1 font-black leading-tight text-night">{d.student.title}</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">{d.student.desc}</p>
+        </section>
+        <StateCard
+          action={
+            <Link className="font-black text-crystal" href="/profiles">
+              {d.switchMode}
+            </Link>
+          }
+          description={d.student.studentRequiredDesc}
+          title={d.student.studentRequired}
+        />
+      </div>
+    );
+  }
+
+  const gamification = buildStudentGamification(data.totalPoints);
   const z = m.zigo;
 
   return (
@@ -64,7 +87,7 @@ export default async function StudentPage() {
         <GradeLevelForm initialGradeLevel={data.gradeLevel} />
       ) : null}
 
-      <section className="grid grid-cols-2 gap-2">
+      <section className="zigo-dashboard-grid">
         <DashboardLink accent="from-indigo-600 to-violet-600" href="/focus" label={z.focusMode} text={z.studyWithMe} />
         <DashboardLink accent="from-crystal to-berry" href="/micro" label={z.micro} text={d.student.watchEarn} />
         <DashboardLink accent="from-aqua to-mint" href="/learn" label={m.dock.learn} text={d.student.quizzes} />
@@ -100,6 +123,23 @@ export default async function StudentPage() {
         focusSessions={data.stats.focusSessions}
       />
 
+      {!data.isSignedOut && !data.showPreview ? (
+        <RecommendedTeachersPanel
+          labels={{
+            eyebrow: m.ecosystem.recommendedEyebrow,
+            title: m.ecosystem.recommendedTitle,
+            desc: m.ecosystem.recommendedDesc,
+            weaknessPrefix: m.ecosystem.recommendedWeakness,
+            reputation: m.ecosystem.reputation,
+            empty: m.ecosystem.recommendedEmpty,
+            requestLesson: m.ecosystem.recommendedRequestLesson,
+            analyzing: m.ecosystem.recommendedAnalyzing,
+            childLabel: m.ecosystem.recommendedChildLabel,
+          }}
+          role="student"
+        />
+      ) : null}
+
       <LeaguePathCard
         gamification={gamification}
         quizCompletions={data.stats.quizCompletions}
@@ -128,6 +168,7 @@ async function getStudentDashboardData(): Promise<{
   stats: LearningProgressStats;
   showPreview: boolean;
   isSignedOut: boolean;
+  mode: "student" | "signed-out" | "role-preview" | "preview";
   streakDays: number;
   totalPoints: number;
   focusAnalytics: Awaited<ReturnType<typeof getStudentFocusAnalytics>> | null;
@@ -143,6 +184,7 @@ async function getStudentDashboardData(): Promise<{
           stats: fallbackStats,
           isSignedOut: false,
           showPreview: true,
+          mode: "preview",
           streakDays: 3,
           totalPoints: 240,
           focusAnalytics: {
@@ -164,6 +206,7 @@ async function getStudentDashboardData(): Promise<{
           stats: emptyStats,
           isSignedOut: true,
           showPreview: false,
+          mode: "signed-out",
           streakDays: 0,
           totalPoints: 0,
           focusAnalytics: null,
@@ -180,6 +223,7 @@ async function getStudentDashboardData(): Promise<{
         stats: fallbackStats,
         isSignedOut: false,
         showPreview: true,
+        mode: "preview",
         streakDays: 3,
         totalPoints: 240,
         focusAnalytics: {
@@ -201,6 +245,7 @@ async function getStudentDashboardData(): Promise<{
         stats: emptyStats,
         isSignedOut: true,
         showPreview: false,
+        mode: "signed-out",
         streakDays: 0,
         totalPoints: 0,
         focusAnalytics: null,
@@ -219,6 +264,24 @@ async function getStudentDashboardData(): Promise<{
       stats: emptyStats,
       isSignedOut: true,
       showPreview: false,
+      mode: "signed-out" as const,
+      streakDays: 0,
+      totalPoints: 0,
+      focusAnalytics: null,
+      isPremium: false,
+      allowDevActivate: false,
+      gradeLevel: null,
+      planGroups: [],
+    };
+  }
+
+  if (profile.role !== "student") {
+    return {
+      history: [],
+      stats: emptyStats,
+      isSignedOut: false,
+      showPreview: false,
+      mode: "role-preview" as const,
       streakDays: 0,
       totalPoints: 0,
       focusAnalytics: null,
@@ -232,9 +295,9 @@ async function getStudentDashboardData(): Promise<{
   const [stats, history, missions, focusAnalytics, subscription] = await Promise.all([
     getLearningProgressStats(supabase, profile.id),
     getRecentLearningHistory(supabase, profile.id),
-    profile.role === "student" ? getDailyMissionProgress(supabase, profile.id) : Promise.resolve({ streakDays: 0, completedIds: [], eventsToday: 0 }),
-    profile.role === "student" ? getStudentFocusAnalytics(supabase) : Promise.resolve(null),
-    profile.role === "student" ? getUserSubscription(supabase, profile.id) : Promise.resolve({ tier: "free" as const, isPremium: false }),
+    getDailyMissionProgress(supabase, profile.id),
+    getStudentFocusAnalytics(supabase),
+    getUserSubscription(supabase, profile.id),
   ]);
 
   return {
@@ -242,6 +305,7 @@ async function getStudentDashboardData(): Promise<{
     stats,
     isSignedOut: false,
     showPreview: false,
+    mode: "student" as const,
     streakDays: Math.max(0, missions.streakDays),
     totalPoints: profile.total_points,
     focusAnalytics,
@@ -282,7 +346,7 @@ function LeaguePathCard({
           <span className="block text-[0.65rem] uppercase tracking-[0.08em]">{labels.dayStreak}</span>
         </span>
       </div>
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {LEAGUE_PATH.map((league) => {
           const isUnlocked = gamification.points >= league.min;
           return (
@@ -306,8 +370,8 @@ function LeaguePathCard({
 
 function DashboardLink({ accent, href, label, text }: { accent: string; href: string; label: string; text: string }) {
   return (
-    <Link className={`tap-scale rounded-lg bg-gradient-to-br ${accent} p-4 text-white`} href={href}>
-      <p className="text-base font-black">{label}</p>
+    <Link className={`tap-scale zigo-mobile-card rounded-2xl bg-gradient-to-br ${accent} text-white`} href={href}>
+      <p className="text-lg font-black">{label}</p>
       <p className="zigo-fit-text mt-1 text-xs font-bold leading-snug text-white/78">{text}</p>
     </Link>
   );

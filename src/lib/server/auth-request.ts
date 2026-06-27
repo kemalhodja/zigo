@@ -57,7 +57,7 @@ export function shouldBypassAuthRateLimit(request: Request) {
 
 export function enforceAuthRateLimit(
   request: Request,
-  scope: "sign-in" | "sign-up",
+  scope: "sign-in" | "sign-up" | "resend-verification" | "forgot-password" | "reset-password",
   limit: number,
   windowMs: number,
 ) {

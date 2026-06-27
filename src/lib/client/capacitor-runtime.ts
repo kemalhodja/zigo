@@ -1,7 +1,20 @@
+type CapacitorWindow = Window & { Capacitor?: { getPlatform?: () => string } };
+
+export function isCapacitorClient() {
+  if (typeof window === "undefined") return false;
+
+  const capacitor = (window as CapacitorWindow).Capacitor;
+  if (capacitor?.getPlatform?.()) {
+    return true;
+  }
+
+  return /Capacitor/i.test(navigator.userAgent);
+}
+
 export function isCapacitorAndroidClient() {
   if (typeof window === "undefined") return false;
 
-  const capacitor = (window as Window & { Capacitor?: { getPlatform?: () => string } }).Capacitor;
+  const capacitor = (window as CapacitorWindow).Capacitor;
   if (capacitor?.getPlatform?.() === "android") {
     return true;
   }

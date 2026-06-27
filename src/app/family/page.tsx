@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
 import { ChildAreaSelector } from "@/components/child-area-selector";
 import { ChildFocusPanel } from "@/components/child-focus-panel";
 import { ChildGradeLevelForm } from "@/components/child-grade-level-form";
@@ -94,11 +95,20 @@ export default async function FamilyPage() {
           {childDetails.map(({ child, selectedAreaIds, feedPreview, quizActivity }) => (
             <article className="space-y-4 px-4 py-5" key={child.id}>
               <div className="flex items-end justify-between gap-4">
-                <div>
+                <div className="flex min-w-0 items-center gap-3">
+                  <GamifiedChildAvatar
+                    avatarAssets={child.avatar_assets}
+                    badgeLabel={f.liveLessonStarBadge}
+                    label={child.display_name}
+                    showBadgeLabel
+                    size="md"
+                  />
+                  <div>
                   <p className="text-xs font-semibold text-slate-500">
                     {child.age_group ?? f.childProfileLabel}
                   </p>
                   <h3 className="mt-1 text-xl font-black text-night">{child.display_name}</h3>
+                  </div>
                 </div>
                 <div className="rounded-lg bg-slate-100 px-4 py-2 text-right">
                   <p className="text-xs font-black text-slate-500">{f.points}</p>
