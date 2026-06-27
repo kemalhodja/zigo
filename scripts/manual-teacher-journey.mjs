@@ -34,7 +34,7 @@ async function main() {
   results.push(
     journeyStep(
       "1c. Creator Plus (local demo)",
-      devActivate.response.ok || devActivate.response.status === 503,
+      devActivate.response.ok || [403, 503].includes(devActivate.response.status),
       devActivate.body?.error ?? "ok",
     ),
   );

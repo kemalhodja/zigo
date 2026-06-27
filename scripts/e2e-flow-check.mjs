@@ -3,7 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 import { detectBaseUrl } from "./journey-utils.mjs";
-import { loadProjectEnv, resetDemoSocialAccounts } from "./live-test-utils.mjs";
+import { DEMO_POST_IDS, loadProjectEnv, resetDemoE2eState } from "./live-test-utils.mjs";
 
 const DEMO_PASSWORD = "ZigoTest123!";
 
@@ -136,7 +136,7 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  await resetDemoSocialAccounts(admin);
+  await resetDemoE2eState(admin);
 
   await admin
     .from("stories")
@@ -391,7 +391,9 @@ async function main() {
     .select("total_points")
     .eq("id", studentId)
     .maybeSingle();
-  const reelPost = (studentPosts ?? []).find((post) => post.caption?.includes("Kesirleri"));
+  const reelPost =
+    (studentPosts ?? []).find((post) => post.id === DEMO_POST_IDS.kesirReel)
+    ?? (studentPosts ?? []).find((post) => post.caption?.includes("Kesirleri"));
   if (reelPost) {
     const { data: awardRows, error: awardError } = await student.rpc("award_social_reel_watch_points", {
       p_target_user_id: studentId,
@@ -405,6 +407,8 @@ async function main() {
         awardError?.message ?? `${awardRows?.[0]?.points_awarded ?? 0} points`,
       ),
     );
+  } else {
+    checks.push(check("Student reel watch points RPC", false, "demo kesir reel missing"));
   }
 
   const { data: duelRows, error: duelError } = await student.rpc("award_safe_duel_win_points", {

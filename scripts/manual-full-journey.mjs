@@ -3,8 +3,9 @@
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
-import { loadProjectEnv } from "./live-test-utils.mjs";
+import { createClient } from "@supabase/supabase-js";
 
+import { loadProjectEnv, resetDemoE2eState } from "./live-test-utils.mjs";
 const root = process.cwd();
 const scripts = [
   "manual-student-journey.mjs",
@@ -23,10 +24,18 @@ function runScript(name) {
   return result.status === 0;
 }
 
-function main() {
+async function main() {
   loadProjectEnv();
-  const outcomes = scripts.map((script) => ({ script, ok: runScript(script) }));
-  const failed = outcomes.filter((item) => !item.ok);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (url && serviceRole) {
+    const admin = createClient(url, serviceRole, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    await resetDemoE2eState(admin);
+  }
+
+  const outcomes = scripts.map((script) => ({ script, ok: runScript(script) }));  const failed = outcomes.filter((item) => !item.ok);
 
   console.log("\n========== FULL JOURNEY SUMMARY ==========");
   for (const item of outcomes) {
@@ -37,4 +46,7 @@ function main() {
   process.exit(failed.length > 0 ? 1 : 0);
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

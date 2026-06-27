@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { DEMO_ACCOUNT_EMAILS, loadProjectEnv } from "./live-test-utils.mjs";
+import { DEMO_ACCOUNT_EMAILS, loadProjectEnv, seedDemoMatchFeedContent } from "./live-test-utils.mjs";
 
 const root = process.cwd();
 const DEMO_PASSWORD = "ZigoTest123!";
@@ -224,7 +224,8 @@ async function main() {
   await seedInterests(admin, "00000000-0000-4000-8000-000000000201", [mathAreaId]);
   await seedInterests(admin, "00000000-0000-4000-8000-000000000301", [mathAreaId, codingAreaId]);
   await seedDemoContent(admin, mathAreaId, scienceAreaId);
-  console.log("PASS Demo Match-Feed interests seeded");
+  await seedDemoMatchFeedContent(admin);
+  console.log("PASS Demo Match-Feed interests and posts seeded");
 
   const anon = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },

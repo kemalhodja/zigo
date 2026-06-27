@@ -132,6 +132,84 @@ export const DEMO_ACCOUNT_EMAILS = [
   "admin@zigo.test",
 ];
 
+export const DEMO_USER_IDS = {
+  aylin: "00000000-0000-4000-8000-000000000101",
+  mert: "00000000-0000-4000-8000-000000000102",
+  parent: "00000000-0000-4000-8000-000000000201",
+  student: "00000000-0000-4000-8000-000000000301",
+  admin: "00000000-0000-4000-8000-000000000401",
+};
+
+export const DEMO_POST_IDS = {
+  kesirReel: "00000000-0000-4000-8000-000000000601",
+  scienceReel: "00000000-0000-4000-8000-000000000602",
+};
+
+async function resolveDemoAreaIds(admin) {
+  const { data: areas, error } = await admin
+    .from("education_areas")
+    .select("id, area_name")
+    .in("area_name", ["LGS Matematik", "YKS Matematik", "LGS Fen Bilimleri", "Kodlama ve Algoritma"]);
+  if (error) throw error;
+
+  const byName = new Map((areas ?? []).map((area) => [area.area_name, area.id]));
+  return {
+    mathAreaId: byName.get("LGS Matematik") ?? byName.get("YKS Matematik") ?? areas?.[0]?.id ?? null,
+    scienceAreaId: byName.get("LGS Fen Bilimleri") ?? null,
+    codingAreaId: byName.get("Kodlama ve Algoritma") ?? null,
+  };
+}
+
+/** Canonical demo feed posts owned by verified demo teachers (stable E2E reel + science probes). */
+export async function seedDemoMatchFeedContent(admin) {
+  const { mathAreaId, scienceAreaId } = await resolveDemoAreaIds(admin);
+  if (!mathAreaId || !scienceAreaId) return;
+
+  await admin
+    .from("social_posts")
+    .delete()
+    .ilike("caption", "Kesirleri 60 saniyede%")
+    .neq("author_id", DEMO_USER_IDS.aylin);
+
+  const posts = [
+    {
+      id: DEMO_POST_IDS.kesirReel,
+      author_id: DEMO_USER_IDS.aylin,
+      area_id: mathAreaId,
+      caption:
+        "Kesirleri 60 saniyede görselleştir: önce parça, sonra sayı doğrusu, sonra mini pratik.",
+      media_url: null,
+      media_type: "video",
+      is_reel: true,
+    },
+    {
+      id: DEMO_POST_IDS.scienceReel,
+      author_id: DEMO_USER_IDS.mert,
+      area_id: scienceAreaId,
+      caption: "Bitkiler ışığa neden yönelir? Evde veliyle güvenli pencere deneyi.",
+      media_url: null,
+      media_type: "video",
+      is_reel: true,
+    },
+  ];
+
+  for (const post of posts) {
+    const { error } = await admin.from("social_posts").upsert(post, { onConflict: "id" });
+    if (error) throw error;
+  }
+
+  await admin
+    .from("users")
+    .update({ is_verified: true, role: "teacher" })
+    .in("id", [DEMO_USER_IDS.aylin, DEMO_USER_IDS.mert]);
+}
+
+/** Reset demo billing state so plan-picker and havale E2E stay deterministic. */
+export async function resetDemoBillingState(admin) {
+  await admin.from("user_subscriptions").delete().eq("user_id", DEMO_USER_IDS.student);
+  await admin.from("bank_transfer_requests").delete().eq("user_id", DEMO_USER_IDS.student);
+}
+
 /** Idempotent reset so repeatable live E2E/journey runs do not inherit moderation strikes. */
 export async function resetDemoSocialAccounts(admin) {
   const { data: users, error: usersError } = await admin
@@ -154,4 +232,10 @@ export async function resetDemoSocialAccounts(admin) {
     })
     .in("id", ids);
   if (error) throw error;
+}
+
+export async function resetDemoE2eState(admin) {
+  await resetDemoSocialAccounts(admin);
+  await resetDemoBillingState(admin);
+  await seedDemoMatchFeedContent(admin);
 }

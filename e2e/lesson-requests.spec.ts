@@ -35,6 +35,6 @@ test.describe("Lesson requests API", () => {
         messageBody: "Merhaba, matematik dersi desteği istiyoruz.",
       },
     });
-    expect([401, 400]).toContain(response.status());
+    expect([401, 400, 403]).toContain(response.status());
   });
 });

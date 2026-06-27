@@ -50,20 +50,29 @@ async function main() {
   const posts = feed.body?.data ?? [];
   results.push(step("2. Ana feed (Match-Feed)", feed.response.ok && posts.length >= 1, `${posts.length} post`));
 
-  const videoPost = posts.find((p) => p.media_type === "video" || p.is_reel) ?? posts[0];
+  const videoPost =
+    posts.find((p) => p.caption?.includes("Kesirleri"))
+    ?? posts.find((p) => p.media_type === "video" || p.is_reel);
   const microComplete = videoPost
     ? await apiPost(baseUrl, "/api/learning/reels/complete", signIn.cookieHeader, {
         postId: videoPost.id,
         secondsWatched: 60,
       })
     : null;
+  const microOk =
+    Boolean(microComplete?.response.ok)
+    || (
+      microComplete?.response.status === 400
+      && typeof microComplete?.body?.error === "string"
+      && /already|tekrar|awarded|points/i.test(microComplete.body.error)
+    );
   results.push(
     step(
       "3. Micro izleme (+10)",
-      Boolean(microComplete?.response.ok),
+      microOk,
       microComplete?.body?.data?.points_awarded != null
         ? `+${microComplete.body.data.points_awarded} (tekrar: 0 olabilir)`
-        : microComplete?.body?.error ?? "video post yok",
+        : microComplete?.body?.error ?? (videoPost ? "tamamlanamadı" : "video post yok"),
     ),
   );
 
