@@ -1,3 +1,6 @@
+import { revalidateTag } from "next/cache";
+import { after } from "next/server";
+
 import {
   cancelBooking,
   createBooking,
@@ -10,6 +13,7 @@ import {
 } from "@/features/booking/types";
 import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { teacherStatsCacheTag } from "@/lib/domain/stats";
 import { createClient } from "@/lib/supabase/server";
 
 export const GET = withApiHandler(async () => {
@@ -46,6 +50,11 @@ export const PATCH = withApiHandler(async (request: Request) => {
 
   if (profileOrError.role === "teacher") {
     const updated = await updateBooking(supabase, profileOrError.id, body);
+    if (body.status === "completed") {
+      after(() => {
+        revalidateTag(teacherStatsCacheTag(profileOrError.id), "max");
+      });
+    }
     return jsonSuccess(updated);
   }
 

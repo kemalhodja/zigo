@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { isErrorResponse, requireAuthenticatedProfile } from "@/features/shared/api/require-auth";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
-import { getParentWeeklyProgressSummary, listRecentProgressReports } from "@/lib/domain/ecosystem/reporting";
+import { getParentWeeklyProgressSummary, listRecentProgressReports } from "@/lib/domain/ecosystem";
 import { buildWeeklyProgressHtml } from "@/lib/domain/progress-pdf";
 import { createClient } from "@/lib/supabase/server";
 

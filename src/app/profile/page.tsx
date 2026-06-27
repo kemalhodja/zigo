@@ -115,7 +115,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
 
         <div className="zigo-action-grid mt-4">
-          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/onboarding"}>
+          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : profile.role === "teacher" ? "/profile/edit" : "/onboarding"}>
             {profile.isSignedOut ? m.common.signIn : m.common.edit}
           </Link>
           {profile.role === "teacher" ? (

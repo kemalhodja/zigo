@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
+import { matchExpertiseTracksFromReviewComment } from "@/lib/domain/teacher-expertise";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type TeacherCredentialType = "diploma" | "e_devlet";
@@ -12,6 +13,8 @@ export type LessonReviewRow = {
   teacher_id: string;
   rating: number;
   comment: string | null;
+  topic_tags: string[];
+  matched_track_slugs: string[];
   created_at: string;
 };
 
@@ -84,6 +87,9 @@ export async function createLessonReview(
     throw new Error("Reviews are available only after payment is confirmed by both sides.");
   }
 
+  const matchedTracks = matchExpertiseTracksFromReviewComment(parsed.comment);
+  const topicTags = matchedTracks.map((slug) => slug.replaceAll("_", " "));
+
   const { data, error } = await supabase
     .from("lesson_reviews")
     .insert({
@@ -92,11 +98,22 @@ export async function createLessonReview(
       teacher_id: booking.teacher_id,
       rating: parsed.rating,
       comment: parsed.comment ?? null,
+      topic_tags: topicTags,
+      matched_track_slugs: matchedTracks,
     })
     .select("*")
     .single();
 
   if (error) throw error;
+
+  if (matchedTracks.length > 0) {
+    await supabase.rpc("boost_teacher_expertise_from_review", {
+      target_teacher_id: booking.teacher_id,
+      boost_slugs: matchedTracks,
+      boost_amount: parsed.rating >= 4 ? 2 : 1,
+    });
+  }
+
   return data as LessonReviewRow;
 }
 
@@ -107,7 +124,7 @@ export async function listTeacherReviews(
 ) {
   const { data, error } = await supabase
     .from("lesson_reviews")
-    .select("id, booking_id, parent_id, teacher_id, rating, comment, created_at")
+    .select("id, booking_id, parent_id, teacher_id, rating, comment, topic_tags, matched_track_slugs, created_at")
     .eq("teacher_id", teacherId)
     .order("created_at", { ascending: false })
     .limit(limit);

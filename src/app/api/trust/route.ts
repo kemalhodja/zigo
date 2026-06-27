@@ -7,7 +7,7 @@ import {
   createLessonReview,
   openPaymentDispute,
   submitTeacherCredential,
-} from "@/lib/domain/trust/trust-safety";
+} from "@/lib/domain/trust";
 import { createClient } from "@/lib/supabase/server";
 
 export const POST = withApiHandler(async (request) => {

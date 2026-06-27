@@ -67,6 +67,11 @@ model User {
   studentNeedsAsStudent  StudentNeed[]          @relation("StudentNeedUser")
   progressReportsAsStudent ProgressReport[]     @relation("ProgressReportStudent")
 
+  teacherProfileExtras           TeacherProfileExtras?
+  institutionProfileExtras       InstitutionProfileExtras?
+  educationPlatformProfileExtras EducationPlatformProfileExtras?
+  professionalProfile            ProfessionalProfile?
+
   @@map("users")
 }
 
@@ -186,4 +191,113 @@ model ProgressReport {
   studentUser User? @relation("ProgressReportStudent", fields: [studentUserId], references: [id], onDelete: Cascade)
 
   @@map("progress_reports")
+}
+
+enum EducationDegreeType {
+  LISANS         @map("lisans")
+  YUKSEK_LISANS  @map("yuksek_lisans")
+  DOKTORA        @map("doktora")
+}
+
+enum TeachingStyleType {
+  VISUAL    @map("visual")
+  PRACTICAL @map("practical")
+  THEORY    @map("theory")
+}
+
+/// Bireysel öğretmen profesyonel kimlik detayları (1:1 users).
+model TeacherProfileExtras {
+  userId                       String              @id @map("user_id") @db.Uuid
+  cvUrl                        String?             @map("cv_url")
+  yearsOfExperience            Int                 @default(0) @map("years_of_experience")
+  educationDegree              EducationDegreeType? @map("education_degree")
+  teachingStyle                TeachingStyleType?  @map("teaching_style")
+  hourlyRate                   Decimal?            @map("hourly_rate") @db.Decimal(10, 2)
+  responseTimeMinutes          Int?                @map("response_time_minutes")
+  lessonAcceptanceRatePercent  Int?                @map("lesson_acceptance_rate_percent")
+  contactSummary      String?  @map("contact_summary")
+  badgeType           ProfessionalBadgeType? @map("badge_type")
+  videoIntroUrl       String?  @map("video_intro_url")
+  softSkills          String[] @default([]) @map("soft_skills")
+  availabilityStatus  ProfileAvailabilityStatus? @default(AVAILABLE) @map("availability_status")
+  availabilityNote    String?  @map("availability_note")
+  details             Json     @default("{}")
+  updatedAt           DateTime @default(now()) @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_profile_extras")
+}
+
+enum ProfessionalBadgeType {
+  GOLD      @map("gold")
+  PLATINUM  @map("platinum")
+  VERIFIED  @map("verified")
+}
+
+enum ProfileAvailabilityStatus {
+  AVAILABLE @map("available")
+  BUSY      @map("busy")
+  SCHEDULED @map("scheduled")
+}
+
+/// Kurumsal kimlik profili — users + role-specific extras (Prisma referans).
+model ProfessionalProfile {
+  userId      String   @id @map("user_id") @db.Uuid
+  fullName    String   @map("full_name")
+  bio         String?
+  avatarUrl   String?  @map("avatar_url")
+  isVerified  Boolean  @default(false) @map("is_verified")
+  badgeType   ProfessionalBadgeType? @map("badge_type")
+  details     Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("professional_profiles")
+}
+
+/// Eğitim kurumu profesyonel kimlik detayları (1:1 users).
+model InstitutionProfileExtras {
+  userId              String   @id @map("user_id") @db.Uuid
+  licenseNumber       String   @map("license_number")
+  capacity            Int      @default(50)
+  branchCount         Int      @default(1) @map("branch_count")
+  accreditation       String[]
+  services            String[]
+  responseTimeMinutes Int?     @map("response_time_minutes")
+  contactSummary      String?  @map("contact_summary")
+  badgeType           ProfessionalBadgeType? @map("badge_type")
+  videoIntroUrl       String?  @map("video_intro_url")
+  softSkills          String[] @default([]) @map("soft_skills")
+  availabilityStatus  ProfileAvailabilityStatus? @default(AVAILABLE) @map("availability_status")
+  availabilityNote    String?  @map("availability_note")
+  details             Json     @default("{}")
+  updatedAt           DateTime @default(now()) @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("institution_profile_extras")
+}
+
+/// Eğitim platformu profesyonel kimlik detayları (1:1 users).
+model EducationPlatformProfileExtras {
+  userId              String   @id @map("user_id") @db.Uuid
+  contentCount        Int      @default(0) @map("content_count")
+  userBaseSize        Int      @default(0) @map("user_base_size")
+  subscriptionModel   String   @default("freemium") @map("subscription_model")
+  integrationDocsUrl  String?  @map("integration_docs_url")
+  responseTimeMinutes Int?     @map("response_time_minutes")
+  contactSummary      String?  @map("contact_summary")
+  badgeType           ProfessionalBadgeType? @map("badge_type")
+  videoIntroUrl       String?  @map("video_intro_url")
+  softSkills          String[] @default([]) @map("soft_skills")
+  availabilityStatus  ProfileAvailabilityStatus? @default(AVAILABLE) @map("availability_status")
+  availabilityNote    String?  @map("availability_note")
+  details             Json     @default("{}")
+  updatedAt           DateTime @default(now()) @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("education_platform_profile_extras")
 }

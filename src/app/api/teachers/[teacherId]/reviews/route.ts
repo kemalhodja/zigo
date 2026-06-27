@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
-import { getTeacherReviewStats,listTeacherReviews } from "@/lib/domain/trust/trust-safety";
+import { getTeacherReviewStats, listTeacherReviews } from "@/lib/domain/trust";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = { params: Promise<{ teacherId: string }> };

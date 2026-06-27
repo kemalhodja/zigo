@@ -25,6 +25,10 @@ export type PaymentDisputeStatus =
   | "resolved_teacher"
   | "closed";
 export type ExamGoalType = "lgs" | "yks" | "general";
+export type EducationDegreeType = "lisans" | "yuksek_lisans" | "doktora";
+export type TeachingStyleType = "visual" | "practical" | "theory";
+export type ProfessionalBadgeType = "gold" | "platinum" | "verified";
+export type ProfileAvailabilityStatus = "available" | "busy" | "scheduled";
 export type ReputationEventKind = "lesson_completed" | "positive_feedback" | "prompt_answer";
 export type StudentDocumentStatus = "pending" | "approved" | "rejected";
 export type StoreProductCategory =
@@ -1948,6 +1952,8 @@ export type Database = {
           teacher_id: string;
           rating: number;
           comment: string | null;
+          topic_tags: string[];
+          matched_track_slugs: string[];
           created_at: string;
         };
         Insert: {
@@ -1957,11 +1963,89 @@ export type Database = {
           teacher_id: string;
           rating: number;
           comment?: string | null;
+          topic_tags?: string[];
+          matched_track_slugs?: string[];
           created_at?: string;
         };
         Update: {
           rating?: number;
           comment?: string | null;
+          topic_tags?: string[];
+          matched_track_slugs?: string[];
+        };
+        Relationships: [];
+      };
+      teacher_expertise_selections: {
+        Row: {
+          teacher_id: string;
+          track_slug: string;
+          review_boost_score: number;
+          selected_at: string;
+        };
+        Insert: {
+          teacher_id: string;
+          track_slug: string;
+          review_boost_score?: number;
+          selected_at?: string;
+        };
+        Update: {
+          review_boost_score?: number;
+          selected_at?: string;
+        };
+        Relationships: [];
+      };
+      teacher_stats: {
+        Row: {
+          teacher_id: string;
+          total_lessons: number;
+          total_students: number;
+          avg_response_minutes: number;
+          stats_computed_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          teacher_id: string;
+          total_lessons?: number;
+          total_students?: number;
+          avg_response_minutes?: number;
+          stats_computed_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          total_lessons?: number;
+          total_students?: number;
+          avg_response_minutes?: number;
+          stats_computed_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      student_subject_success: {
+        Row: {
+          id: string;
+          child_profile_id: string | null;
+          student_user_id: string | null;
+          area_id: number;
+          success_score: number;
+          completed_lessons: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          child_profile_id?: string | null;
+          student_user_id?: string | null;
+          area_id: number;
+          success_score?: number;
+          completed_lessons?: number;
+          updated_at?: string;
+        };
+        Update: {
+          child_profile_id?: string | null;
+          student_user_id?: string | null;
+          area_id?: number;
+          success_score?: number;
+          completed_lessons?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -2017,6 +2101,165 @@ export type Database = {
           grade_level?: string | null;
           goal_exam?: ExamGoalType;
           struggle_area_id?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      teacher_profile_extras: {
+        Row: {
+          user_id: string;
+          cv_url: string | null;
+          years_of_experience: number;
+          education_degree: EducationDegreeType | null;
+          teaching_style: TeachingStyleType | null;
+          hourly_rate: number | null;
+          response_time_minutes: number | null;
+          lesson_acceptance_rate_percent: number | null;
+          contact_summary: string | null;
+          badge_type: ProfessionalBadgeType | null;
+          video_intro_url: string | null;
+          soft_skills: string[];
+          availability_status: ProfileAvailabilityStatus | null;
+          availability_note: string | null;
+          details: Json;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          cv_url?: string | null;
+          years_of_experience?: number;
+          education_degree?: EducationDegreeType | null;
+          teaching_style?: TeachingStyleType | null;
+          hourly_rate?: number | null;
+          response_time_minutes?: number | null;
+          lesson_acceptance_rate_percent?: number | null;
+          contact_summary?: string | null;
+          badge_type?: ProfessionalBadgeType | null;
+          video_intro_url?: string | null;
+          soft_skills?: string[];
+          availability_status?: ProfileAvailabilityStatus | null;
+          availability_note?: string | null;
+          details?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          cv_url?: string | null;
+          years_of_experience?: number;
+          education_degree?: EducationDegreeType | null;
+          teaching_style?: TeachingStyleType | null;
+          hourly_rate?: number | null;
+          response_time_minutes?: number | null;
+          lesson_acceptance_rate_percent?: number | null;
+          contact_summary?: string | null;
+          badge_type?: ProfessionalBadgeType | null;
+          video_intro_url?: string | null;
+          soft_skills?: string[];
+          availability_status?: ProfileAvailabilityStatus | null;
+          availability_note?: string | null;
+          details?: Json;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      institution_profile_extras: {
+        Row: {
+          user_id: string;
+          license_number: string;
+          capacity: number;
+          branch_count: number;
+          accreditation: string[];
+          services: string[];
+          response_time_minutes: number | null;
+          contact_summary: string | null;
+          badge_type: ProfessionalBadgeType | null;
+          video_intro_url: string | null;
+          soft_skills: string[];
+          availability_status: ProfileAvailabilityStatus | null;
+          availability_note: string | null;
+          details: Json;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          license_number: string;
+          capacity?: number;
+          branch_count?: number;
+          accreditation?: string[];
+          services?: string[];
+          response_time_minutes?: number | null;
+          contact_summary?: string | null;
+          badge_type?: ProfessionalBadgeType | null;
+          video_intro_url?: string | null;
+          soft_skills?: string[];
+          availability_status?: ProfileAvailabilityStatus | null;
+          availability_note?: string | null;
+          details?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          license_number?: string;
+          capacity?: number;
+          branch_count?: number;
+          accreditation?: string[];
+          services?: string[];
+          response_time_minutes?: number | null;
+          contact_summary?: string | null;
+          badge_type?: ProfessionalBadgeType | null;
+          video_intro_url?: string | null;
+          soft_skills?: string[];
+          availability_status?: ProfileAvailabilityStatus | null;
+          availability_note?: string | null;
+          details?: Json;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      education_platform_profile_extras: {
+        Row: {
+          user_id: string;
+          content_count: number;
+          user_base_size: number;
+          subscription_model: string;
+          integration_docs_url: string | null;
+          response_time_minutes: number | null;
+          contact_summary: string | null;
+          badge_type: ProfessionalBadgeType | null;
+          video_intro_url: string | null;
+          soft_skills: string[];
+          availability_status: ProfileAvailabilityStatus | null;
+          availability_note: string | null;
+          details: Json;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          content_count?: number;
+          user_base_size?: number;
+          subscription_model?: string;
+          integration_docs_url?: string | null;
+          response_time_minutes?: number | null;
+          contact_summary?: string | null;
+          badge_type?: ProfessionalBadgeType | null;
+          video_intro_url?: string | null;
+          soft_skills?: string[];
+          availability_status?: ProfileAvailabilityStatus | null;
+          availability_note?: string | null;
+          details?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          content_count?: number;
+          user_base_size?: number;
+          subscription_model?: string;
+          integration_docs_url?: string | null;
+          response_time_minutes?: number | null;
+          contact_summary?: string | null;
+          badge_type?: ProfessionalBadgeType | null;
+          video_intro_url?: string | null;
+          soft_skills?: string[];
+          availability_status?: ProfileAvailabilityStatus | null;
+          availability_note?: string | null;
+          details?: Json;
           updated_at?: string;
         };
         Relationships: [];
@@ -2755,6 +2998,124 @@ export type Database = {
           dispute_reason: string;
         };
         Returns: Database["public"]["Tables"]["payment_disputes"]["Row"];
+      };
+      upsert_teacher_profile_extras: {
+        Args: {
+          next_cv_url?: string | null;
+          next_years_of_experience?: number | null;
+          next_education_degree?: EducationDegreeType | null;
+          next_teaching_style?: TeachingStyleType | null;
+          next_hourly_rate?: number | null;
+          next_response_time_minutes?: number | null;
+          next_lesson_acceptance_rate_percent?: number | null;
+          next_contact_summary?: string | null;
+          next_badge_type?: ProfessionalBadgeType | null;
+          next_video_intro_url?: string | null;
+          next_soft_skills?: string[] | null;
+          next_availability_status?: ProfileAvailabilityStatus | null;
+          next_availability_note?: string | null;
+          next_details?: Json | null;
+        };
+        Returns: Database["public"]["Tables"]["teacher_profile_extras"]["Row"];
+      };
+      upsert_institution_profile_extras: {
+        Args: {
+          next_license_number: string;
+          next_capacity?: number | null;
+          next_branch_count?: number | null;
+          next_accreditation?: string[] | null;
+          next_services?: string[] | null;
+          next_response_time_minutes?: number | null;
+          next_contact_summary?: string | null;
+          next_badge_type?: ProfessionalBadgeType | null;
+          next_video_intro_url?: string | null;
+          next_soft_skills?: string[] | null;
+          next_availability_status?: ProfileAvailabilityStatus | null;
+          next_availability_note?: string | null;
+          next_details?: Json | null;
+        };
+        Returns: Database["public"]["Tables"]["institution_profile_extras"]["Row"];
+      };
+      upsert_education_platform_profile_extras: {
+        Args: {
+          next_content_count?: number | null;
+          next_user_base_size?: number | null;
+          next_subscription_model?: string | null;
+          next_integration_docs_url?: string | null;
+          next_response_time_minutes?: number | null;
+          next_contact_summary?: string | null;
+          next_badge_type?: ProfessionalBadgeType | null;
+          next_video_intro_url?: string | null;
+          next_soft_skills?: string[] | null;
+          next_availability_status?: ProfileAvailabilityStatus | null;
+          next_availability_note?: string | null;
+          next_details?: Json | null;
+        };
+        Returns: Database["public"]["Tables"]["education_platform_profile_extras"]["Row"];
+      };
+      get_teacher_completed_lesson_count: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: number;
+      };
+      get_teacher_platform_activity_stats: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: {
+          total_completed_lessons: number;
+          completed_student_count: number;
+          avg_response_minutes: number;
+        }[];
+      };
+      teacher_has_approved_credentials: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: boolean;
+      };
+      set_teacher_expertise_matrix: {
+        Args: {
+          track_slugs: string[];
+        };
+        Returns: Database["public"]["Tables"]["teacher_expertise_selections"]["Row"][];
+      };
+      boost_teacher_expertise_from_review: {
+        Args: {
+          target_teacher_id: string;
+          boost_slugs: string[];
+          boost_amount?: number;
+        };
+        Returns: undefined;
+      };
+      compute_teacher_avg_response_minutes: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: number;
+      };
+      recompute_teacher_stats: {
+        Args: {
+          target_teacher_id: string;
+        };
+        Returns: Database["public"]["Tables"]["teacher_stats"]["Row"];
+      };
+      apply_teacher_stats_on_lesson_complete: {
+        Args: {
+          target_booking_id: string;
+          lesson_progress_score?: number;
+        };
+        Returns: Database["public"]["Tables"]["teacher_stats"]["Row"];
+      };
+      record_student_subject_success: {
+        Args: {
+          target_child_profile_id: string | null;
+          target_student_user_id: string | null;
+          target_area_id: number;
+          lesson_progress_score: number;
+        };
+        Returns: Database["public"]["Tables"]["student_subject_success"]["Row"];
       };
     };
     Enums: {

@@ -113,9 +113,15 @@ export default async function OnboardingPage() {
             <Link className="tap-scale rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-3 text-center text-sm font-black text-white" href="/">
               {ob.previewFeed}
             </Link>
-            <Link className="tap-scale rounded-lg bg-gradient-to-r from-aqua to-mint px-4 py-3 text-center text-sm font-black text-white" href={profile.role === "parent" ? "/family" : "/micro"}>
-              {profile.role === "parent" ? ob.addChild : m.nav.micro}
-            </Link>
+            {profile.role === "teacher" ? (
+              <Link className="tap-scale rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-3 text-center text-sm font-black text-white" href="/profile/edit">
+                Profesyonel profil
+              </Link>
+            ) : (
+              <Link className="tap-scale rounded-lg bg-gradient-to-r from-aqua to-mint px-4 py-3 text-center text-sm font-black text-white" href={profile.role === "parent" ? "/family" : "/micro"}>
+                {profile.role === "parent" ? ob.addChild : m.nav.micro}
+              </Link>
+            )}
           </div>
         ) : null}
       </section>

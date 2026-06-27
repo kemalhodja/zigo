@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { FollowButton } from "@/components/follow-button";
+import { ProfessionalPortfolio } from "@/components/professional-portfolio";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
@@ -9,6 +10,7 @@ import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { RequestLessonCTA } from "@/features/lesson/components/request-lesson-cta";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getChildProfiles } from "@/lib/domain/children";
+import { getProfessionalProfilePortfolio } from "@/lib/domain/professional-profile";
 import { getCurrentProfile, getUserInterestAreaNames } from "@/lib/domain/profiles";
 import {
   getProfileSocialStats,
@@ -48,13 +50,14 @@ export default async function PublicProfilePage({ params, searchParams }: Public
   const branches =
     profile.role === "teacher" ? await getUserInterestAreaNames(supabase, profile.id) : [];
 
-  const [stats, posts, following, parentChildren] = await Promise.all([
+  const [stats, posts, following, parentChildren, portfolio] = await Promise.all([
     getProfileSocialStats(supabase, profile.id),
     activeTab === "reels"
       ? getUserSocialReels(supabase, profile.id)
       : getUserSocialPosts(supabase, profile.id),
     viewer ? isFollowing(supabase, viewer.id, profile.id) : Promise.resolve(false),
     viewer?.role === "parent" ? getChildProfiles(supabase) : Promise.resolve([]),
+    profile.role === "teacher" ? getProfessionalProfilePortfolio(supabase, profile) : Promise.resolve(null),
   ]);
   const isOwnProfile = viewer?.id === profile.id;
   const handle = profile.full_name.toLowerCase().replaceAll(" ", "");
@@ -63,6 +66,65 @@ export default async function PublicProfilePage({ params, searchParams }: Public
     profile.role === "teacher" &&
     profile.is_verified &&
     !isOwnProfile;
+  const showPortfolio = profile.role === "teacher" && portfolio?.kind;
+
+  if (showPortfolio) {
+    return (
+      <div className="space-y-0 pb-3">
+        <div className="-mx-4 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2.5">
+          <Link className="tap-scale flex size-9 items-center justify-center text-night" href="/">
+            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </Link>
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate text-lg font-black text-night">Profesyonel Portfolyo</h1>
+          </div>
+          <Link className="tap-scale flex size-9 items-center justify-center text-night" href="/questions">
+            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M21 12a8.5 8.5 0 0 1-9 8.5 9.6 9.6 0 0 1-4.2-.95L3 20.5l1.3-4A8.5 8.5 0 1 1 21 12z" />
+            </svg>
+          </Link>
+        </div>
+
+        <ProfessionalPortfolio
+          branches={branches}
+          canRequestLesson={canRequestLesson}
+          childrenOptions={parentChildren.map((child) => ({ id: child.id, name: child.display_name }))}
+          following={following}
+          followersCount={stats.followers}
+          handle={handle}
+          isOwnProfile={isOwnProfile}
+          portfolio={portfolio}
+          profile={profile}
+          requestHint={m.lessonRequests.profileRequestHint}
+        />
+
+        <ProfileHighlights />
+
+        <section className="-mx-4 mt-2 grid grid-cols-2 border-y border-slate-100 bg-white">
+          <Link
+            className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
+              activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+            }`}
+            href={`/profile/${profile.id}`}
+          >
+            Gönderiler
+          </Link>
+          <Link
+            className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
+              activeTab === "reels" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+            }`}
+            href={`/profile/${profile.id}?tab=micro`}
+          >
+            Micro
+          </Link>
+        </section>
+
+        <PostsGrid activeTab={activeTab} messages={m} posts={posts} profileId={profile.id} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-0 pb-3">
@@ -183,6 +245,22 @@ export default async function PublicProfilePage({ params, searchParams }: Public
         </Link>
       </section>
 
+      <PostsGrid activeTab={activeTab} messages={m} posts={posts} profileId={profile.id} />
+    </div>
+  );
+}
+
+function PostsGrid({
+  activeTab,
+  messages: m,
+  posts,
+}: {
+  activeTab: "posts" | "reels";
+  messages: Awaited<ReturnType<typeof getServerMessages>>;
+  posts: Awaited<ReturnType<typeof getUserSocialPosts>>;
+  profileId: string;
+}) {
+  return (
       <section className="-mx-4 grid grid-cols-3 gap-0.5 bg-white">
         {posts.length === 0 ? (
           <div className="col-span-3 bg-white px-6 py-14 text-center">
@@ -223,7 +301,6 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           ))
         )}
       </section>
-    </div>
   );
 }
 

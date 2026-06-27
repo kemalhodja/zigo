@@ -21,6 +21,10 @@ const MIGRATIONS = [
   "071_lesson_packages_and_live_lessons.sql",
   "072_remove_lesson_package_gating.sql",
   "073_trust_safety_growth_platform.sql",
+  "074_professional_profile_extras.sql",
+  "075_professional_portfolio_layer.sql",
+  "076_verified_activity_expertise_matrix.sql",
+  "077_teacher_stats_engine.sql",
 ];
 
 function loadEnvFile(name) {
@@ -154,6 +158,22 @@ async function probe(admin, migrationId) {
   }
   if (migrationId === "073") {
     const { error } = await admin.from("teacher_credential_submissions").select("id").limit(1);
+    return !error;
+  }
+  if (migrationId === "074") {
+    const { error } = await admin.from("teacher_profile_extras").select("user_id").limit(1);
+    return !error;
+  }
+  if (migrationId === "075") {
+    const { error } = await admin.from("teacher_profile_extras").select("video_intro_url").limit(1);
+    return !error;
+  }
+  if (migrationId === "076") {
+    const { error } = await admin.from("teacher_expertise_selections").select("teacher_id").limit(1);
+    return !error;
+  }
+  if (migrationId === "077") {
+    const { error } = await admin.from("teacher_stats").select("teacher_id").limit(1);
     return !error;
   }
   return false;

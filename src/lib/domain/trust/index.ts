@@ -1,6 +1,7 @@
 export {
   confirmLessonPayment,
   createLessonReview,
+  getTeacherReviewStats,
   type LessonReviewRow,
   listTeacherReviews,
   openPaymentDispute,
