@@ -34,10 +34,10 @@ export function ShortcutDock({ canCreateSocialPost, floating = false, viewerRole
 
   return (
     <ShortcutScrollDock
+      ariaLabel={m.dock.shortcuts}
       floating={floating}
       items={items}
       roleClassName={roleClassName}
-      title={m.dock.shortcuts}
     />
   );
 }

@@ -91,7 +91,7 @@ a,
 
 .zigo-shell {
   --zigo-bottom-nav-h: 4.25rem;
-  --zigo-shortcut-dock-h: 6.25rem;
+  --zigo-shortcut-dock-h: 4.25rem;
   --zigo-float-stack-h: var(--zigo-bottom-nav-h);
 }
 
