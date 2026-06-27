@@ -89,6 +89,33 @@ a,
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
+.zigo-shell {
+  --zigo-bottom-nav-h: 4.25rem;
+  --zigo-shortcut-dock-h: 6.25rem;
+  --zigo-float-stack-h: var(--zigo-bottom-nav-h);
+}
+
+.zigo-shell--with-dock {
+  --zigo-float-stack-h: calc(var(--zigo-bottom-nav-h) + var(--zigo-shortcut-dock-h));
+}
+
+.zigo-main-with-bottom-float {
+  padding-bottom: calc(var(--zigo-float-stack-h) + max(0.5rem, env(safe-area-inset-bottom)) + 0.75rem);
+}
+
+.zigo-float-bottom-bar {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.zigo-floating-whatsapp {
+  right: max(1rem, calc(50% - min(28rem, 50vw) + 1rem));
+  bottom: calc(var(--zigo-float-stack-h) + max(0.5rem, env(safe-area-inset-bottom)) + 0.5rem);
+}
+
+.zigo-shell:not(.zigo-shell--with-nav):not(.zigo-shell--with-dock) .zigo-floating-whatsapp {
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
 .safe-screen {
   min-height: 100vh;
   min-height: 100dvh;

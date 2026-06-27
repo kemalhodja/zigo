@@ -41,7 +41,7 @@ export function BottomNav({
 
   return (
     <nav
-      className={`safe-bottom sticky bottom-0 grid grid-cols-5 px-1 pt-1 text-center zigo-nav-label ${roleNavClass} ${
+      className={`grid grid-cols-5 px-1 pt-1 text-center zigo-nav-label ${roleNavClass} ${
         variant === "overlay"
           ? "border-t border-white/10 bg-black/25 text-white backdrop-blur"
           : "zigo-bottom-bar text-slate-500"

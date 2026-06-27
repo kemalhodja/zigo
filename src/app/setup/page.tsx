@@ -5,7 +5,6 @@ import { LiveGatesPanel } from "@/components/live-gates-panel";
 import { RoleQaPanel } from "@/components/role-qa-panel";
 import { SetupProgressTracker } from "@/components/setup-progress-tracker";
 import { SupabaseSetupCard } from "@/components/supabase-setup-card";
-import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getLiveGates } from "@/lib/domain/live-gates";
 import { localizeLiveGates } from "@/lib/i18n/localize-live-gates";
@@ -89,18 +88,6 @@ export default async function SetupPage() {
   return (
     <div className="space-y-5 pb-3">
       <SupabaseSetupCard envConnected={hasSupabaseEnv()} />
-
-      <WhatsAppSupportCard
-        buttonLabel={m.support.button}
-        context="setup"
-        description={m.support.description}
-        eyebrow={m.support.eyebrow}
-        hoursLabel={m.support.hours}
-        prefilledMessage={m.support.messageSetup}
-        privacyNote={m.support.privacyNote}
-        role={null}
-        title={m.support.title}
-      />
 
       <SetupProgressTracker common={m.ops.common} labels={m.ops.setupProgress} report={liveReportRaw} />
 

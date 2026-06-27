@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { BottomNav } from "@/components/bottom-nav";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
+import { FloatingWhatsAppSupport } from "@/components/floating-whatsapp-support";
 import { LegalFooter } from "@/components/legal-footer";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleWelcomeStrip } from "@/components/role-welcome-strip";
@@ -55,10 +56,18 @@ export function AppShell({
     pathname.startsWith("/create") ||
     pathname.startsWith("/questions") ||
     pathname.startsWith("/setup");
+  const showBottomNav = !isStories;
+  const showShortcutDock = !hideQuickDock;
+  const shellFloatClass = [
+    showBottomNav ? "zigo-shell--with-nav" : "",
+    showShortcutDock ? "zigo-shell--with-dock" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div
-      className={`safe-screen zigo-shell-bg mx-auto flex w-full max-w-md flex-col md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${getRoleThemeClass(viewerRole)} ${
+      className={`safe-screen zigo-shell-bg zigo-shell mx-auto flex w-full max-w-md flex-col md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${shellFloatClass} ${getRoleThemeClass(viewerRole)} ${
         isImmersive ? "relative bg-night" : ""
       }`}
     >
@@ -77,7 +86,11 @@ export function AppShell({
       ) : null}
 
       <main
-        className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3"}`}
+        className={`flex-1 ${
+          isImmersive
+            ? "overflow-hidden p-0"
+            : `px-4 py-3 ${showBottomNav || showShortcutDock ? "zigo-main-with-bottom-float" : ""}`
+        }`}
         id="main-content"
       >
         {!isImmersive && !pathname.startsWith("/auth") ? (
@@ -88,24 +101,29 @@ export function AppShell({
 
       {isImmersive ? null : <LegalFooter />}
 
-      {hideQuickDock ? null : (
-        <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
-      )}
-
       {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
 
-      {isStories ? null : (
-        <div className={isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}>
-          <BottomNav
-            canCreateSocialPost={canCreateSocialPost}
-            lessonRequestBadgeCount={lessonRequestBadgeCount}
-            teacherInboxCount={teacherInboxCount}
-            unreadCount={unreadCount}
-            variant={isReels ? "overlay" : "default"}
-            viewerRole={viewerRole}
-          />
+      {showBottomNav || showShortcutDock ? (
+        <div className="zigo-float-bottom-bar pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md">
+          <div className="pointer-events-auto">
+            {showShortcutDock ? (
+              <QuickActionDock canCreateSocialPost={canCreateSocialPost} floating viewerRole={viewerRole} />
+            ) : null}
+            {showBottomNav ? (
+              <BottomNav
+                canCreateSocialPost={canCreateSocialPost}
+                lessonRequestBadgeCount={lessonRequestBadgeCount}
+                teacherInboxCount={teacherInboxCount}
+                unreadCount={unreadCount}
+                variant={isReels ? "overlay" : "default"}
+                viewerRole={viewerRole}
+              />
+            ) : null}
+          </div>
         </div>
-      )}
+      ) : null}
+
+      <FloatingWhatsAppSupport viewerRole={viewerRole} />
 
       <FirstLaunchWelcome />
       {pathname.startsWith("/auth") ? null : <RegistrationCampaignAnnouncement />}
@@ -129,9 +147,11 @@ function PreviewModeBanner() {
 
 function QuickActionDock({
   canCreateSocialPost,
+  floating = false,
   viewerRole,
 }: {
   canCreateSocialPost: boolean;
+  floating?: boolean;
   viewerRole: ViewerRole;
 }) {
   const m = useMessages();
@@ -152,6 +172,7 @@ function QuickActionDock({
         ]}
         roleClassName="role-dock-student border-violet-100"
         title={d.shortcuts}
+        floating={floating}
       />
     );
   }
@@ -168,6 +189,7 @@ function QuickActionDock({
         ]}
         roleClassName="role-dock-parent border-cyan-100"
         title={d.shortcuts}
+        floating={floating}
       />
     );
   }
@@ -191,6 +213,7 @@ function QuickActionDock({
         items={items}
         roleClassName="role-dock-teacher border-slate-200"
         title={d.shortcuts}
+        floating={floating}
       />
     );
   }
@@ -204,6 +227,7 @@ function QuickActionDock({
         { href: ZIGO_PATHS.micro, label: m.nav.micro, icon: "micro" },
       ]}
       title={d.shortcuts}
+      floating={floating}
     />
   );
 }

@@ -31,7 +31,7 @@ export function CookieConsentBanner() {
   if (!visible) return null;
 
   return (
-    <div className="safe-bottom fixed inset-x-0 bottom-14 z-50 mx-auto max-w-md px-3 md:bottom-4">
+    <div className="zigo-cookie-consent safe-bottom fixed inset-x-0 bottom-[var(--zigo-float-stack-h)] z-50 mx-auto max-w-md px-3">
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
         <p className="text-xs font-bold leading-5 text-slate-600">
           {t.body}{" "}

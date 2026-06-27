@@ -7,7 +7,6 @@ import { TeacherPostForm } from "@/components/teacher-post-form";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
-import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { TeacherBookingsPanel } from "@/features/booking/components/teacher-bookings-panel";
 import { TeacherSlotSelector } from "@/features/booking/components/teacher-slot-selector";
@@ -139,7 +138,7 @@ export default async function TeacherPage() {
           <TeacherSponsoredAdsPanel canManage={teacherCreatorPlus} />
         </>
       ) : (
-        <VerificationRequired messages={m.teacherPage} support={m.support} />
+        <VerificationRequired messages={m.teacherPage} />
       )}
       <section className="zigo-dashboard-grid">
         <TeacherLink accent="from-sun to-peach" href="/moderation" label={d.teacher.moderation} text={d.teacher.reviewComments} />
@@ -161,17 +160,6 @@ export default async function TeacherPage() {
         isPremium={teacherCreatorPlus}
       />
 
-      <WhatsAppSupportCard
-        buttonLabel={m.support.button}
-        context="teacher"
-        description={m.support.description}
-        eyebrow={m.support.eyebrow}
-        hoursLabel={m.support.hours}
-        prefilledMessage={m.support.messageTeacher}
-        privacyNote={m.support.privacyNote}
-        role="teacher"
-        title={m.support.title}
-      />
     </div>
   );
   }, previewFallback);
@@ -207,10 +195,8 @@ async function TeacherPreview({ mode }: { mode: "preview" | "signed-out" | "role
 
 function VerificationRequired({
   messages: t,
-  support,
 }: {
   messages: Awaited<ReturnType<typeof getServerMessages>>["teacherPage"];
-  support: Awaited<ReturnType<typeof getServerMessages>>["support"];
 }) {
   const verificationSteps = [
     { label: t.completeProfile, state: t.done },
@@ -235,20 +221,6 @@ function VerificationRequired({
         <p className="mt-2 text-sm font-semibold leading-6 text-white/82">
           {t.verificationDesc}
         </p>
-        <div className="mt-4">
-          <WhatsAppSupportCard
-            buttonLabel={support.button}
-            compact
-            context="teacher"
-            description=""
-            eyebrow=""
-            hoursLabel=""
-            prefilledMessage={support.messageTeacher}
-            privacyNote=""
-            role="teacher"
-            title=""
-          />
-        </div>
       </div>
 
       <div className="grid gap-2">

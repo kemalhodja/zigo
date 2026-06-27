@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { BankTransferCheckoutPanel } from "@/components/bank-transfer-checkout-panel";
 import { LegalLayout } from "@/components/legal-layout";
 import { StateCard } from "@/components/state-card";
-import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { hasSupabaseEnv } from "@/lib/config";
 import {
   getBankTransferAccounts,
@@ -84,17 +83,6 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
         initialRequest={pendingRequest}
         planId={planId}
         planLabel={`${planBundle.group.title} · ${planBundle.plan.intervalLabel}`}
-      />
-      <WhatsAppSupportCard
-        buttonLabel={messages.support.button}
-        context="billing"
-        description={messages.support.description}
-        eyebrow={messages.support.eyebrow}
-        hoursLabel={messages.support.hours}
-        prefilledMessage={messages.support.messageBilling}
-        privacyNote={messages.support.privacyNote}
-        role={profile.role}
-        title={messages.support.title}
       />
     </LegalLayout>
   );

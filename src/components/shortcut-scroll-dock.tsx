@@ -27,6 +27,7 @@ type ShortcutScrollDockProps = {
   title?: string;
   className?: string;
   roleClassName?: string;
+  floating?: boolean;
 };
 
 export function ShortcutScrollDock({
@@ -34,10 +35,13 @@ export function ShortcutScrollDock({
   title,
   className = "",
   roleClassName = "",
+  floating = false,
 }: ShortcutScrollDockProps) {
   return (
     <section
-      className={`premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border bg-white/95 p-2 backdrop-blur ${roleClassName} ${className}`}
+      className={`premium-action-dock overflow-hidden rounded-2xl border bg-white/95 p-2 backdrop-blur ${roleClassName} ${
+        floating ? "mx-2 mb-1 shadow-[0_-8px_24px_rgb(15_23_42_/_0.08)]" : "relative mx-3 mb-2"
+      } ${className}`}
     >
       {title ? (
         <p className="mb-2 px-1 text-[0.62rem] font-black uppercase tracking-[0.16em] text-slate-500">{title}</p>

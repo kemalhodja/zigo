@@ -9,7 +9,6 @@ import { ParentFocusOverviewCard } from "@/components/parent-focus-overview-card
 import { ParentWeeklyPdfButton } from "@/components/parent-weekly-pdf-button";
 import { SocialPill } from "@/components/social-primitives";
 import { StateCard } from "@/components/state-card";
-import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { GamifiedChildAvatar } from "@/features/booking/components/gamified-child-avatar";
 import { ParentEcosystemHub } from "@/features/booking/components/parent-ecosystem-hub";
@@ -311,19 +310,6 @@ export default async function ParentPage() {
         />
       ) : null}
 
-      {mode === "parent" ? (
-        <WhatsAppSupportCard
-          buttonLabel={messages.support.button}
-          context="parent"
-          description={messages.support.description}
-          eyebrow={messages.support.eyebrow}
-          hoursLabel={messages.support.hours}
-          prefilledMessage={messages.support.messageParent}
-          privacyNote={messages.support.privacyNote}
-          role="parent"
-          title={messages.support.title}
-        />
-      ) : null}
     </div>
   );
 }
