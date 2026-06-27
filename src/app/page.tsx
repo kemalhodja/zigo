@@ -2,9 +2,11 @@ import Link from "next/link";
 
 import { DismissibleFeedPost } from "@/components/dismissible-feed-post";
 import { DoubleTapLikeLink } from "@/components/double-tap-like-link";
+import { ExamCountdownBanner } from "@/components/exam-countdown-banner";
 import { FeedEducationBadges } from "@/components/feed-education-badges";
 import { FeedRefreshControl } from "@/components/feed-refresh-control";
 import { FollowButton } from "@/components/follow-button";
+import { PersonalizedHomeGreeting } from "@/components/personalized-home-greeting";
 import { PostOptionsButton } from "@/components/post-options-button";
 import { PremiumPrepLink } from "@/components/premium-prep-link";
 import { SocialMediaFrame } from "@/components/social-media-frame";
@@ -20,7 +22,8 @@ import { TodayLearningCard } from "@/components/today-learning-card";
 import { hasSupabaseEnv } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getDailyMissionProgress } from "@/lib/domain/learning";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getOnboardingIntake } from "@/lib/domain/onboarding-intake";
+import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
 import {
   type ActiveStory,
   getActiveStories,
@@ -174,6 +177,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
   const activeFeed = params.feed === "following" ? "following" : "for-you";
   const viewer = await getHomeViewerContext();
+  const personalization = await getHomePersonalization();
   const [posts, stories, suggestedCreators, studyMoments, teacherInsights] = await Promise.all([
     getHomePosts(activeFeed),
     getHomeStories(viewer),
@@ -197,6 +201,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div className="space-y-4 pb-3">
+      {personalization ? (
+        <>
+          <PersonalizedHomeGreeting
+            fullName={personalization.fullName}
+            role={personalization.role}
+            struggleAreaName={personalization.struggleAreaName}
+          />
+          {personalization.goalExam ? <ExamCountdownBanner goalExam={personalization.goalExam} /> : null}
+        </>
+      ) : null}
       {teacherInsights ? (
         <TeacherHomeInsights
           copy={m.feedEnhancements}
@@ -627,6 +641,37 @@ async function getHomeStudyMoments() {
     return await getMatchedStudyMoments(supabase);
   } catch {
     return [];
+  }
+}
+
+async function getHomePersonalization(): Promise<{
+  fullName: string;
+  role: "student" | "parent" | "teacher";
+  goalExam: "lgs" | "yks" | "general" | null;
+  struggleAreaName: string | null;
+} | null> {
+  if (!hasSupabaseEnv()) return null;
+
+  try {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+    if (!profile || (profile.role !== "student" && profile.role !== "parent")) return null;
+
+    const intake = await getOnboardingIntake(supabase, profile.id);
+    let struggleAreaName: string | null = null;
+    if (intake?.struggleAreaId) {
+      const areas = await getEducationAreas(supabase);
+      struggleAreaName = areas.find((area) => area.id === intake.struggleAreaId)?.area_name ?? null;
+    }
+
+    return {
+      fullName: profile.full_name,
+      role: profile.role,
+      goalExam: intake?.goalExam ?? null,
+      struggleAreaName,
+    };
+  } catch {
+    return null;
   }
 }
 

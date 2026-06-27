@@ -28,6 +28,33 @@ export const reviewStudentDocumentSchema = z.object({
   status: z.enum(["approved", "rejected"]),
 });
 
+export const reviewTeacherCredentialSchema = z.object({
+  submissionId: z.string().uuid(),
+  status: z.enum(["approved", "rejected"]),
+  adminNote: z.string().trim().max(500).optional(),
+});
+
+export const resolvePaymentDisputeSchema = z.object({
+  disputeId: z.string().uuid(),
+  status: z.enum(["reviewing", "resolved_parent", "resolved_teacher", "closed"]),
+  resolutionNote: z.string().trim().max(2000).optional(),
+});
+
+export type TeacherCredentialQueueItem = Database["public"]["Tables"]["teacher_credential_submissions"]["Row"] & {
+  teacher: { full_name: string; email: string; is_verified: boolean } | null;
+};
+
+export type PaymentDisputeQueueItem = Database["public"]["Tables"]["payment_disputes"]["Row"] & {
+  booking: {
+    id: string;
+    start_time: string;
+    parent_id: string;
+    teacher_id: string;
+    parent: { full_name: string; email: string } | null;
+    teacher: { full_name: string; email: string } | null;
+  } | null;
+};
+
 export async function isCurrentUserPlatformAdmin(supabase: SupabaseClient<Database>) {
   const { data, error } = await supabase.rpc("current_user_is_platform_admin");
 
@@ -169,6 +196,117 @@ export async function reviewStudentDocument(
     target_student_id: parsed.studentId,
     next_status: parsed.status as StudentDocumentStatus,
   });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getTeacherCredentialQueue(
+  supabase: SupabaseClient<Database>,
+): Promise<TeacherCredentialQueueItem[]> {
+  const { data, error } = await supabase
+    .from("teacher_credential_submissions")
+    .select(
+      `
+      *,
+      teacher:teacher_id (
+        full_name,
+        email,
+        is_verified
+      )
+    `,
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as TeacherCredentialQueueItem[];
+}
+
+export async function getOpenPaymentDisputeQueue(
+  supabase: SupabaseClient<Database>,
+): Promise<PaymentDisputeQueueItem[]> {
+  const { data, error } = await supabase
+    .from("payment_disputes")
+    .select(
+      `
+      *,
+      booking:booking_id (
+        id,
+        start_time,
+        parent_id,
+        teacher_id,
+        parent:parent_id ( full_name, email ),
+        teacher:teacher_id ( full_name, email )
+      )
+    `,
+    )
+    .in("status", ["open", "reviewing"])
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as PaymentDisputeQueueItem[];
+}
+
+export async function reviewTeacherCredential(
+  supabase: SupabaseClient<Database>,
+  adminId: string,
+  input: z.infer<typeof reviewTeacherCredentialSchema>,
+) {
+  const parsed = reviewTeacherCredentialSchema.parse(input);
+  const now = new Date().toISOString();
+
+  const { data: submission, error: fetchError } = await supabase
+    .from("teacher_credential_submissions")
+    .select("id, teacher_id, status")
+    .eq("id", parsed.submissionId)
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
+  if (!submission) throw new Error("Credential submission not found.");
+
+  const { data, error } = await supabase
+    .from("teacher_credential_submissions")
+    .update({
+      status: parsed.status,
+      admin_note: parsed.adminNote ?? null,
+      reviewed_by: adminId,
+      reviewed_at: now,
+    })
+    .eq("id", parsed.submissionId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+
+  if (parsed.status === "approved") {
+    await supabase.rpc("verify_teacher", {
+      target_teacher_id: submission.teacher_id,
+      verified: true,
+    });
+  }
+
+  return data;
+}
+
+export async function resolvePaymentDispute(
+  supabase: SupabaseClient<Database>,
+  adminId: string,
+  input: z.infer<typeof resolvePaymentDisputeSchema>,
+) {
+  const parsed = resolvePaymentDisputeSchema.parse(input);
+
+  const { data, error } = await supabase
+    .from("payment_disputes")
+    .update({
+      status: parsed.status,
+      resolution_note: parsed.resolutionNote ?? null,
+      resolved_by: adminId,
+      resolved_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.disputeId)
+    .select("*")
+    .single();
 
   if (error) throw error;
   return data;

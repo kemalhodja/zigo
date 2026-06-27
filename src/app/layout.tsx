@@ -6,6 +6,7 @@ import Script from "next/script";
 
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
+import { ObservabilityProvider } from "@/components/observability-provider";
 import { NotificationRealtimeBridge } from "@/features/notifications/components/notification-realtime-bridge";
 import { QueryProvider } from "@/features/shared/providers/query-provider";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -82,6 +83,7 @@ export default async function RootLayout({
       <body className={`${jakarta.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
         <LocaleProvider initialLocale={locale}>
           <QueryProvider>
+          <ObservabilityProvider />
           <AuthSessionKeepAlive />
           {shellState.viewerId ? <NotificationRealtimeBridge userId={shellState.viewerId} /> : null}
           <AppShell

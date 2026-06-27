@@ -10,6 +10,21 @@ export type UserRole = "teacher" | "parent" | "student";
 export type LessonRequestStatus = "pending" | "accepted" | "rejected" | "closed";
 export type LessonRequestPriority = "normal" | "urgent";
 export type BookingStatus = "booked" | "completed" | "cancelled";
+export type LessonPaymentStatus =
+  | "pending"
+  | "parent_confirmed"
+  | "teacher_confirmed"
+  | "payment_confirmed"
+  | "disputed";
+export type TeacherCredentialType = "diploma" | "e_devlet";
+export type TeacherCredentialStatus = "pending" | "approved" | "rejected";
+export type PaymentDisputeStatus =
+  | "open"
+  | "reviewing"
+  | "resolved_parent"
+  | "resolved_teacher"
+  | "closed";
+export type ExamGoalType = "lgs" | "yks" | "general";
 export type ReputationEventKind = "lesson_completed" | "positive_feedback" | "prompt_answer";
 export type StudentDocumentStatus = "pending" | "approved" | "rejected";
 export type StoreProductCategory =
@@ -1869,6 +1884,7 @@ export type Database = {
           start_time: string;
           end_time: string;
           status: BookingStatus;
+          payment_status: LessonPaymentStatus;
           created_at: string;
           updated_at: string;
         };
@@ -1882,11 +1898,125 @@ export type Database = {
           start_time: string;
           end_time: string;
           status?: BookingStatus;
+          payment_status?: LessonPaymentStatus;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           status?: BookingStatus;
+          payment_status?: LessonPaymentStatus;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      teacher_credential_submissions: {
+        Row: {
+          id: string;
+          teacher_id: string;
+          credential_type: TeacherCredentialType;
+          document_url: string;
+          status: TeacherCredentialStatus;
+          admin_note: string | null;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          teacher_id: string;
+          credential_type: TeacherCredentialType;
+          document_url: string;
+          status?: TeacherCredentialStatus;
+          admin_note?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: TeacherCredentialStatus;
+          admin_note?: string | null;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      lesson_reviews: {
+        Row: {
+          id: string;
+          booking_id: string;
+          parent_id: string;
+          teacher_id: string;
+          rating: number;
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          parent_id: string;
+          teacher_id: string;
+          rating: number;
+          comment?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          rating?: number;
+          comment?: string | null;
+        };
+        Relationships: [];
+      };
+      payment_disputes: {
+        Row: {
+          id: string;
+          booking_id: string;
+          opened_by: string;
+          reason: string;
+          status: PaymentDisputeStatus;
+          resolution_note: string | null;
+          resolved_by: string | null;
+          resolved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          opened_by: string;
+          reason: string;
+          status?: PaymentDisputeStatus;
+          resolution_note?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: PaymentDisputeStatus;
+          resolution_note?: string | null;
+          resolved_by?: string | null;
+          resolved_at?: string | null;
+        };
+        Relationships: [];
+      };
+      user_onboarding_intake: {
+        Row: {
+          user_id: string;
+          grade_level: string | null;
+          goal_exam: ExamGoalType;
+          struggle_area_id: number | null;
+          completed_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          grade_level?: string | null;
+          goal_exam?: ExamGoalType;
+          struggle_area_id?: number | null;
+          completed_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          grade_level?: string | null;
+          goal_exam?: ExamGoalType;
+          struggle_area_id?: number | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -2611,6 +2741,20 @@ export type Database = {
           target_teacher_id: string;
         };
         Returns: string;
+      };
+      confirm_lesson_payment: {
+        Args: {
+          target_booking_id: string;
+          side: string;
+        };
+        Returns: Database["public"]["Tables"]["lesson_bookings"]["Row"];
+      };
+      open_payment_dispute: {
+        Args: {
+          target_booking_id: string;
+          dispute_reason: string;
+        };
+        Returns: Database["public"]["Tables"]["payment_disputes"]["Row"];
       };
     };
     Enums: {

@@ -1,12 +1,14 @@
 import Link from "next/link";
 
 import { InterestSelector } from "@/components/interest-selector";
+import { OnboardingIntakeQuiz } from "@/components/onboarding-intake-quiz";
 import { ProfileForm } from "@/components/profile-form";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SponsoredCampaignsRail } from "@/components/sponsored-campaigns-rail";
 import { StateCard } from "@/components/state-card";
 import { SupabaseSetupCard } from "@/components/supabase-setup-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
+import { getOnboardingIntake } from "@/lib/domain/onboarding-intake";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrganizationType } from "@/lib/domain/profiles";
 import { listSponsoredTeacherCampaigns } from "@/lib/domain/teacher-campaign";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -57,7 +59,7 @@ export default async function OnboardingPage() {
     );
   }
 
-  const [areas, selectedAreaIds, sponsoredCampaigns] = await Promise.all([
+  const [areas, selectedAreaIds, sponsoredCampaigns, intake] = await Promise.all([
     getEducationAreas(supabase),
     getUserInterestAreaIds(supabase, profile.id),
     getUserInterestAreaIds(supabase, profile.id).then(async (areaIds) => {
@@ -68,6 +70,9 @@ export default async function OnboardingPage() {
         return [];
       }
     }),
+    profile.role === "student" || profile.role === "parent"
+      ? getOnboardingIntake(supabase, profile.id)
+      : Promise.resolve(null),
   ]);
 
   const roleNote =
@@ -92,6 +97,12 @@ export default async function OnboardingPage() {
           <SignOutButton />
         </div>
       </section>
+
+      {!intake && (profile.role === "student" || profile.role === "parent") ? (
+        <OnboardingIntakeQuiz
+          areaOptions={areas.map((area) => ({ id: area.id, name: area.area_name }))}
+        />
+      ) : null}
 
       <section className="-mx-4 bg-white px-4 py-4">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">{m.roles[profile.role]}</p>

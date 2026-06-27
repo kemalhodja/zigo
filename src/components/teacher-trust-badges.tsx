@@ -17,7 +17,7 @@ export function TeacherTrustBadges({
   showVerified = true,
   size = "sm",
   verified = false,
-  verifiedLabel = "Verified teacher",
+  verifiedLabel = "Onaylı Öğretmen",
 }: TeacherTrustBadgesProps) {
   const normalized = uniqueBranches(branches);
   const visible = normalized.slice(0, maxVisible);

@@ -1,18 +1,22 @@
 import Link from "next/link";
 
 import { AdminBankTransferActions } from "@/components/admin-bank-transfer-actions";
+import { AdminDisputeActions } from "@/components/admin-dispute-actions";
 import { AdminRedemptionStatus } from "@/components/admin-redemption-status";
 import { AdminStockForm } from "@/components/admin-stock-form";
 import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
 import { AdminTeacherActions } from "@/components/admin-teacher-actions";
 import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
+import { AdminTeacherCredentialActions } from "@/components/admin-teacher-credential-actions";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv } from "@/lib/config";
 import {
   getAdminStoreProducts,
   getAdminStoreRedemptions,
+  getOpenPaymentDisputeQueue,
   getStudentDocumentQueue,
+  getTeacherCredentialQueue,
   getTeacherVerificationQueue,
   isCurrentUserPlatformAdmin,
 } from "@/lib/domain/admin";
@@ -102,13 +106,16 @@ export default async function AdminPage() {
     );
   }
 
-  const [teachers, products, redemptions, areas, studentDocuments, bankTransfers] = await Promise.all([
+  const [teachers, products, redemptions, areas, studentDocuments, bankTransfers, credentialQueue, disputeQueue] =
+    await Promise.all([
     getTeacherVerificationQueue(supabase),
     getAdminStoreProducts(supabase),
     getAdminStoreRedemptions(supabase),
     getEducationAreas(supabase),
     getStudentDocumentQueue(supabase),
     getPendingBankTransferQueue(supabase),
+    getTeacherCredentialQueue(supabase),
+    getOpenPaymentDisputeQueue(supabase),
   ]);
 
   const pendingTeachers = teachers.filter((teacher) => !teacher.is_verified);
@@ -117,6 +124,8 @@ export default async function AdminPage() {
   const auditItems = [
     { label: a.queueTeacherVerify, value: pendingTeachers.length },
     { label: a.queueStudentDocs, value: studentDocuments.length },
+    { label: "Öğretmen belgeleri", value: credentialQueue.length },
+    { label: "Ödeme itirazları", value: disputeQueue.length },
     { label: a.queueBankTransfers, value: bankTransfers.length },
     { label: a.queueStoreOrders, value: redemptions.length },
     { label: a.queueStock, value: products.length },
@@ -191,6 +200,57 @@ export default async function AdminPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="-mx-4 bg-white">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <h3 className="text-lg font-black text-night">Öğretmen diploma / e-Devlet kuyruğu</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+            Yüklenen belgeleri inceleyin; onay sonrası öğretmen otomatik doğrulanır.
+          </p>
+        </div>
+        {credentialQueue.length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <p className="text-sm font-black text-night">Bekleyen belge yok</p>
+          </div>
+        ) : (
+          credentialQueue.map((submission) => (
+            <div className="border-b border-slate-100 px-4 py-4" key={submission.id}>
+              <AdminTeacherCredentialActions
+                credentialType={submission.credential_type}
+                documentUrl={submission.document_url}
+                submissionId={submission.id}
+                teacherEmail={submission.teacher?.email ?? ""}
+                teacherName={submission.teacher?.full_name ?? c.unknownUser}
+              />
+            </div>
+          ))
+        )}
+      </section>
+
+      <section className="-mx-4 bg-white">
+        <div className="border-b border-slate-100 px-4 py-3">
+          <h3 className="text-lg font-black text-night">Ödeme itirazları</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+            Veli veya öğretmen tarafından açılan ders ödeme itirazları.
+          </p>
+        </div>
+        {disputeQueue.length === 0 ? (
+          <div className="px-4 py-8 text-center">
+            <p className="text-sm font-black text-night">Açık itiraz yok</p>
+          </div>
+        ) : (
+          disputeQueue.map((dispute) => (
+            <div className="border-b border-slate-100 px-4 py-4" key={dispute.id}>
+              <AdminDisputeActions
+                disputeId={dispute.id}
+                parentName={dispute.booking?.parent?.full_name}
+                reason={dispute.reason}
+                teacherName={dispute.booking?.teacher?.full_name}
+              />
+            </div>
+          ))
+        )}
       </section>
 
       <section className="-mx-4 bg-white">

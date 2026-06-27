@@ -5,6 +5,15 @@ import { buildSecurityHeaders } from "./src/lib/server/security-headers";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   async headers() {
     const securityHeaders = buildSecurityHeaders(process.env.NODE_ENV === "production");
     return [

@@ -20,6 +20,7 @@ const MIGRATIONS = [
   "070_lesson_completion_child_rewards.sql",
   "071_lesson_packages_and_live_lessons.sql",
   "072_remove_lesson_package_gating.sql",
+  "073_trust_safety_growth_platform.sql",
 ];
 
 function loadEnvFile(name) {
@@ -150,6 +151,10 @@ async function probe(admin, migrationId) {
   if (migrationId === "072") {
     const { data, error } = await admin.rpc("lesson_package_booking_gating_removed");
     return !error && data === true;
+  }
+  if (migrationId === "073") {
+    const { error } = await admin.from("teacher_credential_submissions").select("id").limit(1);
+    return !error;
   }
   return false;
 }

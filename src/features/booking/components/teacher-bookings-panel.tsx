@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { useBookings, useUpdateBookingStatus } from "@/features/booking/hooks";
 import { LiveLessonActions } from "@/features/live-lessons/components/live-lesson-actions";
+import { LessonTrustPanel } from "@/components/lesson-trust-panel";
 
 type TeacherBookingsPanelProps = {
   labels: {
@@ -116,6 +117,7 @@ export function TeacherBookingsPanel({ labels }: TeacherBookingsPanelProps) {
                   </button>
                 </div>
               ) : null}
+              <LessonTrustPanel booking={booking} viewerRole="teacher" />
             </article>
             );
           })

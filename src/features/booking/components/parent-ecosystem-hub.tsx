@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { LessonTrustPanel } from "@/components/lesson-trust-panel";
 import {
   CalendarAgendaCard,
   CalendarAgendaEmpty,
@@ -360,6 +361,9 @@ export function ParentEcosystemHub({ childrenOptions, areaOptions, labels }: Par
                     </button>
                   ) : null}
                 </div>
+                {booking.status === "completed" ? (
+                  <LessonTrustPanel booking={booking} viewerRole="parent" />
+                ) : null}
               </article>
             ))
           )}

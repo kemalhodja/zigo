@@ -6,6 +6,7 @@ import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
 import { ParentChildrenFocusCard } from "@/components/parent-children-focus-card";
 import { ParentFocusOverviewCard } from "@/components/parent-focus-overview-card";
+import { ParentWeeklyPdfButton } from "@/components/parent-weekly-pdf-button";
 import { SocialPill } from "@/components/social-primitives";
 import { StateCard } from "@/components/state-card";
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
@@ -72,42 +73,47 @@ export default async function ParentPage() {
       ) : null}
 
       {mode === "parent" ? (
-        <ParentDevelopmentDashboard
-          data={developmentDashboard}
-          labels={{
-            eyebrow: messages.ecosystem.developmentEyebrow,
-            title: messages.ecosystem.developmentTitle,
-            weekly: {
-              eyebrow: messages.ecosystem.weeklyEyebrow,
-              title: messages.ecosystem.weeklyTitle,
-              reports: messages.ecosystem.weeklyReports,
-              average: messages.ecosystem.weeklyAverage,
-              topArea: messages.ecosystem.weeklyTopArea,
-              bookings: messages.ecosystem.weeklyBookings,
-              empty: messages.ecosystem.weeklyEmpty,
-            },
-            topicSuccess: {
-              title: messages.ecosystem.topicSuccessTitle,
-              empty: messages.ecosystem.topicSuccessEmpty,
-              successLabel: messages.ecosystem.topicSuccessLabel,
-            },
-            growth: {
-              title: messages.ecosystem.growthTitle,
-              empty: messages.ecosystem.growthEmpty,
-              scoreLabel: messages.ecosystem.growthScoreLabel,
-            },
-            upcoming: {
-              title: messages.ecosystem.upcomingTitle,
-              empty: messages.ecosystem.upcomingEmpty,
-              withTeacher: messages.ecosystem.upcomingWithTeacher,
-              agendaLabel: messages.ecosystem.agendaViewLabel,
-              joinLesson: messages.liveLessons.joinLesson,
-              startLesson: messages.liveLessons.startLesson,
-              notYet: messages.liveLessons.notYet,
-              completed: messages.liveLessons.completed,
-            },
-          }}
-        />
+        <>
+          <ParentDevelopmentDashboard
+            data={developmentDashboard}
+            labels={{
+              eyebrow: messages.ecosystem.developmentEyebrow,
+              title: messages.ecosystem.developmentTitle,
+              weekly: {
+                eyebrow: messages.ecosystem.weeklyEyebrow,
+                title: messages.ecosystem.weeklyTitle,
+                reports: messages.ecosystem.weeklyReports,
+                average: messages.ecosystem.weeklyAverage,
+                topArea: messages.ecosystem.weeklyTopArea,
+                bookings: messages.ecosystem.weeklyBookings,
+                empty: messages.ecosystem.weeklyEmpty,
+              },
+              topicSuccess: {
+                title: messages.ecosystem.topicSuccessTitle,
+                empty: messages.ecosystem.topicSuccessEmpty,
+                successLabel: messages.ecosystem.topicSuccessLabel,
+              },
+              growth: {
+                title: messages.ecosystem.growthTitle,
+                empty: messages.ecosystem.growthEmpty,
+                scoreLabel: messages.ecosystem.growthScoreLabel,
+              },
+              upcoming: {
+                title: messages.ecosystem.upcomingTitle,
+                empty: messages.ecosystem.upcomingEmpty,
+                withTeacher: messages.ecosystem.upcomingWithTeacher,
+                agendaLabel: messages.ecosystem.agendaViewLabel,
+                joinLesson: messages.liveLessons.joinLesson,
+                startLesson: messages.liveLessons.startLesson,
+                notYet: messages.liveLessons.notYet,
+                completed: messages.liveLessons.completed,
+              },
+            }}
+          />
+          <div className="-mx-4 bg-white px-4 py-3">
+            <ParentWeeklyPdfButton childProfileId={children[0]?.id} />
+          </div>
+        </>
       ) : null}
 
       {mode === "parent" && children.length > 0 ? (

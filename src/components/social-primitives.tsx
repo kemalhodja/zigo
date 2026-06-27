@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 type SocialAvatarProps = {
@@ -26,8 +27,14 @@ export function SocialAvatar({
     <span className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} ${ring ? "p-0.5" : ""} ${className}`}>
       <span className="flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white text-[0.68rem] font-black text-night">
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt="" className="size-full object-cover" src={imageUrl} />
+          <Image
+            alt=""
+            className="size-full object-cover"
+            height={96}
+            src={imageUrl}
+            unoptimized={!imageUrl.includes("supabase.co")}
+            width={96}
+          />
         ) : (
           getInitials(label)
         )}

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrganizationTypeForm } from "@/components/organization-type-form";
+import { TeacherCredentialPanel } from "@/components/teacher-credential-panel";
 import { TeacherPostForm } from "@/components/teacher-post-form";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
@@ -150,6 +151,8 @@ export default async function TeacherPage() {
           initialOrganizationType={parseOrganizationType(profile.organization_type)}
         />
       ) : null}
+
+      <TeacherCredentialPanel />
 
       <ZigoPlusPlansSection
         allowDevActivate={allowDevActivate}

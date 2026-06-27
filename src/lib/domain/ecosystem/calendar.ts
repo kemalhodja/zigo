@@ -169,6 +169,7 @@ export type LessonBookingListItem = {
   start_time: string;
   end_time: string;
   status: "booked" | "completed" | "cancelled";
+  payment_status?: "pending" | "parent_confirmed" | "teacher_confirmed" | "payment_confirmed" | "disputed";
   area_id: number | null;
   teacher?: { full_name: string } | null;
   parent?: { full_name: string } | null;
@@ -192,6 +193,7 @@ export async function listBookingsForUser(
       start_time,
       end_time,
       status,
+      payment_status,
       area_id,
       teacher:teacher_id ( full_name ),
       parent:parent_id ( full_name ),
