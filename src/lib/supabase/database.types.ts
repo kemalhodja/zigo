@@ -77,6 +77,7 @@ export type UserRow = {
   student_document_reviewed_at: string | null;
   student_document_reviewed_by: string | null;
   grade_level: string | null;
+  shortcut_preferences: Record<string, unknown>;
   city: string | null;
   organization_type: string | null;
   social_safety_strike_count: number;
@@ -2898,6 +2899,12 @@ export type Database = {
       update_user_grade_level: {
         Args: {
           next_grade_level: string;
+        };
+        Returns: UserRow;
+      };
+      update_user_shortcut_preferences: {
+        Args: {
+          next_preferences: Record<string, unknown>;
         };
         Returns: UserRow;
       };

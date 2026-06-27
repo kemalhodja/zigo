@@ -898,29 +898,30 @@ check("Navigation surfaces show unread notification badges", () => {
 
 check("App shell exposes premium daily quick actions", () => {
   const appShell = read("src/components/app-shell.tsx");
+  const shortcutDock = read("src/components/shortcut-dock.tsx");
+  const shortcutPrefs = read("src/lib/domain/shortcut-preferences.ts");
   return (
-    appShell.includes("QuickActionDock") &&
-    (appShell.includes("Daily actions") || appShell.includes("dailyActions") || hasCatalog("Daily actions")) &&
-    appShell.includes('href="/create?mode=story"') &&
-    appShell.includes('href="/create?mode=reel"') &&
-    (appShell.includes("Spark") || appShell.includes("z.spark") || hasCatalog("Spark")) &&
-    (appShell.includes("Micro") || appShell.includes("z.micro") || hasCatalog("Micro")) &&
-    (appShell.includes("Ask safely") || appShell.includes("askSafely") || hasCatalog("Ask safely")) &&
-    appShell.includes('href="/learn"')
+    appShell.includes("ShortcutDock") &&
+    appShell.includes("zigo-float-bottom-bar") &&
+    shortcutDock.includes("ShortcutScrollDock") &&
+    shortcutPrefs.includes('href: "/create?mode=story"') &&
+    shortcutPrefs.includes('href: "/create?mode=reel"') &&
+    shortcutPrefs.includes('href: "/learn"') &&
+    shortcutPrefs.includes('href: "/questions"')
   );
 });
 
 check("Global polish includes premium motion with reduced-motion support", () => {
   const globals = read("src/app/globals.css");
   const homePage = read("src/app/page.tsx");
-  const appShell = read("src/components/app-shell.tsx");
+  const shortcutScrollDock = read("src/components/shortcut-scroll-dock.tsx");
   return (
     globals.includes("story-live-pulse") &&
     globals.includes("premium-action-dock") &&
     globals.includes("premium-dock-sheen") &&
     globals.includes("prefers-reduced-motion") &&
     homePage.includes("story-live-pulse") &&
-    appShell.includes("premium-action-dock")
+    shortcutScrollDock.includes("premium-action-dock")
   );
 });
 

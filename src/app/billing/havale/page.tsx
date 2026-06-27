@@ -13,7 +13,6 @@ import {
 } from "@/lib/domain/bank-transfer";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
-import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
 type BillingHavalePageProps = {
@@ -66,7 +65,6 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
 
   const configured = hasBankTransferConfigured();
   const banks = getBankTransferAccounts();
-  const messages = await getServerMessages();
 
   return (
     <LegalLayout title="Havale / EFT ile Zigo Plus">

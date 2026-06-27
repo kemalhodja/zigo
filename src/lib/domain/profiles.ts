@@ -11,6 +11,13 @@ import {
   type RegistrationAccountKind,
   resolveRegistrationAccount,
 } from "@/lib/domain/registration-account";
+import type { ViewerRole } from "@/lib/domain/role-theme";
+import {
+  normalizeShortcutPreferences,
+  parseShortcutPreferencesValue,
+  type ShortcutPreferences,
+  shortcutPreferencesSchema,
+} from "@/lib/domain/shortcut-preferences";
 import type { Database, UserRole } from "@/lib/supabase/database.types";
 
 export type UserProfile = Database["public"]["Tables"]["users"]["Row"];
@@ -213,4 +220,40 @@ export async function updateUserGradeLevel(
 
   if (error) throw error;
   return data;
+}
+
+export function resolveShortcutOptionsForProfile(
+  profile: Pick<UserProfile, "role" | "is_verified">,
+): { role: ViewerRole; canCreateSocialPost: boolean } {
+  return {
+    role: profile.role,
+    canCreateSocialPost: profile.role === "teacher" && profile.is_verified,
+  };
+}
+
+export function readStoredShortcutPreferences(
+  profile: Pick<UserProfile, "role" | "is_verified" | "shortcut_preferences">,
+): ShortcutPreferences | null {
+  const { role, canCreateSocialPost } = resolveShortcutOptionsForProfile(profile);
+  return parseShortcutPreferencesValue(role, { canCreateSocialPost }, profile.shortcut_preferences);
+}
+
+export async function updateUserShortcutPreferences(
+  supabase: SupabaseClient<Database>,
+  profile: Pick<UserProfile, "role" | "is_verified">,
+  input: z.infer<typeof shortcutPreferencesSchema>,
+) {
+  const parsed = shortcutPreferencesSchema.parse(input);
+  const { role, canCreateSocialPost } = resolveShortcutOptionsForProfile(profile);
+  const normalized = normalizeShortcutPreferences(role, { canCreateSocialPost }, {
+    enabled: parsed.enabled,
+    selectedIds: parsed.selectedIds as ShortcutPreferences["selectedIds"],
+  });
+
+  const { data, error } = await supabase.rpc("update_user_shortcut_preferences", {
+    next_preferences: normalized,
+  });
+
+  if (error) throw error;
+  return { profile: data, preferences: normalized };
 }

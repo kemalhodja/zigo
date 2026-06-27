@@ -5,6 +5,7 @@ import {
   getDefaultShortcutPreferences,
   normalizeShortcutPreferences,
   parseShortcutPreferencesJson,
+  parseShortcutPreferencesValue,
 } from "@/lib/domain/shortcut-preferences";
 
 describe("shortcut-preferences", () => {
@@ -39,5 +40,10 @@ describe("shortcut-preferences", () => {
 
     expect(parsed.enabled).toBe(false);
     expect(parsed.selectedIds).toEqual(["student_learn", "student_focus"]);
+  });
+
+  it("treats empty stored records as unset", () => {
+    const unset = parseShortcutPreferencesValue("student", { canCreateSocialPost: false }, {});
+    expect(unset).toBeNull();
   });
 });

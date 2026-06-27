@@ -5,7 +5,10 @@ export {
   getEducationAreas,
   getUserInterestAreaIds,
   parseOrganizationType,
+  readStoredShortcutPreferences,
+  resolveShortcutOptionsForProfile,
   setUserOrganizationType,
   updateUserGradeLevel,
   updateUserProfile,
+  updateUserShortcutPreferences,
 } from "@/lib/domain/profiles";

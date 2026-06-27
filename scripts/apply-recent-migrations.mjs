@@ -25,6 +25,7 @@ const MIGRATIONS = [
   "075_professional_portfolio_layer.sql",
   "076_verified_activity_expertise_matrix.sql",
   "077_teacher_stats_engine.sql",
+  "078_user_shortcut_preferences.sql",
 ];
 
 function loadEnvFile(name) {
@@ -174,6 +175,10 @@ async function probe(admin, migrationId) {
   }
   if (migrationId === "077") {
     const { error } = await admin.from("teacher_stats").select("teacher_id").limit(1);
+    return !error;
+  }
+  if (migrationId === "078") {
+    const { error } = await admin.from("users").select("shortcut_preferences").limit(1);
     return !error;
   }
   return false;

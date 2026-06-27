@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { updateGradeLevelSchema } from "@/lib/domain/grade-level";
 import { isRegistrationAccountKind } from "@/lib/domain/registration-account";
+import { shortcutPreferencesSchema } from "@/lib/domain/shortcut-preferences";
 
 export {
   createProfileSchema,
@@ -22,6 +23,8 @@ export const updateProfileBodySchema = z.object({
 });
 
 export const updateGradeLevelBodySchema = updateGradeLevelSchema;
+
+export const updateShortcutPreferencesBodySchema = shortcutPreferencesSchema;
 
 export function parseRegistrationAccountKind(value: unknown) {
   if (typeof value !== "string") return undefined;

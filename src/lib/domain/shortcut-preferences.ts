@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import type { Messages } from "@/lib/i18n/types";
@@ -51,6 +53,11 @@ export type ShortcutPreferences = {
   enabled: boolean;
   selectedIds: ShortcutId[];
 };
+
+export const shortcutPreferencesSchema = z.object({
+  enabled: z.boolean(),
+  selectedIds: z.array(z.string()),
+});
 
 export type ShortcutOptions = {
   canCreateSocialPost: boolean;
@@ -216,6 +223,31 @@ export function getDefaultShortcutPreferences(role: ViewerRole, options: Shortcu
   };
 }
 
+export function parseShortcutPreferencesValue(
+  role: ViewerRole,
+  options: ShortcutOptions,
+  value: unknown,
+): ShortcutPreferences | null {
+  const parsed = shortcutPreferencesSchema.safeParse(value);
+  if (!parsed.success) return null;
+
+  const normalized = normalizeShortcutPreferences(role, options, {
+    enabled: parsed.data.enabled,
+    selectedIds: parsed.data.selectedIds as ShortcutId[],
+  });
+
+  const defaults = getDefaultShortcutPreferences(role, options);
+  if (
+    normalized.enabled === defaults.enabled
+    && normalized.selectedIds.length === defaults.selectedIds.length
+    && normalized.selectedIds.every((id, index) => id === defaults.selectedIds[index])
+  ) {
+    return null;
+  }
+
+  return normalized;
+}
+
 export function parseShortcutPreferencesJson(
   role: ViewerRole,
   options: ShortcutOptions,
@@ -224,10 +256,10 @@ export function parseShortcutPreferencesJson(
   if (!raw) return getDefaultShortcutPreferences(role, options);
 
   try {
-    const parsed = JSON.parse(raw) as Partial<ShortcutPreferences>;
+    const value = JSON.parse(raw) as Partial<ShortcutPreferences>;
     return normalizeShortcutPreferences(role, options, {
-      enabled: parsed.enabled ?? true,
-      selectedIds: Array.isArray(parsed.selectedIds) ? (parsed.selectedIds as ShortcutId[]) : [],
+      enabled: value.enabled ?? true,
+      selectedIds: Array.isArray(value.selectedIds) ? (value.selectedIds as ShortcutId[]) : [],
     });
   } catch {
     return getDefaultShortcutPreferences(role, options);
