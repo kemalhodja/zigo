@@ -27,6 +27,7 @@ const MIGRATIONS = [
   "077_teacher_stats_engine.sql",
   "078_user_shortcut_preferences.sql",
   "079_platform_user_role.sql",
+  "080_platform_user_role.sql",
 ];
 
 function loadEnvFile(name) {
@@ -185,6 +186,12 @@ async function probe(admin, migrationId) {
   if (migrationId === "079") {
     const { error } = await admin.from("users").select("id").eq("role", "platform").limit(1);
     return !error;
+  }
+  if (migrationId === "080") {
+    const { data, error } = await admin.rpc("user_is_verified_teacher", {
+      p_user_id: "00000000-0000-0000-0000-000000000000",
+    });
+    return !error && typeof data === "boolean";
   }
   return false;
 }
