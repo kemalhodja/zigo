@@ -188,10 +188,12 @@ async function probe(admin, migrationId) {
     return !error;
   }
   if (migrationId === "080") {
-    const { data, error } = await admin.rpc("user_is_verified_teacher", {
-      p_user_id: "00000000-0000-0000-0000-000000000000",
-    });
-    return !error && typeof data === "boolean";
+    const { data, error } = await admin
+      .from("zigo_applied_migrations")
+      .select("migration_id")
+      .eq("migration_id", "080_platform_user_role")
+      .maybeSingle();
+    return !error && Boolean(data);
   }
   return false;
 }

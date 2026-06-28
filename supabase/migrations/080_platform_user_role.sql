@@ -109,3 +109,12 @@ WITH CHECK (
   follower_id = auth.uid()
   AND public.user_is_verified_teacher(following_id)
 );
+
+CREATE TABLE IF NOT EXISTS public.zigo_applied_migrations (
+  migration_id text PRIMARY KEY,
+  applied_at timestamptz NOT NULL DEFAULT now()
+);
+
+INSERT INTO public.zigo_applied_migrations (migration_id)
+VALUES ('080_platform_user_role')
+ON CONFLICT (migration_id) DO NOTHING;
