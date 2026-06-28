@@ -1,52 +1,54 @@
-import { getUserInterestAreaIds } from "@/features/profile/services";
 import {
   createQuestion,
   createQuestionBodySchema,
   getMatchedQuestions,
 } from "@/features/questions";
-import { isErrorResponse, jsonError, jsonSuccess, requireAuthenticatedProfile } from "@/features/shared";
-import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import {
+  assertAuthzDecision,
+  canAskQuestion,
+  jsonSuccess,
+  withAuthorizedApiHandler,
+} from "@/features/shared";
 import { RateLimitExceededError } from "@/features/shared/errors/global-error-handler";
 import { checkRateLimit } from "@/lib/server/rate-limit";
-import { createClient } from "@/lib/supabase/server";
 
-export const GET = withApiHandler(async () => {
-  const supabase = await createClient();
-  const profileOrError = await requireAuthenticatedProfile(supabase);
-  if (isErrorResponse(profileOrError)) return profileOrError;
+export const GET = withAuthorizedApiHandler(
+  { enforceApiPrefixRule: false },
+  async (_request, _context, { supabase, auth }) => {
+    const questions = await getMatchedQuestions(supabase, auth.userId);
+    return jsonSuccess(questions);
+  },
+  { fallbackMessage: "Questions could not be loaded." },
+);
 
-  const questions = await getMatchedQuestions(supabase, profileOrError.id);
-  return jsonSuccess(questions);
-}, { fallbackMessage: "Questions could not be loaded." });
-
-export const POST = withApiHandler(async (request: Request) => {
-  const supabase = await createClient();
-  const profileOrError = await requireAuthenticatedProfile(supabase, {
+export const POST = withAuthorizedApiHandler(
+  {
     excludeRoles: ["teacher"],
-  });
-  if (isErrorResponse(profileOrError)) return profileOrError;
+    capability: "question:create",
+    enforceApiPrefixRule: false,
+  },
+  async (request, _context, { supabase, auth }) => {
+    const rateLimit = checkRateLimit(`question:${auth.userId}`, 8, 60 * 60_000);
+    if (!rateLimit.allowed) {
+      throw new RateLimitExceededError(
+        "Çok fazla soru gönderdin. Bir süre bekleyip tekrar dene.",
+        rateLimit.retryAfterSeconds,
+      );
+    }
 
-  const rateLimit = checkRateLimit(`question:${profileOrError.id}`, 8, 60 * 60_000);
-  if (!rateLimit.allowed) {
-    throw new RateLimitExceededError(
-      "Çok fazla soru gönderdin. Bir süre bekleyip tekrar dene.",
-      rateLimit.retryAfterSeconds,
-    );
-  }
+    const body = createQuestionBodySchema.parse(await request.json());
+    const areaDecision = canAskQuestion(auth, body.areaId);
+    const areaError = assertAuthzDecision(areaDecision);
+    if (areaError) return areaError;
 
-  const body = createQuestionBodySchema.parse(await request.json());
-  const areaIds = await getUserInterestAreaIds(supabase, profileOrError.id);
+    const question = await createQuestion(supabase, {
+      authorId: auth.userId,
+      areaId: body.areaId,
+      title: body.title,
+      description: body.description,
+    });
 
-  if (!areaIds.includes(body.areaId)) {
-    return jsonError("Questions can only be asked in your selected education areas.", 403, "FORBIDDEN");
-  }
-
-  const question = await createQuestion(supabase, {
-    authorId: profileOrError.id,
-    areaId: body.areaId,
-    title: body.title,
-    description: body.description,
-  });
-
-  return jsonSuccess(question, 201);
-}, { fallbackMessage: "Question could not be created." });
+    return jsonSuccess(question, 201);
+  },
+  { fallbackMessage: "Question could not be created." },
+);

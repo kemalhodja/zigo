@@ -2,6 +2,7 @@ export * from "@/features/shared/api/client-fetch";
 export * from "@/features/shared/api/rbac";
 export * from "@/features/shared/api/require-auth";
 export * from "@/features/shared/api/with-api-handler";
+export * from "@/features/shared/authorization";
 export * from "@/features/shared/errors/global-error-handler";
 export * from "@/features/shared/errors/types";
 export * from "@/features/shared/middleware/role-guards";

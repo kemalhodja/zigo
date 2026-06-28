@@ -120,7 +120,7 @@ export function AppShell({
 
       <FloatingWhatsAppSupport viewerRole={viewerRole} />
 
-      <FirstLaunchWelcome />
+      <FirstLaunchWelcome viewerRole={viewerRole} />
       {pathname.startsWith("/auth") ? null : <RegistrationCampaignAnnouncement />}
     </div>
   );

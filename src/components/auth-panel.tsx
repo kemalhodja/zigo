@@ -9,6 +9,7 @@ import { isCapacitorClient } from "@/lib/client/capacitor-runtime";
 import { markRegistrationCampaignAnnouncementPending } from "@/lib/client/registration-campaign-announcement";
 import { validateRegistrationPassword } from "@/lib/domain/password-policy";
 import {
+  isRegistrationAccountKind,
   REGISTRATION_ACCOUNT_OPTIONS,
   type RegistrationAccountKind,
 } from "@/lib/domain/registration-account";
@@ -47,6 +48,7 @@ export function AuthPanel() {
 
   const [mode, setMode] = useState<Mode>("sign-in");
   const [accountKind, setAccountKind] = useState<RegistrationAccountKind>("student");
+  const [rolePrefilled, setRolePrefilled] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -58,6 +60,28 @@ export function AuthPanel() {
   useEffect(() => {
     setRememberMe(readRememberPref());
   }, []);
+
+  useEffect(() => {
+    const modeParam = searchParams.get("mode");
+    const accountKindParam = searchParams.get("accountKind");
+
+    if (modeParam === "signup") {
+      setMode("sign-up");
+      setMessage(a.signUpContinue);
+    } else if (modeParam === "signin") {
+      setMode("sign-in");
+      setMessage(a.signInContinue);
+    }
+
+    if (isRegistrationAccountKind(accountKindParam)) {
+      setAccountKind(accountKindParam);
+      setRolePrefilled(true);
+      if (modeParam !== "signin") {
+        setMode("sign-up");
+        setMessage(a.signUpContinue);
+      }
+    }
+  }, [a.signInContinue, a.signUpContinue, searchParams]);
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -300,7 +324,7 @@ export function AuthPanel() {
           </p>
         ) : null}
 
-        {mode === "sign-up" ? (
+        {mode === "sign-up" && !rolePrefilled ? (
           <div className="space-y-2">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{a.chooseRole}</p>
             {roleOptions.map((option) => (
@@ -328,6 +352,20 @@ export function AuthPanel() {
                 </span>
               </button>
             ))}
+          </div>
+        ) : null}
+
+        {mode === "sign-up" && rolePrefilled ? (
+          <div className={`rounded-lg border border-transparent bg-gradient-to-r p-3 text-white ${(roleOptions.find((option) => option.id === accountKind) ?? roleOptions[0]).accent}`}>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-white/70">{a.chooseRole}</p>
+            <p className="mt-1 text-sm font-black">{(roleOptions.find((option) => option.id === accountKind) ?? roleOptions[0]).label}</p>
+            <button
+              className="tap-scale mt-2 text-xs font-black text-white/85 underline"
+              onClick={() => setRolePrefilled(false)}
+              type="button"
+            >
+              {a.changeRole}
+            </button>
           </div>
         ) : null}
 
