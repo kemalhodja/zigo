@@ -202,13 +202,13 @@ async function getProfiles(m: Messages) {
       id: profile.id,
       title: profile.full_name,
       subtitle:
-        profile.role === "teacher"
+        profile.role === "teacher" || profile.role === "platform"
           ? profile.is_verified
             ? p.verifiedStudio
             : p.verificationPending
           : p.pointsLabel.replace("{points}", String(profile.total_points)),
-      href: profile.role === "teacher" ? "/teacher" : "/student",
-      accent: profile.role === "teacher" ? "from-emerald-500 to-teal-500" : "from-crystal to-fuchsia-500",
+      href: profile.role === "platform" ? "/platform" : profile.role === "teacher" ? "/teacher" : "/student",
+      accent: profile.role === "teacher" || profile.role === "platform" ? "from-emerald-500 to-teal-500" : "from-crystal to-fuchsia-500",
     },
   ];
   }, previewProfiles);

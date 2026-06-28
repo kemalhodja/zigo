@@ -1,3 +1,4 @@
+import { isPublisherRole } from "@/lib/domain/role-utils";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import type { UserRole } from "@/lib/supabase/database.types";
 import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
@@ -29,6 +30,7 @@ export function getRoleNavLabels(
       student: Pick<BottomNavLabels, "home" | "search" | "learn" | "micro" | "profile">;
       parent: Pick<BottomNavLabels, "home" | "search" | "parentDash" | "ask" | "profile">;
       teacher: Pick<BottomNavLabels, "home" | "search" | "create" | "studio" | "ask" | "profile">;
+      platform: Pick<BottomNavLabels, "home" | "search" | "create" | "studio" | "ask" | "profile">;
     };
   },
 ): BottomNavLabels {
@@ -40,6 +42,10 @@ export function getRoleNavLabels(
 
   if (role === "parent") {
     return { ...nav, ...navByRole.parent };
+  }
+
+  if (role === "platform") {
+    return { ...nav, ...navByRole.platform };
   }
 
   if (role === "teacher") {
@@ -113,7 +119,7 @@ export function getBottomNavItems(
     ];
   }
 
-  if (role === "teacher") {
+  if (role === "teacher" || role === "platform") {
     const center: BottomNavItem = options.canCreateSocialPost
       ? {
           href: "/create",
@@ -133,10 +139,10 @@ export function getBottomNavItems(
       explore,
       center,
       {
-        href: "/teacher",
+        href: role === "platform" ? "/platform" : "/teacher",
         icon: "studio",
         label: labels.studio,
-        match: (path) => path.startsWith("/teacher"),
+        match: (path) => path.startsWith(role === "platform" ? "/platform" : "/teacher"),
       },
       profile,
     ];
@@ -162,7 +168,7 @@ export function getBottomNavItems(
 }
 
 export function getHeaderPrimaryAction(role: ViewerRole, canCreateSocialPost: boolean) {
-  if (role === "teacher" && canCreateSocialPost) {
+  if (role !== "guest" && isPublisherRole(role) && canCreateSocialPost) {
     return { href: "/create", isCreate: true as const };
   }
   return { href: "/questions", isCreate: false as const };
@@ -171,6 +177,7 @@ export function getHeaderPrimaryAction(role: ViewerRole, canCreateSocialPost: bo
 export function getRoleDashboardHref(role: UserRole | "guest") {
   if (role === "parent") return "/parent";
   if (role === "teacher") return "/teacher";
+  if (role === "platform") return "/platform";
   if (role === "student") return "/student";
   return "/profiles";
 }
@@ -184,5 +191,5 @@ export function isParentSupervisionRole(role: ViewerRole) {
 }
 
 export function isTeacherStudioRole(role: ViewerRole) {
-  return role === "teacher";
+  return role === "teacher" || role === "platform";
 }

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
@@ -34,6 +35,10 @@ export default async function TeacherPage() {
 
   if (!profile) {
     return <TeacherPreview mode="signed-out" />;
+  }
+
+  if (profile.role === "platform") {
+    redirect("/platform");
   }
 
   if (profile.role !== "teacher") {

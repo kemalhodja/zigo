@@ -56,6 +56,11 @@ describe("authorization/capabilities", () => {
     expect(evaluateCapability(ctx("teacher", false), "post:create").allowed).toBe(false);
   });
 
+  it("allows verified platform accounts to publish like teachers", () => {
+    expect(evaluateCapability(ctx("platform", true), "post:create").allowed).toBe(true);
+    expect(evaluateCapability(ctx("platform", false), "post:create").allowed).toBe(false);
+  });
+
   it("allows students and parents to ask questions but not teachers", () => {
     expect(roleHasCapability("student", "question:create")).toBe(true);
     expect(roleHasCapability("parent", "question:create")).toBe(true);

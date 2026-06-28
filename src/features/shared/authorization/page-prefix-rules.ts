@@ -13,6 +13,7 @@ export const ROLE_PATH_RULES: readonly RolePathRule[] = [
   { prefix: "/dashboard/parent", roles: ["parent"] },
   { prefix: "/dashboard/student", roles: ["student"] },
   { prefix: "/teacher", roles: ["teacher"] },
+  { prefix: "/platform", roles: ["platform"] },
   { prefix: "/parent", roles: ["parent"] },
   { prefix: "/family", roles: ["parent"] },
   { prefix: "/student", roles: ["student"] },
@@ -20,7 +21,7 @@ export const ROLE_PATH_RULES: readonly RolePathRule[] = [
   { prefix: "/avatar", roles: ["student"] },
   { prefix: "/store", roles: ["student", "parent"] },
   { prefix: "/sparks", roles: ["student"] },
-  { prefix: "/create", roles: ["teacher"] },
+  { prefix: "/create", roles: ["teacher", "platform"] },
 ] as const;
 
 export function getRequiredRolesForPath(pathname: string): UserRole[] | null {
@@ -50,6 +51,7 @@ export function resolveDashboardAliasRedirect(pathname: string): string | null {
 
   const aliasMap: Record<string, string> = {
     "/dashboard/teacher": "/teacher",
+    "/dashboard/platform": "/platform",
     "/dashboard/parent": "/parent",
     "/dashboard/student": "/student",
   };

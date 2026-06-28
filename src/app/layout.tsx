@@ -13,6 +13,7 @@ import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getLessonRequestUnreadCount } from "@/lib/domain/lesson-requests";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { canPublishSocialContent, isPublisherRole } from "@/lib/domain/role-utils";
 import { getRoleAccentLabel, getRoleThemeClass, getRoleThemeColor, type ViewerRole } from "@/lib/domain/role-theme";
 import { getUnreadNotificationCount } from "@/lib/domain/social";
 import { getTeacherInboxCount } from "@/lib/domain/teacher-inbox";
@@ -130,15 +131,15 @@ async function getShellState() {
     }
 
     const teacherInboxCount =
-      profile.role === "teacher" ? await getTeacherInboxCount(supabase, profile.id) : 0;
+      isPublisherRole(profile.role) ? await getTeacherInboxCount(supabase, profile.id) : 0;
     const lessonRequestBadgeCount =
-      profile.role === "parent" || profile.role === "teacher"
+      profile.role === "parent" || isPublisherRole(profile.role)
         ? await getLessonRequestUnreadCount(supabase, profile.id, profile.role)
         : 0;
     const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
 
     return {
-      canCreateSocialPost: profile.role === "teacher" && profile.is_verified,
+      canCreateSocialPost: canPublishSocialContent(profile),
       unreadCount: await getUnreadNotificationCount(supabase, profile.id),
       teacherInboxCount,
       lessonRequestBadgeCount,

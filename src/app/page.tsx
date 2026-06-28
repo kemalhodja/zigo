@@ -39,6 +39,7 @@ import { formatFeedTimestamp } from "@/lib/format-time";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 const demoStories: DisplayStory[] = [
   {
@@ -588,7 +589,7 @@ function toDisplayPost(
   followState: {
     canFollowCreator?: boolean;
     isFollowingCreator?: boolean;
-    viewerRole?: "teacher" | "parent" | "student" | null;
+    viewerRole?: UserRole | null;
   } = {},
 ): DisplayPost {
   const authorName = post.author?.full_name ?? "Zigo Creator";
@@ -681,7 +682,7 @@ async function getHomeViewerContext(): Promise<{
   streakDays: number;
   missionDone: number;
   missionTotal: number;
-  role: "teacher" | "parent" | "student" | null;
+  role: UserRole | null;
 }> {
   if (!hasSupabaseEnv()) {
     return allowDemoContent()

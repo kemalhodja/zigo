@@ -35,7 +35,9 @@ export function RoleWelcomeStrip({ viewerRole }: { viewerRole: ViewerRole }) {
       ? { title: m.studentTitle, hint: m.studentHint }
       : viewerRole === "parent"
         ? { title: m.parentTitle, hint: m.parentHint }
-        : { title: m.teacherTitle, hint: m.teacherHint };
+        : viewerRole === "platform"
+          ? { title: m.platformTitle, hint: m.platformHint }
+          : { title: m.teacherTitle, hint: m.teacherHint };
 
   function dismiss() {
     try {

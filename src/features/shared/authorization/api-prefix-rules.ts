@@ -5,15 +5,15 @@ import type { ApiRbacPrefixRule } from "./types";
 /** Documented API prefix RBAC — enforced via `authorizeRequest` and route helpers. */
 export const API_RBAC_PREFIX_RULES: readonly ApiRbacPrefixRule[] = [
   { prefix: "/api/admin", requirePlatformAdmin: true },
-  { prefix: "/api/ecosystem/bookings", roles: ["parent", "teacher"] },
-  { prefix: "/api/ecosystem/availability", roles: ["parent", "teacher"] },
-  { prefix: "/api/ecosystem/matching", roles: ["parent", "student", "teacher"] },
+  { prefix: "/api/ecosystem/bookings", roles: ["parent", "teacher", "platform"] },
+  { prefix: "/api/ecosystem/availability", roles: ["parent", "teacher", "platform"] },
+  { prefix: "/api/ecosystem/matching", roles: ["parent", "student", "teacher", "platform"] },
   { prefix: "/api/ecosystem/progress/weekly", roles: ["parent"] },
-  { prefix: "/api/questions", roles: ["parent", "student", "teacher"] },
-  { prefix: "/api/answers", roles: ["teacher"] },
-  { prefix: "/api/learn", excludeRoles: ["teacher"] },
-  { prefix: "/api/quizzes", roles: ["teacher"] },
-  { prefix: "/api/notifications", roles: ["parent", "student", "teacher"] },
+  { prefix: "/api/questions", roles: ["parent", "student", "teacher", "platform"] },
+  { prefix: "/api/answers", roles: ["teacher", "platform"] },
+  { prefix: "/api/learn", excludeRoles: ["teacher", "platform"] },
+  { prefix: "/api/quizzes", roles: ["teacher", "platform"] },
+  { prefix: "/api/notifications", roles: ["parent", "student", "teacher", "platform"] },
   { prefix: "/api/lesson-requests", excludeRoles: ["student"] },
   { prefix: "/api/lessons/request", excludeRoles: ["student"] },
 ] as const;

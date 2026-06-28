@@ -35,7 +35,7 @@ export function BottomNav({
       ? "role-bottom-nav-student"
       : viewerRole === "parent"
         ? "role-bottom-nav-parent"
-        : viewerRole === "teacher"
+        : viewerRole === "teacher" || viewerRole === "platform"
           ? "role-bottom-nav-teacher"
           : "";
 
@@ -80,6 +80,9 @@ export function BottomNav({
               </span>
             ) : null}
             {item.href === "/teacher" && viewerRole === "teacher" ? (
+              <LessonRequestNavBadge fallbackCount={lessonRequestBadgeCount} viewerRole={viewerRole} />
+            ) : null}
+            {item.href === "/platform" && viewerRole === "platform" ? (
               <LessonRequestNavBadge fallbackCount={lessonRequestBadgeCount} viewerRole={viewerRole} />
             ) : null}
             {item.href === "/parent" && viewerRole === "parent" ? (

@@ -103,6 +103,7 @@ export const upsertPlatformProfileExtrasSchema = platformExpertiseStepSchema
 export function resolveProfessionalProfileKind(
   profile: Pick<UserProfile, "role" | "organization_type">,
 ): ProfessionalProfileKind | null {
+  if (profile.role === "platform") return "platform";
   if (profile.role !== "teacher") return null;
   if (!profile.organization_type) return "teacher";
   if (profile.organization_type === "egitim_platformu") return "platform";

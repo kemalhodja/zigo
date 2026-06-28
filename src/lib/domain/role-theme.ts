@@ -8,6 +8,7 @@ export function getRoleThemeClass(role: ViewerRole) {
   if (role === "student") return "role-theme-student";
   if (role === "parent") return "role-theme-parent";
   if (role === "teacher") return "role-theme-teacher";
+  if (role === "platform") return "role-theme-platform";
   return "role-theme-guest";
 }
 
@@ -21,6 +22,7 @@ export function getRoleAccentLabel(
   if (role === "student") return roles.student;
   if (role === "parent") return roles.parent;
   if (role === "teacher") return roles.teacher;
+  if (role === "platform") return roles.platform;
   return roles.guest;
 }
 
@@ -28,5 +30,6 @@ export function getRoleThemeColor(role: ViewerRole) {
   if (role === "student") return "#7C3AED";
   if (role === "parent") return "#0891B2";
   if (role === "teacher") return "#101828";
+  if (role === "platform") return "#0284C7";
   return "#7C3AED";
 }

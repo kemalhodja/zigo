@@ -12,6 +12,7 @@ import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getProfileBillingSection } from "@/lib/domain/profile-billing";
 import { getCurrentProfile, getUserInterestAreaNames, type UserProfile } from "@/lib/domain/profiles";
 import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
+import { canPublishSocialContent, isPublisherRole } from "@/lib/domain/role-utils";
 import {
   getProfileSocialStats,
   getSavedSocialPosts,
@@ -98,7 +99,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <br />
             {profile.bio}
           </p>
-          {profile.role === "teacher" && (profile.isVerified || profile.branches.length > 0) ? (
+          {profile.role !== "guest" && isPublisherRole(profile.role) && (profile.isVerified || profile.branches.length > 0) ? (
             <div className="mt-3">
               <TeacherTrustBadges
                 branches={profile.branches}
@@ -116,10 +117,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
 
         <div className="zigo-action-grid mt-4">
-          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : profile.role === "teacher" ? "/profile/edit" : "/onboarding"}>
+          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : profile.role !== "guest" && isPublisherRole(profile.role) ? "/profile/edit" : "/onboarding"}>
             {profile.isSignedOut ? m.common.signIn : m.common.edit}
           </Link>
-          {profile.role === "teacher" ? (
+          {profile.role !== "guest" && isPublisherRole(profile.role) ? (
             <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/setup" : "/create"}>
               {profile.isSignedOut ? m.common.setup : m.header.create}
             </Link>
@@ -147,7 +148,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       {!profile.isSignedOut ? (
         <section className="-mx-4 px-4 pt-4">
           <ProfileShortcutSettings
-            canCreateSocialPost={profile.role === "teacher" && profile.isVerified}
+            canCreateSocialPost={
+              profile.role !== "guest"
+              && canPublishSocialContent({ role: profile.role, is_verified: profile.isVerified })
+            }
             viewerRole={profile.role}
           />
         </section>
@@ -419,11 +423,15 @@ function ProfileActionBar({
 }) {
   const dashboardHref = getRoleDashboardHref(role);
   const actions =
-    role === "teacher"
+    role === "teacher" || role === "platform"
       ? [
           { href: isSignedOut ? "/auth" : "/create?mode=story", label: messages.zigo.spark, tone: "from-crystal to-berry" },
           { href: isSignedOut ? "/auth" : "/create?mode=reel", label: messages.zigo.micro, tone: "from-aqua to-mint" },
-          { href: isSignedOut ? "/auth" : "/teacher", label: messages.dashboard.teacher.studio, tone: "from-sun to-peach" },
+          {
+            href: isSignedOut ? "/auth" : role === "platform" ? "/platform" : "/teacher",
+            label: role === "platform" ? messages.dashboard.platform.studio : messages.dashboard.teacher.studio,
+            tone: "from-sun to-peach",
+          },
         ]
       : role === "student"
         ? [
@@ -614,7 +622,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
     getProfileSocialStats(supabase, profile.id),
     getProfileGridPosts(supabase, profile.id, activeTab),
     getProfileSuggestedCreators(supabase, profile.id),
-    profile.role === "teacher" ? getUserInterestAreaNames(supabase, profile.id) : Promise.resolve([]),
+    isPublisherRole(profile.role) ? getUserInterestAreaNames(supabase, profile.id) : Promise.resolve([]),
   ]);
   return { ...toProfileData(profile, stats, posts, branches, pf), suggestedCreators: suggested };
   }, previewFallback);
@@ -666,7 +674,7 @@ function toProfileData(
   return {
     name: profile.full_name,
     handle: profile.full_name.toLowerCase().replaceAll(" ", ""),
-    bio: profile.role === "teacher" ? pf.fallbackTeacherBio : pf.fallbackLearnerBio,
+    bio: isPublisherRole(profile.role) ? pf.fallbackTeacherBio : pf.fallbackLearnerBio,
     role: profile.role,
     isVerified: profile.is_verified,
     branches,

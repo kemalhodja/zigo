@@ -14,6 +14,7 @@ import { listSponsoredTeacherCampaigns } from "@/lib/domain/teacher-campaign";
 import { getServerMessages } from "@/lib/i18n/server";
 import type { Messages } from "@/lib/i18n/types";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 export default async function OnboardingPage() {
   const m = await getServerMessages();
@@ -83,7 +84,7 @@ export default async function OnboardingPage() {
       : ob.profileReady;
 
   const organizationType = parseOrganizationType(profile.organization_type);
-  const isOrganizationTeacher = profile.role === "teacher" && Boolean(organizationType);
+  const isOrganizationTeacher = (profile.role === "teacher" || profile.role === "platform") && Boolean(organizationType);
 
   return (
     <div className="space-y-5">
@@ -144,7 +145,7 @@ export default async function OnboardingPage() {
         />
       ) : null}
 
-      {profile.role === "teacher" && !profile.is_verified && !isOrganizationTeacher ? (
+      {(profile.role === "teacher" || profile.role === "platform") && !profile.is_verified && !isOrganizationTeacher ? (
         <TeacherPendingCard messages={m} />
       ) : areas.length === 0 ? (
         <StateCard
@@ -178,22 +179,23 @@ function NextBestActionPanel({
   hasAreas: boolean;
   isVerified: boolean;
   messages: Messages;
-  role: "teacher" | "parent" | "student";
+  role: UserRole;
 }) {
   const ob = m.onboarding;
   const o = m.onboardingPage;
+  const isPublisher = role === "teacher" || role === "platform";
   const actions = getNextActions({ hasAreas, isVerified, role, messages: m });
 
   return (
     <section className="-mx-4 border-y border-violet-100 bg-gradient-to-r from-violet-50 via-pink-50 to-cyan-50 px-4 py-4">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{ob.nextBest}</p>
       <h3 className="mt-1 text-xl font-black text-night">
-        {hasAreas ? ob.feedReady : role === "teacher" ? o.feedReadyTeacher : ob.chooseInterests}
+        {hasAreas ? ob.feedReady : isPublisher ? o.feedReadyTeacher : ob.chooseInterests}
       </h3>
       <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
         {hasAreas
           ? ob.jumpIntoSurface
-          : role === "teacher"
+          : isPublisher
             ? ob.teacherSetupDesc
             : ob.interestsUnlockDesc}
       </p>
@@ -222,15 +224,16 @@ function getNextActions({
 }: {
   hasAreas: boolean;
   isVerified: boolean;
-  role: "teacher" | "parent" | "student";
+  role: UserRole;
   messages: Messages;
 }) {
   const ob = m.onboarding;
+  const studioHref = role === "platform" ? "/platform" : "/teacher";
 
   if (!hasAreas) {
-    if (role === "teacher") {
+    if (role === "teacher" || role === "platform") {
       return [
-        { href: "/teacher", label: isVerified ? ob.actionStudio : ob.actionVerify, primary: true },
+        { href: studioHref, label: isVerified ? ob.actionStudio : ob.actionVerify, primary: true },
         { href: "/profile", label: ob.actionProfile },
         { href: "/", label: ob.actionFeed },
       ];
@@ -243,9 +246,9 @@ function getNextActions({
     ];
   }
 
-  if (role === "teacher") {
+  if (role === "teacher" || role === "platform") {
     return [
-      { href: isVerified ? "/create" : "/teacher", label: isVerified ? ob.actionCreate : ob.actionVerify, primary: true },
+      { href: isVerified ? "/create" : studioHref, label: isVerified ? ob.actionCreate : ob.actionVerify, primary: true },
       { href: "/micro", label: m.nav.micro },
       { href: "/questions", label: ob.actionQa },
     ];

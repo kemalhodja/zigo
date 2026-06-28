@@ -14,7 +14,7 @@ async function fetchLessonRequestBadgeCount(): Promise<number> {
 
 export function useLessonRequestBadgeCount(viewerRole: ViewerRole) {
   const queryClient = useQueryClient();
-  const enabled = viewerRole === "parent" || viewerRole === "teacher";
+  const enabled = viewerRole === "parent" || viewerRole === "teacher" || viewerRole === "platform";
 
   useEffect(() => {
     if (!enabled) return;

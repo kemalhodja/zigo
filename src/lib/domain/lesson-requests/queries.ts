@@ -145,7 +145,7 @@ export async function getLessonRequestUnreadCount(
     }
   }
 
-  if (error && role === "teacher") {
+  if (error && (role === "teacher" || role === "platform")) {
     const pending = await supabase
       .from("lesson_requests")
       .select("*", { count: "exact", head: true })

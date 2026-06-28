@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "teacher" | "parent" | "student";
+export type UserRole = "teacher" | "parent" | "student" | "platform";
 export type LessonRequestStatus = "pending" | "accepted" | "rejected" | "closed";
 export type LessonRequestPriority = "normal" | "urgent";
 export type BookingStatus = "booked" | "completed" | "cancelled";

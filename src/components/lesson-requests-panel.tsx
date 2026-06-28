@@ -35,7 +35,7 @@ type ThreadMessage = {
 };
 
 type LessonRequestsPanelProps = {
-  role: "parent" | "teacher";
+  role: "parent" | "teacher" | "platform";
   viewerId: string;
   childrenOptions?: ChildOption[];
   redirectOnCreate?: string;
@@ -335,7 +335,7 @@ export function LessonRequestsPanel({
               role === "parent"
                 ? item.receiver?.full_name ?? lr.toTeacher
                 : item.sender?.full_name ?? lr.fromParent;
-            const isTeacherPending = role === "teacher" && item.status === "pending" && item.receiver_id === viewerId;
+            const isTeacherPending = (role === "teacher" || role === "platform") && item.status === "pending" && item.receiver_id === viewerId;
 
             return (
               <article className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4" key={item.id}>

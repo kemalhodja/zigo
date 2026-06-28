@@ -26,6 +26,7 @@ const MIGRATIONS = [
   "076_verified_activity_expertise_matrix.sql",
   "077_teacher_stats_engine.sql",
   "078_user_shortcut_preferences.sql",
+  "079_platform_user_role.sql",
 ];
 
 function loadEnvFile(name) {
@@ -179,6 +180,10 @@ async function probe(admin, migrationId) {
   }
   if (migrationId === "078") {
     const { error } = await admin.from("users").select("shortcut_preferences").limit(1);
+    return !error;
+  }
+  if (migrationId === "079") {
+    const { error } = await admin.from("users").select("id").eq("role", "platform").limit(1);
     return !error;
   }
   return false;

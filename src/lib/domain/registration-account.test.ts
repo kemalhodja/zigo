@@ -22,9 +22,9 @@ describe("registration-account", () => {
     expect(institution.organizationType).toBe("egitim_kurumu");
   });
 
-  it("maps platform signup to platform billing metadata", () => {
+  it("maps platform signup to dedicated platform role", () => {
     const platform = resolveRegistrationAccount("platform");
-    expect(platform.role).toBe("teacher");
+    expect(platform.role).toBe("platform");
     expect(platform.organizationType).toBe("egitim_platformu");
   });
 });

@@ -16,6 +16,7 @@ import {
   isGeneralInterestArea,
 } from "@/lib/domain/general-interest-areas";
 import { isOrganizationRegistrationType } from "@/lib/domain/registration-account";
+import { isPublisherRole } from "@/lib/domain/role-utils";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Database, UserRole } from "@/lib/supabase/database.types";
 
@@ -53,7 +54,7 @@ export function InterestSelector({
     [areas, role],
   );
   const groupedAreas = useMemo(() => groupEducationAreasByGrade(visibleAreas), [visibleAreas]);
-  const isTeacherNiche = role === "teacher";
+  const isTeacherNiche = isPublisherRole(role);
   const maxSelections = isTeacherNiche ? 1 : 20;
   const lockedRegistrationOrg = isOrganizationRegistrationType(initialOrganizationType);
   const registrationOrgLabel = getOrganizationOption(initialOrganizationType)?.label;
@@ -61,6 +62,8 @@ export function InterestSelector({
   const nextStep =
     lockedRegistrationOrg
       ? { href: "/profile", label: "Kurumsal abonelik" }
+      : role === "platform"
+        ? { href: "/platform", label: i.openStudio }
       : role === "teacher"
       ? { href: "/teacher", label: i.openStudio }
       : role === "parent"

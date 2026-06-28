@@ -22,7 +22,7 @@ const authSchema = z.object({
     .min(2, "Ad soyad en az 2 karakter olmalı.")
     .max(100, "Ad soyad en fazla 100 karakter olabilir."),
   password: registrationPasswordSchema,
-  role: z.enum(["teacher", "parent", "student"]).optional(),
+  role: z.enum(["teacher", "parent", "student", "platform"]).optional(),
   accountKind: z.enum(["student", "parent", "teacher", "institution", "platform"]).optional(),
   organizationType: z
     .enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu"])

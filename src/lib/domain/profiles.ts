@@ -11,6 +11,7 @@ import {
   type RegistrationAccountKind,
   resolveRegistrationAccount,
 } from "@/lib/domain/registration-account";
+import { canPublishSocialContent } from "@/lib/domain/role-utils";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import {
   normalizeShortcutPreferences,
@@ -24,7 +25,7 @@ export type UserProfile = Database["public"]["Tables"]["users"]["Row"];
 
 export const createProfileSchema = z.object({
   fullName: z.string().trim().min(2).max(100),
-  role: z.enum(["teacher", "parent", "student"]).optional(),
+  role: z.enum(["teacher", "parent", "student", "platform"]).optional(),
   accountKind: z.enum(["student", "parent", "teacher", "institution", "platform"]).optional(),
 }).refine((value) => Boolean(value.role || value.accountKind), {
   message: "Choose student, parent, teacher, institution or platform.",
@@ -227,7 +228,7 @@ export function resolveShortcutOptionsForProfile(
 ): { role: ViewerRole; canCreateSocialPost: boolean } {
   return {
     role: profile.role,
-    canCreateSocialPost: profile.role === "teacher" && profile.is_verified,
+    canCreateSocialPost: canPublishSocialContent(profile),
   };
 }
 

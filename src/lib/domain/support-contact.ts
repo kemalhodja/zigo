@@ -34,7 +34,7 @@ export function buildWhatsAppSupportUrl(message: string): string | null {
 }
 
 export function isWhatsAppSupportVisibleForRole(role: UserRole | null | undefined): boolean {
-  return role === "parent" || role === "teacher";
+  return role === "parent" || role === "teacher" || role === "platform";
 }
 
 export function isWhatsAppSupportVisible(

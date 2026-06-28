@@ -54,7 +54,7 @@ export const REGISTRATION_ACCOUNT_OPTIONS: readonly RegistrationAccountOption[] 
     id: "platform",
     label: "Eğitim platformu",
     description: "Dijital platform ve içerik ağı hesabı.",
-    role: "teacher",
+    role: "platform",
     organizationType: "egitim_platformu",
     accent: "from-sky-500 to-cyan-500",
   },

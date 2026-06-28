@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getCurrentProfile, getUserInterestAreaIds, type UserProfile } from "@/lib/domain/profiles";
+import { isVerifiedPublisher } from "@/lib/domain/role-utils";
 import type { Database } from "@/lib/supabase/database.types";
 
 import { isApiRoleAllowed } from "./api-prefix-rules";
@@ -38,7 +39,7 @@ export function profileToAuthContext(
     role: profile.role,
     areaIds: options.areaIds ?? [],
     isPlatformAdmin: options.isPlatformAdmin ?? false,
-    isVerifiedTeacher: profile.role === "teacher" && profile.is_verified,
+    isVerifiedTeacher: isVerifiedPublisher(profile),
   };
 }
 

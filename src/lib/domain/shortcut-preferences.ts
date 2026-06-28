@@ -44,6 +44,11 @@ export type ShortcutId =
   | "teacher_requests"
   | "teacher_ask"
   | "teacher_learn"
+  | "platform_spark"
+  | "platform_micro"
+  | "platform_studio"
+  | "platform_requests"
+  | "platform_ask"
   | "guest_ask"
   | "guest_learn"
   | "guest_profile"
@@ -178,6 +183,38 @@ const SHORTCUT_DEFINITIONS: Record<ShortcutId, ShortcutDefinition> = {
     icon: "learn",
     label: (m) => m.nav.learn,
     roles: ["teacher"],
+  },
+  platform_spark: {
+    href: "/create?mode=story",
+    icon: "spark",
+    label: (m) => m.dockByRole.platform.spark,
+    roles: ["platform"],
+    requiresCreate: true,
+  },
+  platform_micro: {
+    href: "/create?mode=reel",
+    icon: "micro",
+    label: (m) => m.dockByRole.platform.micro,
+    roles: ["platform"],
+    requiresCreate: true,
+  },
+  platform_studio: {
+    href: "/platform",
+    icon: "studio",
+    label: (m) => m.dockByRole.platform.studio,
+    roles: ["platform"],
+  },
+  platform_requests: {
+    href: "/platform#lesson-requests",
+    icon: "requests",
+    label: (m) => m.dockByRole.platform.requests,
+    roles: ["platform"],
+  },
+  platform_ask: {
+    href: "/questions",
+    icon: "ask",
+    label: (m) => m.dockByRole.platform.ask,
+    roles: ["platform"],
   },
   guest_ask: {
     href: "/questions",

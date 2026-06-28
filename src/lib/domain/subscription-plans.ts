@@ -159,6 +159,7 @@ export function resolveProfilePlanGroups(
   }
 
   if (role === "teacher") return [TEACHER_PLAN_GROUP];
+  if (role === "platform") return [PLATFORM_PLAN_GROUP];
   if (role === "parent") {
     return hasLinkedChildren
       ? [FAMILY_PLAN_GROUP, learnerPlans("parent", "/parent?billing=cancelled")]

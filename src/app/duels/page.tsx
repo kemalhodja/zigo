@@ -152,7 +152,7 @@ async function getDuelAccess(): Promise<{ mode: "parent" | "signed-out" | "stude
       const supabase = await createClient();
       const profile = await getCurrentProfile(supabase);
       if (!profile) return { mode: "signed-out" as const };
-      if (profile.role === "teacher") return { mode: "teacher" as const };
+      if (profile.role === "teacher" || profile.role === "platform") return { mode: "teacher" as const };
       return { mode: profile.role };
     },
     { mode: "signed-out" as const },

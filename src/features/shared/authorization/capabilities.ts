@@ -9,21 +9,21 @@ type CapabilityRule = {
 };
 
 export const ZIGO_CAPABILITY_RULES: Record<ZigoCapability, CapabilityRule> = {
-  "feed:read_matched": { roles: ["student", "parent", "teacher"] },
-  "post:create": { roles: ["teacher"], requireVerifiedTeacher: true },
+  "feed:read_matched": { roles: ["student", "parent", "teacher", "platform"] },
+  "post:create": { roles: ["teacher", "platform"], requireVerifiedTeacher: true },
   "question:create": { roles: ["student", "parent"] },
-  "answer:create": { roles: ["teacher"], requireVerifiedTeacher: true },
+  "answer:create": { roles: ["teacher", "platform"], requireVerifiedTeacher: true },
   "learn:access": { roles: ["student", "parent"] },
-  "quiz:author": { roles: ["teacher"], requireVerifiedTeacher: true },
+  "quiz:author": { roles: ["teacher", "platform"], requireVerifiedTeacher: true },
   "lesson_request:create": { roles: ["parent"] },
-  "lesson_request:respond": { roles: ["teacher"], requireVerifiedTeacher: true },
-  "ecosystem:book": { roles: ["parent", "teacher"] },
-  "ecosystem:availability": { roles: ["parent", "teacher"] },
+  "lesson_request:respond": { roles: ["teacher", "platform"], requireVerifiedTeacher: true },
+  "ecosystem:book": { roles: ["parent", "teacher", "platform"] },
+  "ecosystem:availability": { roles: ["parent", "teacher", "platform"] },
   "parent:weekly_progress": { roles: ["parent"] },
   "child:manage": { roles: ["parent"] },
   "avatar:customize": { roles: ["student"] },
-  "notifications:read": { roles: ["student", "parent", "teacher"] },
-  "admin:platform": { roles: ["teacher", "parent", "student"], platformAdminOnly: true },
+  "notifications:read": { roles: ["student", "parent", "teacher", "platform"] },
+  "admin:platform": { roles: ["teacher", "parent", "student", "platform"], platformAdminOnly: true },
 };
 
 export function evaluateCapability(

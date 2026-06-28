@@ -40,7 +40,7 @@ export async function getOnboardingReadyState(
     .maybeSingle();
 
   if (profileError || !profile) return false;
-  if (profile.role === "teacher") return true;
+  if (profile.role === "teacher" || profile.role === "platform") return true;
 
   const { count, error: interestsError } = await supabase
     .from("user_interests")
