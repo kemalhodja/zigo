@@ -35,6 +35,13 @@ import {
 } from "@/lib/domain/social";
 import { getMatchedStudyMoments } from "@/lib/domain/study-moments";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
+import {
+  canCreateStoryFromFeed,
+  isVerifiedPublisherStoryAuthor,
+  shouldShowPublisherHomeInsights,
+  shouldShowStudentHomeModules,
+} from "@/lib/domain/role-surfaces";
+import { isPublisherRole } from "@/lib/domain/role-utils";
 import { formatFeedTimestamp } from "@/lib/format-time";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
@@ -198,7 +205,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       }))
     : [];
   const reelSpotlights = buildReelSpotlights(posts, reelDemoFallback);
-  const showStudentHomeModules = viewer.role === "student" || viewer.role === null;
+  const showStudentHomeModules = shouldShowStudentHomeModules(viewer.role);
+  const showPublisherInsights = shouldShowPublisherHomeInsights(viewer.role);
 
   return (
     <div className="space-y-4 pb-3">
@@ -212,7 +220,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           {personalization.goalExam ? <ExamCountdownBanner goalExam={personalization.goalExam} /> : null}
         </>
       ) : null}
-      {teacherInsights ? (
+      {showPublisherInsights && teacherInsights ? (
         <TeacherHomeInsights
           copy={m.feedEnhancements}
           inboxCount={teacherInsights.inboxCount}
@@ -488,7 +496,7 @@ async function getHomeStories(viewer: { showStudentStrip: boolean; missionDone: 
         getActiveStories(supabase),
       ]);
       const createStoryEntry: DisplayStory[] =
-        profile?.role === "teacher" && profile.is_verified
+        profile && canCreateStoryFromFeed(profile.role, profile.is_verified)
           ? [
               {
                 id: "your-story",
@@ -543,7 +551,7 @@ async function getHomeStories(viewer: { showStudentStrip: boolean; missionDone: 
 function toDisplayStory(story: ActiveStory): DisplayStory {
   const name = story.author?.full_name ?? "Zigo";
   const status = getStoryStatus(story.created_at);
-  const isVerifiedTeacher = Boolean(story.author?.is_verified && story.author.role === "teacher");
+  const isVerifiedTeacher = isVerifiedPublisherStoryAuthor(story.author);
   return {
     id: story.id,
     creatorId: story.author?.id ?? null,
@@ -647,7 +655,7 @@ async function getHomeStudyMoments() {
 
 async function getHomePersonalization(): Promise<{
   fullName: string;
-  role: "student" | "parent" | "teacher";
+  role: "student" | "parent" | "teacher" | "platform";
   goalExam: "lgs" | "yks" | "general" | null;
   struggleAreaName: string | null;
 } | null> {
@@ -656,7 +664,18 @@ async function getHomePersonalization(): Promise<{
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
-    if (!profile || (profile.role !== "student" && profile.role !== "parent")) return null;
+    if (!profile) return null;
+
+    if (isPublisherRole(profile.role)) {
+      return {
+        fullName: profile.full_name,
+        role: profile.role === "platform" ? "platform" : "teacher",
+        goalExam: null,
+        struggleAreaName: null,
+      };
+    }
+
+    if (profile.role !== "student" && profile.role !== "parent") return null;
 
     const intake = await getOnboardingIntake(supabase, profile.id);
     let struggleAreaName: string | null = null;
@@ -727,7 +746,7 @@ async function getHomeTeacherInsights(): Promise<HomeTeacherInsights> {
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
-    if (!profile || profile.role !== "teacher") return null;
+    if (!profile || !shouldShowPublisherHomeInsights(profile.role)) return null;
     return await getTeacherFeedInsights(supabase, profile.id);
   } catch {
     return null;

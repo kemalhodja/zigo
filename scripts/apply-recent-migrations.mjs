@@ -28,6 +28,7 @@ const MIGRATIONS = [
   "078_user_shortcut_preferences.sql",
   "079_platform_user_role.sql",
   "080_platform_user_role.sql",
+  "081_publisher_admin_verification.sql",
 ];
 
 function loadEnvFile(name) {
@@ -192,6 +193,14 @@ async function probe(admin, migrationId) {
       .from("zigo_applied_migrations")
       .select("migration_id")
       .eq("migration_id", "080_platform_user_role")
+      .maybeSingle();
+    return !error && Boolean(data);
+  }
+  if (migrationId === "081") {
+    const { data, error } = await admin
+      .from("zigo_applied_migrations")
+      .select("migration_id")
+      .eq("migration_id", "081_publisher_admin_verification")
       .maybeSingle();
     return !error && Boolean(data);
   }

@@ -15,42 +15,97 @@ import {
   getAdminStoreProducts,
   getAdminStoreRedemptions,
   getOpenPaymentDisputeQueue,
+  getPublisherVerificationQueue,
   getStudentDocumentQueue,
   getTeacherCredentialQueue,
-  getTeacherVerificationQueue,
   isCurrentUserPlatformAdmin,
 } from "@/lib/domain/admin";
+import { resolvePublisherAccountKind, type PublisherAccountKind } from "@/lib/domain/registration-account";
 import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
 import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
-function TeacherRow({
-  teacher,
+function PublisherRow({
+  publisher,
   areas,
   labels,
 }: {
-  teacher: Awaited<ReturnType<typeof getTeacherVerificationQueue>>[number];
+  publisher: Awaited<ReturnType<typeof getPublisherVerificationQueue>>[number];
   areas: Awaited<ReturnType<typeof getEducationAreas>>;
   labels: {
     verified: string;
     pendingVerification: string;
+    accountKinds: Record<PublisherAccountKind, string>;
   };
 }) {
+  const accountKind = resolvePublisherAccountKind(publisher);
+
   return (
     <div className="grid gap-3 border-b border-slate-100 px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-black text-night">{teacher.full_name}</p>
-          <p className="text-xs font-bold text-slate-500">{teacher.email}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-black text-night">{publisher.full_name}</p>
+            <span className="rounded-lg bg-violet-50 px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.12em] text-crystal">
+              {labels.accountKinds[accountKind]}
+            </span>
+          </div>
+          <p className="text-xs font-bold text-slate-500">{publisher.email}</p>
           <p className="mt-1 text-xs font-black text-crystal">
-            {teacher.is_verified ? labels.verified : labels.pendingVerification}
+            {publisher.is_verified ? labels.verified : labels.pendingVerification}
           </p>
         </div>
-        <AdminTeacherActions isVerified={teacher.is_verified} teacherId={teacher.id} />
+        <AdminTeacherActions isVerified={publisher.is_verified} teacherId={publisher.id} />
       </div>
-      <AdminTeacherAreaForm areas={areas} teacherId={teacher.id} />
+      <AdminTeacherAreaForm areas={areas} teacherId={publisher.id} />
     </div>
+  );
+}
+
+function PublisherQueueSection({
+  title,
+  desc,
+  publishers,
+  areas,
+  labels,
+  emptyTitle,
+  emptyDesc,
+}: {
+  title: string;
+  desc: string;
+  publishers: Awaited<ReturnType<typeof getPublisherVerificationQueue>>;
+  areas: Awaited<ReturnType<typeof getEducationAreas>>;
+  labels: {
+    verified: string;
+    pendingVerification: string;
+    accountKinds: Record<PublisherAccountKind, string>;
+  };
+  emptyTitle: string;
+  emptyDesc: string;
+}) {
+  return (
+    <section className="-mx-4 bg-white">
+      <div className="border-b border-slate-100 px-4 py-3">
+        <h3 className="text-lg font-black text-night">{title}</h3>
+        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{desc}</p>
+      </div>
+      {publishers.length === 0 ? (
+        <div className="px-4 py-8 text-center">
+          <p className="text-sm font-black text-night">{emptyTitle}</p>
+          <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{emptyDesc}</p>
+        </div>
+      ) : (
+        publishers.map((publisher) => (
+          <PublisherRow
+            areas={areas}
+            key={publisher.id}
+            labels={labels}
+            publisher={publisher}
+          />
+        ))
+      )}
+    </section>
   );
 }
 
@@ -106,9 +161,9 @@ export default async function AdminPage() {
     );
   }
 
-  const [teachers, products, redemptions, areas, studentDocuments, bankTransfers, credentialQueue, disputeQueue] =
+  const [publishers, products, redemptions, areas, studentDocuments, bankTransfers, credentialQueue, disputeQueue] =
     await Promise.all([
-    getTeacherVerificationQueue(supabase),
+    getPublisherVerificationQueue(supabase),
     getAdminStoreProducts(supabase),
     getAdminStoreRedemptions(supabase),
     getEducationAreas(supabase),
@@ -118,11 +173,30 @@ export default async function AdminPage() {
     getOpenPaymentDisputeQueue(supabase),
   ]);
 
-  const pendingTeachers = teachers.filter((teacher) => !teacher.is_verified);
-  const verifiedTeachers = teachers.filter((teacher) => teacher.is_verified);
+  const pendingPublishers = publishers.filter((publisher) => !publisher.is_verified);
+  const verifiedPublishers = publishers.filter((publisher) => publisher.is_verified);
+  const pendingTeachers = pendingPublishers.filter(
+    (publisher) => resolvePublisherAccountKind(publisher) === "teacher",
+  );
+  const pendingInstitutions = pendingPublishers.filter(
+    (publisher) => resolvePublisherAccountKind(publisher) === "institution",
+  );
+  const pendingPlatforms = pendingPublishers.filter(
+    (publisher) => resolvePublisherAccountKind(publisher) === "platform",
+  );
+
+  const publisherLabels = {
+    verified: a.verified,
+    pendingVerification: a.pendingVerification,
+    accountKinds: {
+      teacher: a.publisherKindTeacher,
+      institution: a.publisherKindInstitution,
+      platform: a.publisherKindPlatform,
+    },
+  };
 
   const auditItems = [
-    { label: a.queueTeacherVerify, value: pendingTeachers.length },
+    { label: a.queuePublisherVerify, value: pendingPublishers.length },
     { label: a.queueStudentDocs, value: studentDocuments.length },
     { label: "Öğretmen belgeleri", value: credentialQueue.length },
     { label: "Ödeme itirazları", value: disputeQueue.length },
@@ -277,39 +351,47 @@ export default async function AdminPage() {
         )}
       </section>
 
-      <section className="-mx-4 bg-white">
-        <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="text-lg font-black text-night">{a.pendingTeachersTitle}</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.pendingTeachersDesc}</p>
-        </div>
-        {pendingTeachers.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">{a.noTeachersTitle}</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noTeachersDesc}</p>
-          </div>
-        ) : (
-          pendingTeachers.map((teacher) => (
-            <TeacherRow
-              areas={areas}
-              key={teacher.id}
-              labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
-              teacher={teacher}
-            />
-          ))
-        )}
-      </section>
+      <PublisherQueueSection
+        areas={areas}
+        desc={a.pendingTeachersDesc}
+        emptyDesc={a.noTeachersDesc}
+        emptyTitle={a.noTeachersTitle}
+        labels={publisherLabels}
+        publishers={pendingTeachers}
+        title={a.pendingTeachersTitle}
+      />
 
-      {verifiedTeachers.length > 0 ? (
+      <PublisherQueueSection
+        areas={areas}
+        desc={a.pendingInstitutionsDesc}
+        emptyDesc={a.noInstitutionsDesc}
+        emptyTitle={a.noInstitutionsTitle}
+        labels={publisherLabels}
+        publishers={pendingInstitutions}
+        title={a.pendingInstitutionsTitle}
+      />
+
+      <PublisherQueueSection
+        areas={areas}
+        desc={a.pendingPlatformsDesc}
+        emptyDesc={a.noPlatformsDesc}
+        emptyTitle={a.noPlatformsTitle}
+        labels={publisherLabels}
+        publishers={pendingPlatforms}
+        title={a.pendingPlatformsTitle}
+      />
+
+      {verifiedPublishers.length > 0 ? (
         <section className="-mx-4 bg-white">
           <div className="border-b border-slate-100 px-4 py-3">
             <h3 className="text-lg font-black text-night">{a.allTeachersTitle}</h3>
           </div>
-          {verifiedTeachers.map((teacher) => (
-            <TeacherRow
+          {verifiedPublishers.map((publisher) => (
+            <PublisherRow
               areas={areas}
-              key={teacher.id}
-              labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
-              teacher={teacher}
+              key={publisher.id}
+              labels={publisherLabels}
+              publisher={publisher}
             />
           ))}
         </section>

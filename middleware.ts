@@ -45,6 +45,9 @@ const protectedPagePrefixes = [
   "/sparks",
   "/student",
   "/teacher",
+  "/platform",
+  "/duels",
+  "/focus",
   "/dashboard",
 ];
 

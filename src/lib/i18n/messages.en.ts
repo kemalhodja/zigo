@@ -76,6 +76,7 @@ export const messagesEn: Messages = {
     askQuestion: "Ask a question",
     notifications: "Notifications",
     switchProfile: "Switch profile",
+    signOut: "Sign out",
   },
   dock: {
     shortcuts: "Shortcuts",

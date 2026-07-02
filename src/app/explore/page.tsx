@@ -7,6 +7,7 @@ import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { filterExploreCategories, filterExploreTopicBridges } from "@/lib/domain/role-surfaces";
 import {
   getMatchedTeachers,
   getSuggestedCreators,
@@ -86,6 +87,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const params = await searchParams;
   const query = params.q ?? "";
   const activeFormat = getExploreFormat(params.format);
+  const viewerRole = await getExploreViewerRole();
+  const visibleCategories = filterExploreCategories(categories, viewerRole);
   const { creators, posts, suggestedRail } = await getExploreResults(query, activeFormat);
   const filteredPosts = filterExploreTiles(posts, activeFormat);
   const hasResults = filteredPosts.length > 0;
@@ -111,7 +114,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           />
         </form>
         <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto">
-          {categories.map((category) => (
+          {visibleCategories.map((category) => (
             <Link
               className={`rounded-full border px-3 py-1.5 text-xs font-black ${
                 query.toLowerCase() === category.query.toLowerCase() || (!hasQuery && category.query === "")
@@ -172,7 +175,17 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         </section>
       ) : null}
 
-      <ExploreTopicBridges messages={m} />
+      {filterExploreTopicBridges(
+        [
+          { href: "/explore?q=5-8. Sınıf", label: e.middleGrades, meta: e.stemMeta },
+          { href: "/questions", label: e.askTeacher, meta: e.qaMeta },
+          { href: "/learn", label: e.learningHub, meta: e.hubMeta },
+          { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
+        ],
+        viewerRole,
+      ).length > 0 ? (
+        <ExploreTopicBridges messages={m} viewerRole={viewerRole} />
+      ) : null}
 
       {creators.length > 0 || activeFormat === "teachers" ? (
         <section className="-mx-4 bg-white">
@@ -347,14 +360,23 @@ function ExploreTrendRadar({
   );
 }
 
-function ExploreTopicBridges({ messages }: { messages: Messages }) {
+function ExploreTopicBridges({
+  messages,
+  viewerRole,
+}: {
+  messages: Messages;
+  viewerRole: Awaited<ReturnType<typeof getExploreViewerRole>>;
+}) {
   const e = messages.explore;
-  const topicBridges = [
-    { href: "/explore?q=5-8. Sınıf", label: e.middleGrades, meta: e.stemMeta },
-    { href: "/questions", label: e.askTeacher, meta: e.qaMeta },
-    { href: "/learn", label: e.learningHub, meta: e.hubMeta },
-    { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
-  ];
+  const topicBridges = filterExploreTopicBridges(
+    [
+      { href: "/explore?q=5-8. Sınıf", label: e.middleGrades, meta: e.stemMeta },
+      { href: "/questions", label: e.askTeacher, meta: e.qaMeta },
+      { href: "/learn", label: e.learningHub, meta: e.hubMeta },
+      { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
+    ],
+    viewerRole,
+  );
 
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
@@ -397,6 +419,16 @@ type ExploreResults = {
   posts: ReturnType<typeof toExploreTile>[];
   suggestedRail: ExploreRailCreator[];
 };
+
+async function getExploreViewerRole() {
+  if (!hasSupabaseEnv()) return null;
+
+  return withSupabaseFallback(async () => {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+    return profile?.role ?? null;
+  }, null);
+}
 
 async function getExploreResults(query: string, format: ExploreFormat): Promise<ExploreResults> {
   const empty: ExploreResults = { creators: [], posts: [], suggestedRail: [] };

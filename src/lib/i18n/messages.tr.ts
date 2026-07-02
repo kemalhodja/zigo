@@ -75,6 +75,7 @@ export const messagesTr = {
     askQuestion: "Soru sor",
     notifications: "Bildirimler",
     switchProfile: "Profil değiştir",
+    signOut: "Çıkış yap",
   },
   dock: {
     shortcuts: "Kısayollar",

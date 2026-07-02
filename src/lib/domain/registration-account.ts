@@ -85,3 +85,23 @@ export function shouldHideOrganizationPlanPrices(
 ) {
   return isOrganizationRegistrationType(organizationType);
 }
+
+export type PublisherAccountKind = "teacher" | "institution" | "platform";
+
+export function resolvePublisherAccountKind(input: {
+  role: UserRole;
+  organization_type?: string | null;
+}): PublisherAccountKind {
+  if (input.role === "platform") return "platform";
+
+  const organizationType = input.organization_type as EducationOrganizationType | null | undefined;
+  if (
+    organizationType === "egitim_kurumu"
+    || organizationType === "kurs"
+    || organizationType === "okul"
+  ) {
+    return "institution";
+  }
+  if (organizationType === "egitim_platformu") return "platform";
+  return "teacher";
+}

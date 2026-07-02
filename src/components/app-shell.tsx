@@ -12,6 +12,7 @@ import { LegalFooter } from "@/components/legal-footer";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleWelcomeStrip } from "@/components/role-welcome-strip";
 import { ShortcutDock, useShortcutDockVisible } from "@/components/shortcut-dock";
+import { SignOutButton } from "@/components/sign-out-button";
 import {
   getHeaderPrimaryAction,
 } from "@/lib/domain/role-navigation";
@@ -204,6 +205,7 @@ function Header({
               <path d="M4 20a8 8 0 0 1 16 0" />
             </svg>
           </Link>
+          {viewerRole !== "guest" ? <SignOutButton variant="icon" /> : null}
         </div>
       </div>
     </header>

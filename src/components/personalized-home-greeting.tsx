@@ -1,18 +1,21 @@
 type PersonalizedHomeGreetingProps = {
   fullName: string;
   struggleAreaName?: string | null;
-  role: "student" | "parent" | "teacher";
+  role: "student" | "parent" | "teacher" | "platform";
 };
 
 export function PersonalizedHomeGreeting({ fullName, struggleAreaName, role }: PersonalizedHomeGreetingProps) {
   const firstName = fullName.split(" ")[0] ?? fullName;
   const focusLine =
-    struggleAreaName && role !== "teacher"
+    struggleAreaName && role === "student"
       ? `${struggleAreaName} alanında senin için eşleşen öğretmen içerikleri öne çıkarıldı.`
       : role === "parent"
-        ? "Çocuğunuzun gelişim raporları ve öğretmen yanıtları burada."
-        : "Doğrulanmış eğitim akışın hazır.";
-
+        ? "Çocuğunun gelişim raporları ve öğretmen yanıtları burada."
+        : role === "platform"
+          ? "Platform vitrinin ve içerik ağın için eşleşen akış hazır."
+          : role === "teacher"
+            ? "Stüdyo, soru kutusu ve doğrulanmış içerik akışın burada."
+            : "Doğrulanmış eğitim akışın hazır.";
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-4">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">Hoş geldin</p>

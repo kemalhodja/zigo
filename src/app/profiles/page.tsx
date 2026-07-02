@@ -1,16 +1,19 @@
 import Link from "next/link";
 
+import { SignOutButton } from "@/components/sign-out-button";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getChildProfiles } from "@/lib/domain/children";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getPublisherStudioHref, shouldShowLearnerProfilesBridge, shouldShowParentProfilesBridge, shouldShowPublisherProfilesBridge } from "@/lib/domain/role-surfaces";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 export default async function ProfilesPage() {
   const m = await getServerMessages();
   const p = m.profilesPage;
-  const profiles = await getProfiles(m);
+  const { profiles, viewerRole } = await getProfiles(m);
 
   return (
     <div className="space-y-5 pb-3">
@@ -54,22 +57,46 @@ export default async function ProfilesPage() {
         )}
       </section>
 
-      <section className="-mx-4 border-y border-violet-100 bg-gradient-to-r from-violet-50 via-pink-50 to-cyan-50 px-4 py-4">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{p.familyBridge}</p>
-        <h2 className="mt-1 text-xl font-black text-night">{p.familyTitle}</h2>
-        <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{p.familyDesc}</p>
-        <div className="zigo-dashboard-grid mt-4">
-          <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/family">
-            {p.familySetup}
-          </Link>
-          <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/student">
+      {shouldShowParentProfilesBridge(viewerRole) ? (
+        <section className="-mx-4 border-y border-violet-100 bg-gradient-to-r from-violet-50 via-pink-50 to-cyan-50 px-4 py-4">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{p.familyBridge}</p>
+          <h2 className="mt-1 text-xl font-black text-night">{p.familyTitle}</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{p.familyDesc}</p>
+          <div className="zigo-dashboard-grid mt-4">
+            <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/family">
+              {p.familySetup}
+            </Link>
+            <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/student">
+              {p.studentMode}
+            </Link>
+            <Link className="tap-scale zigo-mobile-cta rounded-2xl text-center" href="/">
+              {p.continueFeed}
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
+      {shouldShowLearnerProfilesBridge(viewerRole) ? (
+        <section className="zigo-dashboard-grid">
+          <Link className="tap-scale zigo-mobile-cta rounded-2xl text-center" href="/student">
             {p.studentMode}
           </Link>
-          <Link className="tap-scale zigo-mobile-cta rounded-2xl text-center" href="/">
-            {p.continueFeed}
+          <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/learn">
+            {m.nav.learn}
           </Link>
-        </div>
-      </section>
+        </section>
+      ) : null}
+
+      {shouldShowPublisherProfilesBridge(viewerRole) && viewerRole ? (
+        <section className="zigo-dashboard-grid">
+          <Link className="tap-scale zigo-mobile-cta rounded-2xl text-center" href={getPublisherStudioHref(viewerRole)}>
+            {viewerRole === "platform" ? m.dashboard.platform.studio : m.dashboard.teacher.studio}
+          </Link>
+          <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/questions">
+            {m.nav.ask}
+          </Link>
+        </section>
+      ) : null}
 
       <section className="zigo-dashboard-grid">
         <Link className="rounded-lg bg-slate-100 px-4 py-3 text-center text-sm font-black text-night" href="/onboarding">
@@ -79,6 +106,12 @@ export default async function ProfilesPage() {
           {p.continueFeed}
         </Link>
       </section>
+
+      {profiles.length > 0 ? (
+        <section className="-mx-4 border-t border-slate-100 bg-white px-4 py-4">
+          <SignOutButton variant="fullWidth" />
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -128,10 +161,23 @@ function ProfileSwitchCard({
   );
 }
 
-async function getProfiles(m: Messages) {
+type ProfileCard = {
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  accent: string;
+};
+
+type ProfilesPageData = {
+  profiles: ProfileCard[];
+  viewerRole: UserRole | null;
+};
+
+async function getProfiles(m: Messages): Promise<ProfilesPageData> {
   const p = m.profilesPage;
 
-  const previewProfiles = [
+  const previewProfiles: ProfileCard[] = [
     {
       id: "student",
       title: p.previewStudent,
@@ -155,12 +201,14 @@ async function getProfiles(m: Messages) {
     },
   ];
 
-  if (!hasSupabaseEnv()) return previewProfiles;
+  if (!hasSupabaseEnv()) {
+    return { profiles: previewProfiles, viewerRole: null };
+  }
 
-  return withSupabaseFallback(async () => {
+  return withSupabaseFallback<ProfilesPageData>(async () => {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
-  if (!profile) return [];
+  if (!profile) return { profiles: [], viewerRole: null };
 
   const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
   const adminProfile = isPlatformAdmin
@@ -177,7 +225,8 @@ async function getProfiles(m: Messages) {
 
   if (profile.role === "parent") {
     const children = await getChildProfiles(supabase);
-    return [
+    return {
+      profiles: [
       ...adminProfile,
       {
         id: profile.id,
@@ -193,10 +242,13 @@ async function getProfiles(m: Messages) {
         href: `/profiles/select/${child.id}?next=/student`,
         accent: "from-crystal to-fuchsia-500",
       })),
-    ];
+      ],
+      viewerRole: profile.role,
+    };
   }
 
-  return [
+  return {
+    profiles: [
     ...adminProfile,
     {
       id: profile.id,
@@ -210,6 +262,8 @@ async function getProfiles(m: Messages) {
       href: profile.role === "platform" ? "/platform" : profile.role === "teacher" ? "/teacher" : "/student",
       accent: profile.role === "teacher" || profile.role === "platform" ? "from-emerald-500 to-teal-500" : "from-crystal to-fuchsia-500",
     },
-  ];
-  }, previewProfiles);
+    ],
+    viewerRole: profile.role,
+  };
+  }, { profiles: previewProfiles, viewerRole: null });
 }

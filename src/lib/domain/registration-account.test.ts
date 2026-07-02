@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   REGISTRATION_ACCOUNT_OPTIONS,
+  resolvePublisherAccountKind,
   resolveRegistrationAccount,
 } from "@/lib/domain/registration-account";
 
@@ -26,5 +27,18 @@ describe("registration-account", () => {
     const platform = resolveRegistrationAccount("platform");
     expect(platform.role).toBe("platform");
     expect(platform.organizationType).toBe("egitim_platformu");
+  });
+
+  it("resolves publisher account kinds for admin verification", () => {
+    expect(resolvePublisherAccountKind({ role: "teacher", organization_type: null })).toBe("teacher");
+    expect(
+      resolvePublisherAccountKind({ role: "teacher", organization_type: "egitim_kurumu" }),
+    ).toBe("institution");
+    expect(
+      resolvePublisherAccountKind({ role: "teacher", organization_type: "egitim_platformu" }),
+    ).toBe("platform");
+    expect(resolvePublisherAccountKind({ role: "platform", organization_type: "egitim_platformu" })).toBe(
+      "platform",
+    );
   });
 });

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FollowButton } from "@/components/follow-button";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { ProfileShortcutSettings } from "@/components/profile-shortcut-settings";
+import { SignOutButton } from "@/components/sign-out-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
@@ -142,6 +143,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </Link>
         </div>
       </section>
+
+      {!profile.isSignedOut ? (
+        <section className="-mx-4 border-t border-slate-100 bg-white px-4 py-4">
+          <SignOutButton variant="fullWidth" />
+        </section>
+      ) : null}
 
       <ProfileHighlights />
 

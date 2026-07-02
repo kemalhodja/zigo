@@ -84,7 +84,6 @@ export default async function OnboardingPage() {
       : ob.profileReady;
 
   const organizationType = parseOrganizationType(profile.organization_type);
-  const isOrganizationTeacher = (profile.role === "teacher" || profile.role === "platform") && Boolean(organizationType);
 
   return (
     <div className="space-y-5">
@@ -145,8 +144,8 @@ export default async function OnboardingPage() {
         />
       ) : null}
 
-      {(profile.role === "teacher" || profile.role === "platform") && !profile.is_verified && !isOrganizationTeacher ? (
-        <TeacherPendingCard messages={m} />
+      {(profile.role === "teacher" || profile.role === "platform") && !profile.is_verified ? (
+        <PublisherPendingCard messages={m} role={profile.role} />
       ) : areas.length === 0 ? (
         <StateCard
           title={o.noAreas}
@@ -269,8 +268,9 @@ function getNextActions({
   ];
 }
 
-function TeacherPendingCard({ messages: m }: { messages: Messages }) {
+function PublisherPendingCard({ messages: m, role }: { messages: Messages; role: UserRole }) {
   const ob = m.onboarding;
+  const studioHref = role === "platform" ? "/platform" : "/teacher";
 
   return (
     <section className="-mx-4 bg-white px-6 py-10 text-center">
@@ -283,7 +283,7 @@ function TeacherPendingCard({ messages: m }: { messages: Messages }) {
       </span>
       <h3 className="mt-4 text-xl font-black text-night">{ob.verificationPending}</h3>
       <p className="mx-auto mt-2 max-w-72 text-sm leading-6 text-slate-500">{ob.verificationPendingDesc}</p>
-      <Link className="tap-scale mt-5 inline-flex zigo-cta tap-scale rounded-lg px-5 py-3 text-sm font-black text-white" href="/teacher">
+      <Link className="tap-scale mt-5 inline-flex zigo-cta tap-scale rounded-lg px-5 py-3 text-sm font-black text-white" href={studioHref}>
         {ob.openStudio}
       </Link>
     </section>

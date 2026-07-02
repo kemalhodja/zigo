@@ -1165,7 +1165,7 @@ check("Onboarding recommends role-based next best actions", () => {
     onboarding.includes("NextBestActionPanel") &&
     catalog.includes("Next best action") &&
     catalog.includes("Choose interests to unlock Match-Feed") &&
-    onboarding.includes("TeacherPendingCard") &&
+    onboarding.includes("PublisherPendingCard") &&
     catalog.includes("Verify") &&
     catalog.includes("Duels") &&
     authGates.includes('profile.role === "teacher"')

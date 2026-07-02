@@ -62,15 +62,20 @@ export async function isCurrentUserPlatformAdmin(supabase: SupabaseClient<Databa
   return data;
 }
 
-export async function getTeacherVerificationQueue(supabase: SupabaseClient<Database>) {
+export async function getPublisherVerificationQueue(supabase: SupabaseClient<Database>) {
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .eq("role", "teacher")
+    .in("role", ["teacher", "platform"])
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   return data;
+}
+
+/** @deprecated Use getPublisherVerificationQueue */
+export async function getTeacherVerificationQueue(supabase: SupabaseClient<Database>) {
+  return getPublisherVerificationQueue(supabase);
 }
 
 export async function getAdminStoreProducts(supabase: SupabaseClient<Database>) {
