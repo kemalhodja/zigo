@@ -15,6 +15,7 @@ export const API_RBAC_PREFIX_RULES: readonly ApiRbacPrefixRule[] = [
   { prefix: "/api/quizzes", roles: ["teacher", "platform"] },
   { prefix: "/api/notifications", roles: ["parent", "student", "teacher", "platform"] },
   { prefix: "/api/lesson-requests", excludeRoles: ["student"] },
+  { prefix: "/api/groups", roles: ["student", "parent"] },
   { prefix: "/api/lessons/request", excludeRoles: ["student"] },
 ] as const;
 

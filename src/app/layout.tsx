@@ -89,6 +89,7 @@ export default async function RootLayout({
           {shellState.viewerId ? <NotificationRealtimeBridge userId={shellState.viewerId} /> : null}
           <AppShell
           canCreateSocialPost={shellState.canCreateSocialPost}
+          hasAuthSession={shellState.hasAuthSession}
           isPreviewMode={!hasSupabaseEnv()}
           roleAccentLabel={getRoleAccentLabel(shellState.viewerRole, messages, {
             isPlatformAdmin: shellState.isPlatformAdmin,
@@ -120,14 +121,35 @@ export default async function RootLayout({
 
 async function getShellState() {
   if (!hasSupabaseEnv()) {
-    return { canCreateSocialPost: true, unreadCount: 0, teacherInboxCount: 0, lessonRequestBadgeCount: 0, viewerId: null, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
+    return {
+      canCreateSocialPost: true,
+      unreadCount: 0,
+      teacherInboxCount: 0,
+      lessonRequestBadgeCount: 0,
+      viewerId: null,
+      viewerRole: "guest" as ViewerRole,
+      isPlatformAdmin: false,
+      hasAuthSession: false,
+    };
   }
 
   try {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const profile = await getCurrentProfile(supabase);
     if (!profile) {
-      return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, lessonRequestBadgeCount: 0, viewerId: null, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
+      return {
+        canCreateSocialPost: false,
+        unreadCount: 0,
+        teacherInboxCount: 0,
+        lessonRequestBadgeCount: 0,
+        viewerId: null,
+        viewerRole: "guest" as ViewerRole,
+        isPlatformAdmin: false,
+        hasAuthSession: Boolean(user),
+      };
     }
 
     const teacherInboxCount =
@@ -146,8 +168,18 @@ async function getShellState() {
       viewerId: profile.id,
       viewerRole: profile.role as ViewerRole,
       isPlatformAdmin,
+      hasAuthSession: true,
     };
   } catch {
-    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, lessonRequestBadgeCount: 0, viewerId: null, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
+    return {
+      canCreateSocialPost: false,
+      unreadCount: 0,
+      teacherInboxCount: 0,
+      lessonRequestBadgeCount: 0,
+      viewerId: null,
+      viewerRole: "guest" as ViewerRole,
+      isPlatformAdmin: false,
+      hasAuthSession: false,
+    };
   }
 }

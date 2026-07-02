@@ -135,11 +135,7 @@ export function AuthPanel() {
               email: trimmedEmail,
               fullName: trimmedFullName,
               password,
-              accountKind,
-              role: selectedAccount.role,
-              ...(selectedAccount.organizationType
-                ? { organizationType: selectedAccount.organizationType }
-                : {}),
+              deferRoleSelection: true,
               recaptchaToken,
             }
           : {
@@ -213,7 +209,7 @@ export function AuthPanel() {
         return;
       }
 
-      router.push(next?.startsWith("/") ? next : mode === "sign-up" ? "/onboarding" : "/");
+      router.push(next?.startsWith("/") ? next : mode === "sign-up" ? "/onboarding/role" : "/");
     } finally {
       submittingRef.current = false;
     }
@@ -324,49 +320,10 @@ export function AuthPanel() {
           </p>
         ) : null}
 
-        {mode === "sign-up" && !rolePrefilled ? (
-          <div className="space-y-2">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{a.chooseRole}</p>
-            {roleOptions.map((option) => (
-              <button
-                className={`tap-scale w-full rounded-lg border p-3 text-left transition ${
-                  accountKind === option.id
-                    ? "border-transparent bg-gradient-to-r text-white " + option.accent
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-                data-testid={`registration-account-${option.id}`}
-                key={option.id}
-                onClick={() => setAccountKind(option.id)}
-                type="button"
-              >
-                <span className="flex items-start justify-between gap-3">
-                  <span>
-                    <span className="block text-sm font-black">{option.label}</span>
-                    <span className={`mt-1 block text-xs font-bold leading-5 ${accountKind === option.id ? "text-white/80" : "text-slate-500"}`}>
-                      {option.description}
-                    </span>
-                  </span>
-                  <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-lg border ${accountKind === option.id ? "border-white/60 bg-white/25" : "border-slate-300"}`}>
-                    {accountKind === option.id ? <span className="size-2 rounded-sm bg-white" /> : null}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {mode === "sign-up" && rolePrefilled ? (
-          <div className={`rounded-lg border border-transparent bg-gradient-to-r p-3 text-white ${(roleOptions.find((option) => option.id === accountKind) ?? roleOptions[0]).accent}`}>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-white/70">{a.chooseRole}</p>
-            <p className="mt-1 text-sm font-black">{(roleOptions.find((option) => option.id === accountKind) ?? roleOptions[0]).label}</p>
-            <button
-              className="tap-scale mt-2 text-xs font-black text-white/85 underline"
-              onClick={() => setRolePrefilled(false)}
-              type="button"
-            >
-              {a.changeRole}
-            </button>
-          </div>
+        {mode === "sign-up" ? (
+          <p className="rounded-lg bg-violet-50 px-3 py-2 text-xs font-bold leading-5 text-crystal">
+            {a.signUpTrialHint}
+          </p>
         ) : null}
 
         {recaptcha.enabled ? (

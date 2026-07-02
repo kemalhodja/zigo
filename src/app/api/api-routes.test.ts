@@ -189,7 +189,15 @@ describe("API route handlers", () => {
       is_verified: true,
     } as never);
     vi.mocked(getUserInterestAreaIds).mockResolvedValue([1]);
-    vi.mocked(getUserSubscription).mockResolvedValue({ tier: "free", isPremium: false });
+    vi.mocked(getUserSubscription).mockResolvedValue({
+      tier: "free",
+      isPremium: false,
+      isPaidPremium: false,
+      isTrialActive: false,
+      trialEndsAt: null,
+      trialDaysLeft: 0,
+      trialExpired: false,
+    });
     vi.mocked(createSocialPost).mockResolvedValue({ id: "p1" } as never);
 
     const response = await socialPostsPost(

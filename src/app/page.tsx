@@ -34,6 +34,8 @@ import {
   type SocialFeedPost,
 } from "@/lib/domain/social";
 import { getMatchedStudyMoments } from "@/lib/domain/study-moments";
+import { TrialStatusBanner } from "@/components/trial-status-banner";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import {
   canCreateStoryFromFeed,
@@ -185,6 +187,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
   const activeFeed = params.feed === "following" ? "following" : "for-you";
   const viewer = await getHomeViewerContext();
+  const trialState = await getHomeTrialState();
   const personalization = await getHomePersonalization();
   const [posts, stories, suggestedCreators, studyMoments, teacherInsights] = await Promise.all([
     getHomePosts(activeFeed),
@@ -219,6 +222,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           />
           {personalization.goalExam ? <ExamCountdownBanner goalExam={personalization.goalExam} /> : null}
         </>
+      ) : null}
+      {trialState ? (
+        <TrialStatusBanner
+          isPaidPremium={trialState.isPaidPremium}
+          isTrialActive={trialState.isTrialActive}
+          labels={m.trialBanner}
+          trialDaysLeft={trialState.trialDaysLeft}
+          trialExpired={trialState.trialExpired}
+        />
       ) : null}
       {showPublisherInsights && teacherInsights ? (
         <TeacherHomeInsights
@@ -690,6 +702,22 @@ async function getHomePersonalization(): Promise<{
       goalExam: intake?.goalExam ?? null,
       struggleAreaName,
     };
+  } catch {
+    return null;
+  }
+}
+
+async function getHomeTrialState() {
+  if (!hasSupabaseEnv()) return null;
+
+  try {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+    if (!profile || (profile.role !== "student" && profile.role !== "parent")) {
+      return null;
+    }
+
+    return await getUserSubscription(supabase, profile.id);
   } catch {
     return null;
   }

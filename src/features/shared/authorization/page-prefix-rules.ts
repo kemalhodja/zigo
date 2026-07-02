@@ -23,6 +23,7 @@ export const ROLE_PATH_RULES: readonly RolePathRule[] = [
   { prefix: "/micro", roles: ["student", "parent"] },
   { prefix: "/avatar", roles: ["student"] },
   { prefix: "/store", roles: ["student", "parent"] },
+  { prefix: "/groups", roles: ["student", "parent"] },
   { prefix: "/sparks", roles: ["student"] },
   { prefix: "/create", roles: ["teacher", "platform"] },
 ] as const;

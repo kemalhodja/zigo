@@ -48,6 +48,7 @@ const protectedPagePrefixes = [
   "/platform",
   "/duels",
   "/focus",
+  "/groups",
   "/dashboard",
 ];
 

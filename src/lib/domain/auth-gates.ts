@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isLocalDemoSupabase } from "@/lib/domain/demo-env";
 import type { Database, UserRole } from "@/lib/supabase/database.types";
 
-export type AuthGate = "email" | "onboarding" | "student-document" | "ready";
+export type AuthGate = "email" | "role-selection" | "onboarding" | "student-document" | "ready";
 
 export function isEmailConfirmationEnforced() {
   if (isLocalDemoSupabase()) return false;
@@ -24,6 +24,20 @@ export function requiresEmailConfirmation(user: Pick<User, "email_confirmed_at">
   return isEmailConfirmationEnforced() && !isEmailConfirmed(user);
 }
 
+export async function needsRoleSelection(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("role_selection_completed")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return data.role_selection_completed === false;
+}
+
 export async function getOnboardingReadyState(
   supabase: SupabaseClient<Database>,
   userId: string,
@@ -35,11 +49,12 @@ export async function getOnboardingReadyState(
 
   const { data: profile, error: profileError } = await supabase
     .from("users")
-    .select("id, role, is_verified")
+    .select("id, role, is_verified, role_selection_completed")
     .eq("id", userId)
     .maybeSingle();
 
   if (profileError || !profile) return false;
+  if (profile.role_selection_completed === false) return false;
   if (profile.role === "teacher" || profile.role === "platform") return true;
 
   const { count, error: interestsError } = await supabase
@@ -57,6 +72,11 @@ export async function resolveAuthGate(
 ): Promise<AuthGate> {
   if (requiresEmailConfirmation(user)) {
     return "email";
+  }
+
+  const roleSelectionPending = await needsRoleSelection(supabase, user.id);
+  if (roleSelectionPending) {
+    return "role-selection";
   }
 
   const onboardingReady = await getOnboardingReadyState(supabase, user.id);
@@ -77,6 +97,8 @@ export function authGateRedirectPath(gate: AuthGate, options?: { isPlatformAdmin
   switch (gate) {
     case "email":
       return "/auth/verify-email";
+    case "role-selection":
+      return "/onboarding/role";
     case "onboarding":
       return "/onboarding";
     case "student-document":

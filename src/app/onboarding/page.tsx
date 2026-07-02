@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { InterestSelector } from "@/components/interest-selector";
 import { OnboardingIntakeQuiz } from "@/components/onboarding-intake-quiz";
@@ -51,13 +52,22 @@ export default async function OnboardingPage() {
     return (
       <div className="space-y-5">
         <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{o.step1}</p>
-          <h2 className="mt-1 text-2xl font-black text-night">{o.createProfile}</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-500">{o.createProfileDesc}</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{o.step1}</p>
+              <h2 className="mt-1 text-2xl font-black text-night">{o.createProfile}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">{o.createProfileDesc}</p>
+            </div>
+            <SignOutButton variant="icon" />
+          </div>
         </section>
         <ProfileForm />
       </div>
     );
+  }
+
+  if (profile.role_selection_completed === false) {
+    redirect("/onboarding/role");
   }
 
   const [areas, selectedAreaIds, sponsoredCampaigns, intake] = await Promise.all([

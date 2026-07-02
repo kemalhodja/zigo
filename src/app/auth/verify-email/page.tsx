@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { SignOutButton } from "@/components/sign-out-button";
 import { VerifyEmailPanel } from "@/components/verify-email-panel";
 import { getServerMessages } from "@/lib/i18n/server";
 
@@ -10,11 +11,16 @@ export default async function VerifyEmailPage() {
   return (
     <div className="space-y-5 pb-4">
       <section className="-mx-4 border-b border-violet-100 bg-white px-4 py-6">
-        <h1 className="text-2xl font-black text-night">{a.verifyEmailTitle}</h1>
-        <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{a.verifyEmailLead}</p>
-        <Link className="mt-4 inline-block text-sm font-black text-crystal" href="/auth">
-          {a.backToAuth}
-        </Link>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-black text-night">{a.verifyEmailTitle}</h1>
+            <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{a.verifyEmailLead}</p>
+            <Link className="mt-4 inline-block text-sm font-black text-crystal" href="/auth">
+              {a.backToAuth}
+            </Link>
+          </div>
+          <SignOutButton variant="icon" />
+        </div>
       </section>
       <Suspense fallback={<div className="px-4 text-sm font-bold text-slate-500">{a.loadingAuth}</div>}>
         <VerifyEmailPanel />

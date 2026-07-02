@@ -4,6 +4,7 @@ import { ChildActivityTimeline } from "@/components/child-activity-timeline";
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
+import { ParentGroupApprovalQueue } from "@/components/parent-group-approval-queue";
 import { ParentChildrenFocusCard } from "@/components/parent-children-focus-card";
 import { ParentFocusOverviewCard } from "@/components/parent-focus-overview-card";
 import { ParentWeeklyPdfButton } from "@/components/parent-weekly-pdf-button";
@@ -26,6 +27,7 @@ import { getParentChildrenFocusStats, getParentFocusOverview } from "@/lib/domai
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";
+import { getPendingStudyGroupApprovals } from "@/lib/domain/study-groups";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -47,7 +49,7 @@ const previewChildren: ParentDashboardChild[] = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { children, mode, pendingApprovals, focusOverview, childrenFocusStats, isPremium, allowDevActivate, childActivityById, gradeLevel, planGroups, profileId, parentAreas, developmentDashboard } =
+  const { children, mode, pendingApprovals, pendingGroupApprovals, focusOverview, childrenFocusStats, isPremium, allowDevActivate, childActivityById, gradeLevel, planGroups, profileId, parentAreas, developmentDashboard } =
     await getParentData();
   const d = messages.dashboard;
   const pp = messages.parentPage;
@@ -220,6 +222,10 @@ export default async function ParentPage() {
       </section>
 
       {mode === "parent" ? (
+        <ParentGroupApprovalQueue items={pendingGroupApprovals} />
+      ) : null}
+
+      {mode === "parent" ? (
         <ParentApprovalQueue
           items={pendingApprovals.map((item) => ({
             id: item.id,
@@ -318,6 +324,7 @@ async function getParentData(): Promise<{
   children: ParentDashboardChild[];
   mode: "parent" | "preview" | "role-preview" | "signed-out";
   pendingApprovals: Awaited<ReturnType<typeof getPendingParentRedemptions>>;
+  pendingGroupApprovals: Awaited<ReturnType<typeof getPendingStudyGroupApprovals>>;
   focusOverview: Awaited<ReturnType<typeof getParentFocusOverview>>;
   childrenFocusStats: Awaited<ReturnType<typeof getParentChildrenFocusStats>>;
   isPremium: boolean;
@@ -358,6 +365,7 @@ async function getParentData(): Promise<{
       children: previewChildren,
       mode: "preview",
       pendingApprovals: [],
+      pendingGroupApprovals: [],
       focusOverview: previewOverview,
       childrenFocusStats: [],
       isPremium: false,
@@ -376,6 +384,7 @@ async function getParentData(): Promise<{
     children: previewChildren,
     mode: "preview" as const,
     pendingApprovals: [] as Awaited<ReturnType<typeof getPendingParentRedemptions>>,
+    pendingGroupApprovals: [] as Awaited<ReturnType<typeof getPendingStudyGroupApprovals>>,
     focusOverview: previewOverview,
     childrenFocusStats: [] as Awaited<ReturnType<typeof getParentChildrenFocusStats>>,
     isPremium: false,
@@ -397,6 +406,7 @@ async function getParentData(): Promise<{
       children: [],
       mode: "signed-out",
       pendingApprovals: [],
+      pendingGroupApprovals: [],
       focusOverview: previewOverview,
       childrenFocusStats: [],
       isPremium: false,
@@ -415,6 +425,7 @@ async function getParentData(): Promise<{
       children: [],
       mode: "role-preview",
       pendingApprovals: [],
+      pendingGroupApprovals: [],
       focusOverview: previewOverview,
       childrenFocusStats: [],
       isPremium: false,
@@ -429,10 +440,11 @@ async function getParentData(): Promise<{
     };
   }
 
-  const [children, pendingApprovals, focusOverview, childrenFocusStats, subscription, weeklyProgress, allAreas, parentAreaIds, developmentDashboard] =
+  const [children, pendingApprovals, pendingGroupApprovals, focusOverview, childrenFocusStats, subscription, weeklyProgress, allAreas, parentAreaIds, developmentDashboard] =
     await Promise.all([
     getChildProfiles(supabase),
     getPendingParentRedemptions(supabase),
+    getPendingStudyGroupApprovals(supabase, profile.id),
     getParentFocusOverview(supabase),
     getParentChildrenFocusStats(supabase),
     getUserSubscription(supabase, profile.id),
@@ -456,6 +468,7 @@ async function getParentData(): Promise<{
     })),
     mode: "parent",
     pendingApprovals,
+    pendingGroupApprovals,
     focusOverview,
     childrenFocusStats,
     isPremium: subscription.isPremium,

@@ -23,6 +23,7 @@ import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
 type AppShellProps = {
   canCreateSocialPost: boolean;
   children: ReactNode;
+  hasAuthSession?: boolean;
   isPreviewMode?: boolean;
   roleAccentLabel: string;
   teacherInboxCount?: number;
@@ -34,6 +35,7 @@ type AppShellProps = {
 export function AppShell({
   canCreateSocialPost,
   children,
+  hasAuthSession = false,
   isPreviewMode = false,
   roleAccentLabel,
   teacherInboxCount = 0,
@@ -67,7 +69,15 @@ export function AppShell({
         isImmersive ? "relative bg-night" : ""
       }`}
     >
-      {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
+      {isImmersive ? null : (
+        <Header
+          canCreateSocialPost={canCreateSocialPost}
+          hasAuthSession={hasAuthSession}
+          roleAccentLabel={roleAccentLabel}
+          unreadCount={unreadCount}
+          viewerRole={viewerRole}
+        />
+      )}
 
       {isPreviewMode ? <PreviewModeBanner /> : null}
 
@@ -143,11 +153,13 @@ function PreviewModeBanner() {
 
 function Header({
   canCreateSocialPost,
+  hasAuthSession,
   roleAccentLabel,
   unreadCount,
   viewerRole,
 }: {
   canCreateSocialPost: boolean;
+  hasAuthSession: boolean;
   roleAccentLabel: string;
   unreadCount: number;
   viewerRole: ViewerRole;
@@ -205,7 +217,7 @@ function Header({
               <path d="M4 20a8 8 0 0 1 16 0" />
             </svg>
           </Link>
-          {viewerRole !== "guest" ? <SignOutButton variant="icon" /> : null}
+          {viewerRole !== "guest" || hasAuthSession ? <SignOutButton variant="icon" /> : null}
         </div>
       </div>
     </header>

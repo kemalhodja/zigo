@@ -28,7 +28,8 @@ const authSchema = z.object({
     .enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu"])
     .nullish(),
   recaptchaToken: z.string().trim().min(1).optional(),
-}).refine((value) => Boolean(value.role || value.accountKind), {
+  deferRoleSelection: z.boolean().optional(),
+}).refine((value) => Boolean(value.deferRoleSelection || value.role || value.accountKind), {
   message: "Hesap türü seçin.",
 });
 
@@ -37,12 +38,15 @@ export async function POST(request: Request) {
     const requestUrl = new URL(request.url);
     const rawBody = await request.json();
     const body = authSchema.parse(rawBody);
-    const account = body.accountKind
-      ? resolveRegistrationAccount(body.accountKind)
-      : {
-          role: body.role ?? "student",
-          organizationType: body.organizationType ?? null,
-        };
+    const deferRoleSelection = body.deferRoleSelection ?? (!body.accountKind && !body.role);
+    const account = deferRoleSelection
+      ? null
+      : body.accountKind
+        ? resolveRegistrationAccount(body.accountKind)
+        : {
+            role: body.role ?? "student",
+            organizationType: body.organizationType ?? null,
+          };
 
     const rateLimit = enforceAuthRateLimit(request, "sign-up", 6, 60 * 60_000, { email: body.email });
     if (!rateLimit.allowed) {
@@ -57,12 +61,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: recaptcha.message }, { status: recaptcha.status });
     }
 
-    const userMetadata = {
-      full_name: body.fullName,
-      role: account.role,
-      ...(account.organizationType ? { organization_type: account.organizationType } : {}),
-      ...(body.accountKind ? { account_kind: body.accountKind } : {}),
-    };
+    const userMetadata = deferRoleSelection
+      ? {
+          full_name: body.fullName,
+          defer_role_selection: true,
+        }
+      : {
+          full_name: body.fullName,
+          role: account!.role,
+          ...(account!.organizationType ? { organization_type: account!.organizationType } : {}),
+          ...(body.accountKind ? { account_kind: body.accountKind } : {}),
+        };
 
     const supabase = await createAuthActionClient(true);
 
@@ -115,7 +124,7 @@ export async function POST(request: Request) {
         },
         profileCreated: Boolean(created.user),
         needsEmailConfirmation: false,
-        message: "Hesap oluşturuldu. Kuruluma devam et.",
+        message: "Hesap oluşturuldu. İlk hafta ücretsiz — rolünü seç ve kuruluma devam et.",
       });
     }
 
@@ -125,7 +134,7 @@ export async function POST(request: Request) {
       email: body.email,
       password: body.password,
       options: {
-        emailRedirectTo: new URL("/auth/callback?next=/onboarding", siteUrl).toString(),
+        emailRedirectTo: new URL("/auth/callback?next=/onboarding/role", siteUrl).toString(),
         data: userMetadata,
       },
     });
@@ -160,7 +169,7 @@ export async function POST(request: Request) {
       needsEmailConfirmation,
       message: needsEmailConfirmation
         ? "Hesap oluşturuldu. E-postanı doğrula, ardından giriş yap."
-        : "Hesap oluşturuldu. Kuruluma devam et.",
+        : "Hesap oluşturuldu. İlk hafta ücretsiz — rolünü seç ve kuruluma devam et.",
     });
   } catch (error) {
     if (error instanceof RateLimitExceededError) {

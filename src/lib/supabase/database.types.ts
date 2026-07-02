@@ -80,6 +80,7 @@ export type UserRow = {
   shortcut_preferences: Record<string, unknown>;
   city: string | null;
   organization_type: string | null;
+  role_selection_completed?: boolean;
   social_safety_strike_count: number;
   social_interactions_blocked: boolean;
   social_interactions_blocked_at: string | null;
@@ -1281,6 +1282,100 @@ export type Database = {
           },
         ];
       };
+      study_groups: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          area_id: number | null;
+          owner_user_id: string;
+          status: "pending_parent" | "active" | "closed";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          area_id?: number | null;
+          owner_user_id: string;
+          status?: "pending_parent" | "active" | "closed";
+          created_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          area_id?: number | null;
+          owner_user_id?: string;
+          status?: "pending_parent" | "active" | "closed";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      study_group_members: {
+        Row: {
+          group_id: string;
+          user_id: string;
+          joined_at: string;
+        };
+        Insert: {
+          group_id: string;
+          user_id: string;
+          joined_at?: string;
+        };
+        Update: {
+          joined_at?: string;
+        };
+        Relationships: [];
+      };
+      study_group_messages: {
+        Row: {
+          id: string;
+          group_id: string;
+          sender_id: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          group_id: string;
+          sender_id: string;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          content?: string;
+        };
+        Relationships: [];
+      };
+      study_group_approvals: {
+        Row: {
+          id: string;
+          kind: "create_group" | "join_group";
+          status: "pending" | "approved" | "rejected";
+          group_id: string;
+          student_user_id: string;
+          parent_user_id: string;
+          note: string | null;
+          created_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          kind: "create_group" | "join_group";
+          status?: "pending" | "approved" | "rejected";
+          group_id: string;
+          student_user_id: string;
+          parent_user_id: string;
+          note?: string | null;
+          created_at?: string;
+          reviewed_at?: string | null;
+        };
+        Update: {
+          status?: "pending" | "approved" | "rejected";
+          reviewed_at?: string | null;
+        };
+        Relationships: [];
+      };
       lesson_package_subscriptions: {
         Row: {
           id: string;
@@ -2457,6 +2552,47 @@ export type Database = {
           profile_role: UserRole;
         };
         Returns: UserRow;
+      };
+      complete_role_selection: {
+        Args: {
+          profile_role: UserRole;
+          org_type?: string | null;
+        };
+        Returns: UserRow;
+      };
+      grant_registration_trial: {
+        Args: { p_user_id: string };
+        Returns: undefined;
+      };
+      create_study_group: {
+        Args: {
+          p_name: string;
+          p_description?: string | null;
+          p_area_id?: number | null;
+          p_parent_email?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["study_groups"]["Row"];
+      };
+      request_study_group_join: {
+        Args: {
+          p_group_id: string;
+          p_parent_email: string;
+        };
+        Returns: Database["public"]["Tables"]["study_group_approvals"]["Row"];
+      };
+      parent_review_study_group_approval: {
+        Args: {
+          p_approval_id: string;
+          p_decision: string;
+        };
+        Returns: Database["public"]["Tables"]["study_group_approvals"]["Row"];
+      };
+      send_study_group_message: {
+        Args: {
+          p_group_id: string;
+          p_content: string;
+        };
+        Returns: Database["public"]["Tables"]["study_group_messages"]["Row"];
       };
       set_user_interests: {
         Args: {

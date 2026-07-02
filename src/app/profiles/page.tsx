@@ -69,6 +69,9 @@ export default async function ProfilesPage() {
             <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/student">
               {p.studentMode}
             </Link>
+            <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/groups">
+              {m.studyGroups.title}
+            </Link>
             <Link className="tap-scale zigo-mobile-cta rounded-2xl text-center" href="/">
               {p.continueFeed}
             </Link>
@@ -80,6 +83,9 @@ export default async function ProfilesPage() {
         <section className="zigo-dashboard-grid">
           <Link className="tap-scale zigo-mobile-cta rounded-2xl text-center" href="/student">
             {p.studentMode}
+          </Link>
+          <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/groups">
+            {m.studyGroups.title}
           </Link>
           <Link className="tap-scale zigo-mobile-card rounded-2xl bg-white text-center text-base font-black text-slate-700" href="/learn">
             {m.nav.learn}
