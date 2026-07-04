@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Zigo iOS app icon">
+  <defs>
+    <linearGradient id="appleGradient" x1="72" x2="440" y1="56" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101828" />
+      <stop offset="0.34" stop-color="#7C3AED" />
+      <stop offset="0.7" stop-color="#EC4899" />
+      <stop offset="1" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#appleGradient)" />
+  <rect x="72" y="72" width="368" height="368" rx="96" fill="white" fill-opacity="0.12" />
+  <path d="M151 356h213v-58H245l115-145v-45H158v58h109L151 311v45Z" fill="white" />
+  <circle cx="357" cy="141" r="28" fill="#A7F3D0" />
+</svg>

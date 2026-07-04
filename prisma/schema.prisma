@@ -1,0 +1,77 @@
+// Zigo — Prisma eşdeğeri (REFERANS)
+// Kaynak gerçeği: supabase/migrations/*.sql + Supabase Auth
+// Bu projede Prisma Client kullanılmaz; auth.users + public.users + RLS ile çalışır.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT  @map("student")
+  PARENT   @map("parent")
+  TEACHER  @map("teacher")
+}
+
+enum LessonRequestStatus {
+  PENDING  @map("pending")
+  ACCEPTED @map("accepted")
+  REJECTED @map("rejected")
+  CLOSED   @map("closed")
+}
+
+/// Supabase auth.users.id ile birebir; passwordHash burada tutulmaz.
+model User {
+  id               String   @id @db.Uuid
+  email            String   @unique
+  fullName         String   @map("full_name")
+  role             UserRole
+  isVerified       Boolean  @default(false) @map("is_verified")
+  organizationType String?  @map("organization_type")
+  totalPoints      Int      @default(0) @map("total_points")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  sentLessonRequests     LessonRequest[]        @relation("LessonRequestSender")
+  receivedLessonRequests LessonRequest[]        @relation("LessonRequestReceiver")
+  lessonRequestMessages  LessonRequestMessage[]
+
+  @@map("users")
+}
+
+/// Veli → doğrulanmış öğretmen/kurum talebi. Serbest DM yok.
+model LessonRequest {
+  id             String              @id @default(uuid()) @db.Uuid
+  senderId       String              @map("sender_id") @db.Uuid
+  receiverId     String              @map("receiver_id") @db.Uuid
+  childProfileId String?             @map("child_profile_id") @db.Uuid
+  areaId         Int?                @map("area_id")
+  status         LessonRequestStatus @default(PENDING)
+  messageBody    String              @map("message_body")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  sender   User                   @relation("LessonRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User                   @relation("LessonRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  messages LessonRequestMessage[]
+
+  @@map("lesson_requests")
+}
+
+/// Yalnızca kabul edilmiş talep sonrası mesajlaşma (öğrenci erişemez — RLS).
+model LessonRequestMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  requestId String   @map("request_id") @db.Uuid
+  senderId  String   @map("sender_id") @db.Uuid
+  content   String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  request LessonRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  sender  User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_request_messages")
+}

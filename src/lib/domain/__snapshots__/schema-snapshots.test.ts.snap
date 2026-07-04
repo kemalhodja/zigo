@@ -1,0 +1,133 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`domain schema snapshots > matches comment schema snapshot 1`] = `
+{
+  "content": "Çok faydalı oldu",
+  "postId": "00000000-0000-4000-8000-000000000601",
+}
+`;
+
+exports[`domain schema snapshots > matches feed post schema snapshot 1`] = `
+{
+  "areaId": 1,
+  "content": "Özet notlar",
+  "teacherId": "00000000-0000-4000-8000-000000000101",
+  "title": "Kesirler",
+}
+`;
+
+exports[`domain schema snapshots > matches focus completion schema snapshot 1`] = `
+{
+  "sessionId": "00000000-0000-4000-8000-000000000901",
+}
+`;
+
+exports[`domain schema snapshots > matches focus session schema snapshot 1`] = `
+{
+  "topicLabel": "Paragraf çalışması",
+}
+`;
+
+exports[`domain schema snapshots > matches follow schema snapshot 1`] = `
+{
+  "followingId": "00000000-0000-4000-8000-000000000101",
+}
+`;
+
+exports[`domain schema snapshots > matches interests schema snapshot 1`] = `
+{
+  "areaIds": [
+    1,
+    2,
+    3,
+  ],
+}
+`;
+
+exports[`domain schema snapshots > matches moderation action schema snapshot 1`] = `
+{
+  "itemId": "00000000-0000-4000-8000-000000000601",
+  "kind": "story_reply",
+  "status": "rejected",
+}
+`;
+
+exports[`domain schema snapshots > matches profile schema snapshot 1`] = `
+{
+  "fullName": "Zeynep",
+  "role": "student",
+}
+`;
+
+exports[`domain schema snapshots > matches profile update schema snapshot 1`] = `
+{
+  "bio": "Matematik çalışıyorum",
+}
+`;
+
+exports[`domain schema snapshots > matches question schema snapshot 1`] = `
+{
+  "areaId": 1,
+  "authorId": "00000000-0000-4000-8000-000000000301",
+  "description": "Detaylı açıklama metni",
+  "title": "Soru başlığı",
+}
+`;
+
+exports[`domain schema snapshots > matches quiz submit schema snapshot 1`] = `
+{
+  "quizId": "00000000-0000-4000-8000-000000000701",
+  "selectedOption": 1,
+}
+`;
+
+exports[`domain schema snapshots > matches reel watch schema snapshot 1`] = `
+{
+  "postId": "00000000-0000-4000-8000-000000000601",
+  "secondsWatched": 60,
+}
+`;
+
+exports[`domain schema snapshots > matches report schema snapshot 1`] = `
+{
+  "postId": "00000000-0000-4000-8000-000000000601",
+  "reason": "bullying",
+}
+`;
+
+exports[`domain schema snapshots > matches social post schema snapshot 1`] = `
+{
+  "areaId": 1,
+  "caption": "Kesirler dersi",
+  "isReel": true,
+  "mediaType": "video",
+}
+`;
+
+exports[`domain schema snapshots > matches store redeem schema snapshot 1`] = `
+{
+  "note": "Kitap istiyorum",
+  "productId": "00000000-0000-4000-8000-000000000801",
+}
+`;
+
+exports[`domain schema snapshots > matches story reply schema snapshot 1`] = `
+{
+  "content": "Harika spark",
+  "storyId": "00000000-0000-4000-8000-000000000601",
+}
+`;
+
+exports[`domain schema snapshots > matches story schema snapshot 1`] = `
+{
+  "areaId": 2,
+  "caption": "Spark notu",
+}
+`;
+
+exports[`domain schema snapshots > matches study moment share schema snapshot 1`] = `
+{
+  "caption": "Odaklandım",
+  "sessionId": "00000000-0000-4000-8000-000000000901",
+}
+`;

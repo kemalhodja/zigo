@@ -1,0 +1,108 @@
+/* global console, process */
+
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+
+const root = process.cwd();
+const migrationsDir = join(root, "supabase", "migrations");
+
+const expected = [
+  "001_initial_schema.sql",
+  "002_seed_education_areas.sql",
+  "003_family_child_profiles.sql",
+  "004_zigo_store.sql",
+  "005_seed_store_products.sql",
+  "006_platform_admin_ops.sql",
+  "007_learning_engine.sql",
+  "008_social_graph.sql",
+  "009_social_storage.sql",
+  "010_story_replies.sql",
+  "011_learning_events.sql",
+  "012_content_reports.sql",
+  "013_author_moderation_review.sql",
+  "014_social_match_feed_rls.sql",
+  "015_social_safety_hardening.sql",
+  "016_auth_profile_autocreate.sql",
+  "017_mvp_seed_content.sql",
+  "018_story_match_feed_rls.sql",
+  "019_admin_teacher_area_assignment.sql",
+  "020_lock_teacher_interest_self_assignment.sql",
+  "021_story_area_match_feed.sql",
+  "022_platform_admin_moderation_policies.sql",
+  "023_moderation_audit_log.sql",
+  "024_postgrest_role_grants.sql",
+  "025_fix_auth_seed_token_nulls.sql",
+  "026_fix_reel_award_ambiguous_points.sql",
+  "027_student_read_own_social_text.sql",
+  "028_duel_and_quiz_learning_events.sql",
+  "029_seed_matched_quizzes.sql",
+  "030_focus_study_with_me.sql",
+  "031_focus_analytics_and_plans.sql",
+  "032_launch_gaps_closure.sql",
+  "033_compliance_and_demo_child.sql",
+  "034_expand_education_areas_tr.sql",
+  "035_coaching_and_guidance_areas.sql",
+  "036_study_skills_and_exam_prep.sql",
+  "037_user_profile_extensions.sql",
+  "038_auth_email_and_student_gates.sql",
+  "039_unified_content_posts.sql",
+  "040_moderation_keyword_filter.sql",
+  "041_quiz_questions_and_attempts.sql",
+  "042_parent_child_activity.sql",
+  "043_content_moderation_publish_rls.sql",
+  "044_product_scope_hardening.sql",
+  "045_premium_prep_grade_optional_doc.sql",
+  "046_teacher_creator_plus_gates.sql",
+  "047_sponsored_ads_infrastructure.sql",
+  "048_education_organization_type.sql",
+  "049_registration_organization_accounts.sql",
+  "050_verified_teacher_answers_rls.sql",
+  "051_general_interest_areas.sql",
+  "052_obscenity_moderation.sql",
+  "053_moderation_strikes.sql",
+  "054_moderation_strikes_fix.sql",
+  "055_demo_social_interactions_reset.sql",
+];
+
+function check(name, ok, message = "") {
+  return { name, ok, message };
+}
+
+function main() {
+  const checks = [];
+
+  checks.push(check("Migrations directory exists", existsSync(migrationsDir)));
+
+  const files = existsSync(migrationsDir)
+    ? readdirSync(migrationsDir).filter((name) => name.endsWith(".sql")).sort()
+    : [];
+
+  for (const fileName of expected) {
+    checks.push(check(`Migration present: ${fileName}`, files.includes(fileName)));
+  }
+
+  const onlyExpected = expected.filter((name) => files.includes(name));
+  checks.push(
+    check(
+      "Migration manifest order is intact",
+      JSON.stringify(onlyExpected) === JSON.stringify(expected),
+      onlyExpected.join(", "),
+    ),
+  );
+
+  checks.push(
+    check(
+      "Bundle script exists",
+      existsSync(join(root, "scripts", "bundle-migrations.mjs")),
+    ),
+  );
+
+  const failed = checks.filter((item) => !item.ok);
+  for (const item of checks) {
+    console.log(`${item.ok ? "PASS" : "FAIL"} ${item.name}${item.message ? `: ${item.message}` : ""}`);
+  }
+
+  process.exit(failed.length > 0 ? 1 : 0);
+}
+
+main();

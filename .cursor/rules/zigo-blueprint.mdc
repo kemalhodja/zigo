@@ -1,0 +1,39 @@
+---
+description: Core product, data, and permission rules for Zigo
+alwaysApply: true
+---
+
+# Zigo Blueprint
+
+Zigo is a mobile-first verified education media platform: a smart, verified, and gamified social feed for education.
+
+## Product Principles
+
+- Build around Match-Feed: creators add an education area, consumers select education areas, and feeds show only matching posts.
+- Treat teachers as verified content producers, parents as analytics and supervision users, and students as gamified learners.
+- Keep student UX playful: Pomodoro focus blocks, Study-with-me sharing, micro learning videos, quizzes, duels, Zigo Crystals, avatar customization, levels, and rewards.
+- Keep parent UX calm and analytical: progress, time spent, answers from teachers, and reward approvals.
+- Never add student direct messaging. Student social interaction must be constrained, moderated, and age-safe.
+
+## Data Model
+
+- Core tables: `users`, `education_areas`, `user_interests`, `posts`, `questions`, `answers`.
+- User roles are exactly `teacher`, `parent`, and `student`.
+- `user_interests` powers both learner feed matching and teacher subject expertise.
+- `posts.area_id` is mandatory for feed matching and authorization.
+- Student points live in `users.total_points`; avatar inventory lives in `users.avatar_assets`.
+
+## Authorization
+
+- Only verified teachers can create posts.
+- Teachers can post only in areas assigned to them through `user_interests`.
+- Parents and students cannot create posts; they can only create questions.
+- Parents and students should only see posts matching their selected `user_interests`.
+- Teachers can answer questions only for areas assigned to them.
+- Award points only for verified learning actions such as completed focus Pomodoros, watched videos, completed quizzes, or won duels.
+
+## Implementation Defaults
+
+- Prefer Supabase/PostgreSQL Row Level Security for backend authorization.
+- Prefer mobile-first React/Next.js PWA unless the user explicitly chooses Flutter.
+- Keep API and UI code aligned with the database policies; never rely on frontend-only permission checks.

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Zigo maskable app icon">
+  <defs>
+    <linearGradient id="maskableGradient" x1="48" x2="464" y1="44" y2="468" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED" />
+      <stop offset="0.48" stop-color="#EC4899" />
+      <stop offset="1" stop-color="#06B6D4" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#maskableGradient)" />
+  <circle cx="256" cy="256" r="176" fill="white" fill-opacity="0.16" />
+  <circle cx="376" cy="136" r="34" fill="#A7F3D0" />
+  <path d="M141 360h230v-62H245l121-151V98H149v62h119L141 311v49Z" fill="white" />
+</svg>
