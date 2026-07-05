@@ -64,6 +64,7 @@ export function RoleSelectionPanel() {
                 ? `border-transparent bg-gradient-to-r text-white ${option.accent}`
                 : "border-slate-200 bg-white text-slate-600"
             }`}
+            data-testid={`role-onboarding-pick-${option.id}`}
             key={option.id}
             onClick={() => setAccountKind(option.id)}
             type="button"
@@ -80,6 +81,7 @@ export function RoleSelectionPanel() {
 
       <button
         className="tap-scale w-full rounded-lg bg-gradient-to-r from-crystal via-berry to-aqua px-4 py-3.5 text-sm font-black text-white disabled:opacity-60"
+        data-testid="role-onboarding-continue"
         disabled={status === "loading"}
         onClick={() => void submit()}
         type="button"

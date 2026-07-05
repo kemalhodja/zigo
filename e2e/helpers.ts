@@ -144,6 +144,8 @@ export const PUBLIC_APP_ROUTES = [
   "/notifications",
   "/moderation",
   "/onboarding",
+  "/onboarding/role",
+  "/groups",
   "/profiles",
   "/store",
   "/questions",

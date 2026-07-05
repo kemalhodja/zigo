@@ -16,6 +16,8 @@ describe("auth-gates", () => {
 
   it("maps gates to verify routes", () => {
     expect(authGateRedirectPath("email")).toBe("/auth/verify-email");
+    expect(authGateRedirectPath("role-selection")).toBe("/onboarding/role");
+    expect(authGateRedirectPath("onboarding")).toBe("/onboarding");
     expect(authGateRedirectPath("student-document")).toBe("/auth/verify-student");
     expect(authGateRedirectPath("ready")).toBe("/");
     expect(authGateRedirectPath("ready", { isPlatformAdmin: true })).toBe("/admin");

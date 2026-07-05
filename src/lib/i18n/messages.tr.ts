@@ -195,6 +195,7 @@ export const messagesTr = {
     signedIn: "Giriş başarılı. Akışın açılıyor…",
     accountCreated: "Hesap oluşturuldu. İlk hafta ücretsiz!",
     signUpTrialHint: "Kayıttan sonra rol seçilir. İlk 7 gün ücretsiz, ardından abonelik planlarına geçebilirsin.",
+    signUpNext: "Kayıt sonrası rol seçimine geç, ardından ilgi alanlarını tamamla.",
     checkEmail: "Hesap oluşturuldu. E-postanı kontrol et, sonra rol seçimine devam et.",
     nextStep: "Sonraki adım",
     teacherNext: "Öğretmen hesapları yayın açmadan önce doğrulanır.",

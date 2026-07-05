@@ -46,6 +46,7 @@ export function SignOutButton({ className = "", variant = "default" }: SignOutBu
         <button
           aria-label={s.label}
           className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-rose-600 disabled:opacity-60"
+          data-testid="sign-out-button"
           disabled={isLoading}
           onClick={signOut}
           type="button"
@@ -72,7 +73,7 @@ export function SignOutButton({ className = "", variant = "default" }: SignOutBu
 
   return (
     <div className={`space-y-1 ${variant === "fullWidth" ? "w-full" : "text-right"} ${className}`}>
-      <button className={buttonClass} disabled={isLoading} onClick={signOut} type="button">
+      <button className={buttonClass} data-testid="sign-out-button" disabled={isLoading} onClick={signOut} type="button">
         {label}
       </button>
       {message ? <p className="text-xs font-bold text-red-600">{message}</p> : null}

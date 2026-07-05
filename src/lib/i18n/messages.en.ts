@@ -195,6 +195,7 @@ export const messagesEn: Messages = {
     signedIn: "Signed in. Opening your feed...",
     accountCreated: "Account created. First week free!",
     signUpTrialHint: "You choose your role after signup. First 7 days are free, then subscribe to continue.",
+    signUpNext: "After signup you pick a role, then finish interest areas.",
     checkEmail: "Account created. Check your email, then continue role selection.",
     nextStep: "Next step",
     teacherNext: "Teacher accounts go to verification before posting unlocks.",

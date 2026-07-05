@@ -12,7 +12,7 @@ export function canTeacherUseCreatorPlusTools(
   subscription: UserSubscription,
   role: UserRole | null | undefined,
 ) {
-  return role === "teacher" || role === "platform";
+  return (role === "teacher" || role === "platform") && subscription.isPremium;
 }
 
 export function assertTeacherCreatorPlus(

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { dismissAppIntro } from "./helpers";
 
-const BASE = process.env.E2E_BASE_URL ?? "https://zigo-kohl.vercel.app";
+const BASE = process.env.E2E_BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
 const PASS = "ZigoTest2026!Secure";
 
 test.describe("registration flow UI verification", () => {
@@ -18,7 +18,6 @@ test.describe("registration flow UI verification", () => {
     await page.getByPlaceholder("Zigo Kullanıcı").fill("UI Verify User");
     await page.getByPlaceholder("sen@ornek.com").fill(email);
     await page.getByPlaceholder(/en az|password/i).fill(PASS);
-    await page.getByTestId("registration-account-student").click();
 
     const signUpResponse = page.waitForResponse(
       (response) => response.url().includes("/api/auth/sign-up") && response.status() === 200,
@@ -27,9 +26,12 @@ test.describe("registration flow UI verification", () => {
     await page.getByRole("button", { name: /hesap oluştur|create account/i }).click();
     const response = await signUpResponse;
     const body = (await response.json()) as { message?: string };
-    expect(body.message ?? "").toMatch(/7 gün|trial|deneme|Hesap oluşturuldu|Kuruluma devam/i);
+    expect(body.message ?? "").toMatch(/7 gün|trial|deneme|ücretsiz|Hesap oluşturuldu/i);
 
-    await page.waitForURL(/\/onboarding/, { timeout: 30_000 });
+    await page.waitForURL(/\/onboarding\/role/, { timeout: 30_000 });
+    await page.getByTestId("role-onboarding-pick-student").click();
+    await page.getByTestId("role-onboarding-continue").click();
+    await page.waitForURL((url) => url.pathname === "/onboarding", { timeout: 30_000 });
 
     await page.evaluate(() => {
       sessionStorage.setItem("zigo:announce-campaigns", "1");

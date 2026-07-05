@@ -353,6 +353,7 @@ check("Local demo quick-login is wired on auth", () => {
 check("Auth flow explains roles and setup clearly", () => {
   const authPage = read("src/app/auth/page.tsx");
   const authPanel = read("src/components/auth-panel.tsx");
+  const roleSelection = read("src/components/role-selection-panel.tsx");
   const signInRoute = read("src/app/api/auth/sign-in/route.ts");
   const signUpRoute = read("src/app/api/auth/sign-up/route.ts");
   const setupCard = read("src/components/supabase-setup-card.tsx");
@@ -362,26 +363,45 @@ check("Auth flow explains roles and setup clearly", () => {
     (authPage.includes("Registration path") || authPage.includes("registrationPath") || hasCatalog("Registration path")) &&
     (authPage.includes("Pick role") || authPage.includes("pickRole") || hasCatalog("Pick role")) &&
     (authPage.includes("Start feed") || authPage.includes("startFeed") || hasCatalog("Start feed")) &&
-    (authPanel.includes("Choose role") || authPanel.includes("chooseRole") || hasCatalog("Choose role")) &&
+    (authPanel.includes("signUpTrialHint") || authPanel.includes("deferRoleSelection") || hasCatalog("First 7 days")) &&
+    roleSelection.includes("role-onboarding-pick-") &&
+    roleSelection.includes("role-onboarding-continue") &&
     (authPanel.includes("Next step") || authPanel.includes("nextStep") || hasCatalog("Next step")) &&
-    (authPanel.includes("Micro, quizzes, streaks, crystals") ||
-      authPanel.includes("studentRole") ||
-      authPanel.includes("REGISTRATION_ACCOUNT_OPTIONS") ||
-      authPanel.includes("registration-account") ||
-      hasCatalog("Micro, quizzes")) &&
-    (authPanel.includes("Verified creator tools") ||
-      authPanel.includes("verifiedTools") ||
-      authPanel.includes("Eğitim kurumu") ||
-      authPanel.includes("institution") ||
-      hasCatalog("Verified creator tools")) &&
     authPanel.includes('"signin"') &&
     signInRoute.includes("enforceAuthRateLimit") &&
     signInRoute.includes("verifyAuthRecaptcha") &&
     signUpRoute.includes("registrationPasswordSchema") &&
+    signUpRoute.includes("defer_role_selection") &&
     signUpRoute.includes("enforceAuthRateLimit") &&
     authProduction.includes("ZIGO_REQUIRE_EMAIL_CONFIRM") &&
     (setupCard.includes("What this means") || setupCard.includes("whatThisMeans") || hasOps("What this means")) &&
     (setupCard.includes("registration will open") || setupCard.includes("envMissingDesc") || hasOps("registration will open"))
+  );
+});
+
+check("Study groups and parent approval are wired", () => {
+  const groupsPage = read("src/app/groups/page.tsx");
+  const groupsApi = read("src/app/api/groups/route.ts");
+  const parentQueue = read("src/components/parent-group-approval-queue.tsx");
+  const studyGroups = read("src/lib/domain/study-groups.ts");
+  return (
+    groupsPage.includes("StudyGroupsPanel") &&
+    groupsApi.includes("createStudyGroup") &&
+    parentQueue.includes("/api/groups/approvals/") &&
+    studyGroups.includes("getPendingStudyGroupApprovals")
+  );
+});
+
+check("Sign-out is wired across auth and app shell", () => {
+  const signOut = read("src/components/sign-out-button.tsx");
+  const appShell = read("src/components/app-shell.tsx");
+  const verifyEmail = read("src/app/auth/verify-email/page.tsx");
+  const rolePage = read("src/app/onboarding/role/page.tsx");
+  return (
+    signOut.includes('data-testid="sign-out-button"') &&
+    appShell.includes("hasAuthSession") &&
+    verifyEmail.includes("SignOutButton") &&
+    rolePage.includes("SignOutButton")
   );
 });
 

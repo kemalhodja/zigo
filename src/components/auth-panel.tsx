@@ -353,11 +353,7 @@ export function AuthPanel() {
       <section className="rounded-lg bg-slate-50 px-4 py-3">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">{a.nextStep}</p>
         <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
-          {mode === "sign-up"
-            ? accountKind === "teacher" || accountKind === "institution" || accountKind === "platform"
-              ? a.teacherNext
-              : a.learnerNext
-            : a.signInNext}
+          {mode === "sign-up" ? a.signUpNext : a.signInNext}
         </p>
       </section>
     </div>
