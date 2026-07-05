@@ -88,7 +88,7 @@ async function main() {
     results.push(journeyStep("6. Denetimli çocuk focus başlat", false, "çocuk profili yok"));
   }
 
-  for (const path of ["/parent", "/family"]) {
+  for (const path of ["/parent", "/family", "/groups"]) {
     results.push(journeyStep(`7. Sayfa: ${path}`, await pageOk(baseUrl, path), path));
   }
 

@@ -11,6 +11,8 @@ const scripts = [
   "manual-student-journey.mjs",
   "manual-parent-journey.mjs",
   "manual-teacher-journey.mjs",
+  "study-groups-journey.mjs",
+  "admin-teacher-verify-journey.mjs",
   "e2e-flow-check.mjs",
 ];
 

@@ -203,6 +203,121 @@ async function main() {
     check("Teacher Mert has science area", scienceAreas.length >= 1, `${scienceAreas.length} areas`),
   );
 
+  // --- Trial + study groups + admin verify ---
+  const { data: studentSub } = await admin
+    .from("user_subscriptions")
+    .select("trial_started_at, trial_ends_at, tier")
+    .eq("user_id", studentId)
+    .maybeSingle();
+  if (!studentSub?.trial_started_at) {
+    await admin.rpc("grant_registration_trial", { p_user_id: studentId });
+  }
+  const { data: trialSub } = await admin
+    .from("user_subscriptions")
+    .select("trial_started_at, trial_ends_at")
+    .eq("user_id", studentId)
+    .maybeSingle();
+  checks.push(
+    check(
+      "Student registration trial",
+      Boolean(trialSub?.trial_started_at && trialSub?.trial_ends_at),
+      trialSub?.trial_ends_at ?? "trial missing",
+    ),
+  );
+
+  const { data: parentGroup, error: parentGroupError } = await parent.rpc("create_study_group", {
+    p_name: `E2E Parent Group ${Date.now()}`,
+    p_description: "Parent-owned active group",
+  });
+  checks.push(
+    check(
+      "Parent creates active study group",
+      !parentGroupError && parentGroup?.status === "active",
+      parentGroupError?.message ?? parentGroup?.status ?? "failed",
+    ),
+  );
+
+  const { data: studentGroup, error: studentGroupError } = await student.rpc("create_study_group", {
+    p_name: `E2E Student Group ${Date.now()}`,
+    p_parent_email: ACCOUNTS.parent.email,
+  });
+  checks.push(
+    check(
+      "Student creates pending study group",
+      !studentGroupError && studentGroup?.status === "pending_parent",
+      studentGroupError?.message ?? studentGroup?.status ?? "failed",
+    ),
+  );
+
+  const { data: pendingApproval } = await parent
+    .from("study_group_approvals")
+    .select("id")
+    .eq("group_id", studentGroup?.id ?? "00000000-0000-0000-0000-000000000000")
+    .eq("status", "pending")
+    .maybeSingle();
+
+  const { error: approveGroupError } = await parent.rpc("parent_review_study_group_approval", {
+    p_approval_id: pendingApproval?.id,
+    p_decision: "approved",
+  });
+  checks.push(
+    check(
+      "Parent approves study group request",
+      !approveGroupError && Boolean(pendingApproval?.id),
+      approveGroupError?.message ?? "approved",
+    ),
+  );
+
+  const { data: browsableGroups, error: browseGroupsError } = await student
+    .from("study_groups")
+    .select("id")
+    .eq("status", "active")
+    .limit(10);
+  checks.push(
+    check(
+      "Student browses active study groups",
+      !browseGroupsError && (browsableGroups?.length ?? 0) > 0,
+      browseGroupsError?.message ?? `${browsableGroups?.length ?? 0} groups`,
+    ),
+  );
+
+  const { error: groupMessageError } = await student.rpc("send_study_group_message", {
+    p_group_id: studentGroup?.id,
+    p_content: "E2E supervised group message.",
+  });
+  checks.push(
+    check(
+      "Student sends study group message",
+      !groupMessageError,
+      groupMessageError?.message ?? "sent",
+    ),
+  );
+
+  const { data: verifiedTeacher, error: verifyTeacherError } = await adminUser.rpc("verify_teacher", {
+    target_teacher_id: scienceTeacherId,
+    verified: true,
+  });
+  checks.push(
+    check(
+      "Admin verify_teacher RPC",
+      !verifyTeacherError && verifiedTeacher?.is_verified === true,
+      verifyTeacherError?.message ?? String(verifiedTeacher?.is_verified),
+    ),
+  );
+
+  const { data: appliedMigration } = await admin
+    .from("zigo_applied_migrations")
+    .select("migration_id")
+    .eq("migration_id", "083_study_groups_join_discovery")
+    .maybeSingle();
+  checks.push(
+    check(
+      "Study group join discovery migration",
+      Boolean(appliedMigration?.migration_id),
+      appliedMigration?.migration_id ?? "missing",
+    ),
+  );
+
   // --- Match-Feed posts ---
 
   const { data: studentPosts, error: studentPostsError } = await student
@@ -456,7 +571,7 @@ async function main() {
     );
 
     if (signInResult.cookieHeader) {
-      const feed = await apiGet(baseUrl, "/api/feed", signInResult.cookieHeader);
+      const feed = await apiGet(baseUrl, `/api/feed?limit=50`, signInResult.cookieHeader);
       checks.push(
         check(
           "API /api/feed authorized",

@@ -1499,18 +1499,36 @@ check("Full role journey scripts cover student parent and teacher", () => {
   const full = read("scripts/manual-full-journey.mjs");
   const parent = read("scripts/manual-parent-journey.mjs");
   const teacher = read("scripts/manual-teacher-journey.mjs");
+  const groupsJourney = read("scripts/study-groups-journey.mjs");
+  const adminVerifyJourney = read("scripts/admin-teacher-verify-journey.mjs");
   const startRoute = read("src/app/api/learning/focus/start/route.ts");
   const packageJson = read("package.json");
   return (
     full.includes("manual-parent-journey.mjs") &&
     full.includes("manual-teacher-journey.mjs") &&
+    full.includes("study-groups-journey.mjs") &&
+    full.includes("admin-teacher-verify-journey.mjs") &&
     parent.includes("childProfileId") &&
-    parent.includes("get_parent_children_focus_stats") &&
+    parent.includes("/groups") &&
+    groupsJourney.includes("parent_review_study_group_approval") &&
+    adminVerifyJourney.includes("verify_teacher") &&
     teacher.includes("/api/quizzes") &&
     startRoute.includes('profile.role === "parent"') &&
     packageJson.includes('"test:journey"') &&
     packageJson.includes('"test:acceptance"') &&
     packageJson.includes('"setup:complete"')
+  );
+});
+
+check("Critical Playwright journeys are wired", () => {
+  return (
+    existsSync(join(root, "e2e/registration.spec.ts")) &&
+    existsSync(join(root, "e2e/sign-out.spec.ts")) &&
+    existsSync(join(root, "e2e/groups.spec.ts")) &&
+    existsSync(join(root, "e2e/admin-teacher-verify.spec.ts")) &&
+    existsSync(join(root, "e2e/parent-approval.spec.ts")) &&
+    read("e2e/registration.spec.ts").includes("role-onboarding-pick-student") &&
+    read("scripts/e2e-flow-check.mjs").includes("Parent approves study group request")
   );
 });
 

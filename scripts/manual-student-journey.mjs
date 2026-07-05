@@ -155,6 +155,7 @@ async function main() {
     ["/focus", "Focus"],
     ["/duels", "Duels"],
     ["/student", "Student panel"],
+    ["/groups", "Study groups"],
     ["/store", "Store"],
     ["/avatar", "Avatar"],
     ["/collections", "Collections"],

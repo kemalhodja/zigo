@@ -46,6 +46,7 @@ export async function detectBaseUrl() {
   const candidates = [
     process.env.E2E_BASE_URL,
     process.env.NEXT_PUBLIC_SITE_URL,
+    "https://zigo-kohl.vercel.app",
     "http://127.0.0.1:3005",
     "http://localhost:3005",
     "http://localhost:3004",
