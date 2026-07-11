@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FollowButton } from "@/components/follow-button";
+import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
@@ -138,6 +139,17 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
             {profile.isSignedOut ? p.feed : p.saved}
           </Link>
+          {profile.role === "teacher" && !profile.isSignedOut ? (
+            <ProfileAdvertiseModal
+              profile={{
+                id: profile.id,
+                role: profile.role,
+                organization_type: profile.organization_type,
+                full_name: profile.name,
+              }}
+              isOwner={true}
+            />
+          ) : null}
         </div>
       </section>
 
@@ -497,10 +509,12 @@ type ProfileSuggestedCreator = {
 };
 
 async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
+  id: string;
   name: string;
   handle: string;
   bio: string;
   role: UserProfile["role"] | "guest";
+  organization_type?: string | null;
   isVerified: boolean;
   branches: string[];
   stats: ProfileSocialStats;
@@ -515,10 +529,12 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
   const roles = signedOutMessages.roles;
 
   const fallback = {
+    id: "demo-creator",
     name: pf.fallbackCreatorName,
     handle: "zigocreator",
     bio: pf.fallbackCreatorBio,
-    role: "teacher" as const,
+    role: "teacher" as UserProfile["role"] | "guest",
+    organization_type: "egitim_platformu" as string | null,
     isVerified: true,
     branches: ["LGS Matematik", "5-8. Sınıf Fen Bilimleri"],
     stats: { posts: 48, followers: 18200, following: 214 },
@@ -550,10 +566,12 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
     if (allowDemoContent()) return fallback;
     const signedOutMessages = await getServerMessages();
     return {
+      id: "signin",
       name: signedOutMessages.common.signIn,
       handle: "signin",
       bio: signedOutMessages.profile.signInDesc,
-      role: "guest" as const,
+      role: "guest" as UserProfile["role"] | "guest",
+      organization_type: null as string | null,
       isVerified: false,
       branches: [],
       stats: { posts: 0, followers: 0, following: 0 },
@@ -567,10 +585,12 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
   const previewFallback: Awaited<ReturnType<typeof getProfileData>> = allowDemoContent()
     ? fallback
     : {
+        id: "signin",
         name: (await getServerMessages()).common.signIn,
         handle: "signin",
         bio: (await getServerMessages()).profile.signInDesc,
-        role: "guest" as const,
+        role: "guest" as UserProfile["role"] | "guest",
+        organization_type: null as string | null,
         isVerified: false,
         branches: [],
         stats: { posts: 0, followers: 0, following: 0 },
@@ -586,10 +606,12 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
   if (!profile) {
     const signedOutMessages = await getServerMessages();
     return {
+      id: "signin",
       name: signedOutMessages.common.signIn,
       handle: "signin",
       bio: signedOutMessages.profile.signInDesc,
-      role: "guest",
+      role: "guest" as UserProfile["role"] | "guest",
+      organization_type: null as string | null,
       isVerified: false,
       branches: [],
       stats: { posts: 0, followers: 0, following: 0 },
@@ -654,10 +676,12 @@ function toProfileData(
   pf: Messages["profile"],
 ) {
   return {
+    id: profile.id,
     name: profile.full_name,
     handle: profile.full_name.toLowerCase().replaceAll(" ", ""),
     bio: profile.role === "teacher" ? pf.fallbackTeacherBio : pf.fallbackLearnerBio,
-    role: profile.role,
+    role: profile.role as UserProfile["role"] | "guest",
+    organization_type: profile.organization_type as string | null,
     isVerified: profile.is_verified,
     branches,
     stats,

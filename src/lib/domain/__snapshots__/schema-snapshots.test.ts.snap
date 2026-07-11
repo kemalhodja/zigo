@@ -101,6 +101,7 @@ exports[`domain schema snapshots > matches social post schema snapshot 1`] = `
   "caption": "Kesirler dersi",
   "isReel": true,
   "mediaType": "video",
+  "targetAudience": "all",
 }
 `;
 

@@ -69,7 +69,8 @@ export async function getSocialFeed(
         id,
         full_name,
         role,
-        is_verified
+        is_verified,
+        organization_type
       ),
       area:area_id (
         area_name
@@ -149,7 +150,8 @@ export async function searchSocialPosts(
         id,
         full_name,
         role,
-        is_verified
+        is_verified,
+        organization_type
       ),
       area:area_id (
         area_name
@@ -219,7 +221,7 @@ export async function getPublicProfile(
 ) {
   const { data, error } = await supabase
     .from("users")
-    .select("id, full_name, role, is_verified, total_points, avatar_assets, created_at")
+    .select("id, full_name, role, is_verified, total_points, avatar_assets, created_at, organization_type")
     .eq("id", userId)
     .maybeSingle();
 
@@ -250,7 +252,8 @@ export async function getSocialPostById(
         id,
         full_name,
         role,
-        is_verified
+        is_verified,
+        organization_type
       ),
       area:area_id (
         area_name
@@ -306,7 +309,8 @@ export async function getFollowingFeed(
         id,
         full_name,
         role,
-        is_verified
+        is_verified,
+        organization_type
       ),
       area:area_id (
         area_name
@@ -406,7 +410,8 @@ export async function getActiveStories(supabase: SupabaseClient<Database>): Prom
         id,
         full_name,
         role,
-        is_verified
+        is_verified,
+        organization_type
       )
     `,
     )

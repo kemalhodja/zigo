@@ -1,7 +1,50 @@
 import { describe, expect, it } from "vitest";
 
-import { hydrateSocialPosts } from "@/lib/domain/social/helpers";
+import { filterPostsForAudience, hydrateSocialPosts, type RawSocialPost } from "@/lib/domain/social/helpers";
 import { createMockSupabase, samplePostRow } from "@/test/mock-supabase";
+
+describe("filterPostsForAudience", () => {
+  it("bypasses filtering for educational platforms and institutions", () => {
+    const platformPost = {
+      ...samplePostRow,
+      id: "platform-post",
+      target_audience: "parent_only" as const,
+      author: {
+        ...samplePostRow.author,
+        organization_type: "egitim_platformu",
+      },
+    } as unknown as RawSocialPost;
+
+    const institutionPost = {
+      ...samplePostRow,
+      id: "institution-post",
+      target_audience: "grade" as const,
+      target_grade: "1-4",
+      author: {
+        ...samplePostRow.author,
+        organization_type: "okul",
+      },
+    } as unknown as RawSocialPost;
+
+    const normalTeacherPost = {
+      ...samplePostRow,
+      id: "normal-teacher-post",
+      target_audience: "parent_only" as const,
+      author: {
+        ...samplePostRow.author,
+        organization_type: null,
+      },
+    } as unknown as RawSocialPost;
+
+    const filtered = filterPostsForAudience(
+      [platformPost, institutionPost, normalTeacherPost],
+      undefined,
+      { role: "student", grade_level: "9-12" },
+    );
+
+    expect(filtered.map((p) => p.id)).toEqual(["platform-post", "institution-post"]);
+  });
+});
 
 describe("hydrateSocialPosts", () => {
   it("batch-loads interaction counts for multiple posts", async () => {
@@ -31,3 +74,4 @@ describe("hydrateSocialPosts", () => {
     expect(supabase.from).toHaveBeenCalledTimes(3);
   });
 });
+

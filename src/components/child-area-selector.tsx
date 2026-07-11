@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 
 import type { GradeCategoryKey } from "@/lib/domain/education-catalog";
 import { groupEducationAreasByGrade, resolveGradeCategory } from "@/lib/domain/education-catalog";
-import { isGeneralInterestArea } from "@/lib/domain/general-interest-areas";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Database } from "@/lib/supabase/database.types";
 

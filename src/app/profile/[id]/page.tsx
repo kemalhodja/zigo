@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { FollowButton } from "@/components/follow-button";
+import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
@@ -125,6 +126,19 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             Ask
           </Link>
         </div>
+        {isOwnProfile && profile.role === "teacher" ? (
+          <div className="mt-3 flex">
+            <ProfileAdvertiseModal
+              profile={{
+                id: profile.id,
+                role: profile.role,
+                organization_type: profile.organization_type,
+                full_name: profile.full_name,
+              }}
+              isOwner={true}
+            />
+          </div>
+        ) : null}
         <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500">
           Public creator profile. Follow actions are visible; saved posts remain private to each viewer.
         </p>

@@ -10,7 +10,7 @@ import type {
 } from "@/lib/supabase/database.types";
 
 export type RawSocialPost = SocialPostRow & {
-  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified"> | null;
+  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "organization_type"> | null;
   area: Pick<EducationAreaRow, "area_name"> | null;
 };
 
@@ -21,6 +21,14 @@ export function filterPostsForAudience(
 ): RawSocialPost[] {
   return posts.filter((post) => {
     if (!post.target_audience || post.target_audience === "all") return true;
+    if (
+      post.author &&
+      "organization_type" in post.author &&
+      post.author.organization_type &&
+      ["egitim_platformu", "egitim_kurumu", "okul", "kurs"].includes(String(post.author.organization_type))
+    ) {
+      return true;
+    }
     if (viewerId && post.author_id === viewerId) return true;
     if (post.target_audience === "parent_only") {
       return viewerProfile?.role === "parent";

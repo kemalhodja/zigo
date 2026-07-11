@@ -110,6 +110,7 @@ export const samplePostRow = {
     full_name: "Aylin",
     role: "teacher" as const,
     is_verified: true,
+    organization_type: null,
   },
   area: { area_name: "Matematik" },
 };
