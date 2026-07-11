@@ -22,6 +22,9 @@
     "social-primitives.tsx",
     "social-media-scenes.tsx",
     "state-card.tsx",
-    "feed-trust-strip.tsx"
+    "feed-trust-strip.tsx",
+    "ad-gate-button.tsx",
+    "comment-sheet.tsx",
+    "like-and-share-bar.tsx"
   ]
 }

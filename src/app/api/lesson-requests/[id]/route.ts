@@ -10,6 +10,7 @@ import {
   updateLessonRequestStatus,
 } from "@/lib/domain/lesson-requests";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 type RouteContext = {
@@ -94,6 +95,16 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (profile.role === "student") {
       return NextResponse.json({ error: "Students cannot send professional messages." }, { status: 403 });
+    }
+
+    if (profile.role === "parent") {
+      const subscription = await getUserSubscription(supabase, profile.id);
+      if (!subscription.isPremium) {
+        return NextResponse.json(
+          { error: "Öğretmene mesaj göndermek için Veli Aboneliği (Zigo Plus) gereklidir." },
+          { status: 403 },
+        );
+      }
     }
 
     const body = await request.json();

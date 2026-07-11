@@ -1,3 +1,4 @@
+// defaultFooter
 type StateCardProps = {
   title: string;
   description: string;

@@ -40,6 +40,8 @@ export function SocialCreateForm({
   const [preview, setPreview] = useState<{ url: string; type: "image" | "video" } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState("");
+  const [targetAudience, setTargetAudience] = useState<"all" | "parent_only" | "grade">("all");
+  const [targetGrade, setTargetGrade] = useState("");
   const [shareAsReel, setShareAsReel] = useState(forceReel);
   const [premiumPrepLabel, setPremiumPrepLabel] = useState("");
   const [premiumPrepUrl, setPremiumPrepUrl] = useState("");
@@ -55,10 +57,14 @@ export function SocialCreateForm({
         caption?: string;
         isReel?: boolean;
         mediaType?: string;
+        targetAudience?: "all" | "parent_only" | "grade";
+        targetGrade?: string;
       };
       setCaption(draft.caption ?? "");
       setMediaTypeValue(draft.mediaType ?? (forceReel ? "video" : "image"));
       setSelectedAreaId(draft.areaId ?? "");
+      if (draft.targetAudience) setTargetAudience(draft.targetAudience);
+      if (draft.targetGrade) setTargetGrade(draft.targetGrade);
       setShareAsReel(forceReel || Boolean(draft.isReel));
       setMessage(sc.draftRestored);
     } catch {
@@ -75,13 +81,15 @@ export function SocialCreateForm({
           caption,
           isReel: shareAsReel,
           mediaType: mediaTypeValue,
+          targetAudience,
+          targetGrade,
           savedAt: new Date().toISOString(),
         }),
       );
     } catch {
       // Draft autosave is a convenience; publishing should still work if storage is blocked.
     }
-  }, [caption, forceReel, mediaTypeValue, selectedAreaId, shareAsReel]);
+  }, [caption, forceReel, mediaTypeValue, selectedAreaId, shareAsReel, targetAudience, targetGrade]);
 
   function setFilePreview(file?: File) {
     if (preview?.url.startsWith("blob:")) {
@@ -174,6 +182,8 @@ export function SocialCreateForm({
           mediaUrl,
           mediaType,
           areaId: formData.get("areaId"),
+          targetAudience,
+          targetGrade: targetAudience === "grade" ? targetGrade : null,
           isReel: forceReel || formData.get("isReel") === "on",
           ...(teacherCreatorPlus && premiumPrepLabel.trim() && premiumPrepUrl.trim()
             ? { premiumPrepLabel: premiumPrepLabel.trim(), premiumPrepUrl: premiumPrepUrl.trim() }
@@ -208,6 +218,8 @@ export function SocialCreateForm({
     setCaption("");
     setMediaTypeValue(forceReel ? "video" : "image");
     setSelectedAreaId("");
+    setTargetAudience("all");
+    setTargetGrade("");
     setShareAsReel(forceReel);
     setPremiumPrepLabel("");
     setPremiumPrepUrl("");
@@ -298,6 +310,52 @@ export function SocialCreateForm({
           required
           value={caption}
         />
+
+        <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <label className="block text-xs font-black uppercase tracking-wider text-slate-500">Hedef Kitle & Görünürlük</label>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => { setTargetAudience("all"); setTargetGrade(""); }}
+              className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "all" ? "bg-night text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
+            >
+              🌟 Genel (Herkes)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTargetAudience("parent_only"); setTargetGrade(""); }}
+              className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "parent_only" ? "bg-pink-600 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
+            >
+              👨‍👩‍👧 Sadece Veli
+            </button>
+            <button
+              type="button"
+              onClick={() => setTargetAudience("grade")}
+              className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "grade" ? "bg-indigo-600 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
+            >
+              🎒 Sınıf / Kademe
+            </button>
+          </div>
+          <input type="hidden" name="targetAudience" value={targetAudience} />
+          {targetAudience === "grade" ? (
+            <div className="mt-2.5 pt-2.5 border-t border-slate-200">
+              <label className="block text-xs font-bold text-slate-600 mb-1.5">Hedef Sınıf Kademesi Seçin:</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {["Okul Öncesi", "1-4. Sınıf", "5-8. Sınıf", "9-12. Sınıf"].map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setTargetGrade(lvl)}
+                    className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${targetGrade === lvl ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+              <input type="hidden" name="targetGrade" value={targetGrade} />
+            </div>
+          ) : null}
+        </div>
 
         <div className="grid grid-cols-2 gap-2">
           <select

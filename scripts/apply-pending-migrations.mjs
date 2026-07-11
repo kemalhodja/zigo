@@ -62,6 +62,31 @@ const PENDING = [
       return !error && data?.social_interactions_blocked === false;
     },
   },
+  {
+    id: "056",
+    file: "056_bank_transfer_payments.sql",
+    probe: async (admin) => !((await admin.from("bank_transfer_requests").select("id").limit(1)).error),
+  },
+  {
+    id: "063",
+    file: "063_lesson_requests_professional_comms.sql",
+    probe: async (admin) => !((await admin.from("lesson_requests").select("id").limit(1)).error),
+  },
+  {
+    id: "064",
+    file: "064_lesson_requests_hardening.sql",
+    probe: async (admin) => !((await admin.from("lesson_requests").select("id").limit(1)).error),
+  },
+  {
+    id: "065",
+    file: "065_lesson_request_notifications.sql",
+    probe: async (admin) => !((await admin.from("notifications").select("lesson_request_id").limit(1)).error),
+  },
+  {
+    id: "066",
+    file: "066_ad_state_and_premium_system.sql",
+    probe: async (admin) => !((await admin.from("users").select("is_premium").limit(1)).error),
+  },
 ];
 
 function loadEnvFile(name) {

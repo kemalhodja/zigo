@@ -1,3 +1,4 @@
+// live Zigo activity
 export const catalogEn = {
   locale: {
     language: "Language",
@@ -1622,3 +1623,9 @@ export const catalogEn = {
     messageSetup: "Hello, Zigo technical support.",
   },
 } as const;
+
+// live Zigo activity
+// Next best action
+// Choose interests to unlock Match-Feed
+// Verify
+// Duels

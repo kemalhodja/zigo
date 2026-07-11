@@ -13,6 +13,9 @@ const MIGRATIONS = [
   "063_lesson_requests_professional_comms.sql",
   "064_lesson_requests_hardening.sql",
   "065_lesson_request_notifications.sql",
+  "066_ad_state_and_premium_system.sql",
+  "067_subscriber_class_groups_and_ad_gates.sql",
+  "068_post_audience_and_parent_dm_gates.sql",
 ];
 
 function loadEnvFile(name) {
@@ -92,6 +95,18 @@ async function probe(admin, migrationId) {
       message: "probe",
     });
     return Boolean(error?.message?.includes("invalid lesson request participants"));
+  }
+  if (migrationId === "066") {
+    const { error } = await admin.from("ad_watch_records").select("id").limit(1);
+    return !error;
+  }
+  if (migrationId === "067") {
+    const { error } = await admin.from("class_groups").select("id").limit(1);
+    return !error;
+  }
+  if (migrationId === "068") {
+    const { error } = await admin.from("social_posts").select("target_audience").limit(1);
+    return !error;
   }
   return false;
 }

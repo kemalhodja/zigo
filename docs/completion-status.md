@@ -1,6 +1,6 @@
 # Zigo completion status
 
-Local MVP is **code-complete** at migration **055** (moderation strikes, demo social reset, verified teacher answers RLS).
+Local MVP is **code-complete** at migration **066** (ad state and premium system).
 
 ## One-command local verification
 

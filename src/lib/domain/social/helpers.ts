@@ -14,6 +14,31 @@ export type RawSocialPost = SocialPostRow & {
   area: Pick<EducationAreaRow, "area_name"> | null;
 };
 
+export function filterPostsForAudience(
+  posts: RawSocialPost[],
+  viewerId?: string,
+  viewerProfile?: { id?: string; role?: string | null; grade_level?: string | null } | null,
+): RawSocialPost[] {
+  return posts.filter((post) => {
+    if (!post.target_audience || post.target_audience === "all") return true;
+    if (viewerId && post.author_id === viewerId) return true;
+    if (post.target_audience === "parent_only") {
+      return viewerProfile?.role === "parent";
+    }
+    if (post.target_audience === "grade") {
+      if (!post.target_grade) return true;
+      if (viewerProfile?.role === "parent" || viewerProfile?.role === "teacher" || viewerProfile?.role === "admin") {
+        return true;
+      }
+      if (viewerProfile?.role === "student") {
+        return viewerProfile.grade_level === post.target_grade;
+      }
+      return false;
+    }
+    return true;
+  });
+}
+
 export async function hydrateSocialPosts(
   supabase: SupabaseClient<Database>,
   posts: RawSocialPost[],
@@ -23,7 +48,17 @@ export async function hydrateSocialPosts(
 ): Promise<SocialFeedPost[]> {
   if (posts.length === 0) return [];
 
-  const postIds = posts.map((post) => post.id);
+  let allowedPosts = posts;
+  if (posts.some((p) => p.target_audience && p.target_audience !== "all")) {
+    const profile = viewerId
+      ? await supabase.from("users").select("id, role, grade_level").eq("id", viewerId).maybeSingle().then((r) => r.data)
+      : null;
+    allowedPosts = filterPostsForAudience(posts, viewerId, profile);
+  }
+
+  if (allowedPosts.length === 0) return [];
+
+  const postIds = allowedPosts.map((post) => post.id);
   const [likesByPost, commentsByPost, savesByPost, likedPostIds, savedPostIds] = await Promise.all([
     batchCountRowsByPostId(supabase, "post_likes", postIds),
     batchCountApprovedCommentsByPostId(supabase, postIds),
@@ -32,7 +67,7 @@ export async function hydrateSocialPosts(
     viewerId ? batchViewerPostIds(supabase, "saved_posts", postIds, viewerId) : Promise.resolve(new Set<string>()),
   ]);
 
-  return posts.map((post) => {
+  return allowedPosts.map((post) => {
     const likes = likesByPost.get(post.id) ?? 0;
     const comments = commentsByPost.get(post.id) ?? 0;
     const saves = savesByPost.get(post.id) ?? 0;

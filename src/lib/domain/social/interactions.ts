@@ -45,6 +45,8 @@ export async function createSocialPost(
     mediaType?: SocialMediaType;
     isReel?: boolean;
     areaId: number;
+    targetAudience?: "all" | "parent_only" | "grade";
+    targetGrade?: string | null;
     postType?: ContentPostType;
     title?: string;
     content?: string;
@@ -86,6 +88,8 @@ export async function createSocialPost(
           media_type: parsed.mediaType,
           is_reel: postType === "micro" ? true : parsed.isReel,
           area_id: parsed.areaId,
+          target_audience: parsed.targetAudience ?? "all",
+          target_grade: parsed.targetGrade ?? null,
           post_type: postType,
           title,
           content,

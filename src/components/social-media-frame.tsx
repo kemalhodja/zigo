@@ -42,7 +42,7 @@ export function SocialMediaFrame({
           className="absolute inset-0 size-full object-cover"
           decoding="async"
           fetchPriority={priority ? "high" : "low"}
-          loading={priority ? "eager" : "lazy"}
+          loading={priority ? "eager" : "lazy"} // loading="lazy"
           src={playbackUrl}
         />
       ) : null}

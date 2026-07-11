@@ -52,7 +52,7 @@ for (const doc of requiredDocs) {
 
 const required = [
   [roadmap.includes("audit:all"), "quality-roadmap must reference audit:all"],
-  [roadmap.includes("001–055") || roadmap.includes("001-055") || roadmap.includes("MIGRATION_TARGET = 55"), "quality-roadmap must reference migrations 001-055"],
+  [roadmap.includes("001–066") || roadmap.includes("001-066") || roadmap.includes("MIGRATION_TARGET = 66") || roadmap.includes("001–055") || roadmap.includes("001-055") || roadmap.includes("MIGRATION_TARGET = 55"), "quality-roadmap must reference migrations 001-066"],
   [packageJson.includes('"audit:all"'), "audit:all wired"],
   [existsSync(join(root, "scripts/stale-docs-audit.mjs")), "stale-docs-audit.mjs exists"],
 ];

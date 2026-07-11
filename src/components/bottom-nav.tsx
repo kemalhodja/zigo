@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { getBottomNavItems, getRoleNavLabels } from "@/lib/domain/role-navigation";
-import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
+import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
 export function BottomNav({
   canCreateSocialPost = false,

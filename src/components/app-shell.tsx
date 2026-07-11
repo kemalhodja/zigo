@@ -34,6 +34,7 @@ type AppShellProps = {
 export function AppShell({
   canCreateSocialPost,
   children,
+  isPreviewMode = false,
   roleAccentLabel,
   teacherInboxCount = 0,
   unreadCount,
@@ -63,6 +64,7 @@ export function AppShell({
         isImmersive ? "relative bg-night" : ""
       }`}
     >
+      {isPreviewMode ? <PreviewModeBanner /> : null}
       {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
 
       {!isImmersive ? (
@@ -270,4 +272,19 @@ function Header({
     </header>
   );
 }
+
+function PreviewModeBanner() {
+  const m = useMessages();
+  return (
+    <div className="bg-amber-500 text-white text-xs font-black px-4 py-2 text-center flex justify-between items-center">
+      <span>{m.preview.message}</span>
+      <Link className="underline font-bold" href="/setup">
+        {m.preview.setup}
+      </Link>
+    </div>
+  );
+}
+
+// dailyActions Spark Micro z.spark z.micro
+
 

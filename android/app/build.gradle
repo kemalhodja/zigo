@@ -60,6 +60,11 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
     implementation 'com.android.billingclient:billing:7.1.1'
+    
+    // Namaz vakitleri hesaplama kütüphanesi
+    implementation 'com.batoulapps:adhan:1.2.1'
+    // Konum kütüphanesi
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
 }
 
 apply from: 'capacitor.build.gradle'

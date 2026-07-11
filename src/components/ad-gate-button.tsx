@@ -7,9 +7,11 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { AdGateModal } from "./ad-gate-modal";
+import { useEffect,useState } from "react";
+
 import { useAdGate } from "@/lib/hooks/use-ad-state";
+
+import { AdGateModal } from "./ad-gate-modal";
 
 interface AdGateButtonProps {
   userId: string | null | undefined;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ClassGroupManager } from "@/components/class-group-manager";
 import { DailyMissionsCard } from "@/components/daily-missions-card";
 import { FocusAnalyticsCard } from "@/components/focus-analytics-card";
 import { GradeLevelForm } from "@/components/grade-level-form";
@@ -83,7 +84,17 @@ export default async function StudentPage() {
       </section>
 
       {!data.isSignedOut && !data.showPreview ? (
-        <GradeLevelForm initialGradeLevel={data.gradeLevel} />
+        <div className="space-y-3">
+          <GradeLevelForm initialGradeLevel={data.gradeLevel} />
+          <ClassGroupManager
+            isSubscriber={data.isPremium}
+            initialCity={data.city}
+            initialDistrict={data.district}
+            initialSchoolName={data.schoolName}
+            initialGradeLevel={data.gradeLevel}
+            userRole="student"
+          />
+        </div>
       ) : null}
 
       <section className="grid grid-cols-2 gap-2">
@@ -157,6 +168,9 @@ async function getStudentDashboardData(): Promise<{
   isPremium: boolean;
   allowDevActivate: boolean;
   gradeLevel: string | null;
+  city: string | null;
+  district: string | null;
+  schoolName: string | null;
   planGroups: ReturnType<typeof resolveProfilePlanGroups>;
 }> {
   if (!hasSupabaseEnv()) {
@@ -181,6 +195,9 @@ async function getStudentDashboardData(): Promise<{
           isPremium: false,
           allowDevActivate: canUseDevBillingBypass(),
           gradeLevel: null,
+          city: null,
+          district: null,
+          schoolName: null,
           planGroups: resolveProfilePlanGroups("student"),
         }
       : {
@@ -195,6 +212,9 @@ async function getStudentDashboardData(): Promise<{
           isPremium: false,
           allowDevActivate: false,
           gradeLevel: null,
+          city: null,
+          district: null,
+          schoolName: null,
           planGroups: [],
         };
   }
@@ -220,6 +240,9 @@ async function getStudentDashboardData(): Promise<{
         isPremium: false,
         allowDevActivate: canUseDevBillingBypass(),
         gradeLevel: null as string | null,
+        city: null as string | null,
+        district: null as string | null,
+        schoolName: null as string | null,
         planGroups: resolveProfilePlanGroups("student"),
       }
     : {
@@ -234,6 +257,9 @@ async function getStudentDashboardData(): Promise<{
         isPremium: false,
         allowDevActivate: false,
         gradeLevel: null,
+        city: null,
+        district: null,
+        schoolName: null,
         planGroups: [],
       };
 
@@ -253,6 +279,9 @@ async function getStudentDashboardData(): Promise<{
       isPremium: false,
       allowDevActivate: false,
       gradeLevel: null,
+      city: null,
+      district: null,
+      schoolName: null,
       planGroups: [],
     };
   }
@@ -270,6 +299,9 @@ async function getStudentDashboardData(): Promise<{
       isPremium: false,
       allowDevActivate: false,
       gradeLevel: null,
+      city: null,
+      district: null,
+      schoolName: null,
       planGroups: [],
     };
   }
@@ -294,6 +326,9 @@ async function getStudentDashboardData(): Promise<{
     isPremium: subscription.isPremium,
     allowDevActivate: canUseDevBillingBypass(),
     gradeLevel: profile.grade_level,
+    city: profile.city,
+    district: profile.district,
+    schoolName: profile.school_name,
     planGroups: resolveProfilePlanGroups("student", false, parseOrganizationType(profile.organization_type)),
   };
   }, previewFallback);

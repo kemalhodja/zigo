@@ -46,6 +46,7 @@ export function AuthPanel() {
   const roleOptions = useMemo(() => REGISTRATION_ACCOUNT_OPTIONS, []);
 
   const [mode, setMode] = useState<Mode>("sign-in");
+  const [accountKind, setAccountKind] = useState<RegistrationAccountKind>("student");
   const [rememberMe, setRememberMe] = useState(true);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -109,6 +110,7 @@ export function AuthPanel() {
               email: trimmedEmail,
               fullName: trimmedFullName,
               password,
+              accountKind,
               recaptchaToken,
             }
           : {
@@ -323,6 +325,36 @@ export function AuthPanel() {
         <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
           {mode === "sign-up" ? a.learnerNext : a.signInNext}
         </p>
+        {mode === "sign-up" ? (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Choose role</p>
+            <div className="flex flex-wrap gap-2">
+              {roleOptions.map((option) => {
+                const isActive = option.id === accountKind;
+                return (
+                  <button
+                    key={option.id}
+                    className={`tap-scale rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                      isActive
+                        ? `bg-gradient-to-r ${option.accent} text-white shadow-sm`
+                        : "bg-white text-slate-700 border border-slate-200"
+                    }`}
+                    data-testid={`registration-account-${option.id}`}
+                    onClick={() => setAccountKind(option.id)}
+                    type="button"
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-2 rounded-lg bg-slate-50 p-2.5">
+              <p className="text-xs font-semibold leading-5 text-slate-500">
+                {roleOptions.find((o) => o.id === accountKind)?.description}
+              </p>
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
   );

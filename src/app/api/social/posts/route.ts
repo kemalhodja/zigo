@@ -95,6 +95,8 @@ export async function POST(request: Request) {
       mediaType: body.mediaType,
       isReel: body.isReel,
       areaId,
+      targetAudience: body.targetAudience,
+      targetGrade: body.targetGrade,
       postType: body.postType,
       title: body.title,
       content: body.content,

@@ -61,13 +61,17 @@ export function GradeLevelForm({
       <p className="mt-1 text-sm font-semibold text-slate-500">{description}</p>
 
       <div className="mt-3 flex flex-wrap gap-2">
+        <label htmlFor="grade-level" className="sr-only">Sınıf seviyesi</label>
         <select
-          className="min-w-0 flex-1 rounded-lg bg-slate-100 px-3 py-3 text-sm font-bold text-slate-700 outline-none"
+          id="grade-level"
+          className="min-w-0 flex-1 rounded-lg bg-slate-100 px-3 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-crystal focus:ring-offset-2"
           onChange={(event) => {
             setGradeLevel(event.target.value);
             setStatus("idle");
           }}
           value={gradeLevel}
+          aria-describedby={message ? "grade-level-message" : undefined}
+          aria-invalid={status === "error"}
         >
           <option value="">Sınıf seçin</option>
           {GRADE_LEVEL_OPTIONS.map((option) => (
@@ -77,10 +81,11 @@ export function GradeLevelForm({
           ))}
         </select>
         <button
-          className="tap-scale rounded-lg bg-night px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+          className="tap-scale rounded-lg bg-night px-4 py-3 text-sm font-black text-white disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-crystal focus:ring-offset-2"
           disabled={status === "saving"}
           onClick={() => void save()}
           type="button"
+          aria-busy={status === "saving"}
         >
           {status === "saving" ? "Kaydediliyor..." : "Kaydet"}
         </button>

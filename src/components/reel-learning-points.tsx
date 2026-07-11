@@ -105,11 +105,13 @@ export function ReelLearningPoints({ reelId, requiresPlayback = false }: ReelLea
           setIsClaimed(true);
           setIsPending(false);
           setMessage(
-            payload.data.already_awarded
-              ? a.alreadyClaimedTotal.replace("{total}", String(payload.data.total_points))
-              : a.pointsClaimedTotal
-                  .replace("{points}", String(payload.data.points_awarded))
-                  .replace("{total}", String(payload.data.total_points)),
+            payload.data.points_awarded === 0 && !payload.data.already_awarded
+              ? "👑 Abone Olmayan Modu: Reels izlendi, beğeni/kaydet aktiftir ancak Zigo Puanı kazanmak için Abone Olun!"
+              : payload.data.already_awarded
+                ? a.alreadyClaimedTotal.replace("{total}", String(payload.data.total_points))
+                : a.pointsClaimedTotal
+                    .replace("{points}", String(payload.data.points_awarded))
+                    .replace("{total}", String(payload.data.total_points)),
           );
           return;
         }

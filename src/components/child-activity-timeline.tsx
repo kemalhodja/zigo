@@ -2,6 +2,7 @@ import type { ChildActivityItem } from "@/lib/domain/parent-dashboard";
 
 type ChildActivityTimelineProps = {
   activity: ChildActivityItem[];
+  isLocked?: boolean;
   labels: {
     title: string;
     empty: string;
@@ -11,12 +12,28 @@ type ChildActivityTimelineProps = {
   };
 };
 
-export function ChildActivityTimeline({ activity, labels }: ChildActivityTimelineProps) {
+export function ChildActivityTimeline({ activity, isLocked = false, labels }: ChildActivityTimelineProps) {
   return (
     <section className="rounded-lg border border-slate-100 bg-slate-50/80 p-4" data-testid="child-activity-timeline">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{labels.title}</p>
 
-      {activity.length === 0 ? (
+      {isLocked ? (
+        <div className="mt-3 relative rounded-xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-purple-50 p-5 text-center shadow-sm">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gradient-to-r from-crystal to-berry text-white text-xl shadow-md">
+            👑
+          </div>
+          <h3 className="mt-2.5 text-sm font-black text-night">Öğrenci Detaylı Takip Modu Abone Özeldir</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-600 max-w-sm mx-auto">
+            Çocuğunuzun günlük çalışma adımlarını, izlediği içerikleri, quiz skorlarını ve zaman çizelgesini canlı takip etmek için Veli Aboneliği (Zigo Plus) gereklidir.
+          </p>
+          <a
+            href="#zigo-plus-plans"
+            className="mt-3 inline-block rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-2 text-xs font-black text-white shadow transition hover:opacity-95"
+          >
+            Veli Aboneliği Al & Detayları Aç
+          </a>
+        </div>
+      ) : activity.length === 0 ? (
         <p className="mt-3 rounded-lg bg-white px-3 py-3 text-sm font-bold text-slate-500">{labels.empty}</p>
       ) : (
         <ul className="mt-3 space-y-2">

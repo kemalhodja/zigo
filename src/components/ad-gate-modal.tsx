@@ -9,6 +9,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { useWatchAd } from "@/lib/hooks/use-ad-state";
 
 interface AdGateModalProps {

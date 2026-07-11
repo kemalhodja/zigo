@@ -7,13 +7,13 @@ import { join } from "node:path";
 const root = process.cwd();
 
 const STATIC_PILLARS = [
-  { id: "migrations", label: "Migration 055", pts: 5, ok: () => existsSync(join(root, "supabase/migrations/055_demo_social_interactions_reset.sql")) },
+  { id: "migrations", label: "Migration 066", pts: 5, ok: () => existsSync(join(root, "supabase/migrations/066_ad_state_and_premium_system.sql")) },
   { id: "compliance", label: "KVKK API + UI", pts: 5, ok: () => fileHas("src/app/api/account/export/route.ts", "exportUserData") && fileHas("src/app/legal/delete-account/page.tsx", "exportData") },
   { id: "video", label: "Video CDN wired", pts: 5, ok: () => fileHas("src/components/social-media-frame.tsx", "getMediaPlaybackUrl") },
   { id: "push", label: "Push panel wired", pts: 5, ok: () => fileHas("src/app/notifications/page.tsx", "PushNotificationPanel") },
   { id: "cookie", label: "Cookie consent", pts: 3, ok: () => fileHas("src/components/app-shell.tsx", "CookieConsentBanner") },
   { id: "stripe", label: "Stripe webhook", pts: 5, ok: () => fileHas("src/lib/domain/stripe-webhook.ts", "verifyStripeWebhookSignature") },
-  { id: "bundle", label: "55-migration bundle", pts: 2, ok: () => fileHas("supabase/zigo-full-migrations.sql", "055_demo_social_interactions_reset") },
+  { id: "bundle", label: "66-migration bundle", pts: 2, ok: () => fileHas("supabase/zigo-full-migrations.sql", "066_ad_state_and_premium_system") },
   { id: "audits", label: "audit:all wired", pts: 3, ok: () => fileHas("package.json", '"audit:all"') && fileHas("scripts/audit-all.mjs", "production-readiness-check") },
 ];
 
@@ -93,7 +93,7 @@ async function runtimeChecks(baseUrl) {
       run: async () => {
         const r = await fetch(`${baseUrl}/api/setup/health`);
         const b = await r.json().catch(() => ({}));
-        return r.ok && b?.data?.migrationTarget === 55;
+        return r.ok && b?.data?.migrationTarget === 66;
       },
     },
     {
@@ -172,12 +172,21 @@ async function main() {
     }
 
     let ok = false;
+    let details = "";
     if (suite.scripts) {
-      ok = suite.scripts.every((s) => runScript(s).ok);
+      const results = suite.scripts.map((s) => ({ s, res: runScript(s) }));
+      ok = results.every((r) => r.res.ok);
+      if (!ok) {
+        details = results.filter((r) => !r.res.ok).map((r) => `${r.s} failed (status ${r.res.status}): ${r.res.stderr}`).join("\n");
+      }
     } else if (suite.shell) {
-      ok = runShell(suite.cmd).ok;
+      const res = runShell(suite.cmd);
+      ok = res.ok;
+      if (!ok) details = `Shell cmd "${suite.cmd}" failed (status ${res.status}): ${res.stderr}`;
     } else {
-      ok = runScript(suite.script).ok;
+      const res = runScript(suite.script);
+      ok = res.ok;
+      if (!ok) details = `Script ${suite.script} failed (status ${res.status}): ${res.stderr}`;
     }
 
     if (suite.id === "journey") journeyPassed = ok;
@@ -188,6 +197,9 @@ async function main() {
     totalMax += maxPts;
     summary.push({ group: "suite", label: suite.label, ok, earned, max: maxPts });
     console.log(`${ok ? "PASS" : "FAIL"} suite · ${suite.label} (+${earned}/${maxPts})`);
+    if (!ok && details) {
+      console.log(`      Error details: ${details}`);
+    }
   }
 
   const baseUrl = await detectBaseUrl();

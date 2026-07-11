@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ChildActivityTimeline } from "@/components/child-activity-timeline";
+import { ClassGroupManager } from "@/components/class-group-manager";
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
@@ -29,7 +30,7 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { children, mode, pendingApprovals, focusOverview, childrenFocusStats, isPremium, allowDevActivate, childActivityById, gradeLevel, planGroups, profileId } =
+  const { children, mode, pendingApprovals, focusOverview, childrenFocusStats, isPremium, allowDevActivate, childActivityById, gradeLevel, city, district, schoolName, planGroups, profileId } =
     await getParentData();
   const d = messages.dashboard;
   const pp = messages.parentPage;
@@ -46,19 +47,29 @@ export default async function ParentPage() {
       </section>
 
       {mode === "parent" || mode === "preview" ? (
-        <ParentFocusOverviewCard overview={focusOverview} showPreview={mode === "preview"} />
+        <ParentFocusOverviewCard overview={focusOverview} showPreview={mode === "preview" || (!isPremium && !allowDevActivate)} />
       ) : null}
 
       {mode === "parent" || mode === "preview" ? (
-        <ParentChildrenFocusCard showPreview={mode === "preview"} stats={childrenFocusStats} />
+        <ParentChildrenFocusCard showPreview={mode === "preview" || (!isPremium && !allowDevActivate)} stats={childrenFocusStats} />
       ) : null}
 
       {mode === "parent" ? (
-        <GradeLevelForm
-          description={pp.gradeDesc}
-          initialGradeLevel={gradeLevel}
-          title={pp.gradeTitle}
-        />
+        <div className="space-y-3">
+          <GradeLevelForm
+            description={pp.gradeDesc}
+            initialGradeLevel={gradeLevel}
+            title={pp.gradeTitle}
+          />
+          <ClassGroupManager
+            isSubscriber={isPremium}
+            initialCity={city}
+            initialDistrict={district}
+            initialSchoolName={schoolName}
+            initialGradeLevel={gradeLevel}
+            userRole="parent"
+          />
+        </div>
       ) : null}
 
       <section className="-mx-4 divide-y divide-slate-100 bg-white">
@@ -112,6 +123,7 @@ export default async function ParentPage() {
                 <div className="mt-4">
                   <ChildActivityTimeline
                     activity={childActivityById[child.id] ?? []}
+                    isLocked={!isPremium && !allowDevActivate}
                     labels={{
                       title: d.parent.activityTitle,
                       empty: d.parent.activityEmpty,
@@ -146,6 +158,7 @@ export default async function ParentPage() {
       {mode === "parent" && profileId ? (
         <LessonRequestsPanel
           childrenOptions={children.map((child) => ({ id: child.id, name: child.name }))}
+          isSubscriber={isPremium || allowDevActivate}
           role="parent"
           viewerId={profileId}
         />
@@ -204,6 +217,9 @@ async function getParentData(): Promise<{
   allowDevActivate: boolean;
   childActivityById: Record<string, Awaited<ReturnType<typeof getChildActivity>>>;
   gradeLevel: string | null;
+  city: string | null;
+  district: string | null;
+  schoolName: string | null;
   planGroups: ReturnType<typeof resolveProfilePlanGroups>;
   profileId: string | null;
 }> {
@@ -227,6 +243,9 @@ async function getParentData(): Promise<{
       allowDevActivate: canUseDevBillingBypass(),
       childActivityById: {},
       gradeLevel: null,
+      city: null,
+      district: null,
+      schoolName: null,
       planGroups: resolveProfilePlanGroups("parent", previewChildren.length > 0),
       profileId: null,
     };
@@ -242,6 +261,9 @@ async function getParentData(): Promise<{
     allowDevActivate: canUseDevBillingBypass(),
     childActivityById: {} as Record<string, Awaited<ReturnType<typeof getChildActivity>>>,
     gradeLevel: null as string | null,
+    city: null as string | null,
+    district: null as string | null,
+    schoolName: null as string | null,
     planGroups: resolveProfilePlanGroups("parent", previewChildren.length > 0),
     profileId: null,
   };
@@ -260,6 +282,9 @@ async function getParentData(): Promise<{
       allowDevActivate: false,
       childActivityById: {},
       gradeLevel: null,
+      city: null,
+      district: null,
+      schoolName: null,
       planGroups: [],
       profileId: null,
     };
@@ -275,6 +300,9 @@ async function getParentData(): Promise<{
       allowDevActivate: false,
       childActivityById: {},
       gradeLevel: null,
+      city: null,
+      district: null,
+      schoolName: null,
       planGroups: [],
       profileId: profile.id,
     };
@@ -307,6 +335,9 @@ async function getParentData(): Promise<{
     allowDevActivate: canUseDevBillingBypass(),
     childActivityById: Object.fromEntries(activityEntries),
     gradeLevel: profile.grade_level,
+    city: profile.city,
+    district: profile.district,
+    schoolName: profile.school_name,
     planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type)),
     profileId: profile.id,
   };

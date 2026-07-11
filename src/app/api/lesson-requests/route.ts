@@ -7,6 +7,7 @@ import {
   getLessonRequestsForUser,
 } from "@/lib/domain/lesson-requests";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,6 +47,14 @@ export async function POST(request: Request) {
     if (profile.role !== "parent") {
       return NextResponse.json(
         { error: "Only parents can create lesson requests." },
+        { status: 403 },
+      );
+    }
+
+    const subscription = await getUserSubscription(supabase, profile.id);
+    if (!subscription.isPremium) {
+      return NextResponse.json(
+        { error: "Öğretmenlere ders talebi göndermek ve doğrudan mesajlaşmak için Veli Aboneliği (Zigo Plus) gereklidir." },
         { status: 403 },
       );
     }

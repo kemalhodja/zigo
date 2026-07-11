@@ -10,6 +10,7 @@ type StoreProductCardProps = {
   product: StoreProductRow;
   mode: "student" | "parent";
   childrenProfiles?: ChildProfileRow[];
+  isSubscriber?: boolean;
 };
 
 const categoryAccents: Record<StoreProductRow["category"], string> = {
@@ -20,7 +21,7 @@ const categoryAccents: Record<StoreProductRow["category"], string> = {
   experience: "from-crystal to-aqua",
 };
 
-export function StoreProductCard({ product, mode, childrenProfiles = [] }: StoreProductCardProps) {
+export function StoreProductCard({ product, mode, childrenProfiles = [], isSubscriber = true }: StoreProductCardProps) {
   const { store: st, actions: a } = useMessages();
   const categoryLabels = useMemo(
     () => ({
@@ -39,7 +40,7 @@ export function StoreProductCard({ product, mode, childrenProfiles = [] }: Store
   const [message, setMessage] = useState(st.redeemDefault);
 
   const isOutOfStock = product.stock_count !== null && product.stock_count <= 0;
-  const canRedeem = mode === "student" || selectedChildId.length > 0;
+  const canRedeem = isSubscriber && (mode === "student" || selectedChildId.length > 0);
   const isRedeemed = status === "saved";
 
   async function redeem() {
@@ -135,13 +136,30 @@ export function StoreProductCard({ product, mode, childrenProfiles = [] }: Store
         value={note}
       />
 
+      {!isSubscriber ? (
+        <div className="rounded-xl border border-pink-200 bg-pink-50/90 p-3 text-center">
+          <p className="text-xs font-black text-night">🔒 Abone Olmayan Modu</p>
+          <p className="mt-0.5 text-xs font-semibold text-slate-600">
+            Zigo Puan kazanmak ve mağazadan harcamak için Abone Olun.
+          </p>
+        </div>
+      ) : null}
+
       <button
         className="tap-scale w-full zigo-cta tap-scale rounded-lg px-4 py-3 text-sm font-black text-white disabled:opacity-60"
-        disabled={status === "saving" || isOutOfStock || !canRedeem || isRedeemed}
+        disabled={status === "saving" || isOutOfStock || !canRedeem || isRedeemed || !isSubscriber}
         onClick={redeem}
         type="button"
       >
-        {status === "saving" ? st.redeeming : isRedeemed ? st.redeemed : isOutOfStock ? st.outOfStock : st.redeemWithZigo}
+        {!isSubscriber
+          ? "👑 Alışveriş İçin Abone Olun"
+          : status === "saving"
+            ? st.redeeming
+            : isRedeemed
+              ? st.redeemed
+              : isOutOfStock
+                ? st.outOfStock
+                : st.redeemWithZigo}
       </button>
 
       <p

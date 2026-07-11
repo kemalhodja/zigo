@@ -4,6 +4,7 @@ import { buildSecurityHeaders } from "./src/lib/server/security-headers";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: "standalone",
   allowedDevOrigins: ["127.0.0.1", "localhost"],
   async headers() {
     const securityHeaders = buildSecurityHeaders(process.env.NODE_ENV === "production");
@@ -21,6 +22,25 @@ const nextConfig: NextConfig = {
       { source: "/stories", destination: "/sparks", permanent: true },
       { source: "/stories/:path*", destination: "/sparks/:path*", permanent: true },
     ];
+  },
+  experimental: {
+    optimizePackageImports: ["@supabase/supabase-js", "lucide-react"],
+  },
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "**.googleusercontent.com",
+      },
+    ],
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };
 

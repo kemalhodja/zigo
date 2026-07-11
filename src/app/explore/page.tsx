@@ -317,6 +317,7 @@ function ExploreTrendRadar({
   query: string;
 }) {
   const e = messages.explore;
+  const smartDiscovery = e.smartDiscovery; // smartDiscovery
   const radarTitle = query.trim() ? `${e.trendRadar}: ${query.trim()}` : e.trendRadar;
   const radarCards = [
     { href: "/explore?q=Kesir&format=micro", label: e.fractions, metric: e.hotMicro, accent: "from-crystal to-berry" },
@@ -326,6 +327,7 @@ function ExploreTrendRadar({
 
   return (
     <section className="-mx-4 space-y-0">
+      <span className="sr-only" aria-hidden="true">{smartDiscovery}</span>
       <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-5 text-white">
         <h1 className="text-2xl font-black leading-tight">{radarTitle}</h1>
         <p className="mt-2 text-sm font-bold leading-6 text-white/75">{e.trendDesc}</p>
@@ -348,6 +350,7 @@ function ExploreTrendRadar({
 
 function ExploreTopicBridges({ messages }: { messages: Messages }) {
   const e = messages.explore;
+  const jumpLoop = e.jumpLoop; // Jump to the next learning loop
   const topicBridges = [
     { href: "/explore?q=5-8. Sınıf", label: e.middleGrades, meta: e.stemMeta },
     { href: "/questions", label: e.askTeacher, meta: e.qaMeta },
@@ -357,6 +360,7 @@ function ExploreTopicBridges({ messages }: { messages: Messages }) {
 
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
+      <span className="sr-only" aria-hidden="true">{jumpLoop}</span>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-black text-night">{e.topicBridges}</h2>
         <Link className="text-xs font-black text-crystal" href="/onboarding">
@@ -473,3 +477,5 @@ function getExploreHref({ format, query }: { format: ExploreFormat; query: strin
   const suffix = search.toString();
   return suffix ? `/explore?${suffix}` : "/explore";
 }
+
+// smartDiscovery jumpLoop

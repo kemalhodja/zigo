@@ -23,7 +23,6 @@ export default defineConfig({
         "src/lib/domain/parent-dashboard.ts",
         "src/lib/domain/social/feed.ts",
         "src/lib/domain/social/safety.ts",
-        "src/app/api/posts/route.ts",
         "src/app/api/gamification/award/route.ts",
         "src/app/api/setup/health/route.ts",
       ],

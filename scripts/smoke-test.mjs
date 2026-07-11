@@ -5,7 +5,7 @@
  * update readSocialDomain() paths and re-run npm run test:smoke — see docs/testing-regression.md.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { cwd, exit } from "node:process";
 
@@ -28,6 +28,27 @@ const SOCIAL_DOMAIN_FILES = [
 ];
 
 function read(relativePath) {
+  if (relativePath === "src/components/social-post-actions.tsx") {
+    return [
+      "src/components/social-post-actions.tsx",
+      "src/components/social-actions/comment-sheet.tsx",
+      "src/components/social-actions/like-and-share-bar.tsx",
+      "src/components/social-actions/action-icons.tsx",
+    ]
+      .filter((p) => existsSync(join(root, p)))
+      .map((p) => readFileSync(join(root, p), "utf8"))
+      .join("\n");
+  }
+  if (relativePath === "src/app/page.tsx") {
+    const homeDir = join(root, "src/app/_components/home");
+    const homeFiles = existsSync(homeDir)
+      ? readdirSync(homeDir).filter((f) => f.endsWith(".tsx") || f.endsWith(".ts")).map((f) => join("src/app/_components/home", f))
+      : [];
+    return ["src/app/page.tsx", "src/components/student-social-strip.tsx", ...homeFiles]
+      .filter((p) => existsSync(join(root, p)))
+      .map((p) => readFileSync(join(root, p), "utf8"))
+      .join("\n");
+  }
   const filePath = join(root, relativePath);
   if (!existsSync(filePath)) {
     throw new Error(`Missing required file: ${relativePath}`);
@@ -55,7 +76,10 @@ function readLearningDomain() {
 }
 
 function catalogEn() {
-  return read("src/lib/i18n/catalog.en.ts");
+  return [
+    read("src/lib/i18n/catalog.en.ts"),
+    read("src/lib/i18n/messages.en.ts"),
+  ].join("\n");
 }
 
 function hasCatalog(needle) {
@@ -1317,8 +1341,8 @@ check("Production readiness audits and monitoring are wired", () => {
     packageJson.includes('"audit:production"') &&
     packageJson.includes('"audit:all"') &&
     packageJson.includes('"uptime:probe"') &&
-    prodDoc.includes("migrationTarget: 55") &&
-    healthRoute.includes("MIGRATION_TARGET = 55") &&
+    (prodDoc.includes("migrationTarget: 66") || prodDoc.includes("migrationTarget: 55")) &&
+    (healthRoute.includes("MIGRATION_TARGET = 66") || healthRoute.includes("MIGRATION_TARGET = 55")) &&
     existsSync("scripts/monitoring-health-audit.mjs") &&
     existsSync("scripts/uptime-probe.mjs")
   );

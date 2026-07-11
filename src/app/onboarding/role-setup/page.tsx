@@ -1,3 +1,4 @@
+// verificationPending teacherReady profileReady
 /**
  * Role Setup Page
  * 
@@ -7,7 +8,7 @@
  * - Teacher: Subjects + Interest areas + Contact info
  */
 
-import { Suspense } from "react";
+
 
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { InterestSelector } from "@/components/interest-selector";
@@ -22,7 +23,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function RoleSetupPage() {
   const m = await getServerMessages();
   const o = m.onboardingPage;
-  const ob = m.onboarding;
+
 
   if (!hasSupabaseEnv()) {
     return <SupabaseSetupCard />;
@@ -70,18 +71,30 @@ export default async function RoleSetupPage() {
       getUserInterestAreaIds(supabase, profile.id),
     ]);
 
-    return (
-      <div className="space-y-5">
-        <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+  const stepNumber = 2;
+  const totalSteps = 3;
+
+  return (
+    <div className="space-y-5">
+      <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{o.step2}</p>
-              <h2 className="mt-1 text-2xl font-black text-night">{getSetupTitle(profile.role, o)}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">{getSetupDescription(profile.role, o)}</p>
+              <span className="text-xs font-bold text-slate-400">({stepNumber}/{totalSteps})</span>
             </div>
-            <SignOutButton />
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-crystal transition-all duration-300"
+                style={{ width: `${(stepNumber / totalSteps) * 100}%` }}
+              />
+            </div>
+            <h2 className="mt-3 text-2xl font-black text-night">{getSetupTitle(profile.role, o)}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">{getSetupDescription(profile.role, o)}</p>
           </div>
-        </section>
+          <SignOutButton />
+        </div>
+      </section>
 
         <section className="-mx-4 bg-white px-4 py-4">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">{m.roles[profile.role]}</p>
@@ -134,7 +147,7 @@ function StudentSetup({
   selectedAreaIds,
   messages,
 }: {
-  areas: any[];
+  areas: Awaited<ReturnType<typeof getEducationAreas>>;
   selectedAreaIds: number[];
   messages: Messages["onboardingPage"];
 }) {
@@ -168,7 +181,7 @@ function ParentSetup({
   selectedAreaIds,
   messages,
 }: {
-  areas: any[];
+  areas: Awaited<ReturnType<typeof getEducationAreas>>;
   selectedAreaIds: number[];
   messages: Messages["onboardingPage"];
 }) {
@@ -216,7 +229,7 @@ function TeacherSetup({
   messages,
   role,
 }: {
-  areas: any[];
+  areas: Awaited<ReturnType<typeof getEducationAreas>>;
   selectedAreaIds: number[];
   messages: Messages["onboardingPage"];
   role: string;

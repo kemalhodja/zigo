@@ -36,11 +36,11 @@ Manual: `docs/safe-instagram-feel-checklist.md`, `docs/visual-regression-checkli
 | Scorecard | `npm run test:scorecard` | **≥90** local, **≥95** with `ZIGO_RUN_LIVE_TESTS=1` |
 | Release | `npm run test:release` | scorecard + coverage + visual probe |
 
-Health runtime probe expects `migrationTarget: 55` on `/api/setup/health`.
+Health runtime probe expects `migrationTarget: 66` on `/api/setup/health`.
 
 ## Pillar map (acceptance)
 
-- Migrations **001–044**
+- Migrations **001–066**
 - KVKK export/delete, cookie consent, video CDN, push scaffold, Stripe webhook
 - Full role journeys + staging preflight
 - `test:repo` (+20) and `test:live` (+15) when env available

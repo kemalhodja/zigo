@@ -6,6 +6,7 @@ import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getChildProfiles } from "@/lib/domain/children";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getStoreProducts, getUserStoreRedemptions } from "@/lib/domain/store";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -85,10 +86,11 @@ export default async function StorePage({ searchParams }: StorePageProps) {
     return <StorePreview mode="teacher" messages={m} />;
   }
 
-  const [products, redemptions, childrenProfiles] = await Promise.all([
+  const [products, redemptions, childrenProfiles, subscription] = await Promise.all([
     getStoreProducts(supabase),
     getUserStoreRedemptions(supabase),
     profile.role === "parent" ? getChildProfiles(supabase) : Promise.resolve([]),
+    getUserSubscription(supabase, profile.id),
   ]);
   const storeMode = profile.role === "parent" ? "parent" : "student";
   const filteredProducts = filterStoreProducts(products, activeCategory, query);
@@ -105,6 +107,25 @@ export default async function StorePage({ searchParams }: StorePageProps) {
   return (
     <div className="space-y-5">
       <StoreVisitTracker />
+      {!subscription.isPremium ? (
+        <div className="-mx-4 bg-gradient-to-r from-night via-crystal to-berry px-5 py-4 text-white shadow-md">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">👑 Abone Olmayan Modu</p>
+              <h3 className="mt-0.5 text-base font-black">Zigo Mağaza Alanı Abone Özeldir!</h3>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-white/80">
+                Abone olmayan kullanıcılar içerikleri izleyip beğenebilir, ancak Zigo Puan kazanamaz ve mağazadan alışveriş yapamaz. Hemen abone olun ve ödülleri toplamaya başlayın!
+              </p>
+            </div>
+            <Link
+              href={profile.role === "parent" ? "/parent#zigo-plus" : "/student#zigo-plus"}
+              className="tap-scale shrink-0 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-night shadow-sm hover:bg-slate-100"
+            >
+              Abone Ol →
+            </Link>
+          </div>
+        </div>
+      ) : null}
       <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{s.title}</p>
         <h2 className="mt-1 text-2xl font-black text-night">{s.subtitle}</h2>
@@ -208,6 +229,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
           filteredProducts.map((product) => (
             <StoreProductCard
               childrenProfiles={childrenProfiles}
+              isSubscriber={subscription.isPremium}
               key={product.id}
               mode={storeMode}
               product={product}

@@ -23,10 +23,10 @@ function check(name, ok, message = "") {
 function main() {
   const checks = [
     check("Migration 055 demo social reset", existsSync(join(root, "supabase/migrations/055_demo_social_interactions_reset.sql"))),
-    check("Health targets migration 55", fileHas("src/app/api/setup/health/route.ts", "MIGRATION_TARGET = 55")),
+    check("Health targets migration target", fileHas("src/app/api/setup/health/route.ts", "MIGRATION_TARGET = 66")),
     check("Answers API requires verified teacher", fileHas("src/app/api/answers/route.ts", "is_verified")),
     check("Canonical social posts API", fileHas("src/app/api/social/posts/route.ts", "createSocialPost")),
-    check("Legacy posts retired", fileHas("src/app/api/posts/route.ts", "LEGACY_POSTS_RETIRED")),
+    check("Legacy posts route removed", !existsSync(join(root, "src/app/api/posts/route.ts"))),
     check("Parent activity RPC wired", fileHas("src/lib/domain/parent-dashboard.ts", "get_parent_child_activity")),
     check(
       "Quiz questions play RPC wired",

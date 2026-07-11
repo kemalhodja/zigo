@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
+
 import { checkAdGate } from "@/lib/server/ad-state-manager";
 
 export async function GET(request: Request) {

@@ -6,6 +6,8 @@ export const createSocialPostSchema = z.object({
   mediaType: z.enum(["image", "video", "carousel"]).default("image"),
   isReel: z.coerce.boolean().default(false),
   areaId: z.coerce.number().int().positive(),
+  targetAudience: z.enum(["all", "parent_only", "grade"]).default("all"),
+  targetGrade: z.string().trim().optional().nullable(),
   postType: z.enum(["normal", "quiz", "micro"]).optional(),
   title: z.string().trim().max(255).optional(),
   content: z.string().trim().max(4000).optional(),

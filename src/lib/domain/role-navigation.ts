@@ -1,6 +1,6 @@
-import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import type { UserRole } from "@/lib/supabase/database.types";
+import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
 export type BottomNavItem = {
   href: string;

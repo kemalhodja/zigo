@@ -5,7 +5,6 @@ import { POST as answersPost } from "@/app/api/answers/route";
 import { POST as authSignInPost } from "@/app/api/auth/sign-in/route";
 import { POST as gamificationAwardPost } from "@/app/api/gamification/award/route";
 import { POST as learnQuizPost } from "@/app/api/learn/quiz/route";
-import { GET as legacyPostsGet, POST as legacyPostsPost } from "@/app/api/posts/route";
 import { GET as healthGet, MIGRATION_TARGET } from "@/app/api/setup/health/route";
 import { GET as socialPostsGet, POST as socialPostsPost } from "@/app/api/social/posts/route";
 
@@ -69,26 +68,12 @@ describe("API route handlers", () => {
     vi.mocked(createClient).mockResolvedValue({} as never);
   });
 
-  it("legacy GET /api/posts returns 410", async () => {
-    const response = await legacyPostsGet();
-    expect(response.status).toBe(410);
-    const body = await response.json();
-    expect(body.code).toBe("LEGACY_POSTS_RETIRED");
-  });
-
-  it("legacy POST /api/posts returns 410", async () => {
-    const response = await legacyPostsPost();
-    expect(response.status).toBe(410);
-    const body = await response.json();
-    expect(body.replacement).toBe("/api/social/posts");
-  });
-
   it("POST /api/gamification/award returns 410", async () => {
     const response = await gamificationAwardPost();
     expect(response.status).toBe(410);
   });
 
-  it("GET /api/setup/health exposes migration target 42", async () => {
+  it("GET /api/setup/health exposes migration target", async () => {
     const response = await healthGet();
     expect(response.ok).toBe(true);
     const body = await response.json();

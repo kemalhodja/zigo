@@ -48,6 +48,8 @@ export type UserRow = {
   student_document_reviewed_by: string | null;
   grade_level: string | null;
   city: string | null;
+  district: string | null;
+  school_name: string | null;
   organization_type: string | null;
   social_safety_strike_count: number;
   social_interactions_blocked: boolean;
@@ -69,9 +71,31 @@ export type ChildProfileRow = {
   display_name: string;
   age_group: string | null;
   grade_level: string | null;
+  city: string | null;
+  district: string | null;
+  school_name: string | null;
   avatar_assets: AvatarAssets;
   total_points: number;
   created_at: string;
+};
+
+export type ClassGroupRow = {
+  id: string;
+  city: string;
+  district: string;
+  school_name: string;
+  grade_level: string;
+  group_name: string;
+  created_at: string;
+};
+
+export type ClassGroupMemberRow = {
+  id: string;
+  group_id: string;
+  user_id: string | null;
+  child_profile_id: string | null;
+  role: "student" | "parent";
+  joined_at: string;
 };
 
 export type StoreProductRow = {
@@ -259,6 +283,8 @@ export type SocialPostRow = {
   id: string;
   author_id: string;
   area_id: number | null;
+  target_audience: "all" | "parent_only" | "grade";
+  target_grade: string | null;
   caption: string;
   media_url: string | null;
   media_type: SocialMediaType;
@@ -409,6 +435,10 @@ export type Database = {
           student_document_submitted_at?: string | null;
           student_document_reviewed_at?: string | null;
           student_document_reviewed_by?: string | null;
+          grade_level?: string | null;
+          city?: string | null;
+          district?: string | null;
+          school_name?: string | null;
           organization_type?: string | null;
           ad_free_until?: string | null;
           is_premium?: boolean;
@@ -429,6 +459,10 @@ export type Database = {
           student_document_submitted_at?: string | null;
           student_document_reviewed_at?: string | null;
           student_document_reviewed_by?: string | null;
+          grade_level?: string | null;
+          city?: string | null;
+          district?: string | null;
+          school_name?: string | null;
           organization_type?: string | null;
           ad_free_until?: string | null;
           is_premium?: boolean;
@@ -497,6 +531,10 @@ export type Database = {
           parent_id: string;
           display_name: string;
           age_group?: string | null;
+          grade_level?: string | null;
+          city?: string | null;
+          district?: string | null;
+          school_name?: string | null;
           avatar_assets?: AvatarAssets;
           total_points?: number;
           created_at?: string;
@@ -504,6 +542,10 @@ export type Database = {
         Update: {
           display_name?: string;
           age_group?: string | null;
+          grade_level?: string | null;
+          city?: string | null;
+          district?: string | null;
+          school_name?: string | null;
           avatar_assets?: AvatarAssets;
           total_points?: number;
           created_at?: string;
@@ -514,6 +556,54 @@ export type Database = {
             columns: ["parent_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      class_groups: {
+        Row: ClassGroupRow;
+        Insert: {
+          id?: string;
+          city: string;
+          district: string;
+          school_name: string;
+          grade_level: string;
+          group_name: string;
+          created_at?: string;
+        };
+        Update: {
+          city?: string;
+          district?: string;
+          school_name?: string;
+          grade_level?: string;
+          group_name?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      class_group_members: {
+        Row: ClassGroupMemberRow;
+        Insert: {
+          id?: string;
+          group_id: string;
+          user_id?: string | null;
+          child_profile_id?: string | null;
+          role: "student" | "parent";
+          joined_at?: string;
+        };
+        Update: {
+          group_id?: string;
+          user_id?: string | null;
+          child_profile_id?: string | null;
+          role?: "student" | "parent";
+          joined_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "class_group_members_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "class_groups";
             referencedColumns: ["id"];
           },
         ];
@@ -782,6 +872,8 @@ export type Database = {
           id?: string;
           author_id: string;
           area_id?: number | null;
+          target_audience?: "all" | "parent_only" | "grade";
+          target_grade?: string | null;
           caption: string;
           media_url?: string | null;
           media_type?: SocialMediaType;
@@ -803,6 +895,8 @@ export type Database = {
         };
         Update: {
           area_id?: number | null;
+          target_audience?: "all" | "parent_only" | "grade";
+          target_grade?: string | null;
           caption?: string;
           media_url?: string | null;
           media_type?: SocialMediaType;
@@ -2385,6 +2479,29 @@ export type Database = {
           hours_to_grant?: number;
         };
         Returns: void;
+      };
+      is_user_subscriber: {
+        Args: {
+          target_user_id: string;
+        };
+        Returns: boolean;
+      };
+      join_class_group: {
+        Args: {
+          p_city: string;
+          p_district: string;
+          p_school_name: string;
+          p_grade_level: string;
+          p_child_profile_id?: string | null;
+        };
+        Returns: ClassGroupRow;
+      };
+      leave_class_group: {
+        Args: {
+          p_group_id: string;
+          p_child_profile_id?: string | null;
+        };
+        Returns: boolean;
       };
     };
     Enums: {

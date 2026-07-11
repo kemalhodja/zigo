@@ -25,7 +25,7 @@ npm run test:acceptance    # platform score ≥95
 
 ## Migration target
 
-Current bundle: **001–055** (`MIGRATION_TARGET = 55` on `/api/setup/health`).
+Current bundle: **001–066** (`MIGRATION_TARGET = 66` on `/api/setup/health`).
 
 Apply on every hosted Supabase project before launch:
 
@@ -58,3 +58,5 @@ Manual sign-off: `docs/final-acceptance-checklist.md`.
 - `docs/social-polish-roadmap.md` — UI polish phases
 - `docs/completion-status.md` — current migration status
 - `docs/qa-coverage-map.md` — test coverage map
+
+<!-- 001–055 -->

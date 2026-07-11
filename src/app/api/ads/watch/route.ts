@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
+
 import { grantAdFreeTime } from "@/lib/server/ad-state-manager";
 
 export async function POST(request: Request) {

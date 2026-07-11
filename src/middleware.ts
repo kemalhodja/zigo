@@ -51,6 +51,17 @@ const publicPagePrefixes = [
 ];
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === "/api/posts") {
+    return NextResponse.json(
+      {
+        error: "Legacy posts API retired. Use GET/POST /api/social/posts instead.",
+        code: "LEGACY_POSTS_RETIRED",
+        replacement: "/api/social/posts",
+      },
+      { status: 410 },
+    );
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

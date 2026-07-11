@@ -36,6 +36,7 @@ type ThreadMessage = {
 type LessonRequestsPanelProps = {
   role: "parent" | "teacher";
   viewerId: string;
+  isSubscriber?: boolean;
   childrenOptions?: ChildOption[];
 };
 
@@ -46,7 +47,7 @@ function statusLabel(status: RequestItem["status"], labels: ReturnType<typeof us
   return labels.closedStatus;
 }
 
-export function LessonRequestsPanel({ role, viewerId, childrenOptions = [] }: LessonRequestsPanelProps) {
+export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, childrenOptions = [] }: LessonRequestsPanelProps) {
   const lr = useMessages().lessonRequests;
   const router = useRouter();
   const [requests, setRequests] = useState<RequestItem[]>([]);
@@ -230,7 +231,23 @@ export function LessonRequestsPanel({ role, viewerId, childrenOptions = [] }: Le
 
       {message ? <p className="mt-3 text-sm font-bold text-crystal">{message}</p> : null}
 
-      {showComposer && role === "parent" ? (
+      {showComposer && role === "parent" && !isSubscriber ? (
+        <div className="mt-4 relative rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-purple-50 p-5 text-center shadow-sm">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gradient-to-r from-crystal to-berry text-white text-xl shadow-md">
+            👑
+          </div>
+          <h3 className="mt-2.5 text-sm font-black text-night">Öğretmenlerle Doğrudan Mesajlaşma (DM) Abone Özeldir</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-600 max-w-md mx-auto">
+            Öğretmenlere ders talebi göndermek, özel soru sormak ve birebir mesajlaşmak için Veli Aboneliği (Zigo Plus) gereklidir.
+          </p>
+          <a
+            href="#zigo-plus-plans"
+            className="mt-3.5 inline-block rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-2.5 text-xs font-black text-white shadow transition hover:opacity-95"
+          >
+            Veli Aboneliği Al & DM Özelliğini Aç
+          </a>
+        </div>
+      ) : showComposer && role === "parent" ? (
         <div className="mt-4 space-y-3 rounded-2xl border border-cyan-100 bg-cyan-50/40 p-4">
           <label className="block">
             <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{lr.chooseTeacher}</span>
@@ -370,34 +387,44 @@ export function LessonRequestsPanel({ role, viewerId, childrenOptions = [] }: Le
                             </div>
                           ))
                         )}
-                        <label className="block">
-                          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
-                            {lr.writeMessage}
-                          </span>
-                          <textarea
-                            className="zigo-input mt-1 min-h-20 w-full rounded-xl px-3 py-2 text-sm font-semibold"
-                            onChange={(event) => setThreadMessage(event.target.value)}
-                            value={threadMessage}
-                          />
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            className="tap-scale zigo-cta rounded-xl px-3 py-2 text-xs font-black text-white disabled:opacity-60"
-                            disabled={!threadMessage.trim() || pendingAction === `send:${item.id}`}
-                            onClick={() => void sendThreadMessage(item.id)}
-                            type="button"
-                          >
-                            {lr.sendMessage}
-                          </button>
-                          <button
-                            className="tap-scale rounded-xl bg-slate-200 px-3 py-2 text-xs font-black text-night"
-                            disabled={pendingAction === item.id}
-                            onClick={() => void updateStatus(item.id, "closed")}
-                            type="button"
-                          >
-                            {lr.close}
-                          </button>
-                        </div>
+                        {role === "parent" && !isSubscriber ? (
+                          <div className="rounded-xl border border-pink-200 bg-pink-50/70 p-3.5 text-center">
+                            <p className="text-xs font-black text-night">👑 DM Yöneticisi Abone Özeldir</p>
+                            <p className="mt-0.5 text-[0.7rem] text-slate-600">Öğretmene doğrudan mesaj atmak için aboneliğe geçin.</p>
+                            <a href="#zigo-plus-plans" className="mt-2 inline-block rounded-lg bg-gradient-to-r from-crystal to-berry px-3 py-1.5 text-[0.7rem] font-black text-white">Veli Aboneliği Al</a>
+                          </div>
+                        ) : (
+                          <>
+                            <label className="block">
+                              <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                                {lr.writeMessage}
+                              </span>
+                              <textarea
+                                className="zigo-input mt-1 min-h-20 w-full rounded-xl px-3 py-2 text-sm font-semibold"
+                                onChange={(event) => setThreadMessage(event.target.value)}
+                                value={threadMessage}
+                              />
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                className="tap-scale zigo-cta rounded-xl px-3 py-2 text-xs font-black text-white disabled:opacity-60"
+                                disabled={!threadMessage.trim() || pendingAction === `send:${item.id}`}
+                                onClick={() => void sendThreadMessage(item.id)}
+                                type="button"
+                              >
+                                {lr.sendMessage}
+                              </button>
+                              <button
+                                className="tap-scale rounded-xl bg-slate-200 px-3 py-2 text-xs font-black text-night"
+                                disabled={pendingAction === item.id}
+                                onClick={() => void updateStatus(item.id, "closed")}
+                                type="button"
+                              >
+                                {lr.close}
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ) : null}
                   </div>
