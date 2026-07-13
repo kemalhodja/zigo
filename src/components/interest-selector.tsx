@@ -129,7 +129,6 @@ export function InterestSelector({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-black text-night">{area.area_name}</p>
-                  <p className="mt-0.5 text-xs font-bold text-slate-500">{gradeLabels[gradeKey]}</p>
                 </div>
                 <span
                   className={`rounded-lg px-2.5 py-1 text-xs font-black shrink-0 ${
@@ -304,7 +303,7 @@ export function InterestSelector({
                     2. Adım: Branş & Akademik Dersler
                   </p>
                   <h4 className="text-base font-black text-night">
-                    📚 {gradeLabels[gradeFilter as GradeCategoryKey] || gradeFilter} Branşları ({matchingGradeAreas.length} Alan)
+                    📚 Branşlar ({matchingGradeAreas.length} Alan)
                   </h4>
                 </div>
               </div>

@@ -173,7 +173,7 @@ export function ChildAreaSelector({
           <>
             <div className="space-y-2">
               <p className="text-[0.65rem] font-black uppercase tracking-[0.14em] text-indigo-600">
-                📚 {gradeLabels[gradeFilter as GradeCategoryKey] || gradeFilter} — Branşlar ve Okul Dersleri ({matchingGradeAreas.length})
+                📚 Branşlar ve Okul Dersleri ({matchingGradeAreas.length})
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {matchingGradeAreas.length > 0 ? (
