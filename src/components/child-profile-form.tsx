@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type Status = "idle" | "saving" | "saved" | "error";
@@ -83,11 +84,12 @@ export function ChildProfileForm() {
           <option disabled value="">
             {m.interest.selectArea}
           </option>
-          <option value={f.preschool}>{f.preschool}</option>
-          <option value={f.primaryLow}>{f.primaryLow}</option>
-          <option value={f.primaryHigh}>{f.primaryHigh}</option>
-          <option value={f.middle}>{f.middle}</option>
-          <option value={f.high}>{f.high}</option>
+          <option value="Okul Öncesi">Okul Öncesi</option>
+          {GRADE_LEVEL_OPTIONS.filter((option) => option !== "Veli").map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
       </div>
 
