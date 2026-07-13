@@ -252,7 +252,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
           <option value="">{s.chooseArea}</option>
           {areas.map((area) => (
             <option key={area.id} value={area.id}>
-              {area.area_name}{area.age_group ? ` · ${area.age_group}` : ""}
+              {area.area_name}
             </option>
           ))}
         </select>

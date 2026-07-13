@@ -378,7 +378,7 @@ export function SocialCreateForm({
             <option value="">{sc.subject}</option>
             {areas.map((area) => (
               <option key={area.id} value={area.id}>
-                {area.area_name}{area.age_group ? ` · ${area.age_group}` : ""}
+                {area.area_name}
               </option>
             ))}
           </select>
