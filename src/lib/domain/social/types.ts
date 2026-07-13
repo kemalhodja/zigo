@@ -6,7 +6,7 @@ import type {
 } from "@/lib/supabase/database.types";
 
 export type SocialFeedPost = Omit<SocialPostRow, "premium_prep_url" | "sponsored_target_url"> & {
-  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified"> | null;
+  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "avatar_url"> | null;
   area: Pick<EducationAreaRow, "area_name"> | null;
   likes_count: number;
   comments_count: number;
@@ -27,7 +27,7 @@ export type ActiveStory = {
   media_url: string | null;
   caption: string | null;
   created_at: string;
-  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified"> | null;
+  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "avatar_url"> | null;
 };
 
 export type SocialNotification = {
@@ -38,7 +38,7 @@ export type SocialNotification = {
   lesson_request_id: string | null;
   is_read: boolean;
   created_at: string;
-  actor: Pick<UserRow, "id" | "full_name" | "role" | "is_verified"> | null;
+  actor: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "avatar_url"> | null;
 };
 
 export type SocialComment = {
@@ -46,7 +46,7 @@ export type SocialComment = {
   content: string;
   moderation_status: string;
   created_at: string;
-  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified"> | null;
+  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "avatar_url"> | null;
 };
 
 export type ProfileSocialStats = {

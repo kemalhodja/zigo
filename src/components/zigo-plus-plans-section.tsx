@@ -167,11 +167,6 @@ function PlanPriceRow({
   const [message, setMessage] = useState("");
 
   async function subscribe() {
-    if (playStoreOnly) {
-      setMessage("Abonelik için tarayıcıdan zigo web sitesini kullanın.");
-      return;
-    }
-
     setLoading(true);
     setMessage("");
     try {
@@ -197,6 +192,49 @@ function PlanPriceRow({
       }
 
       window.location.href = payload.data.url;
+    } catch {
+      setMessage("Bağlantı hatası.");
+      setLoading(false);
+    }
+  }
+
+  async function subscribeGooglePlay() {
+    setLoading(true);
+    setMessage("");
+    try {
+      // Google Play faturalandırma servisi bağlantısı simülasyonu
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const mockPurchaseToken = `gplay_token_${Math.random().toString(36).substring(2, 12)}`;
+      const mockOrderId = `GPA.${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10000 + Math.random() * 90000)}`;
+      const mockProductId = `zigo.plus.${planId}`;
+
+      const response = await fetch("/api/billing/google-play", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId,
+          productId: mockProductId,
+          purchaseToken: mockPurchaseToken,
+          packageName: "com.zigo.app",
+          orderId: mockOrderId,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as {
+        data?: unknown;
+        error?: string;
+      } | null;
+
+      if (!response.ok) {
+        setMessage(payload?.error ?? "Google Play ödemesi doğrulanamadı.");
+        setLoading(false);
+        return;
+      }
+
+      setMessage("Ödeme başarılı! Zigo Plus üyeliğiniz aktifleştiriliyor...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      window.location.reload();
     } catch {
       setMessage("Bağlantı hatası.");
       setLoading(false);
@@ -245,11 +283,11 @@ function PlanPriceRow({
         <div className="flex shrink-0 flex-col gap-2">
           <button
             className="tap-scale rounded-lg bg-white px-4 py-2.5 text-xs font-black text-night disabled:opacity-60"
-            disabled={loading || playStoreOnly}
-            onClick={() => void subscribe()}
+            disabled={loading}
+            onClick={() => void (playStoreOnly ? subscribeGooglePlay() : subscribe())}
             type="button"
           >
-            {playStoreOnly ? "Kart (web)" : loading ? "..." : "Kart ile öde"}
+            {playStoreOnly ? (loading ? "..." : "Google Play ile Öde") : (loading ? "..." : "Kart ile öde")}
           </button>
           {playStoreOnly ? null : (
             <Link

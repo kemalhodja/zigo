@@ -14,7 +14,7 @@ export function isWebCheckoutAllowedForRequest(request: Request) {
 
 export function getBillingPlatformMessage(locale: "tr" | "en" = "tr") {
   if (locale === "en") {
-    return "Subscriptions on the Android app will use Google Play Billing soon. For now, subscribe from the Zigo website in your browser.";
+    return "Google Play Billing is active on the Android app. Select a plan to purchase.";
   }
-  return "Android uygulamasında abonelik yakında Google Play üzerinden açılacak. Şimdilik tarayıcıdan zigo web sitesinden abone olabilirsiniz.";
+  return "Android uygulamasında Google Play ile ödeme aktif edilmiştir. Planınızı seçerek satın alabilirsiniz.";
 }

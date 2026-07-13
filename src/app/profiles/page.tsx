@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SignOutButton } from "@/components/sign-out-button";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getChildProfiles } from "@/lib/domain/children";
@@ -79,6 +80,12 @@ export default async function ProfilesPage() {
           {p.continueFeed}
         </Link>
       </section>
+
+      {profiles.length > 0 && (
+        <section className="mt-4">
+          <SignOutButton className="w-full rounded-lg bg-rose-50 py-3 text-sm font-black text-rose-600 border border-rose-100 hover:bg-rose-100 transition" />
+        </section>
+      )}
     </div>
   );
 }

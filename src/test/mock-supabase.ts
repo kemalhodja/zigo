@@ -111,6 +111,7 @@ export const samplePostRow = {
     role: "teacher" as const,
     is_verified: true,
     organization_type: null,
+    avatar_url: null,
   },
   area: { area_name: "Matematik" },
 };

@@ -54,7 +54,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
           className="tap-scale flex items-center gap-3 px-4 py-2.5"
           href={post.author?.id ? `/profile/${post.author.id}` : "/profile"}
         >
-          <SocialAvatar className="size-9" label={creator} />
+          <SocialAvatar className="size-9" label={creator} imageUrl={post.author?.avatar_url} />
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-night">{creator}</p>
             {post.author?.is_verified ? (
@@ -145,7 +145,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
           comments.map((comment) => (
             <article className="border-b border-slate-100 py-3 last:border-b-0" key={comment.id}>
               <div className="flex items-center gap-2">
-                <SocialAvatar className="size-8" label={comment.author?.full_name ?? m.postDetail.zigoUser} ring={false} />
+                <SocialAvatar className="size-8" label={comment.author?.full_name ?? m.postDetail.zigoUser} imageUrl={comment.author?.avatar_url} ring={false} />
                 <p className="text-sm leading-5 text-slate-700">
                   <span className="font-black text-night">{comment.author?.full_name ?? m.postDetail.zigoUser}</span>{" "}
                   {comment.content}

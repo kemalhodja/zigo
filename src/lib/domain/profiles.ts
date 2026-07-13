@@ -36,11 +36,12 @@ export const setOrganizationTypeSchema = z.object({
 
 export const updateUserProfileSchema = z
   .object({
+    fullName: z.string().trim().min(2).max(100).optional(),
     bio: z.string().trim().max(500).optional(),
-    avatarUrl: z.string().trim().url().max(500).optional(),
+    avatarUrl: z.string().trim().url().max(500).optional().nullable(),
   })
-  .refine((value) => value.bio !== undefined || value.avatarUrl !== undefined, {
-    message: "Provide bio or avatarUrl to update.",
+  .refine((value) => value.fullName !== undefined || value.bio !== undefined || value.avatarUrl !== undefined, {
+    message: "Provide fullName, bio or avatarUrl to update.",
   });
 
 export const submitStudentDocumentSchema = z.object({
@@ -181,6 +182,7 @@ export async function updateUserProfile(
   const { data, error } = await supabase.rpc("update_user_profile", {
     ...(safeBio !== undefined ? { next_bio: safeBio } : {}),
     ...(parsed.avatarUrl !== undefined ? { next_avatar_url: parsed.avatarUrl } : {}),
+    ...(parsed.fullName !== undefined ? { next_full_name: parsed.fullName } : {}),
   });
 
   if (error) throw error;

@@ -10,7 +10,7 @@ import type {
 } from "@/lib/supabase/database.types";
 
 export type RawSocialPost = SocialPostRow & {
-  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "organization_type"> | null;
+  author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "organization_type" | "avatar_url"> | null;
   area: Pick<EducationAreaRow, "area_name"> | null;
 };
 

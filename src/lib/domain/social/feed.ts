@@ -70,7 +70,8 @@ export async function getSocialFeed(
         full_name,
         role,
         is_verified,
-        organization_type
+        organization_type,
+        avatar_url
       ),
       area:area_id (
         area_name
@@ -151,7 +152,8 @@ export async function searchSocialPosts(
         full_name,
         role,
         is_verified,
-        organization_type
+        organization_type,
+        avatar_url
       ),
       area:area_id (
         area_name
@@ -253,7 +255,8 @@ export async function getSocialPostById(
         full_name,
         role,
         is_verified,
-        organization_type
+        organization_type,
+        avatar_url
       ),
       area:area_id (
         area_name
@@ -310,7 +313,8 @@ export async function getFollowingFeed(
         full_name,
         role,
         is_verified,
-        organization_type
+        organization_type,
+        avatar_url
       ),
       area:area_id (
         area_name
@@ -411,7 +415,8 @@ export async function getActiveStories(supabase: SupabaseClient<Database>): Prom
         full_name,
         role,
         is_verified,
-        organization_type
+        organization_type,
+        avatar_url
       )
     `,
     )
@@ -442,7 +447,8 @@ export async function getNotifications(
         id,
         full_name,
         role,
-        is_verified
+        is_verified,
+        avatar_url
       )
     `,
     )
@@ -511,7 +517,8 @@ export async function getPostComments(
         id,
         full_name,
         role,
-        is_verified
+        is_verified,
+        avatar_url
       )
     `,
     )

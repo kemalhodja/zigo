@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FollowButton } from "@/components/follow-button";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { SignOutButton } from "@/components/sign-out-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
@@ -72,7 +73,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </Link>
         </div>
         <div className="flex items-center gap-5">
-          <SocialAvatar accent="from-crystal via-fuchsia-500 to-rose-400" className="story-ring size-[5.25rem] text-3xl" label={profile.name} />
+          <SocialAvatar
+            accent="from-crystal via-fuchsia-500 to-rose-400"
+            className="story-ring size-[5.25rem] text-3xl"
+            label={profile.name}
+            imageUrl={profile.avatarUrl}
+          />
           <div className="grid flex-1 grid-cols-3 gap-2 text-center">
             {stats.map((stat) => (
               <div className="px-1 py-2" key={stat.label}>
@@ -116,9 +122,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
 
         <div className="zigo-action-grid mt-4">
-          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/onboarding"}>
+          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/profile/edit"}>
             {profile.isSignedOut ? m.common.signIn : m.common.edit}
           </Link>
+          {!profile.isSignedOut && (
+            <SignOutButton className="zigo-action-chip rounded-lg border border-slate-200 bg-white text-night" />
+          )}
           {profile.role === "teacher" ? (
             <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/setup" : "/create"}>
               {profile.isSignedOut ? m.common.setup : m.header.create}
@@ -522,6 +531,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
   suggestedCreators: ProfileSuggestedCreator[];
   isPreview: boolean;
   isSignedOut: boolean;
+  avatarUrl: string | null;
 }> {
   const signedOutMessages = await getServerMessages();
   const pf = signedOutMessages.profile;
@@ -560,6 +570,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
     })),
     isPreview: true,
     isSignedOut: false,
+    avatarUrl: null as string | null,
   };
 
   if (!hasSupabaseEnv()) {
@@ -579,6 +590,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
       suggestedCreators: [],
       isPreview: false,
       isSignedOut: true,
+      avatarUrl: null as string | null,
     };
   }
 
@@ -598,6 +610,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
         suggestedCreators: [],
         isPreview: false,
         isSignedOut: true,
+        avatarUrl: null as string | null,
       };
 
   return withSupabaseFallback(async () => {
@@ -619,6 +632,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
       suggestedCreators: [],
       isPreview: false,
       isSignedOut: true,
+      avatarUrl: null as string | null,
     };
   }
 
@@ -679,7 +693,7 @@ function toProfileData(
     id: profile.id,
     name: profile.full_name,
     handle: profile.full_name.toLowerCase().replaceAll(" ", ""),
-    bio: profile.role === "teacher" ? pf.fallbackTeacherBio : pf.fallbackLearnerBio,
+    bio: profile.bio || (profile.role === "teacher" ? pf.fallbackTeacherBio : pf.fallbackLearnerBio),
     role: profile.role as UserProfile["role"] | "guest",
     organization_type: profile.organization_type as string | null,
     isVerified: profile.is_verified,
@@ -697,5 +711,6 @@ function toProfileData(
         : [],
     isPreview: false,
     isSignedOut: false,
+    avatarUrl: profile.avatar_url || null,
   };
 }

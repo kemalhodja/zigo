@@ -49,6 +49,7 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
     const profile = await updateUserProfile(supabase, {
+      fullName: body.fullName,
       bio: body.bio,
       avatarUrl: body.avatarUrl,
     });
@@ -57,7 +58,7 @@ export async function PATCH(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Bio must be under 500 characters and avatar URL must be valid." },
+        { error: "Name must be 2-100 characters, bio under 500 characters, and avatar URL must be valid." },
         { status: 400 },
       );
     }

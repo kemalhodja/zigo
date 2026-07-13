@@ -5,7 +5,11 @@ import { useState } from "react";
 
 import { useMessages } from "@/lib/i18n/locale-context";
 
-export function SignOutButton() {
+export function SignOutButton({
+  className = "rounded-lg bg-slate-100 px-4 py-3 text-sm font-black text-slate-600",
+}: {
+  className?: string;
+} = {}) {
   const s = useMessages().signOut;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -34,16 +38,16 @@ export function SignOutButton() {
   }
 
   return (
-    <div className="space-y-1 text-right">
+    <div className="inline-block w-full">
       <button
-        className="rounded-lg bg-slate-100 px-4 py-3 text-sm font-black text-slate-600 disabled:opacity-60"
+        className={`w-full text-center transition tap-scale ${className} disabled:opacity-60`}
         disabled={isLoading}
         onClick={signOut}
         type="button"
       >
         {isLoading ? s.signingOut : s.label}
       </button>
-      {message ? <p className="text-xs font-bold text-red-600">{message}</p> : null}
+      {message ? <p className="mt-1 text-center text-xs font-bold text-red-600">{message}</p> : null}
     </div>
   );
 }

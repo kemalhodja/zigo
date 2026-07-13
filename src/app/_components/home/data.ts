@@ -46,6 +46,7 @@ export type DisplayPost = {
   showSponsored?: boolean;
   canOpenSponsored?: boolean;
   isSponsoredActive?: boolean;
+  avatarUrl?: string | null;
 };
 
 export type DisplaySuggestedCreator = {
@@ -351,6 +352,7 @@ function toDisplayPost(
     showSponsored: Boolean(post.has_sponsored && post.sponsored_label),
     canOpenSponsored: post.can_open_sponsored,
     isSponsoredActive: post.is_sponsored_active,
+    avatarUrl: post.author?.avatar_url ?? null,
   };
 }
 
