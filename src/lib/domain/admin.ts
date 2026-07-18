@@ -13,6 +13,17 @@ export const verifyUserSchema = z.object({
   verified: z.boolean(),
 });
 
+export const updateUserStatusSchema = z.object({
+  userId: z.string().uuid(),
+  status: z.enum(["active", "suspended", "limited", "closed"]),
+});
+
+export const sendUserMessageSchema = z.object({
+  userId: z.string().uuid(),
+  title: z.string().min(1).max(255),
+  body: z.string().min(1),
+});
+
 export const updateRedemptionStatusSchema = z.object({
   redemptionId: z.string().uuid(),
   status: z.enum(["pending_parent_approval", "approved", "fulfilled", "cancelled"]),
@@ -129,6 +140,52 @@ export async function verifyUser(
     target_user_id: parsed.userId,
     verified: parsed.verified,
   });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function adminUpdateUserStatus(
+  supabase: SupabaseClient<Database>,
+  input: z.infer<typeof updateUserStatusSchema>,
+) {
+  const parsed = updateUserStatusSchema.parse(input);
+
+  // @ts-expect-error newly added RPC
+  const { error } = await supabase.rpc("admin_update_user_status", {
+    target_user_id: parsed.userId,
+    new_status: parsed.status,
+  });
+
+  if (error) throw error;
+}
+
+export async function adminSendUserMessage(
+  supabase: SupabaseClient<Database>,
+  input: z.infer<typeof sendUserMessageSchema>,
+) {
+  const parsed = sendUserMessageSchema.parse(input);
+
+  // @ts-expect-error newly added RPC
+  const { error } = await supabase.rpc("admin_send_user_message", {
+    target_user_id: parsed.userId,
+    msg_title: parsed.title,
+    msg_body: parsed.body,
+  });
+
+  if (error) throw error;
+}
+
+export async function searchUsers(
+  supabase: SupabaseClient<Database>,
+  query: string
+) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .or(`full_name.ilike.%${query}%,email.ilike.%${query}%`)
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) throw error;
   return data;

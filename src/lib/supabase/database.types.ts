@@ -21,6 +21,7 @@ export type StoreRedemptionStatus =
   | "fulfilled"
   | "cancelled";
 export type BankTransferRequestStatus = "pending" | "approved" | "rejected" | "cancelled";
+export type AccountStatus = "active" | "suspended" | "limited" | "closed";
 
 export type AvatarAssets = {
   hat: string | null;
@@ -57,6 +58,7 @@ export type UserRow = {
   social_interactions_blocked_at: string | null;
   ad_free_until: string | null;
   is_premium: boolean;
+  account_status: AccountStatus;
   created_at: string;
 };
 
@@ -193,7 +195,16 @@ export type StoreRedemptionRow = {
   child_profile_id: string | null;
   points_spent: number;
   status: StoreRedemptionStatus;
-  note: string | null;
+  content: string | null;
+  created_at: string;
+};
+
+export type AdminMessageRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  body: string;
+  is_read: boolean;
   created_at: string;
 };
 
@@ -420,6 +431,34 @@ export type AwardLearningPointsResult = {
 export type Database = {
   public: {
     Tables: {
+      admin_messages: {
+        Row: AdminMessageRow;
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          body: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          body?: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_messages_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       users: {
         Row: UserRow;
         Insert: {
@@ -444,8 +483,10 @@ export type Database = {
           district?: string | null;
           school_name?: string | null;
           organization_type?: string | null;
+          social_interactions_blocked_at?: string | null;
           ad_free_until?: string | null;
           is_premium?: boolean;
+          account_status?: AccountStatus;
           created_at?: string;
         };
         Update: {
@@ -469,8 +510,10 @@ export type Database = {
           district?: string | null;
           school_name?: string | null;
           organization_type?: string | null;
+          social_interactions_blocked_at?: string | null;
           ad_free_until?: string | null;
           is_premium?: boolean;
+          account_status?: AccountStatus;
           created_at?: string;
         };
         Relationships: [];

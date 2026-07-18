@@ -73,6 +73,12 @@ export function ChildAreaSelector({
     });
   }
 
+  function cleanAreaName(name: string) {
+    return name
+      .replace(/^(1-4\.\s*Sınıf|5-8\.\s*Sınıf|9-12\.\s*Sınıf|Okul Öncesi|LGS|YKS|TYT|AYT)\s*/i, "")
+      .trim();
+  }
+
   async function saveAreas() {
     if (isSaving) return;
     if (selectedAreaIds.size === 0) {
@@ -190,7 +196,7 @@ export function ChildAreaSelector({
                         onClick={() => toggleArea(area.id)}
                         type="button"
                       >
-                        {isSelected ? `✓ ${area.area_name}` : `+ ${area.area_name}`}
+                        {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
                       </button>
                     );
                   })
@@ -218,7 +224,7 @@ export function ChildAreaSelector({
                       onClick={() => toggleArea(area.id)}
                       type="button"
                     >
-                      {isSelected ? `✓ ${area.area_name}` : `+ ${area.area_name}`}
+                      {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
                     </button>
                   );
                 })}
@@ -250,7 +256,7 @@ export function ChildAreaSelector({
                           onClick={() => toggleArea(area.id)}
                           type="button"
                         >
-                          {isSelected ? `✓ ${area.area_name}` : `+ ${area.area_name}`}
+                          {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
                         </button>
                       );
                     })}
@@ -279,7 +285,7 @@ export function ChildAreaSelector({
                       onClick={() => toggleArea(area.id)}
                       type="button"
                     >
-                      {isSelected ? `✓ ${area.area_name}` : `+ ${area.area_name}`}
+                      {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
                     </button>
                   );
                 })}

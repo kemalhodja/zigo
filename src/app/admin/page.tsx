@@ -6,6 +6,7 @@ import { AdminStockForm } from "@/components/admin-stock-form";
 import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
 import { AdminUserActions } from "@/components/admin-user-actions";
+import { AdminUserSearch } from "@/components/admin-user-search";
 import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -46,7 +47,12 @@ function UserRow({
             {user.is_verified ? labels.verified : labels.pendingVerification}
           </p>
         </div>
-        <AdminUserActions isVerified={user.is_verified} userId={user.id} />
+        <AdminUserActions 
+          isVerified={user.is_verified} 
+          userId={user.id} 
+          userName={user.full_name} 
+          accountStatus={user.account_status} 
+        />
       </div>
       {user.role === "teacher" ? <AdminTeacherAreaForm areas={areas} teacherId={user.id} /> : null}
     </div>
@@ -152,6 +158,8 @@ export default async function AdminPage() {
       </section>
 
       <AdminStripeCampaignPanel />
+
+      <AdminUserSearch />
 
       <section className="-mx-4 bg-white">
         <div className="border-b border-slate-100 px-4 py-3">

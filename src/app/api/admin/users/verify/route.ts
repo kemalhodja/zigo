@@ -23,8 +23,8 @@ export async function POST(request: Request) {
     const message = error instanceof z.ZodError
       ? "Choose a valid user and verification status."
       : error instanceof Error
-        ? error.message
-        : "User verification failed.";
-    return NextResponse.json({ error: message }, { status: 400 });
+        ? error.message || (error as any).details || (error as any).hint
+        : (error as any)?.message || "User verification failed.";
+    return NextResponse.json({ error: message, fullError: error }, { status: 400 });
   }
 }

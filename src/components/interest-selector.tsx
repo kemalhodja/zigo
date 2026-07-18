@@ -104,6 +104,12 @@ export function InterestSelector({
         ? { href: "/parent", label: i.openParent }
         : { href: "/", label: i.continueFeed };
 
+  function cleanAreaName(name: string) {
+    return name
+      .replace(/^(1-4\.\s*Sınıf|5-8\.\s*Sınıf|9-12\.\s*Sınıf|Okul Öncesi|LGS|YKS|TYT|AYT)\s*/i, "")
+      .trim();
+  }
+
   function renderAreaButtons(areaList: EducationArea[]) {
     return (
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -112,6 +118,7 @@ export function InterestSelector({
           const gradeKey = isGeneralInterestArea(area)
             ? "generalInterest"
             : resolveGradeCategory(area.age_group);
+          const displayName = cleanAreaName(area.area_name);
 
           return (
             <button
@@ -123,12 +130,12 @@ export function InterestSelector({
               onClick={() => toggleArea(area.id)}
               type="button"
               aria-pressed={isSelected}
-              aria-label={`${area.area_name} - ${gradeLabels[gradeKey]}${isSelected ? ` (${f.selected})` : ` (${f.add})`}`}
+              aria-label={`${displayName} - ${gradeLabels[gradeKey]}${isSelected ? ` (${f.selected})` : ` (${f.add})`}`}
               role="listitem"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-black text-night">{area.area_name}</p>
+                  <p className="font-black text-night">{displayName}</p>
                 </div>
                 <span
                   className={`rounded-lg px-2.5 py-1 text-xs font-black shrink-0 ${
