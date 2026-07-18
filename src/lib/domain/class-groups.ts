@@ -8,6 +8,7 @@ export const joinClassGroupSchema = z.object({
   district: z.string().trim().min(2, "İlçe adı en az 2 karakter olmalıdır"),
   schoolName: z.string().trim().min(3, "Okul adı en az 3 karakter olmalıdır"),
   gradeLevel: z.string().trim().min(1, "Sınıf seviyesi seçilmelidir"),
+  classroom: z.string().trim().optional().default(""),
   childProfileId: z.string().uuid().optional().nullable(),
 });
 
@@ -25,6 +26,7 @@ export type ClassGroupInfo = {
     district: string | null;
     schoolName: string | null;
     gradeLevel: string | null;
+    classroom: string | null;
   };
 };
 
@@ -38,12 +40,13 @@ export async function getClassGroupInfo(
     district: null as string | null,
     schoolName: null as string | null,
     gradeLevel: null as string | null,
+    classroom: null as string | null,
   };
 
   if (childProfileId) {
     const { data: child } = await supabase
       .from("child_profiles")
-      .select("city, district, school_name, grade_level")
+      .select("city, district, school_name, grade_level, classroom")
       .eq("id", childProfileId)
       .eq("parent_id", userId)
       .maybeSingle();
@@ -54,12 +57,13 @@ export async function getClassGroupInfo(
         district: child.district,
         schoolName: child.school_name,
         gradeLevel: child.grade_level,
+        classroom: child.classroom,
       };
     }
   } else {
     const { data: user } = await supabase
       .from("users")
-      .select("city, district, school_name, grade_level")
+      .select("city, district, school_name, grade_level, classroom")
       .eq("id", userId)
       .maybeSingle();
 
@@ -69,6 +73,7 @@ export async function getClassGroupInfo(
         district: user.district,
         schoolName: user.school_name,
         gradeLevel: user.grade_level,
+        classroom: user.classroom,
       };
     }
   }
@@ -89,6 +94,7 @@ export async function getClassGroupInfo(
     .eq("district", location.district)
     .eq("school_name", location.schoolName)
     .eq("grade_level", location.gradeLevel)
+    .eq("classroom", location.classroom || "")
     .maybeSingle();
 
   if (!group) {
@@ -143,6 +149,7 @@ export async function joinClassGroup(
     p_district: parsed.district,
     p_school_name: parsed.schoolName,
     p_grade_level: parsed.gradeLevel,
+    p_classroom: parsed.classroom,
     p_child_profile_id: parsed.childProfileId ?? null,
   });
 

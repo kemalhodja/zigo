@@ -5,7 +5,7 @@ import { AdminRedemptionStatus } from "@/components/admin-redemption-status";
 import { AdminStockForm } from "@/components/admin-stock-form";
 import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
-import { AdminTeacherActions } from "@/components/admin-teacher-actions";
+import { AdminUserActions } from "@/components/admin-user-actions";
 import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -13,7 +13,7 @@ import {
   getAdminStoreProducts,
   getAdminStoreRedemptions,
   getStudentDocumentQueue,
-  getTeacherVerificationQueue,
+  getUserVerificationQueue,
   isCurrentUserPlatformAdmin,
 } from "@/lib/domain/admin";
 import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
@@ -21,12 +21,12 @@ import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
-function TeacherRow({
-  teacher,
+function UserRow({
+  user,
   areas,
   labels,
 }: {
-  teacher: Awaited<ReturnType<typeof getTeacherVerificationQueue>>[number];
+  user: Awaited<ReturnType<typeof getUserVerificationQueue>>[number];
   areas: Awaited<ReturnType<typeof getEducationAreas>>;
   labels: {
     verified: string;
@@ -37,15 +37,18 @@ function TeacherRow({
     <div className="grid gap-3 border-b border-slate-100 px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-black text-night">{teacher.full_name}</p>
-          <p className="text-xs font-bold text-slate-500">{teacher.email}</p>
+          <p className="font-black text-night">{user.full_name}</p>
+          <p className="text-xs font-bold text-slate-500">
+            {user.email} • <span className="uppercase text-crystal">{user.role}</span>
+            {user.organization_type ? ` (${user.organization_type})` : ""}
+          </p>
           <p className="mt-1 text-xs font-black text-crystal">
-            {teacher.is_verified ? labels.verified : labels.pendingVerification}
+            {user.is_verified ? labels.verified : labels.pendingVerification}
           </p>
         </div>
-        <AdminTeacherActions isVerified={teacher.is_verified} teacherId={teacher.id} />
+        <AdminUserActions isVerified={user.is_verified} userId={user.id} />
       </div>
-      <AdminTeacherAreaForm areas={areas} teacherId={teacher.id} />
+      {user.role === "teacher" ? <AdminTeacherAreaForm areas={areas} teacherId={user.id} /> : null}
     </div>
   );
 }
@@ -102,8 +105,8 @@ export default async function AdminPage() {
     );
   }
 
-  const [teachers, products, redemptions, areas, studentDocuments, bankTransfers] = await Promise.all([
-    getTeacherVerificationQueue(supabase),
+  const [users, products, redemptions, areas, studentDocuments, bankTransfers] = await Promise.all([
+    getUserVerificationQueue(supabase),
     getAdminStoreProducts(supabase),
     getAdminStoreRedemptions(supabase),
     getEducationAreas(supabase),
@@ -111,11 +114,11 @@ export default async function AdminPage() {
     getPendingBankTransferQueue(supabase),
   ]);
 
-  const pendingTeachers = teachers.filter((teacher) => !teacher.is_verified);
-  const verifiedTeachers = teachers.filter((teacher) => teacher.is_verified);
+  const pendingUsers = users.filter((u) => !u.is_verified);
+  const verifiedUsers = users.filter((u) => u.is_verified);
 
   const auditItems = [
-    { label: a.queueTeacherVerify, value: pendingTeachers.length },
+    { label: "Onay Bekleyenler", value: pendingUsers.length },
     { label: a.queueStudentDocs, value: studentDocuments.length },
     { label: a.queueBankTransfers, value: bankTransfers.length },
     { label: a.queueStoreOrders, value: redemptions.length },
@@ -219,37 +222,37 @@ export default async function AdminPage() {
 
       <section className="-mx-4 bg-white">
         <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="text-lg font-black text-night">{a.pendingTeachersTitle}</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.pendingTeachersDesc}</p>
+          <h3 className="text-lg font-black text-night">Onay Bekleyen Kullanıcılar</h3>
+          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">Doğrulama bekleyen yeni hesaplar</p>
         </div>
-        {pendingTeachers.length === 0 ? (
+        {pendingUsers.length === 0 ? (
           <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">{a.noTeachersTitle}</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noTeachersDesc}</p>
+            <p className="text-sm font-black text-night">Bekleyen onay yok</p>
+            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">Tüm kullanıcılar onaylanmış.</p>
           </div>
         ) : (
-          pendingTeachers.map((teacher) => (
-            <TeacherRow
+          pendingUsers.map((user) => (
+            <UserRow
               areas={areas}
-              key={teacher.id}
+              key={user.id}
               labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
-              teacher={teacher}
+              user={user}
             />
           ))
         )}
       </section>
 
-      {verifiedTeachers.length > 0 ? (
+      {verifiedUsers.length > 0 ? (
         <section className="-mx-4 bg-white">
           <div className="border-b border-slate-100 px-4 py-3">
-            <h3 className="text-lg font-black text-night">{a.allTeachersTitle}</h3>
+            <h3 className="text-lg font-black text-night">Doğrulanmış Kullanıcılar</h3>
           </div>
-          {verifiedTeachers.map((teacher) => (
-            <TeacherRow
+          {verifiedUsers.map((user) => (
+            <UserRow
               areas={areas}
-              key={teacher.id}
+              key={user.id}
               labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
-              teacher={teacher}
+              user={user}
             />
           ))}
         </section>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { verifyTeacher } from "@/lib/domain/admin";
+import { verifyUser } from "@/lib/domain/admin";
 import { requirePlatformAdmin } from "@/lib/domain/admin-auth";
 
 export async function POST(request: Request) {
@@ -13,18 +13,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const teacher = await verifyTeacher(auth.supabase, {
-      teacherId: body.teacherId,
+    const user = await verifyUser(auth.supabase, {
+      userId: body.userId,
       verified: body.verified,
     });
 
-    return NextResponse.json({ data: teacher });
+    return NextResponse.json({ data: user });
   } catch (error) {
     const message = error instanceof z.ZodError
-      ? "Choose a valid teacher and verification status."
+      ? "Choose a valid user and verification status."
       : error instanceof Error
         ? error.message
-        : "Teacher verification failed.";
+        : "User verification failed.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

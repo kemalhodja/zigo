@@ -8,6 +8,11 @@ export const verifyTeacherSchema = z.object({
   verified: z.boolean(),
 });
 
+export const verifyUserSchema = z.object({
+  userId: z.string().uuid(),
+  verified: z.boolean(),
+});
+
 export const updateRedemptionStatusSchema = z.object({
   redemptionId: z.string().uuid(),
   status: z.enum(["pending_parent_approval", "approved", "fulfilled", "cancelled"]),
@@ -40,6 +45,17 @@ export async function getTeacherVerificationQueue(supabase: SupabaseClient<Datab
     .from("users")
     .select("*")
     .eq("role", "teacher")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getUserVerificationQueue(supabase: SupabaseClient<Database>) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .neq("role", "parent")
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -95,6 +111,22 @@ export async function verifyTeacher(
 
   const { data, error } = await supabase.rpc("verify_teacher", {
     target_teacher_id: parsed.teacherId,
+    verified: parsed.verified,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function verifyUser(
+  supabase: SupabaseClient<Database>,
+  input: z.infer<typeof verifyUserSchema>,
+) {
+  const parsed = verifyUserSchema.parse(input);
+
+  // @ts-expect-error verify_user is a newly added RPC
+  const { data, error } = await supabase.rpc("verify_user", {
+    target_user_id: parsed.userId,
     verified: parsed.verified,
   });
 

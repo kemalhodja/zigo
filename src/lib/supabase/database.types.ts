@@ -47,6 +47,7 @@ export type UserRow = {
   student_document_reviewed_at: string | null;
   student_document_reviewed_by: string | null;
   grade_level: string | null;
+  classroom: string | null;
   city: string | null;
   district: string | null;
   school_name: string | null;
@@ -71,6 +72,7 @@ export type ChildProfileRow = {
   display_name: string;
   age_group: string | null;
   grade_level: string | null;
+  classroom: string | null;
   city: string | null;
   district: string | null;
   school_name: string | null;
@@ -85,6 +87,7 @@ export type ClassGroupRow = {
   district: string;
   school_name: string;
   grade_level: string;
+  classroom: string;
   group_name: string;
   created_at: string;
 };
@@ -436,6 +439,7 @@ export type Database = {
           student_document_reviewed_at?: string | null;
           student_document_reviewed_by?: string | null;
           grade_level?: string | null;
+          classroom?: string | null;
           city?: string | null;
           district?: string | null;
           school_name?: string | null;
@@ -460,6 +464,7 @@ export type Database = {
           student_document_reviewed_at?: string | null;
           student_document_reviewed_by?: string | null;
           grade_level?: string | null;
+          classroom?: string | null;
           city?: string | null;
           district?: string | null;
           school_name?: string | null;
@@ -532,6 +537,7 @@ export type Database = {
           display_name: string;
           age_group?: string | null;
           grade_level?: string | null;
+          classroom?: string | null;
           city?: string | null;
           district?: string | null;
           school_name?: string | null;
@@ -543,6 +549,7 @@ export type Database = {
           display_name?: string;
           age_group?: string | null;
           grade_level?: string | null;
+          classroom?: string | null;
           city?: string | null;
           district?: string | null;
           school_name?: string | null;
@@ -568,6 +575,7 @@ export type Database = {
           district: string;
           school_name: string;
           grade_level: string;
+          classroom?: string;
           group_name: string;
           created_at?: string;
         };
@@ -576,6 +584,7 @@ export type Database = {
           district?: string;
           school_name?: string;
           grade_level?: string;
+          classroom?: string;
           group_name?: string;
           created_at?: string;
         };
@@ -2492,6 +2501,7 @@ export type Database = {
           p_district: string;
           p_school_name: string;
           p_grade_level: string;
+          p_classroom?: string;
           p_child_profile_id?: string | null;
         };
         Returns: ClassGroupRow;

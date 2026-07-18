@@ -50,7 +50,7 @@ const publicPagePrefixes = [
   "/setup",
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname === "/api/posts") {
     return NextResponse.json(
       {

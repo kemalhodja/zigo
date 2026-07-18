@@ -12,6 +12,7 @@ type ClassGroupManagerProps = {
   initialDistrict?: string | null;
   initialSchoolName?: string | null;
   initialGradeLevel?: string | null;
+  initialClassroom?: string | null;
   userRole?: "student" | "parent";
 };
 
@@ -31,6 +32,7 @@ type GroupData = {
     district: string | null;
     schoolName: string | null;
     gradeLevel: string | null;
+    classroom: string | null;
   };
 };
 
@@ -41,12 +43,14 @@ export function ClassGroupManager({
   initialDistrict = "",
   initialSchoolName = "",
   initialGradeLevel = "",
+  initialClassroom = "",
   userRole = "student",
 }: ClassGroupManagerProps) {
   const [city, setCity] = useState(initialCity ?? "");
   const [district, setDistrict] = useState(initialDistrict ?? "");
   const [schoolName, setSchoolName] = useState(initialSchoolName ?? "");
   const [gradeLevel, setGradeLevel] = useState(initialGradeLevel ?? "");
+  const [classroom, setClassroom] = useState(initialClassroom ?? "");
   const [groupData, setGroupData] = useState<GroupData | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error" | "success">("idle");
   const [message, setMessage] = useState("");
@@ -67,6 +71,7 @@ export function ClassGroupManager({
           if (json.data.userLocation.district) setDistrict(json.data.userLocation.district);
           if (json.data.userLocation.schoolName) setSchoolName(json.data.userLocation.schoolName);
           if (json.data.userLocation.gradeLevel) setGradeLevel(json.data.userLocation.gradeLevel);
+          if (json.data.userLocation.classroom) setClassroom(json.data.userLocation.classroom);
           setStatus("idle");
         } else if (!ignore) {
           setStatus("idle");
@@ -101,6 +106,7 @@ export function ClassGroupManager({
           district,
           schoolName,
           gradeLevel,
+          classroom,
           childProfileId,
         }),
       });
@@ -286,6 +292,28 @@ export function ClassGroupManager({
                 {GRADE_LEVEL_OPTIONS.map((option) => (
                   <option key={option} value={option}>
                     {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="classroom-select" className="block text-xs font-bold text-slate-600">
+                Şube Seçimi
+              </label>
+              <select
+                id="classroom-select"
+                value={classroom}
+                onChange={(e) => {
+                  setClassroom(e.target.value);
+                  setStatus("idle");
+                }}
+                className="mt-1 w-full rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-bold text-night border border-slate-200 outline-none focus:border-crystal focus:bg-white focus:ring-2 focus:ring-crystal/20"
+              >
+                <option value="">Şube Yok / Bilinmiyor</option>
+                {["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].map((option) => (
+                  <option key={option} value={option}>
+                    {option} Şubesi
                   </option>
                 ))}
               </select>

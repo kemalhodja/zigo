@@ -30,7 +30,7 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { children, mode, pendingApprovals, focusOverview, childrenFocusStats, isPremium, allowDevActivate, childActivityById, gradeLevel, city, district, schoolName, planGroups, profileId } =
+  const { children, mode, pendingApprovals, focusOverview, childrenFocusStats, isPremium, allowDevActivate, childActivityById, gradeLevel, classroom, city, district, schoolName, planGroups, profileId } =
     await getParentData();
   const d = messages.dashboard;
   const pp = messages.parentPage;
@@ -67,6 +67,7 @@ export default async function ParentPage() {
             initialDistrict={district}
             initialSchoolName={schoolName}
             initialGradeLevel={gradeLevel}
+            initialClassroom={classroom}
             userRole="parent"
           />
         </div>
@@ -220,6 +221,7 @@ async function getParentData(): Promise<{
   city: string | null;
   district: string | null;
   schoolName: string | null;
+  classroom: string | null;
   planGroups: ReturnType<typeof resolveProfilePlanGroups>;
   profileId: string | null;
 }> {
@@ -246,6 +248,7 @@ async function getParentData(): Promise<{
       city: null,
       district: null,
       schoolName: null,
+      classroom: null,
       planGroups: resolveProfilePlanGroups("parent", previewChildren.length > 0),
       profileId: null,
     };
@@ -264,6 +267,7 @@ async function getParentData(): Promise<{
     city: null as string | null,
     district: null as string | null,
     schoolName: null as string | null,
+    classroom: null as string | null,
     planGroups: resolveProfilePlanGroups("parent", previewChildren.length > 0),
     profileId: null,
   };
@@ -285,6 +289,7 @@ async function getParentData(): Promise<{
       city: null,
       district: null,
       schoolName: null,
+      classroom: null,
       planGroups: [],
       profileId: null,
     };
@@ -303,6 +308,7 @@ async function getParentData(): Promise<{
       city: null,
       district: null,
       schoolName: null,
+      classroom: null,
       planGroups: [],
       profileId: profile.id,
     };
@@ -338,6 +344,7 @@ async function getParentData(): Promise<{
     city: profile.city,
     district: profile.district,
     schoolName: profile.school_name,
+    classroom: profile.classroom,
     planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type)),
     profileId: profile.id,
   };

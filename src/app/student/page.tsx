@@ -92,6 +92,7 @@ export default async function StudentPage() {
             initialDistrict={data.district}
             initialSchoolName={data.schoolName}
             initialGradeLevel={data.gradeLevel}
+            initialClassroom={null}
             userRole="student"
           />
         </div>

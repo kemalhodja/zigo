@@ -15,7 +15,8 @@ describe("class-groups schemas", () => {
       city: "İstanbul",
       district: "Kadıköy",
       schoolName: "Atatürk Ortaokulu",
-      gradeLevel: "5-8. Sınıf",
+      gradeLevel: "5. Sınıf",
+      classroom: "A",
     });
     expect(valid.city).toBe("İstanbul");
     expect(valid.childProfileId).toBeUndefined();
@@ -27,7 +28,7 @@ describe("class-groups schemas", () => {
         city: "A",
         district: "Kadıköy",
         schoolName: "Atatürk Ortaokulu",
-        gradeLevel: "5-8. Sınıf",
+        gradeLevel: "5. Sınıf",
       }),
     ).toThrow();
   });
@@ -50,7 +51,7 @@ describe("class-groups functions", () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               maybeSingle: vi.fn().mockResolvedValue({
-                data: { city: "Ankara", district: null, school_name: null, grade_level: null },
+                data: { city: "Ankara", district: null, school_name: null, grade_level: null, classroom: null },
                 error: null,
               }),
             }),
@@ -70,7 +71,7 @@ describe("class-groups functions", () => {
   it("joinClassGroup calls join_class_group rpc with parsed parameters", async () => {
     const supabase = createMockSupabase({});
     supabase.rpc = vi.fn().mockResolvedValue({
-      data: { id: "group-uuid-1", group_name: "5-8. Sınıf" },
+      data: { id: "group-uuid-1", group_name: "9. Sınıf A Şubesi Grubu" },
       error: null,
     });
 
@@ -78,17 +79,19 @@ describe("class-groups functions", () => {
       city: "İzmir",
       district: "Karşıyaka",
       schoolName: "Zigo Lisesi",
-      gradeLevel: "9-12. Sınıf",
+      gradeLevel: "9. Sınıf",
+      classroom: "A",
     });
 
     expect(supabase.rpc).toHaveBeenCalledWith("join_class_group", {
       p_city: "İzmir",
       p_district: "Karşıyaka",
       p_school_name: "Zigo Lisesi",
-      p_grade_level: "9-12. Sınıf",
+      p_grade_level: "9. Sınıf",
+      p_classroom: "A",
       p_child_profile_id: null,
     });
-    expect(result).toEqual({ id: "group-uuid-1", group_name: "5-8. Sınıf" });
+    expect(result).toEqual({ id: "group-uuid-1", group_name: "9. Sınıf A Şubesi Grubu" });
   });
 
   it("leaveClassGroup calls leave_class_group rpc with parsed parameters", async () => {

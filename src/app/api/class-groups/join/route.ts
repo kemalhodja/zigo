@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       district: body.district,
       schoolName: body.schoolName,
       gradeLevel: body.gradeLevel,
+      classroom: body.classroom,
       childProfileId: body.childProfileId ?? null,
     });
 
