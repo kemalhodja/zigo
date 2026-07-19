@@ -195,7 +195,7 @@ export type StoreRedemptionRow = {
   child_profile_id: string | null;
   points_spent: number;
   status: StoreRedemptionStatus;
-  content: string | null;
+  note: string | null;
   created_at: string;
 };
 
