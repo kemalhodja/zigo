@@ -7,8 +7,9 @@ import type { Database, UserRole } from "@/lib/supabase/database.types";
 export type AuthGate = "email" | "onboarding" | "student-document" | "ready";
 
 export function isEmailConfirmationEnforced() {
-  if (isLocalDemoSupabase()) return false;
-  return process.env.ZIGO_REQUIRE_EMAIL_CONFIRM !== "false";
+  // if (isLocalDemoSupabase()) return false;
+  // return process.env.ZIGO_REQUIRE_EMAIL_CONFIRM !== "false";
+  return false;
 }
 
 export function isStudentDocumentGateEnforced() {
