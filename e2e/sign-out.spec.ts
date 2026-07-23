@@ -1,10 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { demoLogin,dismissAppIntro } from "./helpers";
+import { demoLogin, dismissAppIntro, isDemoAuthAvailable } from "./helpers";
 
 test.describe("sign out", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }, testInfo) => {
     await dismissAppIntro(page);
+    if (!(await isDemoAuthAvailable(request))) {
+      testInfo.skip(true, "Live Supabase demo auth unavailable");
+    }
   });
 
   test("demo student can sign out from header", async ({ page }) => {

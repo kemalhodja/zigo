@@ -1,13 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-import { dismissAppIntro } from "./helpers";
+import { dismissAppIntro, isDemoAuthAvailable } from "./helpers";
 
 const BASE = process.env.E2E_BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
 const PASS = "ZigoTest2026!Secure";
 
 test.describe("registration flow UI verification", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }, testInfo) => {
     await dismissAppIntro(page);
+    if (!(await isDemoAuthAvailable(request))) {
+      testInfo.skip(true, "Live Supabase demo auth unavailable");
+    }
   });
 
   test("new sign-up shows trial message and campaign modal when available", async ({ page }) => {
@@ -23,7 +26,7 @@ test.describe("registration flow UI verification", () => {
       (response) => response.url().includes("/api/auth/sign-up") && response.status() === 200,
       { timeout: 30_000 },
     );
-    await page.getByRole("button", { name: /hesap oluştur|create account/i }).click();
+    await page.locator('form button[type="submit"]').click();
     const response = await signUpResponse;
     const body = (await response.json()) as { message?: string };
     expect(body.message ?? "").toMatch(/7 gün|trial|deneme|ücretsiz|Hesap oluşturuldu/i);
