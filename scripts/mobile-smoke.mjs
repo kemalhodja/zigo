@@ -23,14 +23,29 @@ function read(relativePath) {
   return readFileSync(filePath, "utf8");
 }
 
-const generatedAndroidConfig = read("android/app/src/main/assets/capacitor.config.json");
+const generatedPath = join(root, "android/app/src/main/assets/capacitor.config.json");
+const generatedAndroidConfig = existsSync(generatedPath) ? readFileSync(generatedPath, "utf8") : "";
+const capacitorSource = read("capacitor.config.ts");
+const androidBuild = read("scripts/android-build-aab.mjs");
 const serviceWorker = read("public/sw.js");
 const manifest = read("public/manifest.json");
 const packageJson = read("package.json");
 
 const checks = [
   { name: "mobile routes exist", ok: mobileRoutes.every((route) => existsSync(join(root, route))) },
-  { name: "generated android config is localhost-free", ok: !generatedAndroidConfig.includes("localhost") },
+  {
+    name: "capacitor source is localhost-free",
+    ok: !capacitorSource.includes("localhost") && capacitorSource.includes("CAPACITOR_SERVER_URL || undefined"),
+  },
+  {
+    name: "generated android config is localhost-free",
+    // File is gitignored and created by `cap sync`; when absent, source + release default are enough.
+    ok: !generatedAndroidConfig.includes("localhost"),
+  },
+  {
+    name: "android release default uses hosted URL",
+    ok: androidBuild.includes("zigo-kohl.vercel.app") && !androidBuild.includes('|| "https://zigo.app"'),
+  },
   { name: "service worker has offline fallback", ok: serviceWorker.includes("caches.match(\"/offline.html\")") },
   { name: "service worker avoids stale page caching", ok: serviceWorker.includes("request.mode === \"navigate\"") && serviceWorker.includes("STATIC_ASSET_PATTERN") },
   { name: "manifest is install ready", ok: manifest.includes("\"display\": \"standalone\"") && manifest.includes("\"orientation\": \"portrait\"") },
