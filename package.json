@@ -59,8 +59,11 @@
     "test:deploy": "node scripts/verify-deploy-readiness.mjs && node scripts/test-stripe-webhook.mjs",
     "staging:preflight": "node scripts/staging-preflight.mjs",
     "uptime:probe": "node scripts/uptime-probe.mjs",
+    "origin:check": "node scripts/check-production-origin.mjs",
+    "dns:fix:print": "node scripts/print-godaddy-dns-fix.mjs",
     "migrations:cloud": "node scripts/apply-cloud-migrations.mjs",
     "migrations:pending": "node scripts/apply-pending-migrations.mjs",
+    "migrations:once": "node scripts/apply-migration-once.mjs",
     "migrations:recent": "node scripts/apply-recent-migrations.mjs",
     "sync:onedrive": "powershell -ExecutionPolicy Bypass -File scripts/sync-repo-to-onedrive.ps1",
     "seed:production-feed": "node scripts/seed-production-feed.mjs",
@@ -102,7 +105,7 @@
     "@supabase/ssr": "0.12.0",
     "@supabase/supabase-js": "2.108.1",
     "@tanstack/react-query": "^5.101.1",
-    "next": "16.2.9",
+    "next": "16.2.11",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "recharts": "^3.9.0",
@@ -118,14 +121,18 @@
     "@vitest/coverage-v8": "^4.1.9",
     "autoprefixer": "10.4.21",
     "eslint": "9.27.0",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.2.11",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "pg": "^8.22.0",
-    "postcss": "8.5.3",
-    "sharp": "^0.35.2",
+    "postcss": "8.5.15",
+    "sharp": "0.35.2",
     "tailwindcss": "4.1.7",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.61.0",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "sharp": "0.35.2",
+    "postcss": "8.5.15"
   }
 }

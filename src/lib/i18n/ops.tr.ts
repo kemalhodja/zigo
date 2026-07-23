@@ -209,6 +209,10 @@ export const opsTr = {
     siteUrlMissing: "NEXT_PUBLIC_SITE_URL ortamda eksik.",
     siteUrlHintLocal: "Hosted domain'e NEXT_PUBLIC_SITE_URL ayarla ve Supabase Auth'a /auth/callback ekle.",
     siteUrlHintMissing: "NEXT_PUBLIC_SITE_URL'i .env.example'dan .env.local'e kopyala.",
+    siteUrlUnreachable:
+      "Production NEXT_PUBLIC_SITE_URL ayarlı ama origin HTTPS kabul etmiyor (ERR_CONNECTION_CLOSED).",
+    siteUrlHintUnreachable:
+      "Özel domain DNS/TLS'ini Vercel'de düzelt veya NEXT_PUBLIC_SITE_URL ile CAPACITOR_SERVER_URL'i https://zigo-kohl.vercel.app yap.",
     authCallbackTitle: "Auth callback rotası",
     authCallbackDetail: "/auth/callback rotası Supabase kodlarını değiştirip kullanıcıyı Zigo'ya döndürür.",
     apiOkTitle: "Supabase API erişilebilir",

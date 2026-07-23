@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { getSiteUrl } from "@/lib/domain/deploy-config";
+import { getAuthRedirectSiteUrl } from "@/lib/domain/deploy-config";
 import { buildRecoveryUrl, sendRecoveryEmail } from "@/lib/server/recovery-email";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -47,18 +47,20 @@ export async function requestPasswordReset(params: {
   email: string;
   requestOrigin?: string;
 }): Promise<PasswordResetResult> {
-  const siteUrl = getSiteUrl(params.requestOrigin);
+  const siteUrl = getAuthRedirectSiteUrl(params.requestOrigin);
   const profile = await findRegisteredUserByEmail(params.admin, params.email);
   if (!profile) {
     return { ok: false, code: "ACCOUNT_NOT_FOUND" };
   }
 
+  // Prefer token_hash → /auth/confirm links. Supabase verify redirect_to often
+  // falls back to a stale Site URL (localhost / zigo.app) and never reaches Zigo.
   if (hasDirectRecoveryEmailConfigured()) {
     const { data, error } = await params.admin.auth.admin.generateLink({
       type: "recovery",
       email: params.email,
       options: {
-        redirectTo: new URL("/auth/reset-password", siteUrl).toString(),
+        redirectTo: new URL("/auth/callback?next=/auth/reset-password", siteUrl).toString(),
       },
     });
 

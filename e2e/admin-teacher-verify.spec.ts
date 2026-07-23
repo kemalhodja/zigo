@@ -1,13 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-import { dismissAppIntro } from "./helpers";
+import { dismissAppIntro, isDemoAuthAvailable } from "./helpers";
 
 const DEMO_PASSWORD = "ZigoTest123!";
 const MERT_TEACHER_ID = "00000000-0000-4000-8000-000000000102";
 
 test.describe("admin teacher verification", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }, testInfo) => {
     await dismissAppIntro(page);
+    if (!(await isDemoAuthAvailable(request))) {
+      testInfo.skip(true, "Live Supabase demo auth unavailable");
+    }
   });
 
   test("platform admin can verify teacher via API", async ({ page }) => {

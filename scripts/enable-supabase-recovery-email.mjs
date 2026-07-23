@@ -21,7 +21,7 @@ function loadEnvFile(name) {
 loadEnvFile(".env.probe");
 
 const siteUrl = "https://zigo-kohl.vercel.app";
-const recoveryTemplate = `<h2>Zigo şifre sıfırlama</h2><p><a href="${siteUrl}/auth/recover?token_hash={{ .TokenHash }}&type=recovery">Şifremi sıfırla</a></p>`;
+const recoveryTemplate = `<h2>Zigo şifre sıfırlama</h2><p><a href="${siteUrl}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/reset-password">Şifremi sıfırla</a></p>`;
 
 const client = new pg.Client({
   connectionString: `postgresql://${process.env.POSTGRES_USER ?? "postgres"}:${encodeURIComponent(process.env.POSTGRES_PASSWORD ?? "")}@${process.env.POSTGRES_HOST}:5432/${process.env.POSTGRES_DATABASE ?? "postgres"}`,
@@ -39,7 +39,10 @@ config.uri_allow_list = [
   `${siteUrl}/auth/callback`,
   `${siteUrl}/auth/callback?next=/onboarding`,
   `${siteUrl}/auth/callback?next=/auth/reset-password`,
+  `${siteUrl}/auth/confirm`,
   `${siteUrl}/auth/recover`,
+  `${siteUrl}/auth/session-bridge`,
+  `${siteUrl}/auth/reset-password`,
 ].join(",");
 config.hook_send_email_enabled = false;
 config.hook_send_email_uri = null;

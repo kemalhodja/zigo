@@ -10,7 +10,7 @@
 Build:
 
 ```bash
-set CAPACITOR_SERVER_URL=https://your-zigo-domain.example
+set CAPACITOR_SERVER_URL=https://zigo-kohl.vercel.app
 npm run android:preflight
 npm run android:sync
 npm run android:open
@@ -21,7 +21,9 @@ If Windows or OneDrive locks `.next`, use `npm run build:safe` before syncing An
 Release bundle:
 
 ```bash
-set CAPACITOR_SERVER_URL=https://your-zigo-domain.example
+set CAPACITOR_SERVER_URL=https://zigo-kohl.vercel.app
 npm run android:build:release
 npm run android:copy:release
 ```
+
+If `https://zigo.app` shows ERR_CONNECTION_CLOSED, keep using the Vercel URL — see `docs/domain-dns-fix.md`.

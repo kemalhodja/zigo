@@ -42,6 +42,13 @@ Quick reference for Zigo production incidents. Pair with `docs/operational-secur
 3. Check `ZIGO_REQUIRE_EMAIL_CONFIRM` / student document gates not blocking all users.
 4. Review auth rate-limit spikes (429 on `/api/auth/sign-in`).
 
+### Custom domain ERR_CONNECTION_CLOSED (`zigo.app`)
+
+1. Probe origins: `npm run origin:check`.
+2. If `zigo-kohl.vercel.app` is healthy but `zigo.app` fails TLS → DNS/SSL only (app code is fine).
+3. Immediate mitigation: point `NEXT_PUBLIC_SITE_URL` + `CAPACITOR_SERVER_URL` at `https://zigo-kohl.vercel.app`, update Supabase Auth redirects, rebuild APK.
+4. Permanent fix: attach `zigo.app` in Vercel Domains and replace GoDaddy parking A records with Vercel DNS targets. Full steps: `docs/domain-dns-fix.md`.
+
 ### Moderation queue backlog
 
 1. `/moderation` — pending comments/replies count.

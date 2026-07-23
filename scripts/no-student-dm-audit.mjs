@@ -18,6 +18,10 @@ function walk(dir, acc = []) {
 
 for (const filePath of walk(join(root, "src/app"))) {
   const rel = filePath.replace(`${root}${join.sep}`, "").replace(/\\/g, "/");
+  // Study-group channels are moderated parent-approved rooms, not student DMs.
+  if (/\/api\/groups\/[^/]+\/messages(\/|$)/.test(rel)) {
+    continue;
+  }
   if (/\/messages(\/|$)/.test(rel)) {
     failures.push(`forbidden student DM route: ${rel}`);
   }

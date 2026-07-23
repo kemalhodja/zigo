@@ -1,6 +1,9 @@
 # Google Play Console — kopyala-yapıştır (TR)
 
 Production domain: **https://zigo.app**  
+Working fallback (DNS/TLS onarılana kadar): **https://zigo-kohl.vercel.app**
+
+> `zigo.app` ERR_CONNECTION_CLOSED veriyorsa Play linkleri ve Capacitor için fallback host kullanın. Adımlar: `docs/domain-dns-fix.md`.
 Paket adı: **com.zigo.education**
 
 Detaylı Data safety eşlemesi: `docs/google-play-data-safety.md`
@@ -174,7 +177,8 @@ E-posta: [TEST_STUDENT_EMAIL]
 Not: Öğrenci belgesi onaylı hesap kullanın.
 
 Gizlilik: https://zigo.app/legal/privacy
-Mobil uygulama Capacitor WebView ile https://zigo.app adresini yükler.
+Mobil uygulama Capacitor WebView ile canlı Next.js hostunu yükler.
+DNS onarılana kadar: `https://zigo-kohl.vercel.app` — sonra: `https://zigo.app`.
 ```
 
 Seed kullanıcıları (yerel): `docs/seed-users.md` veya migration seed e-postaları.
@@ -201,7 +205,7 @@ https://zigo.app
 ## AAB build (production URL ile)
 
 ```powershell
-$env:CAPACITOR_SERVER_URL="https://zigo.app"
+$env:CAPACITOR_SERVER_URL="https://zigo-kohl.vercel.app"
 npm.cmd run android:build:release
 ```
 

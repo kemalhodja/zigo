@@ -256,15 +256,20 @@ check("Platform admins can assign teacher education areas", () => {
 
 check("Mobile APK does not default to localhost", () => {
   const capacitor = read("capacitor.config.ts");
-  const generated = read("android/app/src/main/assets/capacitor.config.json");
+  const generatedPath = "android/app/src/main/assets/capacitor.config.json";
+  const generated = existsSync(join(root, generatedPath)) ? read(generatedPath) : "";
   const packageJson = read("package.json");
   const cleanNext = read("scripts/clean-next.mjs");
   const serviceWorker = read("public/sw.js");
   const fallback = read("public/index.html");
   const checklist = read("public/mobile-apk-checklist.md");
+  const androidBuild = read("scripts/android-build-aab.mjs");
   return (
     capacitor.includes("CAPACITOR_SERVER_URL || undefined") &&
+    !capacitor.includes("localhost") &&
     !generated.includes("localhost") &&
+    androidBuild.includes("zigo-kohl.vercel.app") &&
+    !androidBuild.includes('|| "https://zigo.app"') &&
     packageJson.includes("android:build:release") &&
     packageJson.includes("android:preflight") &&
     packageJson.includes("build:safe") &&
@@ -274,8 +279,9 @@ check("Mobile APK does not default to localhost", () => {
     serviceWorker.includes("STATIC_ASSET_PATTERN") &&
     serviceWorker.includes("caches.match(\"/offline.html\")") &&
     fallback.includes("CAPACITOR_SERVER_URL") &&
-    checklist.includes("CAPACITOR_SERVER_URL=https://your-zigo-domain.example") &&
-    checklist.includes("001` through `042") || checklist.includes("001` through `023")
+    (checklist.includes("CAPACITOR_SERVER_URL=https://your-zigo-domain.example") ||
+      checklist.includes("CAPACITOR_SERVER_URL=https://zigo-kohl.vercel.app")) &&
+    (checklist.includes("001` through `042") || checklist.includes("001` through `023"))
   );
 });
 

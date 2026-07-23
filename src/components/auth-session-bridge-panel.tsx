@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Status = "checking" | "error" | "redirecting";
 
-export function RecoverPasswordPanel() {
+export function AuthSessionBridgePanel() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const m = useMessages();
@@ -19,30 +19,30 @@ export function RecoverPasswordPanel() {
 
   useEffect(() => {
     let active = true;
-    const tokenHash = searchParams.get("token_hash")?.trim();
-    const type = searchParams.get("type")?.trim();
     const nextParam = searchParams.get("next");
     const next = nextParam?.startsWith("/") ? nextParam : "/auth/reset-password";
 
-    // Prefer the server confirm route (sets httpOnly cookies reliably).
-    if (tokenHash && type === "recovery") {
-      const confirm = new URL("/auth/confirm", window.location.origin);
-      confirm.searchParams.set("token_hash", tokenHash);
-      confirm.searchParams.set("type", "recovery");
-      confirm.searchParams.set("next", next);
-      window.location.replace(confirm.toString());
-      return;
-    }
+    async function complete() {
+      const supabase = createClient();
+      const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const type = hashParams.get("type");
+      const errorDescription = hashParams.get("error_description") ?? hashParams.get("error");
 
-    if (!tokenHash || type !== "recovery") {
-      setStatus("error");
-      setMessage(a.resetPasswordSessionMissing);
-      return;
-    }
+      if (errorDescription) {
+        if (!active) return;
+        setStatus("error");
+        setMessage(decodeURIComponent(errorDescription.replace(/\+/g, " ")));
+        return;
+      }
 
-    void createClient()
-      .auth.verifyOtp({ token_hash: tokenHash, type: "recovery" })
-      .then(({ error }) => {
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
         if (!active) return;
         if (error) {
           setStatus("error");
@@ -51,20 +51,36 @@ export function RecoverPasswordPanel() {
         }
 
         setStatus("redirecting");
-        setMessage(a.resetPasswordDesc);
-        router.replace("/auth/reset-password");
+        const destination = type === "recovery" ? "/auth/reset-password" : next;
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        router.replace(destination);
         router.refresh();
-      })
-      .catch(() => {
-        if (!active) return;
-        setStatus("error");
-        setMessage(a.connectionFailed);
-      });
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (!active) return;
+      if (data.session) {
+        setStatus("redirecting");
+        router.replace(next);
+        router.refresh();
+        return;
+      }
+
+      setStatus("error");
+      setMessage(a.resetPasswordSessionMissing);
+    }
+
+    void complete().catch(() => {
+      if (!active) return;
+      setStatus("error");
+      setMessage(a.connectionFailed);
+    });
 
     return () => {
       active = false;
     };
-  }, [a.connectionFailed, a.loadingAuth, a.resetPasswordDesc, a.resetPasswordSessionMissing, router, searchParams]);
+  }, [a.connectionFailed, a.loadingAuth, a.resetPasswordSessionMissing, router, searchParams]);
 
   return (
     <div className="-mx-4 space-y-4 bg-white px-4 pb-4">

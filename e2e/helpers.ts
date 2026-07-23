@@ -107,7 +107,7 @@ export async function demoLogin(page: Page, role: DemoRole) {
           (signIn) => signIn.url().includes("/api/auth/sign-in") && signIn.ok(),
           { timeout: 30_000 },
         ),
-        page.getByRole("button", { name: /sign in|giriş yap/i }).click(),
+        page.locator('form button[type="submit"]').click(),
       ]);
     }
   }

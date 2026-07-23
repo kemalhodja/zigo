@@ -1,18 +1,13 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { PasswordField } from "@/components/password-field";
 import { PasswordStrengthHints } from "@/components/password-strength-hints";
 import { isCapacitorClient } from "@/lib/client/capacitor-runtime";
 import { markRegistrationCampaignAnnouncementPending } from "@/lib/client/registration-campaign-announcement";
 import { validateRegistrationPassword } from "@/lib/domain/password-policy";
-import {
-  isRegistrationAccountKind,
-  REGISTRATION_ACCOUNT_OPTIONS,
-  type RegistrationAccountKind,
-} from "@/lib/domain/registration-account";
 import { useRecaptcha } from "@/lib/hooks/use-recaptcha";
 import { useMessages } from "@/lib/i18n/locale-context";
 
@@ -44,11 +39,7 @@ export function AuthPanel() {
   const a = m.auth;
   const submittingRef = useRef(false);
 
-  const roleOptions = useMemo(() => REGISTRATION_ACCOUNT_OPTIONS, []);
-
   const [mode, setMode] = useState<Mode>("sign-in");
-  const [accountKind, setAccountKind] = useState<RegistrationAccountKind>("student");
-  const [rolePrefilled, setRolePrefilled] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -63,23 +54,13 @@ export function AuthPanel() {
 
   useEffect(() => {
     const modeParam = searchParams.get("mode");
-    const accountKindParam = searchParams.get("accountKind");
 
-    if (modeParam === "signup") {
+    if (modeParam === "signup" || searchParams.get("accountKind")) {
       setMode("sign-up");
       setMessage(a.signUpContinue);
     } else if (modeParam === "signin") {
       setMode("sign-in");
       setMessage(a.signInContinue);
-    }
-
-    if (isRegistrationAccountKind(accountKindParam)) {
-      setAccountKind(accountKindParam);
-      setRolePrefilled(true);
-      if (modeParam !== "signin") {
-        setMode("sign-up");
-        setMessage(a.signUpContinue);
-      }
     }
   }, [a.signInContinue, a.signUpContinue, searchParams]);
 
@@ -108,7 +89,6 @@ export function AuthPanel() {
         }
       }
 
-      const selectedAccount = roleOptions.find((option) => option.id === accountKind) ?? roleOptions[0];
       const isMobileClient = isCapacitorClient();
       const rememberMeChecked = isMobileClient ? true : rememberMe;
       const trimmedEmail = email.trim();

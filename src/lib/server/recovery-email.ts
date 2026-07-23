@@ -1,4 +1,4 @@
-import { getSiteUrl } from "@/lib/domain/deploy-config";
+import { getAuthRedirectSiteUrl, getSiteUrl } from "@/lib/domain/deploy-config";
 
 type RecoveryEmailInput = {
   to: string;
@@ -22,14 +22,16 @@ export function buildRecoveryEmailHtml(recoveryUrl: string, siteUrl: string) {
 </html>`;
 }
 
+/** Direct app link — avoids Supabase verify → redirect_to (often stuck on localhost / zigo.app). */
 export function buildRecoveryUrl(tokenHash: string, siteUrl = getSiteUrl()) {
-  const url = new URL("/auth/recover", siteUrl);
+  const url = new URL("/auth/confirm", siteUrl);
   url.searchParams.set("token_hash", tokenHash);
   url.searchParams.set("type", "recovery");
+  url.searchParams.set("next", "/auth/reset-password");
   return url.toString();
 }
 
-export async function sendRecoveryEmail({ to, recoveryUrl, siteUrl = getSiteUrl() }: RecoveryEmailInput) {
+export async function sendRecoveryEmail({ to, recoveryUrl, siteUrl = getAuthRedirectSiteUrl() }: RecoveryEmailInput) {
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (resendKey) {
     return sendViaResend({ to, recoveryUrl, siteUrl, apiKey: resendKey });
@@ -41,7 +43,7 @@ export async function sendRecoveryEmail({ to, recoveryUrl, siteUrl = getSiteUrl(
 async function sendViaResend({
   to,
   recoveryUrl,
-  siteUrl = getSiteUrl(),
+  siteUrl = getAuthRedirectSiteUrl(),
   apiKey,
 }: RecoveryEmailInput & { apiKey: string; siteUrl: string }) {
   const from = process.env.RESEND_FROM?.trim() || "Zigo <noreply@zigo.app>";

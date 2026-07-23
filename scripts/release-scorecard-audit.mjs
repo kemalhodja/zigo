@@ -26,7 +26,9 @@ const scorecard = read("scripts/test-scorecard.mjs");
 const acceptance = read("scripts/test-acceptance.mjs");
 const completion = read("docs/completion-status.md");
 const packageJson = read("package.json");
-const bundle = existsSync(join(root, "supabase/zigo-full-migrations.sql"))
+const bundleScript = read("scripts/bundle-migrations.mjs");
+const migration055Path = join(root, "supabase/migrations/055_demo_social_interactions_reset.sql");
+const bundledArtifact = existsSync(join(root, "supabase/zigo-full-migrations.sql"))
   ? readFileSync(join(root, "supabase/zigo-full-migrations.sql"), "utf8")
   : "";
 
@@ -39,7 +41,16 @@ const required = [
   [packageJson.includes('"audit:all"'), "package.json must wire audit:all"],
   [packageJson.includes('"test:acceptance"'), "package.json must wire test:acceptance"],
   [packageJson.includes('"test:scorecard"'), "package.json must wire test:scorecard"],
-  [bundle.includes("055_demo_social_interactions_reset.sql"), "bundled SQL must include migration 055"],
+  // Artifact is gitignored; assert the source migration + bundler contract instead.
+  [existsSync(migration055Path), "migration 055_demo_social_interactions_reset.sql must exist"],
+  [
+    bundleScript.includes("055_demo_social_interactions_reset.sql"),
+    "bundle-migrations.mjs must include migration 055",
+  ],
+  [
+    !bundledArtifact || bundledArtifact.includes("055_demo_social_interactions_reset.sql"),
+    "bundled SQL must include migration 055 when present",
+  ],
 ];
 
 for (const [ok, label] of required) {

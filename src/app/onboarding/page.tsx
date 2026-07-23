@@ -14,8 +14,8 @@ import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrga
 import { listSponsoredTeacherCampaigns } from "@/lib/domain/teacher-campaign";
 import { getServerMessages } from "@/lib/i18n/server";
 import type { Messages } from "@/lib/i18n/types";
-import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function OnboardingPage() {
   const m = await getServerMessages();
@@ -92,8 +92,6 @@ export default async function OnboardingPage() {
         ? ob.teacherVerified
         : ob.teacherReady
       : ob.profileReady;
-
-  const organizationType = parseOrganizationType(profile.organization_type);
 
   return (
     <div className="space-y-5">

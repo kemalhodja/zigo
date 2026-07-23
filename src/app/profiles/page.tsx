@@ -7,8 +7,8 @@ import { getChildProfiles } from "@/lib/domain/children";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getPublisherStudioHref, shouldShowLearnerProfilesBridge, shouldShowParentProfilesBridge, shouldShowPublisherProfilesBridge } from "@/lib/domain/role-surfaces";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function ProfilesPage() {
   const m = await getServerMessages();

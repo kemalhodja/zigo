@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getAuthRedirectSiteUrl } from "@/lib/domain/deploy-config";
 import { buildRecoveryEmailHtml, buildRecoveryUrl } from "@/lib/server/recovery-email";
 
 const RECOVERY_SUBJECT = "Zigo şifre sıfırlama";
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unsupported_email_action" }, { status: 400 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://zigo-kohl.vercel.app";
+  const siteUrl = getAuthRedirectSiteUrl();
   const recoveryUrl = buildRecoveryUrl(tokenHash, siteUrl);
 
   try {

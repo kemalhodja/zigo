@@ -89,7 +89,11 @@ function runGradle() {
   return result.status === 0;
 }
 
-const productionServerUrl = (process.env.CAPACITOR_SERVER_URL || "https://zigo.app").replace(/\/$/, "");
+// Prefer explicit CAPACITOR_SERVER_URL. Default to the working Vercel host —
+// custom domain zigo.app currently fails TLS (ERR_CONNECTION_CLOSED) until DNS is fixed.
+const productionServerUrl = (
+  process.env.CAPACITOR_SERVER_URL || "https://zigo-kohl.vercel.app"
+).replace(/\/$/, "");
 
 function runCapSync() {
   console.log(`Capacitor server URL: ${productionServerUrl}`);

@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { completeRoleSelection } from "@/lib/domain/study-groups";
-import { resolveRegistrationAccount } from "@/lib/domain/registration-account";
 import { isErrorResponse, jsonSuccess, requireAuthUser } from "@/features/shared";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { resolveRegistrationAccount } from "@/lib/domain/registration-account";
+import { completeRoleSelection } from "@/lib/domain/study-groups";
 import { createClient } from "@/lib/supabase/server";
 
 const bodySchema = z.object({
