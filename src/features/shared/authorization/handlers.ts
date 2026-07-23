@@ -1,6 +1,5 @@
-import type { NextResponse } from "next/server";
-
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { NextResponse } from "next/server";
 
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
 import type { UserProfile } from "@/lib/domain/profiles";

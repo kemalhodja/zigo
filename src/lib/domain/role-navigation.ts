@@ -1,5 +1,5 @@
-import { isPublisherRole } from "@/lib/domain/role-utils";
 import type { ViewerRole } from "@/lib/domain/role-theme";
+import { isPublisherRole } from "@/lib/domain/role-utils";
 import type { UserRole } from "@/lib/supabase/database.types";
 import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 

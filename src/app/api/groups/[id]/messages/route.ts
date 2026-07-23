@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 import { isErrorResponse, jsonSuccess, requireAuthUser } from "@/features/shared";
-import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { assertSafeStudentTextAsync } from "@/lib/domain/moderation";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { sendStudyGroupMessage } from "@/lib/domain/study-groups";

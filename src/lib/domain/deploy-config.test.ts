@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+
 import {
-  ZIGO_CANONICAL_DOMAIN,
-  ZIGO_HOSTED_FALLBACK_URL,
   isLocalSiteUrl,
   probeSiteOriginReachable,
+  ZIGO_CANONICAL_DOMAIN,
+  ZIGO_HOSTED_FALLBACK_URL,
 } from "@/lib/domain/deploy-config";
 
 describe("deploy-config origin helpers", () => {

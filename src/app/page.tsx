@@ -19,11 +19,19 @@ import { StudyWithMeRail } from "@/components/study-with-me-rail";
 import { TeacherHomeInsights } from "@/components/teacher-home-insights";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { TodayLearningCard } from "@/components/today-learning-card";
+import { TrialStatusBanner } from "@/components/trial-status-banner";
 import { hasSupabaseEnv } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getDailyMissionProgress } from "@/lib/domain/learning";
 import { getOnboardingIntake } from "@/lib/domain/onboarding-intake";
 import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
+import {
+  canCreateStoryFromFeed,
+  isVerifiedPublisherStoryAuthor,
+  shouldShowPublisherHomeInsights,
+  shouldShowStudentHomeModules,
+} from "@/lib/domain/role-surfaces";
+import { isPublisherRole } from "@/lib/domain/role-utils";
 import {
   type ActiveStory,
   getActiveStories,
@@ -34,21 +42,13 @@ import {
   type SocialFeedPost,
 } from "@/lib/domain/social";
 import { getMatchedStudyMoments } from "@/lib/domain/study-moments";
-import { TrialStatusBanner } from "@/components/trial-status-banner";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
-import {
-  canCreateStoryFromFeed,
-  isVerifiedPublisherStoryAuthor,
-  shouldShowPublisherHomeInsights,
-  shouldShowStudentHomeModules,
-} from "@/lib/domain/role-surfaces";
-import { isPublisherRole } from "@/lib/domain/role-utils";
 import { formatFeedTimestamp } from "@/lib/format-time";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 const demoStories: DisplayStory[] = [
   {

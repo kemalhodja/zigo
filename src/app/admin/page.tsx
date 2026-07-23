@@ -20,9 +20,9 @@ import {
   getTeacherCredentialQueue,
   isCurrentUserPlatformAdmin,
 } from "@/lib/domain/admin";
-import { resolvePublisherAccountKind, type PublisherAccountKind } from "@/lib/domain/registration-account";
 import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
 import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
+import { type PublisherAccountKind,resolvePublisherAccountKind } from "@/lib/domain/registration-account";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 

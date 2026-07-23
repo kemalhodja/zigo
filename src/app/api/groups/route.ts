@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 import { isErrorResponse, jsonSuccess, requireAuthUser } from "@/features/shared";
-import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { withApiHandler } from "@/features/shared/api/with-api-handler";
+import { jsonError } from "@/features/shared/errors/global-error-handler";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createStudyGroup } from "@/lib/domain/study-groups";
 import { createClient } from "@/lib/supabase/server";

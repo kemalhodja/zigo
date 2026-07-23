@@ -1,6 +1,5 @@
-import type { UserRole } from "@/lib/supabase/database.types";
-
 import { isPublisherRole } from "@/lib/domain/role-utils";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 export function isStudentAccountRole(role: UserRole | null | undefined): role is "student" {
   return role === "student";

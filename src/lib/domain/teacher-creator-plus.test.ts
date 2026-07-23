@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { SubscriptionRequiredError } from "@/lib/domain/domain-errors";
+import type { UserSubscription } from "@/lib/domain/subscription";
 import {
   assertTeacherCreatorPlus,
   canTeacherUseCreatorPlusTools,
   socialPostRequiresTeacherCreatorPlus,
 } from "@/lib/domain/teacher-creator-plus";
-
-import type { UserSubscription } from "@/lib/domain/subscription";
 
 const plusSubscription: UserSubscription = {
   tier: "zigo_plus",

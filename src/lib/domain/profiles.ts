@@ -11,8 +11,8 @@ import {
   type RegistrationAccountKind,
   resolveRegistrationAccount,
 } from "@/lib/domain/registration-account";
-import { canPublishSocialContent } from "@/lib/domain/role-utils";
 import type { ViewerRole } from "@/lib/domain/role-theme";
+import { canPublishSocialContent } from "@/lib/domain/role-utils";
 import {
   normalizeShortcutPreferences,
   parseShortcutPreferencesValue,

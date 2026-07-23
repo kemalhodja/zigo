@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { TeacherPostForm } from "@/components/teacher-post-form";
