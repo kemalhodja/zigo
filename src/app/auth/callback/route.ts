@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
 import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
 
