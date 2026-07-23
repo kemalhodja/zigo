@@ -225,7 +225,8 @@ function shouldSkipRoute(pathname: string) {
     pathname === "/terms-of-use.html" ||
     pathname === "/offline.html" ||
     pathname === "/sw.js" ||
-    pathname.startsWith("/auth/callback")
+    pathname.startsWith("/auth/callback") ||
+    pathname.startsWith("/auth/confirm")
   );
 }
 

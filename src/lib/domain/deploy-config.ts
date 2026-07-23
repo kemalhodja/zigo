@@ -22,12 +22,40 @@ export function isBrokenCustomDomainHost(url: string) {
   }
 }
 
+function normalizeOrigin(url: string) {
+  return url.trim().replace(/\/$/, "");
+}
+
+function isUsablePublicOrigin(url: string) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return false;
+    if (isLocalSiteUrl(url)) return false;
+    if (shouldBypassBrokenCanonicalDomain() && isBrokenCustomDomainHost(url)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function getSiteUrl(fallback = "http://localhost:3000") {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (configured) {
-    const normalized = configured.replace(/\/$/, "");
+    const normalized = normalizeOrigin(configured);
     if (shouldBypassBrokenCanonicalDomain() && isBrokenCustomDomainHost(normalized)) {
       return ZIGO_HOSTED_FALLBACK_URL;
+    }
+    // Misconfigured hosted env sometimes keeps localhost — prefer a public origin on Vercel.
+    if (isLocalSiteUrl(normalized)) {
+      const vercel = process.env.VERCEL_URL?.trim();
+      if (vercel) {
+        return `https://${vercel.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+      }
+      if (isUsablePublicOrigin(fallback)) {
+        return normalizeOrigin(fallback);
+      }
+      return normalized;
     }
     return normalized;
   }
@@ -38,7 +66,37 @@ export function getSiteUrl(fallback = "http://localhost:3000") {
     return `https://${host}`;
   }
 
-  return fallback.replace(/\/$/, "");
+  if (isUsablePublicOrigin(fallback)) {
+    return normalizeOrigin(fallback);
+  }
+
+  return normalizeOrigin(fallback);
+}
+
+/**
+ * Origin for auth emails / redirectTo. Never emit broken zigo.app or localhost
+ * when a hosted request origin (or Vercel fallback) is available.
+ */
+export function getAuthRedirectSiteUrl(requestOrigin?: string) {
+  const preferred = requestOrigin?.trim() ? normalizeOrigin(requestOrigin) : undefined;
+  if (preferred && isUsablePublicOrigin(preferred)) {
+    return preferred;
+  }
+
+  const fromEnv = getSiteUrl(preferred ?? "http://localhost:3000");
+  if (isUsablePublicOrigin(fromEnv)) {
+    return fromEnv;
+  }
+
+  // Local development: keep loopback so recover links stay on the same machine.
+  if (preferred && isLocalSiteUrl(preferred)) {
+    return preferred;
+  }
+  if (isLocalSiteUrl(fromEnv) && !process.env.VERCEL_URL?.trim() && process.env.VERCEL !== "1") {
+    return fromEnv;
+  }
+
+  return ZIGO_HOSTED_FALLBACK_URL;
 }
 
 export function usesVercelFallbackUrl() {
@@ -127,6 +185,9 @@ export function getSupabaseRedirectUrls(siteUrl = getSiteUrl()) {
   return {
     callback,
     onboarding: new URL("/auth/callback?next=/onboarding", siteUrl).toString(),
+    resetPassword: new URL("/auth/callback?next=/auth/reset-password", siteUrl).toString(),
+    recover: new URL("/auth/recover", siteUrl).toString(),
+    confirmRecovery: new URL("/auth/confirm?next=/auth/reset-password", siteUrl).toString(),
     siteUrl,
   };
 }
