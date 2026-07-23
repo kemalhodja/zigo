@@ -79,15 +79,20 @@ Then open:
 1. Vercel → Domains → add your domain.
 2. Update `NEXT_PUBLIC_SITE_URL` to the custom domain.
 3. Redeploy.
-4. Update Supabase Auth redirect URLs to the custom domain.
+4. Update Supabase Auth Site URL + redirect URLs.
+5. Verify HTTPS works (`curl -I https://your-domain`) before shipping Capacitor.
+
+If the custom domain shows **ERR_CONNECTION_CLOSED** while `*.vercel.app` works, DNS is pointing at a parking/forwarding host instead of Vercel. Follow `docs/domain-dns-fix.md` and keep `CAPACITOR_SERVER_URL` on the working Vercel URL until TLS is Valid.
 
 ## 8. Android
 
 Set:
 
 ```env
-CAPACITOR_SERVER_URL=https://your-production-domain
+CAPACITOR_SERVER_URL=https://zigo-kohl.vercel.app
 ```
+
+(Use `https://zigo.app` only after custom-domain TLS is Valid.)
 
 Then:
 

@@ -1,5 +1,10 @@
 import { hasSupabaseEnv } from "@/lib/config";
-import { hasSiteUrlConfigured, isProductionSiteUrl } from "@/lib/domain/deploy-config";
+import {
+  getSiteUrl,
+  hasSiteUrlConfigured,
+  isProductionSiteUrl,
+  probeSiteOriginReachable,
+} from "@/lib/domain/deploy-config";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 
 export type LiveGate = {
@@ -40,21 +45,34 @@ export async function getLiveGates(): Promise<LiveGatesReport> {
     ready: true,
   });
 
-  gates.push({
-    id: "site_url",
-    title: "Site URL",
-    detail: hasSiteUrlConfigured()
-      ? isProductionSiteUrl()
+  if (!hasSiteUrlConfigured()) {
+    gates.push({
+      id: "site_url",
+      title: "Site URL",
+      detail: "NEXT_PUBLIC_SITE_URL is missing from the environment.",
+      ready: false,
+      hint: "Copy NEXT_PUBLIC_SITE_URL from .env.example into .env.local.",
+    });
+  } else if (!isProductionSiteUrl()) {
+    gates.push({
+      id: "site_url",
+      title: "Site URL",
+      detail: "Local NEXT_PUBLIC_SITE_URL is configured. Update it before public deploy.",
+      ready: true,
+      hint: "Set NEXT_PUBLIC_SITE_URL to your hosted domain and add /auth/callback in Supabase Auth.",
+    });
+  } else {
+    const origin = await probeSiteOriginReachable(getSiteUrl());
+    gates.push({
+      id: "site_url",
+      title: "Site URL",
+      detail: origin.ok
         ? "Production NEXT_PUBLIC_SITE_URL is configured for hosted auth redirects."
-        : "Local NEXT_PUBLIC_SITE_URL is configured. Update it before public deploy."
-      : "NEXT_PUBLIC_SITE_URL is missing from the environment.",
-    ready: hasSiteUrlConfigured(),
-    hint: hasSiteUrlConfigured()
-      ? isProductionSiteUrl()
-        ? undefined
-        : "Set NEXT_PUBLIC_SITE_URL to your hosted domain and add /auth/callback in Supabase Auth."
-      : "Copy NEXT_PUBLIC_SITE_URL from .env.example into .env.local.",
-  });
+        : origin.detail,
+      ready: origin.ok,
+      hint: origin.ok ? undefined : origin.hint,
+    });
+  }
 
   gates.push({
     id: "auth_callback",

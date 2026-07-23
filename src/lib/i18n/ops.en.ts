@@ -209,6 +209,10 @@ export const opsEn = {
     siteUrlMissing: "NEXT_PUBLIC_SITE_URL is missing from the environment.",
     siteUrlHintLocal: "Set NEXT_PUBLIC_SITE_URL to your hosted domain and add /auth/callback in Supabase Auth.",
     siteUrlHintMissing: "Copy NEXT_PUBLIC_SITE_URL from .env.example into .env.local.",
+    siteUrlUnreachable:
+      "Production NEXT_PUBLIC_SITE_URL is set but the origin does not accept HTTPS (ERR_CONNECTION_CLOSED).",
+    siteUrlHintUnreachable:
+      "Fix DNS/TLS for the custom domain in Vercel, or set NEXT_PUBLIC_SITE_URL and CAPACITOR_SERVER_URL to https://zigo-kohl.vercel.app.",
     authCallbackTitle: "Auth callback route",
     authCallbackDetail: "Next.js route at /auth/callback exchanges Supabase codes and returns users to Zigo.",
     apiOkTitle: "Supabase API reachable",

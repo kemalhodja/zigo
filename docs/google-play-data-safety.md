@@ -3,10 +3,11 @@
 Use this when filling **Play Console → App content** for Zigo (`com.zigo.education`).
 
 **Privacy policy URL (production):** `https://zigo.app/legal/privacy`  
-**Static fallback (same content, no React):** `https://zigo.app/privacy-policy.html`  
-**Terms URL:** `https://zigo.app/legal/terms`
+**Working fallback while DNS is repaired:** `https://zigo-kohl.vercel.app/legal/privacy`  
+**Static fallback (same content, no React):** `https://zigo-kohl.vercel.app/privacy-policy.html`  
+**Terms URL:** `https://zigo.app/legal/terms` (fallback: `https://zigo-kohl.vercel.app/legal/terms`)
 
-Canonical production origin for Zigo. **Deploy required** — if `zigo.app` does not load, Play Console cannot verify the link until Vercel/hosting is live.
+Canonical production origin for Zigo is `https://zigo.app`. If that host returns **ERR_CONNECTION_CLOSED**, Play Console links and the Capacitor WebView must use `https://zigo-kohl.vercel.app` until DNS points at Vercel — see `docs/domain-dns-fix.md`.
 
 > Lawyer review still required before public launch. This doc maps **current code behaviour** to Play Console fields — not legal advice.
 

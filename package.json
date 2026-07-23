@@ -59,6 +59,7 @@
     "test:deploy": "node scripts/verify-deploy-readiness.mjs && node scripts/test-stripe-webhook.mjs",
     "staging:preflight": "node scripts/staging-preflight.mjs",
     "uptime:probe": "node scripts/uptime-probe.mjs",
+    "origin:check": "node scripts/check-production-origin.mjs",
     "migrations:cloud": "node scripts/apply-cloud-migrations.mjs",
     "migrations:pending": "node scripts/apply-pending-migrations.mjs",
     "migrations:recent": "node scripts/apply-recent-migrations.mjs",

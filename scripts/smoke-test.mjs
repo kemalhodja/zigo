@@ -274,7 +274,8 @@ check("Mobile APK does not default to localhost", () => {
     serviceWorker.includes("STATIC_ASSET_PATTERN") &&
     serviceWorker.includes("caches.match(\"/offline.html\")") &&
     fallback.includes("CAPACITOR_SERVER_URL") &&
-    checklist.includes("CAPACITOR_SERVER_URL=https://your-zigo-domain.example") &&
+    (checklist.includes("CAPACITOR_SERVER_URL=https://your-zigo-domain.example") ||
+      checklist.includes("CAPACITOR_SERVER_URL=https://zigo-kohl.vercel.app")) &&
     checklist.includes("001` through `042") || checklist.includes("001` through `023")
   );
 });

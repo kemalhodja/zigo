@@ -1,3 +1,9 @@
+/** Known-good Vercel deployment while custom domain DNS/TLS is repaired. */
+export const ZIGO_HOSTED_FALLBACK_URL = "https://zigo-kohl.vercel.app";
+
+/** Canonical custom domain — must resolve to Vercel with a valid TLS cert. */
+export const ZIGO_CANONICAL_DOMAIN = "https://zigo.app";
+
 export function getSiteUrl(fallback = "http://localhost:3000") {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (configured) return configured.replace(/\/$/, "");
@@ -25,6 +31,55 @@ export function isLocalSiteUrl(url: string) {
     return hostname === "localhost" || hostname === "127.0.0.1";
   } catch {
     return true;
+  }
+}
+
+/**
+ * Probes whether NEXT_PUBLIC_SITE_URL answers over HTTPS.
+ * Any HTTP status means TCP+TLS succeeded (redirects/auth walls are fine).
+ * Connection reset / SSL_ERROR_SYSCALL maps to browser ERR_CONNECTION_CLOSED.
+ */
+export async function probeSiteOriginReachable(
+  siteUrl: string,
+  options?: { timeoutMs?: number },
+): Promise<{ ok: boolean; detail: string; hint?: string }> {
+  const normalized = siteUrl.trim().replace(/\/$/, "");
+  if (!normalized || isLocalSiteUrl(normalized)) {
+    return {
+      ok: true,
+      detail: "Local site URL — reachability probe skipped.",
+    };
+  }
+
+  const timeoutMs = options?.timeoutMs ?? 5000;
+  try {
+    const response = await fetch(normalized, {
+      method: "GET",
+      redirect: "manual",
+      cache: "no-store",
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: { Accept: "text/html,*/*" },
+    });
+
+    if (response.status > 0) {
+      return {
+        ok: true,
+        detail: `Site origin reachable (HTTP ${response.status}).`,
+      };
+    }
+
+    return {
+      ok: false,
+      detail: "Site origin returned an empty response.",
+      hint: `Point DNS for the custom domain at Vercel, or set NEXT_PUBLIC_SITE_URL / CAPACITOR_SERVER_URL to ${ZIGO_HOSTED_FALLBACK_URL}.`,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      ok: false,
+      detail: `Site origin unreachable: ${message}`,
+      hint: `Browser shows ERR_CONNECTION_CLOSED when TLS fails. Fix DNS/SSL for the domain, or use ${ZIGO_HOSTED_FALLBACK_URL} until DNS points at Vercel.`,
+    };
   }
 }
 

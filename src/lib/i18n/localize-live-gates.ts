@@ -35,12 +35,16 @@ function localizeGate(gate: LiveGate, labels: LiveGateLabels): LiveGate {
           ? gate.detail.includes("Production") || gate.detail.includes("production")
             ? labels.siteUrlProd
             : labels.siteUrlLocal
-          : labels.siteUrlMissing,
+          : gate.detail.includes("unreachable") || gate.detail.includes("empty response")
+            ? labels.siteUrlUnreachable
+            : labels.siteUrlMissing,
         hint: gate.ready
           ? gate.detail.includes("Local") || gate.detail.includes("local") || gate.detail.includes("Yerel")
             ? labels.siteUrlHintLocal
             : undefined
-          : labels.siteUrlHintMissing,
+          : gate.detail.includes("unreachable") || gate.detail.includes("empty response")
+            ? labels.siteUrlHintUnreachable
+            : labels.siteUrlHintMissing,
       };
     case "auth_callback":
       return { ...gate, title: labels.authCallbackTitle, detail: labels.authCallbackDetail };
