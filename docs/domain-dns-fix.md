@@ -29,6 +29,15 @@ Use the working host:
 https://zigo-kohl.vercel.app
 ```
 
+Print exact GoDaddy + Vercel steps anytime:
+
+```bash
+npm run dns:fix:print
+```
+
+Until DNS is Valid, the app **bypasses** `NEXT_PUBLIC_SITE_URL=https://zigo.app` and uses
+`https://zigo-kohl.vercel.app` for auth/billing redirects (unless `ZIGO_USE_CANONICAL_DOMAIN=1`).
+
 For Android / Capacitor until DNS is fixed:
 
 ```bash

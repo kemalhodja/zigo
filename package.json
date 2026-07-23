@@ -60,6 +60,7 @@
     "staging:preflight": "node scripts/staging-preflight.mjs",
     "uptime:probe": "node scripts/uptime-probe.mjs",
     "origin:check": "node scripts/check-production-origin.mjs",
+    "dns:fix:print": "node scripts/print-godaddy-dns-fix.mjs",
     "migrations:cloud": "node scripts/apply-cloud-migrations.mjs",
     "migrations:pending": "node scripts/apply-pending-migrations.mjs",
     "migrations:once": "node scripts/apply-migration-once.mjs",

@@ -4,9 +4,33 @@ export const ZIGO_HOSTED_FALLBACK_URL = "https://zigo-kohl.vercel.app";
 /** Canonical custom domain — must resolve to Vercel with a valid TLS cert. */
 export const ZIGO_CANONICAL_DOMAIN = "https://zigo.app";
 
+/**
+ * When true (default), auth/billing redirects never point at zigo.app while its
+ * GoDaddy parking DNS still causes ERR_CONNECTION_CLOSED. Set
+ * ZIGO_USE_CANONICAL_DOMAIN=1 after Vercel TLS for zigo.app is Valid.
+ */
+export function shouldBypassBrokenCanonicalDomain() {
+  return process.env.ZIGO_USE_CANONICAL_DOMAIN !== "1";
+}
+
+export function isBrokenCustomDomainHost(url: string) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === "zigo.app" || host === "www.zigo.app";
+  } catch {
+    return false;
+  }
+}
+
 export function getSiteUrl(fallback = "http://localhost:3000") {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (configured) return configured.replace(/\/$/, "");
+  if (configured) {
+    const normalized = configured.replace(/\/$/, "");
+    if (shouldBypassBrokenCanonicalDomain() && isBrokenCustomDomainHost(normalized)) {
+      return ZIGO_HOSTED_FALLBACK_URL;
+    }
+    return normalized;
+  }
 
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {
@@ -19,6 +43,12 @@ export function getSiteUrl(fallback = "http://localhost:3000") {
 
 export function usesVercelFallbackUrl() {
   return !process.env.NEXT_PUBLIC_SITE_URL?.trim() && Boolean(process.env.VERCEL_URL?.trim());
+}
+
+export function usesCanonicalDomainBypass() {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (!configured) return false;
+  return shouldBypassBrokenCanonicalDomain() && isBrokenCustomDomainHost(configured);
 }
 
 export function hasSiteUrlConfigured() {

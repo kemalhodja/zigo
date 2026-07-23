@@ -4,6 +4,7 @@ import {
   hasSiteUrlConfigured,
   isProductionSiteUrl,
   probeSiteOriginReachable,
+  usesCanonicalDomainBypass,
 } from "@/lib/domain/deploy-config";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 
@@ -62,15 +63,23 @@ export async function getLiveGates(): Promise<LiveGatesReport> {
       hint: "Set NEXT_PUBLIC_SITE_URL to your hosted domain and add /auth/callback in Supabase Auth.",
     });
   } else {
-    const origin = await probeSiteOriginReachable(getSiteUrl());
+    const effectiveSiteUrl = getSiteUrl();
+    const origin = await probeSiteOriginReachable(effectiveSiteUrl);
+    const bypass = usesCanonicalDomainBypass();
     gates.push({
       id: "site_url",
       title: "Site URL",
       detail: origin.ok
-        ? "Production NEXT_PUBLIC_SITE_URL is configured for hosted auth redirects."
+        ? bypass
+          ? `Production SITE_URL bypasses broken zigo.app → ${effectiveSiteUrl} for auth redirects.`
+          : "Production NEXT_PUBLIC_SITE_URL is configured for hosted auth redirects."
         : origin.detail,
       ready: origin.ok,
-      hint: origin.ok ? undefined : origin.hint,
+      hint: origin.ok
+        ? bypass
+          ? "Fix GoDaddy DNS → Vercel (npm run dns:fix:print), then set ZIGO_USE_CANONICAL_DOMAIN=1."
+          : undefined
+        : origin.hint,
     });
   }
 
