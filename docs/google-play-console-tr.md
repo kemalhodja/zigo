@@ -202,6 +202,51 @@ https://zigo.app
 
 ---
 
+## Zigo Plus — abonelik ürünleri (Play Billing)
+
+Uygulama **sahte token ile Plus açmaz**. Ödeme Google Play’de alınır; sunucu `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` ile Android Publisher API üzerinden doğrular.
+
+### 1) Play Console abonelik product id’leri
+
+Varsayılan eşleme (`planId` → product id):
+
+| Plan | Product ID |
+| --- | --- |
+| student-monthly | `zigo_plus_student_monthly` |
+| student-semiannual | `zigo_plus_student_semiannual` |
+| student-yearly | `zigo_plus_student_yearly` |
+| parent-monthly | `zigo_plus_parent_monthly` |
+| parent-semiannual | `zigo_plus_parent_semiannual` |
+| parent-yearly | `zigo_plus_parent_yearly` |
+| family-monthly | `zigo_plus_family_monthly` |
+| family-semiannual | `zigo_plus_family_semiannual` |
+| family-yearly | `zigo_plus_family_yearly` |
+| teacher-monthly | `zigo_plus_teacher_monthly` |
+| teacher-semiannual | `zigo_plus_teacher_semiannual` |
+| teacher-yearly | `zigo_plus_teacher_yearly` |
+
+Paket adı: **com.zigo.education**
+
+### 2) Google Cloud service account
+
+1. Google Cloud’da proje → **Android Publisher API**’yi aç  
+2. Service account oluştur → JSON key indir  
+3. Play Console → **Users and permissions** → bu service account’a **View financial data / Manage orders and subscriptions** (veya eşdeğeri) ver  
+4. Vercel Production env:
+
+```
+GOOGLE_PLAY_PACKAGE_NAME=com.zigo.education
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+```
+
+`ZIGO_GOOGLE_PLAY_DEV_BYPASS` ve `ZIGO_BILLING_DEV_BYPASS` production’da **false** kalmalı.
+
+### 3) Migration
+
+`084_google_play_billing.sql` — `google_play_purchases` + `record_google_play_purchase` (hosted Supabase’te uygulanmış olmalı).
+
+---
+
 ## AAB build (production URL ile)
 
 ```powershell
