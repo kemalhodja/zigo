@@ -31,5 +31,6 @@ describe("billing-platform", () => {
 
   it("returns Turkish Play billing guidance", () => {
     expect(getBillingPlatformMessage("tr")).toContain("Google Play");
+    expect(getBillingPlatformMessage("tr")).toContain("doğrulanmadan");
   });
 });

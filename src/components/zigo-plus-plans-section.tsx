@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
+import { purchaseGooglePlaySubscription } from "@/lib/client/play-billing";
 import {
   isSubscriptionCampaignActive,
   SUBSCRIPTION_CAMPAIGN,
@@ -40,7 +41,7 @@ export function ZigoPlusPlansSection({
       })
       .catch(() => {
         setPlatformMessage(
-          "Android uygulamasında abonelik yakında Google Play üzerinden açılacak. Şimdilik tarayıcıdan zigo web sitesinden abone olabilirsiniz.",
+          "Android abonelikleri Google Play Billing ile alınır. Ödeme doğrulanmadan Zigo Plus açılmaz.",
         );
       });
   }, []);
@@ -168,7 +169,7 @@ function PlanPriceRow({
 
   async function subscribe() {
     if (playStoreOnly) {
-      setMessage("Abonelik için tarayıcıdan zigo web sitesini kullanın.");
+      await subscribeGooglePlay();
       return;
     }
 
@@ -199,6 +200,31 @@ function PlanPriceRow({
       window.location.href = payload.data.url;
     } catch {
       setMessage("Bağlantı hatası.");
+      setLoading(false);
+    }
+  }
+
+  async function subscribeGooglePlay() {
+    setLoading(true);
+    setMessage("");
+    try {
+      // Never invent purchase tokens — only accept a real Play Billing result.
+      const purchase = await purchaseGooglePlaySubscription(planId);
+      const response = await fetch("/api/billing/google-play", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(purchase),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        setMessage(payload?.error ?? "Google Play ödemesi doğrulanamadı. Abonelik açılmadı.");
+        setLoading(false);
+        return;
+      }
+      setMessage("Ödeme doğrulandı. Zigo Plus aktifleştiriliyor...");
+      window.location.reload();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Google Play satın alma başarısız.");
       setLoading(false);
     }
   }
@@ -245,11 +271,11 @@ function PlanPriceRow({
         <div className="flex shrink-0 flex-col gap-2">
           <button
             className="tap-scale rounded-lg bg-white px-4 py-2.5 text-xs font-black text-night disabled:opacity-60"
-            disabled={loading || playStoreOnly}
+            disabled={loading}
             onClick={() => void subscribe()}
             type="button"
           >
-            {playStoreOnly ? "Kart (web)" : loading ? "..." : "Kart ile öde"}
+            {loading ? "..." : playStoreOnly ? "Google Play ile Öde" : "Kart ile öde"}
           </button>
           {playStoreOnly ? null : (
             <Link
