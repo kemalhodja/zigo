@@ -13,8 +13,8 @@ export function getVideoPlaybackUrl(storagePath: string) {
   if (!supabaseUrl || !storagePath) return storagePath;
 
   const normalized = storagePath.replace(/^\//, "");
-  if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
-    return normalized;
+  if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("blob:") || normalized.startsWith("data:")) {
+    return storagePath;
   }
 
   return `${supabaseUrl}/storage/v1/object/public/social-media/${normalized}`;
