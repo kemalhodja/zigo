@@ -35,8 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (profile.role !== "teacher" || !profile.is_verified) {
-      return NextResponse.json({ error: "Only verified teachers can upload media." }, { status: 403 });
+    if (!["teacher", "student"].includes(profile.role) || !profile.is_verified) {
+      return NextResponse.json({ error: "Yalnızca doğrulanmış öğretmenler ve öğrenciler medya yükleyebilir." }, { status: 403 });
     }
 
     const formData = await request.formData();
@@ -93,8 +93,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (profile.role !== "teacher" || !profile.is_verified) {
-      return NextResponse.json({ error: "Only verified teachers can clean uploaded media." }, { status: 403 });
+    if (!["teacher", "student"].includes(profile.role) || !profile.is_verified) {
+      return NextResponse.json({ error: "Yalnızca doğrulanmış öğretmenler ve öğrenciler medya silebilir." }, { status: 403 });
     }
 
     const body = cleanupUploadSchema.parse(await request.json());

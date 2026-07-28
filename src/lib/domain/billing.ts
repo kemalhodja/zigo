@@ -59,6 +59,7 @@ export async function createZigoPlusCheckoutSession(
       body.set("discounts[0][coupon]", couponId);
       body.set("metadata[campaign_id]", "yaz-2026-75");
     }
+    body.set("subscription_data[trial_period_days]", "30"); // Added Trial Logic
   }
 
   const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {

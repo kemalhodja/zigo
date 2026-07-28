@@ -6,14 +6,16 @@ import { useEffect, useRef, useState } from "react";
 import type { ComposerArea } from "@/components/create-mode-composer";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
+import { compressVideo, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/server";
 
 type Status = "idle" | "saving" | "saved" | "error";
-type PublishStep = "idle" | "uploading" | "publishing" | "done";
+type PublishStep = "idle" | "compressing" | "uploading" | "publishing" | "done";
 const allowedMediaTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"]);
-const maxFileSizeBytes = 50 * 1024 * 1024;
+const maxFileSizeBytes = 100 * 1024 * 1024;
 const draftKey = "zigo:composer-draft";
 
 type SocialCreateFormProps = {
@@ -34,6 +36,7 @@ export function SocialCreateForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [step, setStep] = useState<PublishStep>("idle");
+  const compressAbortRef = useRef<AbortController | null>(null);
   const [message, setMessage] = useState("");
   const [caption, setCaption] = useState("");
   const [mediaTypeValue, setMediaTypeValue] = useState(forceReel ? "video" : "image");
@@ -112,9 +115,33 @@ export function SocialCreateForm({
 
     if (file.size > maxFileSizeBytes) {
       setStatus("error");
-      setMessage(sc.mediaSizeError);
+      setMessage(`Dosya 100 MB\'dan büyük olamaz. (${sc.mediaSizeError})`);
       setPreview(null);
       setSelectedFile(null);
+      return;
+    }
+
+    if (file.type.startsWith("video/")) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        if (video.duration > 60) {
+          setStatus("error");
+          setMessage("Video 60 saniyeden uzun olamaz.");
+          setPreview(null);
+          setSelectedFile(null);
+          return;
+        }
+        setSelectedFile(file);
+        setStatus("idle");
+        setMessage("");
+        setPreview({
+          url: URL.createObjectURL(file),
+          type: "video",
+        });
+      };
+      video.src = URL.createObjectURL(file);
       return;
     }
 
@@ -123,7 +150,7 @@ export function SocialCreateForm({
     setMessage("");
     setPreview({
       url: URL.createObjectURL(file),
-      type: file.type.startsWith("video/") ? "video" : "image",
+      type: "image",
     });
   }
 
@@ -131,7 +158,6 @@ export function SocialCreateForm({
     if (status === "saving") return;
 
     setStatus("saving");
-    setStep("uploading");
     setMessage(sc.publishing);
 
     let mediaUrl = String(formData.get("mediaUrl") ?? "");
@@ -139,8 +165,48 @@ export function SocialCreateForm({
     let uploadedObjectPath = "";
 
     if (selectedFile) {
+      // ── Video compression (client-side, before upload) ─────────────────────
+      let fileToUpload = selectedFile;
+      if (selectedFile.type.startsWith("video/") && selectedFile.size > VIDEO_MAX_SIZE_BYTES) {
+        setStep("compressing");
+        setMessage("Video sıkıştırılıyor… 0%");
+        const abortCtrl = new AbortController();
+        compressAbortRef.current = abortCtrl;
+        try {
+          fileToUpload = await compressVideo(selectedFile, {
+            signal: abortCtrl.signal,
+            onProgress: (ratio) => {
+              setMessage(`Video sıkıştırılıyor… ${Math.round(ratio * 100)}%`);
+            },
+          });
+          // After compression if still too large, block and show error.
+          if (fileToUpload.size > VIDEO_MAX_SIZE_BYTES) {
+            setStatus("error");
+            setStep("idle");
+            setMessage(
+              `Video sıkıştırıldıktan sonra hâlâ ${Math.round(fileToUpload.size / 1024 / 1024)} MB. Lütfen daha kısa veya düşük çözünürlüklü bir video seçin.`,
+            );
+            return;
+          }
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") {
+            setStatus("idle");
+            setStep("idle");
+            setMessage("");
+            return;
+          }
+          // Non-fatal: fall back to original file (server will reject if > 100 MB).
+          fileToUpload = selectedFile;
+        } finally {
+          compressAbortRef.current = null;
+        }
+      }
+      // ───────────────────────────────────────────────────────────────────────
+
+      setStep("uploading");
+      setMessage(sc.publishing);
       const uploadData = new FormData();
-      uploadData.set("file", selectedFile);
+      uploadData.set("file", fileToUpload);
 
       let uploadResponse: Response;
       try {
@@ -232,9 +298,11 @@ export function SocialCreateForm({
   }
 
   const submitLabel = status === "saving"
-    ? step === "uploading"
-      ? sc.uploading
-      : sc.publishing
+    ? step === "compressing"
+      ? "Sıkıştırılıyor…"
+      : step === "uploading"
+        ? sc.uploading
+        : sc.publishing
     : forceReel
       ? sc.shareReel
       : sc.share;
@@ -311,52 +379,6 @@ export function SocialCreateForm({
           value={caption}
         />
 
-        <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <label className="block text-xs font-black uppercase tracking-wider text-slate-500">Hedef Kitle & Görünürlük</label>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => { setTargetAudience("all"); setTargetGrade(""); }}
-              className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "all" ? "bg-night text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
-            >
-              🌟 Genel (Herkes)
-            </button>
-            <button
-              type="button"
-              onClick={() => { setTargetAudience("parent_only"); setTargetGrade(""); }}
-              className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "parent_only" ? "bg-pink-600 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
-            >
-              👨‍👩‍👧 Sadece Veli
-            </button>
-            <button
-              type="button"
-              onClick={() => setTargetAudience("grade")}
-              className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "grade" ? "bg-indigo-600 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
-            >
-              🎒 Sınıf / Kademe
-            </button>
-          </div>
-          <input type="hidden" name="targetAudience" value={targetAudience} />
-          {targetAudience === "grade" ? (
-            <div className="mt-2.5 pt-2.5 border-t border-slate-200">
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">Hedef Sınıf Kademesi Seçin:</label>
-              <div className="grid grid-cols-2 gap-1.5">
-                {["Okul Öncesi", "1-4. Sınıf", "5-8. Sınıf", "9-12. Sınıf"].map((lvl) => (
-                  <button
-                    key={lvl}
-                    type="button"
-                    onClick={() => setTargetGrade(lvl)}
-                    className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${targetGrade === lvl ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
-                  >
-                    {lvl}
-                  </button>
-                ))}
-              </div>
-              <input type="hidden" name="targetGrade" value={targetGrade} />
-            </div>
-          ) : null}
-        </div>
-
         <div className="grid grid-cols-2 gap-2">
           <select
             className="rounded-lg bg-slate-100 px-3 py-3 text-sm font-bold text-slate-700 outline-none"
@@ -378,7 +400,7 @@ export function SocialCreateForm({
             <option value="">{sc.subject}</option>
             {areas.map((area) => (
               <option key={area.id} value={area.id}>
-                {area.area_name}
+                {displayEducationAreaName(area.area_name)}
               </option>
             ))}
           </select>
@@ -386,6 +408,61 @@ export function SocialCreateForm({
 
         <details className="rounded-lg bg-slate-50 px-3 py-3 text-sm">
           <summary className="cursor-pointer font-black text-slate-600">{sc.advanced}</summary>
+
+          <div className="mt-3 space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+            <label className="block text-xs font-black uppercase tracking-wider text-slate-500">
+              {sc.audienceHeading}
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetAudience("all");
+                  setTargetGrade("");
+                }}
+                className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "all" ? "bg-night text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
+              >
+                {sc.audienceAll}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTargetAudience("parent_only");
+                  setTargetGrade("");
+                }}
+                className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "parent_only" ? "bg-pink-600 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
+              >
+                {sc.audienceParents}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTargetAudience("grade")}
+                className={`rounded-lg px-3 py-2 text-xs font-bold transition ${targetAudience === "grade" ? "bg-indigo-600 text-white shadow-sm" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
+              >
+                {sc.audienceGrade}
+              </button>
+            </div>
+            <input type="hidden" name="targetAudience" value={targetAudience} />
+            {targetAudience === "grade" ? (
+              <div className="mt-2.5 border-t border-slate-200 pt-2.5">
+                <label className="mb-1.5 block text-xs font-bold text-slate-600">{sc.audienceGradePick}</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {["Okul Öncesi", "1-4. Sınıf", "5-8. Sınıf", "9-12. Sınıf"].map((lvl) => (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => setTargetGrade(lvl)}
+                      className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${targetGrade === lvl ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
+                    >
+                      {lvl}
+                    </button>
+                  ))}
+                </div>
+                <input type="hidden" name="targetGrade" value={targetGrade} />
+              </div>
+            ) : null}
+          </div>
+
           <input
             className="mt-3 w-full rounded-lg bg-white px-3 py-3 text-sm outline-none"
             name="mediaUrl"
@@ -435,12 +512,10 @@ export function SocialCreateForm({
               />
             </TeacherCreatorPlusLock>
           </div>
-        </details>
-
         {forceReel ? (
           <input name="isReel" type="hidden" value="on" />
         ) : (
-          <label className="flex items-center justify-between rounded-lg bg-slate-100 px-3 py-3 text-sm font-black text-night">
+          <label className="mt-3 flex items-center justify-between rounded-lg bg-white px-3 py-3 text-sm font-black text-night">
             {sc.shareAsReel}
             <input
               checked={shareAsReel}
@@ -451,6 +526,7 @@ export function SocialCreateForm({
             />
           </label>
         )}
+        </details>
 
         <PublishReadiness
           hasArea={Boolean(selectedAreaId)}
@@ -489,15 +565,20 @@ function PublishSteps({
   if (currentStep === "idle") return null;
 
   const steps: { id: PublishStep; label: string }[] = [
+    { id: "compressing", label: "Sıkıştırılıyor" },
     { id: "uploading", label: labels.uploadStep },
     { id: "publishing", label: labels.publishStep },
     { id: "done", label: labels.doneStep },
   ];
-  const activeIndex = steps.findIndex((step) => step.id === currentStep);
+  // compressing is optional – skip it in the indicator if we jumped straight to uploading
+  const visibleSteps = currentStep === "compressing"
+    ? steps
+    : steps.filter((s) => s.id !== "compressing");
+  const activeIndex = visibleSteps.findIndex((s) => s.id === currentStep);
 
   return (
-    <div className="grid grid-cols-3 gap-2">
-      {steps.map((step, index) => (
+    <div className={`grid gap-2 ${visibleSteps.length === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+      {visibleSteps.map((step, index) => (
         <span
           className={`rounded-lg px-3 py-2 text-center text-[0.68rem] font-black ${
             activeIndex >= index ? "bg-crystal text-white" : "bg-slate-100 text-slate-500"
@@ -529,11 +610,11 @@ function PublishReadiness({
   ];
 
   return (
-    <details className="rounded-lg bg-slate-50 px-3 py-3 text-xs">
-      <summary className="cursor-pointer font-black text-slate-500">
+    <div className="rounded-lg bg-slate-50 px-3 py-3 text-xs">
+      <p className="mb-2 font-black text-slate-500">
         {labels.details} <span className="sr-only">{labels.checklistSr}</span>
-      </summary>
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      </p>
+      <div className="grid grid-cols-3 gap-2">
         {checks.map((check) => (
           <span
             className={`rounded-lg px-2 py-2 text-center text-[0.62rem] font-black ${
@@ -545,6 +626,6 @@ function PublishReadiness({
           </span>
         ))}
       </div>
-    </details>
+    </div>
   );
 }
