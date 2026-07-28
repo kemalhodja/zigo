@@ -95,6 +95,22 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const tilesToRender = hasResults ? filteredPosts : hasQuery || activeFormat === "teachers" ? [] : isPreview ? previewTiles : [];
   const showSuggestedCreators = !hasQuery && creators.length === 0 && activeFormat !== "teachers";
 
+  let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
+  if (hasSupabaseEnv()) {
+    try {
+      const supabase = await createClient();
+      const profile = await getCurrentProfile(supabase);
+      if (profile?.role) viewerRole = profile.role;
+    } catch {
+      viewerRole = "guest";
+    }
+  }
+
+  const roleCategories =
+    viewerRole === "parent"
+      ? categories
+      : categories.filter((category) => category.query !== "Veli");
+
   return (
     <div className="space-y-3 pb-3">
       <section className="sticky top-[3.45rem] z-10 -mx-4 border-b border-slate-100 bg-white/95 px-4 pb-2.5 pt-1 backdrop-blur">
@@ -107,11 +123,11 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             className="block w-full rounded-lg bg-slate-100 px-9 py-2.5 text-sm font-bold text-night outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-slate-200"
             defaultValue={query}
             name="q"
-            placeholder={e.searchPlaceholder}
+            placeholder={viewerRole === "teacher" ? e.teacherSearchPlaceholder : e.searchPlaceholder}
           />
         </form>
         <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto">
-          {categories.map((category) => (
+          {roleCategories.map((category) => (
             <Link
               className={`rounded-full border px-3 py-1.5 text-xs font-black ${
                 query.toLowerCase() === category.query.toLowerCase() || (!hasQuery && category.query === "")
@@ -172,7 +188,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         </section>
       ) : null}
 
-      <ExploreTopicBridges messages={m} />
+      <ExploreTopicBridges messages={m} viewerRole={viewerRole} />
 
       {creators.length > 0 || activeFormat === "teachers" ? (
         <section className="-mx-4 bg-white">
@@ -348,15 +364,41 @@ function ExploreTrendRadar({
   );
 }
 
-function ExploreTopicBridges({ messages }: { messages: Messages }) {
+function ExploreTopicBridges({
+  messages,
+  viewerRole,
+}: {
+  messages: Messages;
+  viewerRole: "teacher" | "parent" | "student" | "guest";
+}) {
   const e = messages.explore;
-  const jumpLoop = e.jumpLoop; // Jump to the next learning loop
-  const topicBridges = [
-    { href: "/explore?q=5-8. Sınıf", label: e.middleGrades, meta: e.stemMeta },
-    { href: "/questions", label: e.askTeacher, meta: e.qaMeta },
-    { href: "/learn", label: e.learningHub, meta: e.hubMeta },
-    { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
-  ];
+  const jumpLoop = e.jumpLoop;
+  const topicBridges =
+    viewerRole === "teacher"
+      ? [
+          { href: "/create", label: messages.header.create, meta: e.qaMeta },
+          { href: "/questions", label: e.answerQuestions, meta: e.qaMeta },
+          { href: "/teacher", label: messages.dashboard.teacher.studio, meta: e.hubMeta },
+          { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
+        ]
+      : viewerRole === "parent"
+        ? [
+            { href: "/family", label: messages.profilesPage.familySetup, meta: e.qaMeta },
+            { href: "/questions", label: e.askTeacher, meta: e.qaMeta },
+            { href: "/parent", label: messages.dashboard.parent.mode, meta: e.hubMeta },
+            { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
+          ]
+        : viewerRole === "student"
+          ? [
+              { href: "/learn", label: e.learningHub, meta: e.hubMeta },
+              { href: "/duels", label: "Düello", meta: e.stemMeta },
+              { href: "/micro", label: messages.nav.micro, meta: e.stemMeta },
+              { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
+            ]
+          : [
+              { href: "/auth", label: messages.common.signIn, meta: e.qaMeta },
+              { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
+            ];
 
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">

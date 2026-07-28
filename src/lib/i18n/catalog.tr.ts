@@ -69,6 +69,8 @@ export const catalogTr = {
     jumpLoop: "Sık kullanılanlar",
     stemSprint: "STEM sprint",
     askTeacher: "Öğretmene sor",
+    answerQuestions: "Soruları yanıtla",
+    teacherSearchPlaceholder: "Eğitim materyali veya zümre ara",
     learningHub: "Öğrenme merkezi",
     savedPosts: "Kaydedilen gönderiler",
     noTeachers: "Alanlarında henüz doğrulanmış öğretmen yok",
