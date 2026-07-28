@@ -32,6 +32,7 @@ const protectedPagePrefixes = [
   "/parent",
   "/post",
   "/profile",
+  "/profiles",
   "/questions",
   "/micro",
   "/store",
@@ -45,7 +46,6 @@ const publicPagePrefixes = [
   "/kampanya",
   "/legal",
   "/onboarding",
-  "/profiles",
   "/readiness",
   "/setup",
 ];
@@ -159,6 +159,27 @@ export async function proxy(request: NextRequest) {
   if (gate !== "ready") {
     const adminOptions = await getPlatformAdminRedirectOptions(supabase);
     return NextResponse.redirect(new URL(authGateRedirectPath(gate, adminOptions), request.url));
+  }
+
+  // Role-based Route Guard
+  if (pathname.startsWith('/teacher') || pathname.startsWith('/parent') || pathname.startsWith('/student')) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = profile?.role;
+
+    if (pathname.startsWith('/teacher') && role !== 'teacher') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    if (pathname.startsWith('/parent') && role !== 'parent') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    if (pathname.startsWith('/student') && role !== 'student') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
   return response;
