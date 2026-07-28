@@ -1,17 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { PasswordField } from "@/components/password-field";
 import { PasswordStrengthHints } from "@/components/password-strength-hints";
+import { RegistrationAccountPicker } from "@/components/registration-account-picker";
 import { isCapacitorClient } from "@/lib/client/capacitor-runtime";
 import { markRegistrationCampaignAnnouncementPending } from "@/lib/client/registration-campaign-announcement";
 import { validateRegistrationPassword } from "@/lib/domain/password-policy";
-import {
-  REGISTRATION_ACCOUNT_OPTIONS,
-  type RegistrationAccountKind,
-} from "@/lib/domain/registration-account";
+import { type RequiredSignupOptionId } from "@/lib/domain/registration-account";
 import { useRecaptcha } from "@/lib/hooks/use-recaptcha";
 import { useMessages } from "@/lib/i18n/locale-context";
 
@@ -43,14 +41,13 @@ export function AuthPanel() {
   const a = m.auth;
   const submittingRef = useRef(false);
 
-  const roleOptions = useMemo(() => REGISTRATION_ACCOUNT_OPTIONS, []);
-
   const [mode, setMode] = useState<Mode>("sign-in");
-  const [accountKind, setAccountKind] = useState<RegistrationAccountKind>("student");
+  const [accountKind, setAccountKind] = useState<RequiredSignupOptionId | null>(null);
   const [rememberMe, setRememberMe] = useState(true);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState(searchParams.get("invite") ?? "");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState(searchParams.get("error") ?? a.defaultMessage);
   const recaptcha = useRecaptcha(mode === "sign-up" ? "signup" : "signin");
@@ -93,6 +90,14 @@ export function AuthPanel() {
         if (trimmedFullName.length < 2) {
           setStatus("error");
           setMessage("Ad soyad en az 2 karakter olmalı.");
+          submittingRef.current = false;
+          return;
+        }
+
+        if (!accountKind) {
+          setStatus("error");
+          setMessage("Lütfen bir hesap türü seçin.");
+          submittingRef.current = false;
           return;
         }
 
@@ -100,6 +105,7 @@ export function AuthPanel() {
         if (!passwordValidation.ok) {
           setStatus("error");
           setMessage(passwordValidation.message);
+          submittingRef.current = false;
           return;
         }
       }
@@ -111,6 +117,7 @@ export function AuthPanel() {
               fullName: trimmedFullName,
               password,
               accountKind,
+              inviteCode: inviteCode.trim() || undefined,
               recaptchaToken,
             }
           : {
@@ -268,6 +275,19 @@ export function AuthPanel() {
 
         {mode === "sign-up" ? <PasswordStrengthHints password={password} /> : null}
 
+        {mode === "sign-up" ? (
+          <div>
+            <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Davet kodu (opsiyonel)</label>
+            <input
+              className="zigo-input mt-2 w-full rounded-xl px-4 py-3 text-sm outline-none"
+              name="inviteCode"
+              onChange={(event) => setInviteCode(event.target.value)}
+              placeholder="ZIGOXXXX"
+              value={inviteCode}
+            />
+          </div>
+        ) : null}
+
         {mode === "sign-in" ? (
           <label className="flex items-start gap-3 rounded-xl bg-slate-50 px-3 py-3">
             <input
@@ -326,33 +346,8 @@ export function AuthPanel() {
           {mode === "sign-up" ? a.learnerNext : a.signInNext}
         </p>
         {mode === "sign-up" ? (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Choose role</p>
-            <div className="flex flex-wrap gap-2">
-              {roleOptions.map((option) => {
-                const isActive = option.id === accountKind;
-                return (
-                  <button
-                    key={option.id}
-                    className={`tap-scale rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                      isActive
-                        ? `bg-gradient-to-r ${option.accent} text-white shadow-sm`
-                        : "bg-white text-slate-700 border border-slate-200"
-                    }`}
-                    data-testid={`registration-account-${option.id}`}
-                    onClick={() => setAccountKind(option.id)}
-                    type="button"
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-2 rounded-lg bg-slate-50 p-2.5">
-              <p className="text-xs font-semibold leading-5 text-slate-500">
-                {roleOptions.find((o) => o.id === accountKind)?.description}
-              </p>
-            </div>
+          <div className="mt-3">
+            <RegistrationAccountPicker value={accountKind} onChange={setAccountKind} />
           </div>
         ) : null}
       </section>

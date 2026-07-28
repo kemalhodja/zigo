@@ -54,7 +54,7 @@ export const roleQaContentTr: Record<RoleQaRole, RoleQaSection[]> = {
       ],
     },
     {
-      title: "Üretici yüzeyleri",
+      title: "Yayın yüzeyleri",
       items: [
         { id: "teacher-post", text: "Atanan alanda /create'ten gönderi oluştur.", href: "/create" },
         { id: "teacher-reel", text: "/create?mode=micro ile kısa ders oluştur.", href: "/create?mode=micro" },

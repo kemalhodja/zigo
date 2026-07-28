@@ -1,18 +1,33 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef,useState } from "react";
+import { useState } from "react";
 
+import { RegistrationAccountPicker } from "@/components/registration-account-picker";
 import { SocialAvatar } from "@/components/social-primitives";
+import { pickProfilePhoto } from "@/lib/client/pick-profile-photo";
+import { type RegistrationAccountKind, type RequiredSignupOptionId } from "@/lib/domain/registration-account";
 import { useMessages } from "@/lib/i18n/locale-context";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 type ProfileEditFormProps = {
   initialProfile: {
     fullName: string;
     bio: string;
     avatarUrl: string | null;
+    email: string | null;
+    role: UserRole;
+    accountKind: RegistrationAccountKind;
   };
 };
+
+// Map legacy RegistrationAccountKind (includes kurs/okul) to RequiredSignupOptionId
+function toRequiredId(kind: RegistrationAccountKind): RequiredSignupOptionId {
+  // kurs and okul both map to institution for the new picker
+  if (kind === "kurs" || kind === "okul") return "institution";
+  return kind as RequiredSignupOptionId;
+}
 
 export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
   const m = useMessages();
@@ -20,21 +35,20 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
   const common = m.common;
   const router = useRouter();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [fullName, setFullName] = useState(initialProfile.fullName);
   const [bio, setBio] = useState(initialProfile.bio);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialProfile.avatarUrl);
+  const [accountKind, setAccountKind] = useState<RequiredSignupOptionId>(
+    toRequiredId(initialProfile.accountKind),
+  );
 
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingKind, setIsSavingKind] = useState(false);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  async function uploadFile(file: File) {
     setIsUploading(true);
     setMessage("");
     setStatus("idle");
@@ -47,13 +61,18 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
         method: "POST",
         body: formData,
       });
+      const result = (await response.json().catch(() => null)) as {
+        error?: string;
+        data?: { avatarUrl?: string };
+      } | null;
 
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || pe.uploadFailed);
+      if (!response.ok || !result?.data?.avatarUrl) {
+        throw new Error(result?.error || pe.uploadFailed);
       }
 
       setAvatarUrl(result.data.avatarUrl);
+      setStatus("success");
+      setMessage(pe.photoReady);
     } catch (err) {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : pe.uploadFailed);
@@ -62,8 +81,11 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
     }
   }
 
-  function triggerFileInput() {
-    fileInputRef.current?.click();
+  async function handlePick(source: "camera" | "gallery") {
+    if (isUploading || isSaving) return;
+    const file = await pickProfilePhoto(source);
+    if (!file) return;
+    await uploadFile(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -81,22 +103,18 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
         body: JSON.stringify({
           fullName: fullName.trim(),
           bio: bio.trim(),
-          avatarUrl: avatarUrl,
+          avatarUrl,
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json().catch(() => null)) as { error?: string } | null;
       if (!response.ok) {
-        throw new Error(result.error || pe.saveError);
+        throw new Error(result?.error || pe.saveError);
       }
 
       setStatus("success");
       setMessage(pe.saveSuccess);
       router.refresh();
-
-      setTimeout(() => {
-        router.push("/profile");
-      }, 1000);
     } catch (err) {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : pe.saveError);
@@ -105,113 +123,169 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
     }
   }
 
+  async function saveAccountKind() {
+    if (isSavingKind || toRequiredId(initialProfile.accountKind) === accountKind) return;
+    setIsSavingKind(true);
+    setMessage("");
+    setStatus("idle");
+
+    try {
+      const response = await fetch("/api/profile/account-kind", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountKind }),
+      });
+      const result = (await response.json().catch(() => null)) as {
+        error?: string;
+        message?: string;
+      } | null;
+
+      if (!response.ok) {
+        throw new Error(result?.error || pe.accountKindError);
+      }
+
+      setStatus("success");
+      setMessage(result?.message || pe.accountKindSaved);
+      router.refresh();
+      router.push("/onboarding/role-setup");
+    } catch (err) {
+      setStatus("error");
+      setMessage(err instanceof Error ? err.message : pe.accountKindError);
+    } finally {
+      setIsSavingKind(false);
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="-mx-4 space-y-6 bg-white px-4 py-5 rounded-xl shadow-sm border border-slate-100">
-      <div className="flex flex-col items-center space-y-3 pb-2 border-b border-slate-100">
-        <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{pe.photoLabel}</label>
-        
-        <div className="relative group cursor-pointer" onClick={triggerFileInput}>
+    <div className="space-y-5">
+      <form
+        onSubmit={handleSubmit}
+        className="-mx-4 space-y-6 rounded-xl border border-slate-100 bg-white px-4 py-5 shadow-sm"
+      >
+        <div className="flex flex-col items-center space-y-3 border-b border-slate-100 pb-4">
+          <label className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{pe.photoLabel}</label>
+
           <SocialAvatar
             accent="from-crystal via-fuchsia-500 to-rose-400"
             className="story-ring size-24 text-4xl shadow-md"
             label={fullName || "User"}
             imageUrl={avatarUrl}
           />
-          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200">
-            <svg className="size-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-              <path d="M15 13.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            </svg>
+
+          <div className="grid w-full max-w-sm grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => void handlePick("camera")}
+              disabled={isUploading || isSaving}
+              className="tap-scale rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+            >
+              {isUploading ? pe.uploading : pe.cameraButton}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handlePick("gallery")}
+              disabled={isUploading || isSaving}
+              className="tap-scale rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+            >
+              {isUploading ? pe.uploading : pe.galleryButton}
+            </button>
           </div>
+          <p className="text-center text-[0.7rem] font-semibold text-slate-500">{pe.photoHint}</p>
         </div>
 
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          className="hidden"
-          disabled={isUploading || isSaving}
-        />
-
-        <button
-          type="button"
-          onClick={triggerFileInput}
-          disabled={isUploading || isSaving}
-          className="tap-scale px-4 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition text-xs font-black text-slate-700 disabled:opacity-60"
-        >
-          {isUploading ? pe.uploading : pe.uploadButton}
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="full-name" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-          {pe.fullNameLabel}
-        </label>
-        <input
-          id="full-name"
-          type="text"
-          required
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          disabled={isSaving}
-          placeholder="Ad Soyad"
-          className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <label htmlFor="bio" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-            {pe.bioLabel}
+        <div className="space-y-2">
+          <label htmlFor="full-name" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+            {pe.fullNameLabel}
           </label>
-          <span className="text-[10px] font-bold text-slate-400">
-            {bio.length} / 500
-          </span>
+          <input
+            id="full-name"
+            type="text"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            disabled={isSaving}
+            placeholder={pe.fullNamePlaceholder}
+            className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
+          />
         </div>
-        <textarea
-          id="bio"
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          disabled={isSaving}
-          maxLength={500}
-          rows={4}
-          placeholder="Kendinizden bahsedin..."
-          className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2 resize-none"
-        />
-      </div>
 
-      <div className="pt-2 flex gap-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="bio" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+              {pe.bioLabel}
+            </label>
+            <span className="text-[10px] font-bold text-slate-400">{bio.length} / 500</span>
+          </div>
+          <textarea
+            id="bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            disabled={isSaving}
+            maxLength={500}
+            rows={4}
+            placeholder={pe.bioPlaceholder}
+            className="w-full resize-none rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
+          />
+        </div>
+
+        <div className="space-y-2 rounded-lg bg-slate-50 px-4 py-3">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{pe.emailLabel}</p>
+          <p className="text-sm font-bold text-night">{initialProfile.email || pe.emailMissing}</p>
+          <Link className="inline-block text-xs font-black text-crystal" href="/auth/forgot-password">
+            {pe.changePassword}
+          </Link>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            type="button"
+            onClick={() => router.push("/profile")}
+            disabled={isSaving}
+            className="tap-scale flex-1 rounded-lg border border-slate-200 bg-white py-3.5 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+          >
+            {common.cancel}
+          </button>
+          <button
+            type="submit"
+            disabled={isSaving || isUploading || !fullName.trim()}
+            className="tap-scale zigo-cta flex-1 rounded-lg py-3.5 text-sm font-black text-white transition hover:brightness-95 disabled:opacity-60"
+          >
+            {isSaving ? pe.saving : pe.saveButton}
+          </button>
+        </div>
+      </form>
+
+      <section className="-mx-4 space-y-3 rounded-xl border border-amber-100 bg-amber-50/70 px-4 py-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-700">{pe.accountKindLabel}</p>
+          <h3 className="mt-1 text-base font-black text-night">{pe.accountKindTitle}</h3>
+          <p className="mt-1 text-xs font-semibold leading-5 text-amber-900">{pe.accountKindDesc}</p>
+        </div>
+        <RegistrationAccountPicker
+          onChange={setAccountKind}
+          value={accountKind}
+        />
         <button
           type="button"
-          onClick={() => router.push("/profile")}
-          disabled={isSaving}
-          className="tap-scale flex-1 rounded-lg border border-slate-200 bg-white py-3.5 text-sm font-black text-slate-700 hover:bg-slate-50 transition disabled:opacity-60"
+          onClick={() => void saveAccountKind()}
+          disabled={isSavingKind || toRequiredId(initialProfile.accountKind) === accountKind}
+          className="tap-scale w-full rounded-lg bg-night px-4 py-3 text-sm font-black text-white disabled:opacity-50"
         >
-          {common.cancel}
+          {isSavingKind ? pe.saving : pe.accountKindSave}
         </button>
-        <button
-          type="submit"
-          disabled={isSaving || isUploading || !fullName.trim()}
-          className="tap-scale flex-1 zigo-cta rounded-lg py-3.5 text-sm font-black text-white hover:brightness-95 transition disabled:opacity-60"
-        >
-          {isSaving ? pe.saving : pe.saveButton}
-        </button>
-      </div>
+      </section>
 
-      {message && (
+      {message ? (
         <p
           className={`rounded-lg px-4 py-3 text-center text-sm font-bold ${
-            status === "success"
-              ? "bg-emerald-50 text-emerald-600"
-              : "bg-rose-50 text-rose-600"
+            status === "success" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
           }`}
           role="status"
           aria-live="polite"
         >
           {message}
         </p>
-      )}
-    </form>
+      ) : null}
+    </div>
   );
 }
