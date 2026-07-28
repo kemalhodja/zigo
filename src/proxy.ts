@@ -169,7 +169,7 @@ export async function proxy(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    const role = profile?.role;
+    const role = (profile as any)?.role;
 
     if (pathname.startsWith('/teacher') && role !== 'teacher') {
       return NextResponse.redirect(new URL('/', request.url));
