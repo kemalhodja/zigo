@@ -131,7 +131,7 @@ export const messagesTr = {
     open: "Aç",
   },
   auth: {
-    hero: "Öğrenci, veli ve öğretmenler için doğrulanmış eğitim akışına gir.",
+    hero: "Öğrenci, veli ve eğitimcileri bir araya getiren %100 güvenli, doğrulanmış yeni nesil eğitim platformu.",
     safeFeed: "Güvenli akış",
     noDm: "DM yok",
     verified: "Doğrulanmış",
