@@ -56,6 +56,8 @@ type ReelItem = {
   scene: "math" | "science" | "coding";
   verified: boolean;
   postId?: string;
+  areaId?: number | null;
+  quizId?: string | null;
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;
@@ -73,6 +75,16 @@ export default async function ReelsPage({ searchParams }: ReelsPageProps) {
   const params = await searchParams;
   const activeFeed = params.feed === "following" ? "following" : "for-you";
   const reels = await getReels(activeFeed);
+  let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
+  if (hasSupabaseEnv()) {
+    try {
+      const supabase = await createClient();
+      const profile = await getCurrentProfile(supabase);
+      if (profile?.role) viewerRole = profile.role;
+    } catch {
+      viewerRole = "guest";
+    }
+  }
 
   return (
   <>
@@ -86,7 +98,14 @@ export default async function ReelsPage({ searchParams }: ReelsPageProps) {
         <ReelsEmptyState activeFeed={activeFeed} messages={m} />
       ) : (
         reels.map((reel, index) => (
-          <ReelSection activeFeed={activeFeed} index={index} key={reel.id} messages={m} reel={reel} />
+          <ReelSection
+            activeFeed={activeFeed}
+            index={index}
+            key={reel.id}
+            messages={m}
+            reel={reel}
+            viewerRole={viewerRole}
+          />
         ))
       )}
     </div>
@@ -99,11 +118,13 @@ function ReelSection({
   index,
   messages: m,
   reel,
+  viewerRole,
 }: {
   activeFeed: "for-you" | "following";
   index: number;
   messages: Messages;
   reel: ReelItem;
+  viewerRole: "teacher" | "parent" | "student" | "guest";
 }) {
   const mp = m.microPage;
   const ru = m.reelUi;
@@ -160,9 +181,11 @@ function ReelSection({
             {ru.watchForPoints}
           </span>
         </div>
-        <ReelLearningDock messages={m} postId={reel.postId} />
+        <ReelLearningDock messages={m} postId={reel.postId} viewerRole={viewerRole} />
         <div className="text-xs font-black text-white/80">
           <ReelLearningPoints
+            areaId={reel.areaId}
+            quizId={reel.quizId}
             reelId={reel.postId ?? reel.id}
             requiresPlayback={Boolean(reel.mediaUrl && reel.mediaType === "video")}
           />
@@ -210,13 +233,39 @@ function ReelContextOverlay({
   );
 }
 
-function ReelLearningDock({ messages, postId }: { messages: Messages; postId?: string }) {
+function ReelLearningDock({
+  messages,
+  postId,
+  viewerRole,
+}: {
+  messages: Messages;
+  postId?: string;
+  viewerRole: "teacher" | "parent" | "student" | "guest";
+}) {
   const mp = messages.microPage;
-  const actions = [
-    { href: "/learn", label: mp.dockQuiz, meta: mp.dockPts },
-    { href: "/collections", label: mp.dockSave, meta: mp.dockSaved },
-    { href: postId ? `/post/${postId}` : "/questions", label: mp.dockAsk, meta: mp.dockQa },
-  ];
+  const actions =
+    viewerRole === "student"
+      ? [
+          { href: "/learn", label: mp.dockQuiz, meta: mp.dockPts },
+          { href: "/collections", label: mp.dockSave, meta: mp.dockSaved },
+          { href: postId ? `/post/${postId}` : "/questions", label: mp.dockAsk, meta: mp.dockQa },
+        ]
+      : viewerRole === "teacher"
+        ? [
+            { href: "/create", label: messages.header.create, meta: mp.dockSaved },
+            { href: "/collections", label: mp.dockSave, meta: mp.dockSaved },
+            { href: "/questions", label: mp.dockAsk, meta: mp.dockQa },
+          ]
+        : viewerRole === "parent"
+          ? [
+              { href: "/family", label: messages.profilesPage.familySetup, meta: mp.dockSaved },
+              { href: "/collections", label: mp.dockSave, meta: mp.dockSaved },
+              { href: "/questions", label: mp.dockAsk, meta: mp.dockQa },
+            ]
+          : [
+              { href: "/auth", label: messages.common.signIn, meta: mp.dockSaved },
+              { href: "/collections", label: mp.dockSave, meta: mp.dockSaved },
+            ];
 
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 p-2 backdrop-blur">
@@ -380,6 +429,8 @@ function toReelItem(
     isOwnCreator: Boolean(context.viewerId && reel.author?.id === context.viewerId),
     mediaUrl: reel.media_url,
     mediaType: reel.media_type,
+    areaId: reel.area_id,
+    quizId: reel.quiz_id,
     scene: index % 3 === 0 ? "math" : index % 3 === 1 ? "science" : "coding",
     verified: Boolean(reel.author?.is_verified),
   };

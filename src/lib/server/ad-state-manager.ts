@@ -6,6 +6,7 @@
  * time-based ad rewards.
  */
 
+import { decideAdGate } from "@/lib/domain/ad-gate";
 import { createClient } from "@/lib/supabase/server";
 
 export type AdType = "rewarded" | "optional" | "gate";
@@ -161,10 +162,10 @@ export async function checkAdGate(userId: string): Promise<{
   adState: AdStateResult;
 }> {
   const adState = await isUserAdFree(userId);
+  const decision = decideAdGate(adState);
 
   return {
-    canProceed: adState.isAdFree,
-    requiresAd: !adState.isAdFree,
+    ...decision,
     adState,
   };
 }

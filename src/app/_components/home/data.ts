@@ -1,4 +1,5 @@
 import type { SocialMediaSceneName } from "@/components/social-media-scenes";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 
 /* ─── Shared display types ─── */
 
@@ -22,6 +23,8 @@ export type DisplayPost = {
   postId?: string;
   authorId?: string;
   authorName: string;
+  coAuthorId?: string;
+  coAuthorName?: string;
   handle: string;
   verified: boolean;
   caption: string;
@@ -198,11 +201,13 @@ export async function getHomeStories(viewer: { showStudentStrip: boolean; missio
 
   if (!hasSupabaseEnv()) {
     if (!allowDemoContent()) return [];
-    stories = demoStories.map((story) => ({
-      ...story,
-      name: story.id === "your-story" ? fx.yourSpark : story.name,
-      showNewBadge: story.status === "unread",
-    }));
+    stories = demoStories
+      .filter((story) => story.id !== "your-story")
+      .map((story) => ({
+        ...story,
+        name: story.name,
+        showNewBadge: story.status === "unread",
+      }));
   } else {
     try {
       const supabase = await createClient();
@@ -220,7 +225,7 @@ export async function getHomeStories(viewer: { showStudentStrip: boolean; missio
                 handle: "create",
                 accent: "from-crystal to-fuchsia-500",
                 mediaUrl: null,
-                href: "/create?mode=story",
+                href: "/create?mode=spark",
                 progress: 0,
                 status: "create",
               },
@@ -233,11 +238,12 @@ export async function getHomeStories(viewer: { showStudentStrip: boolean; missio
       ];
     } catch {
       if (!allowDemoContent()) return [];
-      stories = demoStories.map((story) => ({
-        ...story,
-        name: story.id === "your-story" ? fx.yourSpark : story.name,
-        showNewBadge: story.status === "unread",
-      }));
+      stories = demoStories
+        .filter((story) => story.id !== "your-story")
+        .map((story) => ({
+          ...story,
+          showNewBadge: story.status === "unread",
+        }));
     }
   }
 
@@ -320,6 +326,8 @@ function toDisplayPost(
     postId: post.id,
     authorId: post.author?.id,
     authorName,
+    coAuthorId: post.co_author?.id,
+    coAuthorName: post.co_author?.full_name,
     handle: authorName.toLowerCase().replaceAll(" ", ""),
     verified: Boolean(post.author?.is_verified),
     caption: post.caption,
@@ -332,7 +340,7 @@ function toDisplayPost(
     likes: post.likes_count,
     comments: post.comments_count,
     badge: post.is_reel ? "Micro" : "Post",
-    area: post.area?.area_name ?? "Eşleşen öğrenme",
+    area: displayEducationAreaName(post.area?.area_name) || "Eşleşen öğrenme",
     mediaUrl: post.media_url,
     mediaType: post.media_type,
     isLiked: post.is_liked,
@@ -379,8 +387,8 @@ export async function getHomeViewerContext(): Promise<{
 }> {
   if (!hasSupabaseEnv()) {
     return allowDemoContent()
-      ? { showStudentStrip: true, points: 240, streakDays: 3, missionDone: 1, missionTotal: 2, role: "student" }
-      : { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2, role: null };
+      ? { showStudentStrip: true, points: 240, streakDays: 3, missionDone: 1, missionTotal: 5, role: "student" }
+      : { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 5, role: null };
   }
 
   try {
@@ -392,13 +400,13 @@ export async function getHomeViewerContext(): Promise<{
         points: 0,
         streakDays: 0,
         missionDone: 0,
-        missionTotal: 2,
+        missionTotal: 5,
         role: profile?.role ?? null,
       };
     }
 
     const missions = await getDailyMissionProgress(supabase, profile.id);
-    const missionTotal = 2;
+    const missionTotal = 5;
     const missionDone = Math.min(missionTotal, missions.completedIds.length);
 
     return {
@@ -410,7 +418,7 @@ export async function getHomeViewerContext(): Promise<{
       role: "student",
     };
   } catch {
-    return { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 2, role: null };
+    return { showStudentStrip: false, points: 0, streakDays: 0, missionDone: 0, missionTotal: 5, role: null };
   }
 }
 
@@ -464,7 +472,7 @@ export async function getSuggestedCreatorsForHome(): Promise<DisplaySuggestedCre
       id: creator.id,
       name: creator.full_name,
       handle: creator.full_name.toLowerCase().replaceAll(" ", ""),
-      area: creator.area_name,
+      area: displayEducationAreaName(creator.area_name),
       href: `/profile/${creator.id}`,
       isFollowing: creator.is_following,
     }));

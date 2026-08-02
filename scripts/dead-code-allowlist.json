@@ -16,7 +16,33 @@
     "enable-supabase-recovery-email.mjs",
     "lesson-request-safety-audit.mjs",
     "set-bank-env-production.mjs",
-    "test-forgot-password-production.mjs"
+    "test-forgot-password-production.mjs",
+    "apply-069-migration.mjs",
+    "cutover-cred-check.mjs",
+    "deploy-hetzner.mjs",
+    "godaddy-dns-playwright.mjs",
+    "godaddy-edit-dns.mjs",
+    "godaddy-find-domain.mjs",
+    "godaddy-point-zigo-hetzner.mjs",
+    "hetzner-bootstrap.mjs",
+    "hetzner-cutover-smoke.mjs",
+    "hetzner-docker-host-reach.mjs",
+    "hetzner-find-godaddy.mjs",
+    "hetzner-find-nginx.mjs",
+    "hetzner-inspect-ports.mjs",
+    "hetzner-nginx-debug.mjs",
+    "hetzner-nginx-dump.mjs",
+    "hetzner-nginx-fix.mjs",
+    "hetzner-nginx-main.mjs",
+    "hetzner-post-fix.mjs",
+    "hetzner-search-dns-creds.mjs",
+    "hetzner-ssh-probe.mjs",
+    "hetzner-wait-dns-and-cert.mjs",
+    "hetzner-zigo-env-rebuild.mjs",
+    "hetzner-zigo-nginx.mjs",
+    "seed-custom-users.mjs",
+    "supabase-auth-cutover-check.mjs",
+    "vercel-detach-zigo.mjs"
   ],
   "components": [
     "social-primitives.tsx",
@@ -25,6 +51,11 @@
     "feed-trust-strip.tsx",
     "ad-gate-button.tsx",
     "comment-sheet.tsx",
-    "like-and-share-bar.tsx"
+    "like-and-share-bar.tsx",
+    "ad-gate-modal.tsx",
+    "organization-type-form.tsx",
+    "student-social-strip.tsx",
+    "today-learning-card.tsx",
+    "admin-teacher-actions.tsx"
   ]
 }

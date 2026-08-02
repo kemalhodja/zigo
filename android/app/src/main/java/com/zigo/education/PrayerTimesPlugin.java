@@ -38,7 +38,7 @@ public class PrayerTimesPlugin extends Plugin {
         try {
             method = CalculationMethod.valueOf(methodStr);
         } catch (Exception e) {
-            method = CalculationMethod.TURKEY;
+            method = CalculationMethod.MUSLIM_WORLD_LEAGUE;
         }
 
         PrayerTimes prayerTimes = new PrayerTimes(coordinates, date, method.getParameters());

@@ -44,14 +44,15 @@ function StoryTrayItem({
         : story.status === "unread"
           ? f.unreadStory
           : f.watchedStory;
+  const isLiveRing = story.status === "unread" || story.storyKind === "daily-mission";
   const ringClass =
     story.storyKind === "daily-mission"
-      ? "bg-gradient-to-br from-amber-400 to-orange-500"
+      ? "bg-white story-ring-spin story-ring-spin-mission"
       : story.status === "watched"
         ? "bg-slate-200"
         : story.status === "create"
           ? "bg-gradient-to-br from-crystal to-fuchsia-500"
-          : `bg-gradient-to-br ${story.accent} story-ring-unread`;
+          : "bg-white story-ring-spin story-ring-unread";
 
   return (
     <Link
@@ -60,8 +61,8 @@ function StoryTrayItem({
       href={story.href}
     >
       <span
-        className={`relative mx-auto flex size-[4.7rem] items-center justify-center rounded-full p-0.5 ${
-          story.status === "unread" || story.storyKind === "daily-mission" ? "story-live-pulse" : ""
+        className={`relative mx-auto flex size-[4.7rem] items-center justify-center rounded-full p-[3px] ${
+          isLiveRing ? "story-live-pulse" : ""
         } ${ringClass}`}
       >
         <SocialAvatar

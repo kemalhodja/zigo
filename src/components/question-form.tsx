@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { useMessages } from "@/lib/i18n/locale-context";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Status = "idle" | "saving" | "saved" | "error";
@@ -130,7 +131,7 @@ export function QuestionForm({ areas }: { areas: EducationArea[] }) {
           <option value="">{f.educationArea}</option>
           {areas.map((area) => (
             <option key={area.id} value={area.id}>
-              {area.area_name}
+              {displayEducationAreaName(area.area_name)}
             </option>
           ))}
         </select>

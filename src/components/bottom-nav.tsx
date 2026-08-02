@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { getBottomNavItems, getRoleNavLabels } from "@/lib/domain/role-navigation";
+import { getAdminNavItems, getBottomNavItems, getRoleNavLabels } from "@/lib/domain/role-navigation";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
@@ -14,22 +14,28 @@ export function BottomNav({
   teacherInboxCount = 0,
   variant = "default",
   viewerRole = "guest",
+  isPlatformAdmin = false,
 }: {
   canCreateSocialPost?: boolean;
   unreadCount?: number;
   teacherInboxCount?: number;
   variant?: "default" | "overlay";
   viewerRole?: ViewerRole;
+  isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const messages = useMessages();
   const microPath = ZIGO_PATHS.micro;
 
-  const navItems = getBottomNavItems(viewerRole, getRoleNavLabels(viewerRole, messages), {
-    canCreateSocialPost,
-  });
-  const roleNavClass =
-    viewerRole === "student"
+  const navItems = isPlatformAdmin
+    ? getAdminNavItems({ admin: "Yönetici", profile: messages.nav.profile })
+    : getBottomNavItems(viewerRole, getRoleNavLabels(viewerRole, messages), {
+        canCreateSocialPost,
+      });
+
+  const roleNavClass = isPlatformAdmin
+    ? "role-bottom-nav-admin"
+    : viewerRole === "student"
       ? "role-bottom-nav-student"
       : viewerRole === "parent"
         ? "role-bottom-nav-parent"
@@ -44,6 +50,7 @@ export function BottomNav({
           ? "border-t border-white/10 bg-black/25 text-white backdrop-blur"
           : "zigo-bottom-bar text-slate-500"
       } md:relative md:inset-auto md:bottom-auto md:z-auto`}
+      style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
     >
       {navItems.map((item) => {
         const isActive = item.match(pathname);
@@ -181,9 +188,26 @@ function NavIcon({
     );
   }
 
+  if (name === "admin") {
+    return (
+      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      </svg>
+    );
+  }
+
+  if (name === "moderation") {
+    return (
+      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    );
+  }
+
   return (
     <span className={`flex size-6 items-center justify-center rounded-full border-2 border-current p-0.5 ${active ? "bg-current" : ""}`}>
       <span className={`size-full rounded-full ${active ? "bg-white" : "bg-current"}`} />
     </span>
   );
 }
+

@@ -17,35 +17,37 @@ type StorePageProps = {
 const STORE_CATEGORY_IDS = ["all", "digital_avatar", "book", "question_bank", "experience", "stationery"] as const;
 type StoreCategoryFilter = (typeof STORE_CATEGORY_IDS)[number];
 
-const demoProducts = [
-  {
-    id: "demo-crystal-cap",
-    name: "Crystal Cap",
-    description: "A profile-ready avatar hat for students who finish verified Micro lessons.",
-    category: "digital_avatar",
-    price: 80,
-    badge: "Avatar",
-    accent: "from-crystal to-fuchsia-500",
-  },
-  {
-    id: "demo-book-coupon",
-    name: "Book Coupon",
-    description: "Parent-approved real-world reward for consistent learning streaks.",
-    category: "book",
-    price: 220,
-    badge: "Parent approval",
-    accent: "from-emerald-500 to-teal-500",
-  },
-  {
-    id: "demo-study-owl",
-    name: "Study Owl Pet",
-    description: "A playful companion for the student profile and learning feed.",
-    category: "digital_avatar",
-    price: 140,
-    badge: "Pet",
-    accent: "from-amber-400 to-orange-500",
-  },
-];
+function getDemoProducts(s: Messages["store"]) {
+  return [
+    {
+      id: "demo-crystal-cap",
+      name: s.demoCrystalCap,
+      description: s.demoCrystalCapDesc,
+      category: "digital_avatar",
+      price: 80,
+      badge: s.demoBadgeAvatar,
+      accent: "from-crystal to-fuchsia-500",
+    },
+    {
+      id: "demo-book-coupon",
+      name: s.demoBookCoupon,
+      description: s.demoBookCouponDesc,
+      category: "book",
+      price: 220,
+      badge: s.parentApprovalBadge,
+      accent: "from-emerald-500 to-teal-500",
+    },
+    {
+      id: "demo-study-owl",
+      name: s.demoStudyOwl,
+      description: s.demoStudyOwlDesc,
+      category: "digital_avatar",
+      price: 140,
+      badge: s.demoBadgePet,
+      accent: "from-amber-400 to-orange-500",
+    },
+  ] as const;
+}
 
 export default async function StorePage({ searchParams }: StorePageProps) {
   const m = await getServerMessages();
@@ -130,7 +132,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{s.title}</p>
         <h2 className="mt-1 text-2xl font-black text-night">{s.subtitle}</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Avatar items and parent-approved rewards use the same Zigo points earned from learning.
+          {s.introDesc}
         </p>
         <div className="mt-4 grid grid-cols-3 gap-2">
           <StoreStat label={s.avatar} value={products.filter((product) => product.category === "digital_avatar").length} />
@@ -141,7 +143,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
 
       <StoreWalletHero
         approvalCount={products.filter((product) => product.requires_parent_approval).length}
-        featuredName={featuredProduct?.name ?? "Crystal Cap"}
+        featuredName={featuredProduct?.name ?? s.demoCrystalCap}
         featuredPrice={featuredProduct?.price_points ?? 80}
         messages={m}
         walletPoints={walletPoints}
@@ -244,7 +246,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
           <div className="rounded-lg bg-slate-50 px-4 py-5 text-center">
             <p className="text-sm font-black text-night">{s.noRedemptions}</p>
             <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
-              Redeemed avatar items and parent-approved rewards will appear here.
+              {s.redemptionHistoryEmpty}
             </p>
           </div>
         ) : (
@@ -253,7 +255,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-black text-night">
-                    {redemption.product?.name ?? "Reward"}
+                    {redemption.product?.name ?? s.rewardFallback}
                   </p>
                   <p className="mt-1 text-xs font-bold text-slate-500">
                     {statusLabels[redemption.status] ?? redemption.status}
@@ -294,9 +296,9 @@ function StoreWalletHero({
           {s.walletDesc}
         </h2>
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <StoreHeroStat label="wallet" value={walletPoints} />
-          <StoreHeroStat label="featured" value={featuredPrice} />
-          <StoreHeroStat label="approval" value={approvalCount} />
+          <StoreHeroStat label={s.heroWallet} value={walletPoints} />
+          <StoreHeroStat label={s.heroFeatured} value={featuredPrice} />
+          <StoreHeroStat label={s.heroApproval} value={approvalCount} />
         </div>
       </div>
       <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -389,6 +391,14 @@ function getStoreHref(category: StoreCategoryFilter, query: string) {
 
 async function StorePreview({ mode, messages }: { mode: "preview" | "signed-out" | "teacher" | "parent-empty"; messages: Messages }) {
   const s = messages.store;
+  const demoProducts = getDemoProducts(s);
+  const categoryLabels: Record<string, string> = {
+    digital_avatar: s.avatar,
+    book: s.books,
+    question_bank: s.questionBank,
+    experience: s.experiences,
+    stationery: s.stationery,
+  };
   const note = {
     preview: s.walletDesc,
     "signed-out": s.signInRedeem,
@@ -410,11 +420,11 @@ async function StorePreview({ mode, messages }: { mode: "preview" | "signed-out"
           </div>
           <div className="rounded-lg bg-slate-50 p-3">
             <p className="text-lg font-black">7</p>
-            <p className="text-[0.62rem] font-black text-slate-500">streak</p>
+            <p className="text-[0.62rem] font-black text-slate-500">{s.streakLabel}</p>
           </div>
           <div className="rounded-lg bg-slate-50 p-3">
             <p className="text-lg font-black">3</p>
-            <p className="text-[0.62rem] font-black text-slate-500">items</p>
+            <p className="text-[0.62rem] font-black text-slate-500">{s.itemsLabel}</p>
           </div>
         </div>
       </section>
@@ -426,7 +436,7 @@ async function StorePreview({ mode, messages }: { mode: "preview" | "signed-out"
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <span className="rounded-lg bg-white/20 px-3 py-1 text-xs font-black backdrop-blur">
-                    {product.badge === "Parent approval" ? messages.store.parentApprovalBadge : product.badge}
+                    {product.badge}
                   </span>
                   <h2 className="mt-4 text-2xl font-black">{product.name}</h2>
                 </div>
@@ -439,7 +449,7 @@ async function StorePreview({ mode, messages }: { mode: "preview" | "signed-out"
             </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
-                {product.category.replaceAll("_", " ")}
+                {categoryLabels[product.category] ?? product.category}
               </span>
               <Link className="tap-scale zigo-cta tap-scale rounded-lg px-4 py-2 text-xs font-black text-white" href="/micro">
                 {s.earnPoints}

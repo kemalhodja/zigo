@@ -11,9 +11,7 @@ async function run() {
   console.log('Connected to DB');
   
   const files = [
-    "071_class_groups_section.sql",
-    "072_generic_user_verification.sql",
-    "073_admin_user_controls.sql"
+    "074_auto_verify_teachers.sql"
   ];
 
   for (const file of files) {

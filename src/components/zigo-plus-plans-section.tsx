@@ -4,29 +4,51 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
+import type { EducationOrganizationType } from "@/lib/domain/education-organization";
+import { buildOrganizationSalesWhatsAppUrl } from "@/lib/domain/organization-sales";
 import {
   isSubscriptionCampaignActive,
   SUBSCRIPTION_CAMPAIGN,
 } from "@/lib/domain/subscription-campaign";
 import type { SubscriptionPlanGroup } from "@/lib/domain/subscription-plans";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
+import { useMessages } from "@/lib/i18n/locale-context";
 
 type ZigoPlusPlansSectionProps = {
   groups: SubscriptionPlanGroup[];
   hidePrices?: boolean;
   isPremium?: boolean;
+  isTrial?: boolean;
+  userCreatedAt?: string | Date | null;
   allowDevActivate?: boolean;
+  organizationType?: EducationOrganizationType | null;
+  organizationName?: string | null;
 };
 
 export function ZigoPlusPlansSection({
   groups,
   hidePrices = false,
   isPremium = false,
+  isTrial = false,
+  userCreatedAt = null,
   allowDevActivate = false,
+  organizationType = null,
+  organizationName = null,
 }: ZigoPlusPlansSectionProps) {
+  const b = useMessages().billingUi;
   const [playStoreOnly, setPlayStoreOnly] = useState(false);
   const [platformMessage, setPlatformMessage] = useState("");
   const campaignActive = isSubscriptionCampaignActive();
+
+  let trialDaysRemaining = 30;
+  let isWithinTrial = true;
+  if (userCreatedAt) {
+    const createdTime = new Date(userCreatedAt).getTime();
+    const diffTime = Math.abs(Date.now() - createdTime);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    trialDaysRemaining = Math.max(0, 30 - diffDays);
+    isWithinTrial = diffDays <= 30;
+  }
 
   useEffect(() => {
     const android = isCapacitorAndroidClient();
@@ -39,39 +61,53 @@ export function ZigoPlusPlansSection({
         setPlatformMessage(payload.data?.message ?? "");
       })
       .catch(() => {
-        setPlatformMessage(
-          "Android uygulamasında abonelik yakında Google Play üzerinden açılacak. Şimdilik tarayıcıdan zigo web sitesinden abone olabilirsiniz.",
-        );
+        setPlatformMessage(b.androidFallback);
       });
-  }, []);
+  }, [b.androidFallback]);
 
   if (groups.length === 0) return null;
 
-  if (isPremium) {
+  if (isPremium && !isTrial) {
     return (
       <section className="-mx-4 border-t border-amber-200 bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-5 text-night">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-night/70">Zigo Plus aktif</p>
-        <p className="mt-1 text-lg font-black">Aboneliğiniz açık — premium özellikler kullanılabilir.</p>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-night/70">{b.plusActiveEyebrow}</p>
+        <p className="mt-1 text-lg font-black">{b.plusActiveTitle}</p>
       </section>
     );
   }
 
   return (
-    <section className="-mx-4 space-y-4 border-t border-slate-200 bg-slate-950 px-4 py-5 text-white">
-      {campaignActive ? (
+    <section
+      className="-mx-4 space-y-4 border-t border-slate-200 bg-slate-950 px-4 py-5 text-white"
+      id="zigo-plus-plans"
+    >
+      {!hidePrices ? (
         <div className="rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/20 to-orange-500/20 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">
-            {SUBSCRIPTION_CAMPAIGN.headline} · {SUBSCRIPTION_CAMPAIGN.badgeLabel}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">
+              🎁 30 Gün Ücretsiz Deneme {isWithinTrial ? `· Kalan: ${trialDaysRemaining} Gün` : "· Süre Doldu"}
+            </p>
+            <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-wider text-night">
+              {isWithinTrial ? "%50 İNDİRİM FIRSATI" : "%15 STANDART İNDİRİM"}
+            </span>
+          </div>
+          <p className="mt-2 text-sm font-bold leading-snug text-white">
+            {isWithinTrial
+              ? `Ücretsiz 30 günlük tam deneme sürenizin bitmesine ${trialDaysRemaining} gün kaldı! Şimdi kaydolun ve tüm planlarda %50 indirim avantajını yakalayın.`
+              : "30 günlük ücretsiz deneme süreniz doldu. Tüm planlarımızda %15 avantajlı fiyatla devam edebilirsiniz."}
           </p>
-          <p className="mt-1 text-base font-black leading-snug text-white">{SUBSCRIPTION_CAMPAIGN.description}</p>
         </div>
       ) : null}
 
       <div>
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">Abone ol</p>
-        <h2 className="mt-1 text-xl font-black leading-tight">Zigo Plus planını seç</h2>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">
+          {hidePrices ? b.salesEyebrow : b.subscribeEyebrow}
+        </p>
+        <h2 className="mt-1 text-xl font-black leading-tight">
+          {hidePrices ? b.salesTitle : b.subscribeTitle}
+        </h2>
         <p className="mt-2 text-sm font-semibold text-white/75">
-          Kayıt sonrası profil ekranınızdan abonelik özelliklerini ve güncel fiyatları görebilirsiniz.
+          {hidePrices ? b.salesDesc : b.subscribeDesc}
         </p>
       </div>
 
@@ -82,6 +118,8 @@ export function ZigoPlusPlansSection({
           group={group}
           hidePrices={hidePrices}
           key={group.id}
+          organizationName={organizationName}
+          organizationType={organizationType}
           playStoreOnly={playStoreOnly}
           platformMessage={platformMessage}
         />
@@ -97,6 +135,8 @@ function PlanGroupCard({
   playStoreOnly,
   platformMessage,
   campaignActive,
+  organizationType,
+  organizationName,
 }: {
   group: SubscriptionPlanGroup;
   allowDevActivate: boolean;
@@ -104,13 +144,24 @@ function PlanGroupCard({
   playStoreOnly: boolean;
   platformMessage: string;
   campaignActive: boolean;
+  organizationType: EducationOrganizationType | null;
+  organizationName: string | null;
 }) {
+  const b = useMessages().billingUi;
+  const salesUrl = hidePrices
+    ? buildOrganizationSalesWhatsAppUrl({
+        organizationType,
+        organizationName,
+        planTitle: group.title,
+      })
+    : null;
+
   return (
     <article className="rounded-xl border border-white/15 bg-white/5 p-4">
       <h3 className="text-lg font-black text-white">{group.title}</h3>
       <p className="mt-1 text-sm font-semibold text-white/70">{group.subtitle}</p>
 
-      {playStoreOnly && platformMessage ? (
+      {playStoreOnly && platformMessage && !hidePrices ? (
         <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-400/10 px-3 py-2 text-xs font-bold leading-5 text-amber-100">
           {platformMessage}
         </p>
@@ -125,21 +176,38 @@ function PlanGroupCard({
         ))}
       </ul>
 
-      <div className="mt-4 grid gap-2">
-        {group.plans.map((item) => (
-          <PlanPriceRow
-            allowDevActivate={allowDevActivate}
-            campaignActive={campaignActive}
-            compareAtTry={item.compareAtTry}
-            hidePrices={hidePrices}
-            intervalLabel={item.intervalLabel}
-            key={item.id}
-            planId={item.id}
-            playStoreOnly={playStoreOnly}
-            priceTry={item.priceTry}
-          />
-        ))}
-      </div>
+      {hidePrices ? (
+        <div className="mt-4 space-y-2">
+          {salesUrl ? (
+            <a
+              className="tap-scale inline-flex w-full items-center justify-center rounded-lg bg-[#25D366] px-4 py-3 text-sm font-black text-white"
+              href={salesUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {b.salesCta}
+            </a>
+          ) : (
+            <p className="rounded-lg bg-white/10 px-3 py-2 text-xs font-bold text-amber-100">{b.salesLineMissing}</p>
+          )}
+          <p className="text-xs font-semibold text-white/55">{b.salesSelfServeClosed}</p>
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-2">
+          {group.plans.map((item) => (
+            <PlanPriceRow
+              allowDevActivate={allowDevActivate}
+              campaignActive={campaignActive}
+              compareAtTry={item.compareAtTry}
+              intervalLabel={item.intervalLabel}
+              key={item.id}
+              planId={item.id}
+              playStoreOnly={playStoreOnly}
+              priceTry={item.priceTry}
+            />
+          ))}
+        </div>
+      )}
     </article>
   );
 }
@@ -150,7 +218,6 @@ function PlanPriceRow({
   priceTry,
   compareAtTry,
   allowDevActivate,
-  hidePrices,
   playStoreOnly,
   campaignActive,
 }: {
@@ -159,10 +226,10 @@ function PlanPriceRow({
   priceTry: number;
   compareAtTry: number;
   allowDevActivate: boolean;
-  hidePrices: boolean;
   playStoreOnly: boolean;
   campaignActive: boolean;
 }) {
+  const b = useMessages().billingUi;
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -186,14 +253,14 @@ function PlanPriceRow({
       }
 
       if (!response.ok || !payload?.data?.url) {
-        setMessage(payload?.error ?? "Ödeme başlatılamadı.");
+        setMessage(payload?.error ?? b.checkoutFailed);
         setLoading(false);
         return;
       }
 
       window.location.href = payload.data.url;
     } catch {
-      setMessage("Bağlantı hatası.");
+      setMessage(b.connectionFailed);
       setLoading(false);
     }
   }
@@ -202,7 +269,6 @@ function PlanPriceRow({
     setLoading(true);
     setMessage("");
     try {
-      // Google Play faturalandırma servisi bağlantısı simülasyonu
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       const mockPurchaseToken = `gplay_token_${Math.random().toString(36).substring(2, 12)}`;
@@ -227,16 +293,16 @@ function PlanPriceRow({
       } | null;
 
       if (!response.ok) {
-        setMessage(payload?.error ?? "Google Play ödemesi doğrulanamadı.");
+        setMessage(payload?.error ?? b.playVerifyFailed);
         setLoading(false);
         return;
       }
 
-      setMessage("Ödeme başarılı! Zigo Plus üyeliğiniz aktifleştiriliyor...");
+      setMessage(b.playSuccess);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       window.location.reload();
     } catch {
-      setMessage("Bağlantı hatası.");
+      setMessage(b.connectionFailed);
       setLoading(false);
     }
   }
@@ -250,13 +316,13 @@ function PlanPriceRow({
       });
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
       if (!response.ok) {
-        setMessage(payload?.error ?? "Demo aktivasyon başarısız.");
+        setMessage(payload?.error ?? b.demoActivateFailed);
         setLoading(false);
         return;
       }
       window.location.reload();
     } catch {
-      setMessage("Bağlantı hatası.");
+      setMessage(b.connectionFailed);
       setLoading(false);
     }
   }
@@ -273,12 +339,10 @@ function PlanPriceRow({
               </span>
             ) : null}
           </div>
-          {hidePrices ? null : (
-            <p className="mt-1 flex flex-wrap items-baseline gap-2">
-              <span className="text-xs font-bold text-white/50 line-through">{formatTryPrice(compareAtTry)}</span>
-              <span className="text-lg font-black text-amber-300">{formatTryPrice(priceTry)}</span>
-            </p>
-          )}
+          <p className="mt-1 flex flex-wrap items-baseline gap-2">
+            <span className="text-xs font-bold text-white/50 line-through">{formatTryPrice(compareAtTry)}</span>
+            <span className="text-lg font-black text-amber-300">{formatTryPrice(priceTry)}</span>
+          </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2">
           <button
@@ -287,14 +351,14 @@ function PlanPriceRow({
             onClick={() => void (playStoreOnly ? subscribeGooglePlay() : subscribe())}
             type="button"
           >
-            {playStoreOnly ? (loading ? "..." : "Google Play ile Öde") : (loading ? "..." : "Kart ile öde")}
+            {loading ? b.loading : playStoreOnly ? b.payPlay : b.payCard}
           </button>
           {playStoreOnly ? null : (
             <Link
               className="tap-scale rounded-lg border border-white/30 px-4 py-2.5 text-center text-xs font-black text-white"
               href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
             >
-              Havale / EFT
+              {b.payBank}
             </Link>
           )}
         </div>

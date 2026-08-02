@@ -11,10 +11,15 @@ import {
   resolveBankTransferPlan,
 } from "@/lib/domain/bank-transfer";
 import { getBillingPlatformMessage, isWebCheckoutAllowedForRequest } from "@/lib/domain/billing-platform";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales";
+import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
+import { getServerLocale, getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
+  const messages = await getServerMessages();
+  const h = messages.billingUi.havale;
+
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
@@ -32,23 +37,24 @@ export async function GET() {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Havale talepleri yüklenemedi.";
+    const message = error instanceof Error ? error.message : h.apiLoadFailed;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
 
 export async function POST(request: Request) {
+  const locale = await getServerLocale();
+  const messages = await getServerMessages();
+  const h = messages.billingUi.havale;
+
   try {
     if (!hasBankTransferConfigured()) {
-      return NextResponse.json(
-        { error: "Havale/EFT ödemesi henüz yapılandırılmadı. ZIGO_BANK_IBAN env değerini ekleyin." },
-        { status: 503 },
-      );
+      return NextResponse.json({ error: h.apiNotConfigured }, { status: 503 });
     }
 
     if (!isWebCheckoutAllowedForRequest(request)) {
       return NextResponse.json(
-        { error: getBillingPlatformMessage("tr"), code: "PLAY_STORE_BILLING_REQUIRED" },
+        { error: getBillingPlatformMessage(locale), code: "PLAY_STORE_BILLING_REQUIRED" },
         { status: 403 },
       );
     }
@@ -61,6 +67,17 @@ export async function POST(request: Request) {
 
     const body = createBankTransferSchema.parse(await request.json());
     resolveBankTransferPlan(body.planId);
+
+    if (shouldBlockSelfServeOrgCheckout(parseOrganizationType(profile.organization_type), body.planId)) {
+      return NextResponse.json(
+        {
+          error: h.apiOrgBlocked,
+          code: "ORG_SALES_ASSISTED",
+        },
+        { status: 403 },
+      );
+    }
+
     const transferRequest = await createBankTransferRequest(supabase, body.planId);
 
     return NextResponse.json({
@@ -72,9 +89,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Geçersiz havale talebi." }, { status: 400 });
+      return NextResponse.json({ error: h.apiInvalidRequest }, { status: 400 });
     }
-    const message = error instanceof Error ? error.message : "Havale talebi oluşturulamadı.";
+    const message = error instanceof Error ? error.message : h.apiCreateFailed;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

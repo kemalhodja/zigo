@@ -60,7 +60,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (profile.role !== "teacher" || !profile.is_verified) {
+    if (profile.account_status === "closed" || profile.account_status === "suspended") {
+      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar gönderi yayınlayamaz." }, { status: 403 });
+    }
+
+    if (profile.role === "teacher" && !profile.is_verified) {
       return NextResponse.json({ error: "Only verified teachers can publish posts." }, { status: 403 });
     }
 
@@ -68,10 +72,33 @@ export async function POST(request: Request) {
     const teacherAreaIds = await getUserInterestAreaIds(supabase, profile.id);
     const areaId = body.areaId;
 
-    if (!teacherAreaIds.includes(areaId)) {
+    if (profile.role === "teacher" && teacherAreaIds.length > 0 && !teacherAreaIds.includes(areaId)) {
       return NextResponse.json(
         { error: "Teachers can publish only in assigned education areas." },
         { status: 403 },
+      );
+    }
+
+    const MAX_DAILY_POSTS = 5;
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    let dailyPostCount = 0;
+    try {
+      const { count } = await supabase
+        .from("posts")
+        .select("id", { count: "exact", head: true })
+        .eq("teacher_id", profile.id)
+        .gte("created_at", startOfDay.toISOString());
+      dailyPostCount = count ?? 0;
+    } catch {
+      dailyPostCount = 0;
+    }
+
+    if (dailyPostCount >= MAX_DAILY_POSTS) {
+      return NextResponse.json(
+        { error: "Günlük maksimum gönderi paylaşım sınırına (5 gönderi) ulaştınız." },
+        { status: 429 },
       );
     }
 
@@ -105,6 +132,8 @@ export async function POST(request: Request) {
       premiumPrepUrl: body.premiumPrepUrl,
       sponsoredLabel: body.sponsoredLabel,
       sponsoredTargetUrl: body.sponsoredTargetUrl,
+      externalUrl: body.externalUrl,
+      coAuthorId: body.coAuthorId,
     });
 
     revalidateTag(SOCIAL_FEED_CACHE_TAG, "max");

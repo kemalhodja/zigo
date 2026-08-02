@@ -1,10 +1,7 @@
 import Link from "next/link";
 
 import { FeedRefreshControl } from "@/components/feed-refresh-control";
-import { StudentSocialStrip } from "@/components/student-social-strip";
-import { StudyWithMeRail } from "@/components/study-with-me-rail";
 import { TeacherHomeInsights } from "@/components/teacher-home-insights";
-import { TodayLearningCard } from "@/components/today-learning-card";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { buildDemoPosts } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -13,12 +10,12 @@ import {
   buildReelSpotlights,
   getHomePosts,
   getHomeStories,
-  getHomeStudyMoments,
   getHomeTeacherInsights,
   getHomeViewerContext,
   getSuggestedCreatorsForHome,
 } from "./_components/home/data";
-import { HomeLearningPulse } from "./_components/home/learning-pulse";
+import { HomeMissionStrip } from "./_components/home/mission-strip";
+import { AiMentorCard } from "@/components/ai-mentor-card";
 import { CreatorRail, FeedPostCard, FollowingStarter, ForYouStarter } from "./_components/home/match-feed";
 import { StoryTray } from "./_components/home/story-tray";
 import { ReelSpotlightRail } from "./_components/home/study-rail";
@@ -32,11 +29,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
   const activeFeed = params.feed === "following" ? "following" : "for-you";
   const viewer = await getHomeViewerContext();
-  const [posts, stories, suggestedCreators, studyMoments, teacherInsights] = await Promise.all([
+  const [posts, stories, suggestedCreators, teacherInsights] = await Promise.all([
     getHomePosts(activeFeed),
     getHomeStories(viewer),
     getSuggestedCreatorsForHome(),
-    getHomeStudyMoments(),
     getHomeTeacherInsights(),
   ]);
   const reelDemoFallback = allowDemoContent()
@@ -51,11 +47,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       }))
     : [];
   const reelSpotlights = buildReelSpotlights(posts, reelDemoFallback);
-  const showStudentHomeModules = viewer.role === "student" || viewer.role === null;
+  const showStudentHomeModules = viewer.role === "student";
+  const showTeacherHome = viewer.role === "teacher";
 
   return (
-    <div className="space-y-4 pb-3">
-      {teacherInsights ? (
+    <div className="space-y-3 pb-3">
+      {showTeacherHome && teacherInsights ? (
         <TeacherHomeInsights
           copy={m.feedEnhancements}
           inboxCount={teacherInsights.inboxCount}
@@ -63,17 +60,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         />
       ) : null}
 
-      <HomeLearningPulse />
-
       <StoryTray stories={stories} feedExtras={m.feedExtras} feedEnhancements={m.feedEnhancements} />
 
-      {viewer.showStudentStrip ? <StudentSocialStrip points={viewer.points} streakDays={viewer.streakDays} /> : null}
-
-      {viewer.showStudentStrip ? <StudyWithMeRail moments={studyMoments} showPreview={false} /> : null}
+      {showStudentHomeModules ? (
+        <>
+          <AiMentorCard />
+          <HomeMissionStrip
+          completedCount={viewer.missionDone}
+          cta="Devam"
+          streakDays={viewer.streakDays}
+          title="Bugün"
+        />
+        </>
+      ) : null}
 
       <FeedRefreshControl activeFeed={activeFeed} />
-
-      {showStudentHomeModules ? <TodayLearningCard copy={m.feedEnhancements} /> : null}
 
       {showStudentHomeModules && posts.length > 0 ? <ReelSpotlightRail messages={m} spotlights={reelSpotlights} /> : null}
 
@@ -98,11 +99,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           posts.map((post, index) => (
             <div key={post.postId ?? post.handle}>
               <FeedPostCard
+                enterDelayMs={Math.min(index, 4) * 45}
                 feedEnhancements={m.feedEnhancements}
                 feedExtras={m.feedExtras}
                 post={post}
                 priorityMedia={index === 0}
                 teacherBadges={m.teacherBadges}
+                viewerRole={viewer.role}
               />
               {index === 3 ? (
                 <CreatorRail creators={suggestedCreators} label={m.feed.suggested} seeAll={m.common.seeAll} />
@@ -114,4 +117,3 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     </div>
   );
 }
-

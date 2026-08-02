@@ -10,66 +10,66 @@ export function HomeLearningPulse() {
   const f = m.feed;
   const [collapsed, setCollapsed] = useState(false);
 
-  // trendingTopics list
   const trendingTopics = [
-    { label: "Fractions", href: "/explore?q=fractions" },
-    { label: "Science Lab", href: "/explore?q=science" },
-    { label: "Grammar Boost", href: "/explore?q=english" }
+    { label: "Kesirler", href: "/explore?q=kesirler" },
+    { label: "Fen Bilimleri", href: "/explore?q=fen" },
+    { label: "Dil Bilgisi", href: "/explore?q=dilbilgisi" },
   ];
 
   return (
-    <section className="feed-pulse-hero -mx-4 overflow-hidden bg-gradient-to-br from-slate-900 via-purple-950 to-violet-900 text-white transition-all duration-300">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+    <section className="feed-pulse-hero -mx-4 overflow-hidden text-white transition-all duration-300">
+      <div className="relative z-[1] flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pink-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-pink-500" />
           </span>
-          <h2 className="text-sm font-black uppercase tracking-wider">{f.feedPulse || "Learning Pulse"}</h2>
+          <h2 className="text-sm font-black uppercase tracking-wider">{f.feedPulse || "Akış Nabzı"}</h2>
         </div>
         <button
+          className="tap-scale rounded-lg bg-white/10 px-2.5 py-1 text-xs font-bold transition hover:bg-white/20"
           onClick={() => setCollapsed(!collapsed)}
-          className="text-xs font-bold px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition"
+          type="button"
         >
           {collapsed ? m.common.open : m.common.close}
         </button>
       </div>
 
-      {!collapsed && (
-        <div className="px-4 py-4 space-y-4">
-          <p className="text-xs text-white/80 leading-relaxed font-medium">
-            Discover bite-sized learning moments and challenges customized for you.
+      {!collapsed ? (
+        <div className="relative z-[1] space-y-4 px-4 py-4">
+          <p className="text-xs font-medium leading-relaxed text-white/85">
+            Senin için hazırlanmış kısa dersleri ve mücadeleleri keşfet.
           </p>
-          
+
           <div className="zigo-action-grid">
-            <Link className="zigo-action-chip tap-scale rounded-xl bg-white/10 text-white hover:bg-white/15" href="/micro">
+            <Link className="zigo-action-chip tap-scale rounded-xl bg-white/12 text-white shadow-sm shadow-black/10 hover:bg-white/18" href="/micro">
               <span className="flex flex-col items-center">
-                <span className="text-xs font-black">{m.nav.micro || "Micro"}</span>
-                <span className="text-[10px] text-pink-300 font-bold">+10 pts</span>
+                <span className="text-xs font-black">{m.nav.micro || "Kısa Ders"}</span>
+                <span className="text-[10px] font-bold text-pink-200">+10 puan</span>
               </span>
             </Link>
-            <Link className="zigo-action-chip tap-scale rounded-xl bg-white/10 text-white hover:bg-white/15" href="/learn">
+            <Link className="zigo-action-chip tap-scale rounded-xl bg-white/12 text-white shadow-sm shadow-black/10 hover:bg-white/18" href="/learn">
               <span className="flex flex-col items-center">
                 <span className="text-xs font-black">Quiz</span>
-                <span className="text-[10px] text-cyan-300 font-bold">Practice</span>
+                <span className="text-[10px] font-bold text-cyan-200">Pratik</span>
               </span>
             </Link>
-            <Link className="zigo-action-chip tap-scale rounded-xl bg-white/10 text-white hover:bg-white/15" href="/duels">
+            <Link className="zigo-action-chip tap-scale rounded-xl bg-white/12 text-white shadow-sm shadow-black/10 hover:bg-white/18" href="/duels">
               <span className="flex flex-col items-center">
-                <span className="text-xs font-black">Duels</span>
-                <span className="text-[10px] text-amber-300 font-bold">Race</span>
+                <span className="text-xs font-black">Düello</span>
+                <span className="text-[10px] font-bold text-amber-200">Yarış</span>
               </span>
             </Link>
           </div>
 
-          <div className="pt-2 border-t border-white/5">
-            <p className="text-[10px] font-black uppercase tracking-wider text-pink-300">Trending Topics</p>
+          <div className="border-t border-white/10 pt-2">
+            <p className="text-[10px] font-black uppercase tracking-wider text-pink-200">Popüler Konular</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {trendingTopics.map((topic) => (
                 <Link
-                  key={topic.label}
+                  className="tap-scale rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-xs font-bold text-white/90 transition hover:border-white/30 hover:text-white"
                   href={topic.href}
-                  className="text-xs font-bold bg-white/5 border border-white/10 hover:border-white/20 px-2.5 py-1 rounded-full text-white/90 hover:text-white transition"
+                  key={topic.label}
                 >
                   #{topic.label}
                 </Link>
@@ -77,7 +77,7 @@ export function HomeLearningPulse() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

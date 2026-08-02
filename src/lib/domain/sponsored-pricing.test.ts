@@ -22,7 +22,7 @@ describe("sponsored-pricing", () => {
   });
 
   it("resolves exact pricing for educational institutions (3000 TL weekly / 10000 TL monthly)", () => {
-    for (const orgType of ["kurs", "okul", "egitim_kurumu"]) {
+    for (const orgType of ["kurs", "okul", "egitim_kurumu", "yayinevi"]) {
       const profile = { role: "teacher", organization_type: orgType };
       expect(resolveSponsorCategory(profile)).toBe("institution");
 

@@ -4,7 +4,7 @@ export const zigoProductTarget = {
   promise:
     "A mobile-first Study-with-me network where verified teachers publish, students earn points for every 25-minute focus block, and parents stay in control.",
   northStar: "The first 10 seconds should feel like a polished social app with a Pomodoro-powered learning loop, not an education dashboard.",
-  monetization: "Zigo Plus subscription for advanced analytics, custom study plans and ad-free focus.",
+  monetization: "Zigo Plus subscription for advanced analytics, custom study plans and focus panels. Teacher-sponsored placements only.",
 };
 
 export const premiumSocialGates = [

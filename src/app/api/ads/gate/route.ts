@@ -1,34 +1,27 @@
 /**
  * GET /api/ads/gate
- * 
- * Checks if user can proceed with a gated action (e.g., share reel, create post).
- * Query params: userId
+ *
+ * Checks if the signed-in user can proceed with a gated action.
  */
 
 import { NextResponse } from "next/server";
 
+import { getCurrentProfile } from "@/lib/domain/profiles";
 import { checkAdGate } from "@/lib/server/ad-state-manager";
+import { createClient } from "@/lib/supabase/server";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "userId is required" },
-        { status: 400 }
-      );
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const gateResult = await checkAdGate(userId);
-
+    const gateResult = await checkAdGate(profile.id);
     return NextResponse.json(gateResult);
   } catch (error) {
     console.error("Error checking ad gate:", error);
-    return NextResponse.json(
-      { error: "Failed to check ad gate" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to check ad gate" }, { status: 500 });
   }
 }

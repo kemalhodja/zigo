@@ -24,6 +24,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
   const router = useRouter();
   const [questions, setQuestions] = useState<QuizPlayQuestion[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [questionsError, setQuestionsError] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -39,9 +40,11 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
 
   useEffect(() => {
     let cancelled = false;
+    const expectsMulti = (quiz.question_count ?? 1) > 1;
 
     async function loadQuestions() {
       setLoadingQuestions(true);
+      setQuestionsError(false);
       try {
         const response = await fetch(`/api/learn/quiz/${quiz.id}/questions`);
         const payload = (await response.json().catch(() => null)) as {
@@ -59,7 +62,16 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
 
         if (rows.length > 0) {
           setQuestions(rows);
-        } else if (legacyOptions.length > 0) {
+          return;
+        }
+
+        if (expectsMulti) {
+          setQuestions([]);
+          setQuestionsError(true);
+          return;
+        }
+
+        if (legacyOptions.length > 0) {
           setQuestions([
             {
               id: quiz.id,
@@ -70,7 +82,13 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
           ]);
         }
       } catch {
-        if (!cancelled && legacyOptions.length > 0) {
+        if (cancelled) return;
+        if (expectsMulti) {
+          setQuestions([]);
+          setQuestionsError(true);
+          return;
+        }
+        if (legacyOptions.length > 0) {
           setQuestions([
             {
               id: quiz.id,
@@ -89,7 +107,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
     return () => {
       cancelled = true;
     };
-  }, [legacyOptions, quiz.id, quiz.question_text]);
+  }, [legacyOptions, quiz.id, quiz.question_count, quiz.question_text]);
 
   useEffect(() => {
     if (!activeQuestion) {
@@ -232,6 +250,8 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
 
       {loadingQuestions ? (
         <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500">{l.loadingQuestions}</p>
+      ) : questionsError ? (
+        <p className="rounded-lg bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{l.questionsLoadFailed}</p>
       ) : (
         <div className="space-y-2" role="radiogroup" aria-label={l.matchedQuiz}>
           {displayOptions.map((option, index) => (
@@ -282,7 +302,9 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
 
       <button
         className="w-full zigo-cta tap-scale rounded-lg px-4 py-3 text-sm font-black text-white disabled:opacity-60"
-        disabled={selectedOption === null || isSubmitting || Boolean(result) || loadingQuestions}
+        disabled={
+          selectedOption === null || isSubmitting || Boolean(result) || loadingQuestions || questionsError
+        }
         onClick={submitQuiz}
         type="button"
       >

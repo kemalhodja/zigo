@@ -1,6 +1,6 @@
 # Zigo completion status
 
-Local MVP is **code-complete** at migration **066** (ad state and premium system).
+Local MVP is **code-complete** at migration **077** (moderation SLA `resolved_at`, exam-track areas, yayinevi org type).
 
 ## One-command local verification
 
@@ -24,8 +24,8 @@ Quick score only: `npm run test:scorecard`
 ## Hosted staging (your accounts)
 
 1. Copy `.env.staging.example` → fill values → Vercel env
-2. `npm run migrations:cloud` (or paste SQL bundle in Supabase dashboard — **001–055**)
-3. Pending only: `npm run migrations:pending` (applies **050–055** if missing)
+2. `npm run migrations:cloud` (or paste SQL bundle in Supabase dashboard — **001–077**)
+3. Pending only: `npm run migrations:pending` (applies **048–077** if missing)
 3. Deploy Vercel → set Supabase Auth redirect URLs from `/setup`
 4. Stripe webhook → `STRIPE_WEBHOOK_SECRET` → redeploy
 5. `npm run staging:preflight`

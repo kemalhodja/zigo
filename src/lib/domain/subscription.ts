@@ -6,6 +6,8 @@ import type { SubscriptionTier } from "@/lib/supabase/database.types";
 export type UserSubscription = {
   tier: SubscriptionTier;
   isPremium: boolean;
+  isTrial?: boolean;
+  trialDaysRemaining?: number;
 };
 
 export async function getUserSubscription(
@@ -22,11 +24,44 @@ export async function getUserSubscription(
 
   const tier = (data?.tier ?? "free") as SubscriptionTier;
   const periodEnd = data?.current_period_end ? new Date(data.current_period_end) : null;
-  const isActivePremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
+  const isActivePaidPremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
+
+  if (isActivePaidPremium) {
+    return {
+      tier: "zigo_plus",
+      isPremium: true,
+      isTrial: false,
+      trialDaysRemaining: 0,
+    };
+  }
+
+  // 30 Günlük Tam Özellikli Ücretsiz Deneme (Trial) Kontrolü
+  const { data: user } = await supabase
+    .from("users")
+    .select("created_at")
+    .eq("id", userId)
+    .maybeSingle();
+
+  let isTrialActive = false;
+  let trialDaysRemaining = 0;
+
+  if (user?.created_at) {
+    const createdTime = new Date(user.created_at).getTime();
+    const diffTime = Date.now() - createdTime;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays <= 30) {
+      isTrialActive = true;
+      trialDaysRemaining = Math.max(0, 30 - diffDays);
+    }
+  }
+
+  const isPremium = isActivePaidPremium || isTrialActive;
 
   return {
-    tier: isActivePremium ? "zigo_plus" : "free",
-    isPremium: isActivePremium,
+    tier: isPremium ? "zigo_plus" : "free",
+    isPremium,
+    isTrial: isTrialActive,
+    trialDaysRemaining,
   };
 }
 

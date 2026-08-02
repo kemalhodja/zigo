@@ -16,7 +16,13 @@ import { ProfileForm } from "@/components/profile-form";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SupabaseSetupCard } from "@/components/supabase-setup-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
-import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds } from "@/lib/domain/profiles";
+import { isAutoInterestGradeLevel } from "@/lib/domain/grade-level";
+import {
+  applyAutoInterestsForGrade,
+  getCurrentProfile,
+  getEducationAreas,
+  getUserInterestAreaIds,
+} from "@/lib/domain/profiles";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -71,6 +77,19 @@ export default async function RoleSetupPage() {
       getUserInterestAreaIds(supabase, profile.id),
     ]);
 
+    let effectiveSelectedAreaIds = selectedAreaIds;
+    if (
+      selectedAreaIds.length === 0 &&
+      profile.grade_level &&
+      isAutoInterestGradeLevel(profile.grade_level) &&
+      (profile.role === "student" || profile.role === "parent")
+    ) {
+      const auto = await applyAutoInterestsForGrade(supabase, profile.grade_level);
+      if (auto.autoAssigned) {
+        effectiveSelectedAreaIds = auto.areaIds;
+      }
+    }
+
   const stepNumber = 2;
   const totalSteps = 3;
 
@@ -104,16 +123,18 @@ export default async function RoleSetupPage() {
         {profile.role === "student" && (
           <StudentSetup
             areas={areas}
-            selectedAreaIds={selectedAreaIds}
+            selectedAreaIds={effectiveSelectedAreaIds}
             messages={o}
+            gradeLevel={profile.grade_level}
           />
         )}
 
         {profile.role === "parent" && (
           <ParentSetup
             areas={areas}
-            selectedAreaIds={selectedAreaIds}
+            selectedAreaIds={effectiveSelectedAreaIds}
             messages={o}
+            gradeLevel={profile.grade_level}
           />
         )}
 
@@ -146,10 +167,12 @@ function StudentSetup({
   areas,
   selectedAreaIds,
   messages,
+  gradeLevel,
 }: {
   areas: Awaited<ReturnType<typeof getEducationAreas>>;
   selectedAreaIds: number[];
   messages: Messages["onboardingPage"];
+  gradeLevel: string | null;
 }) {
   return (
     <div className="space-y-6">
@@ -157,7 +180,7 @@ function StudentSetup({
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{messages.childGradeLevel}</p>
         <p className="mt-2 text-sm leading-6 text-slate-600">{messages.studentInterestsDesc}</p>
         <div className="mt-4">
-          <GradeLevelForm />
+          <GradeLevelForm initialGradeLevel={gradeLevel} />
         </div>
       </div>
 
@@ -167,6 +190,7 @@ function StudentSetup({
         <div className="mt-4">
           <InterestSelector
             areas={areas}
+            gradeLevel={gradeLevel}
             initialSelectedAreaIds={selectedAreaIds}
             role="student"
           />
@@ -180,10 +204,12 @@ function ParentSetup({
   areas,
   selectedAreaIds,
   messages,
+  gradeLevel,
 }: {
   areas: Awaited<ReturnType<typeof getEducationAreas>>;
   selectedAreaIds: number[];
   messages: Messages["onboardingPage"];
+  gradeLevel: string | null;
 }) {
   return (
     <div className="space-y-6">
@@ -191,7 +217,7 @@ function ParentSetup({
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{messages.childGradeLevel}</p>
         <p className="mt-2 text-sm leading-6 text-slate-600">{messages.childGradeLevelDesc}</p>
         <div className="mt-4">
-          <GradeLevelForm />
+          <GradeLevelForm initialGradeLevel={gradeLevel} />
         </div>
       </div>
 
@@ -201,6 +227,7 @@ function ParentSetup({
         <div className="mt-4">
           <InterestSelector
             areas={areas}
+            gradeLevel={gradeLevel}
             initialSelectedAreaIds={selectedAreaIds}
             role="parent"
           />

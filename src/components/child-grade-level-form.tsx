@@ -68,7 +68,7 @@ export function ChildGradeLevelForm({
           value={gradeLevel}
         >
           <option value="">Sınıf seçin</option>
-          {GRADE_LEVEL_OPTIONS.filter((option) => option !== "Veli").map((option) => (
+          {GRADE_LEVEL_OPTIONS.map((option) => (
             <option key={option} value={option}>
               {option}
             </option>

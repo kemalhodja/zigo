@@ -16,6 +16,7 @@ function createThenableBuilder(result: QueryResult) {
   const chainMethods = [
     "select",
     "eq",
+    "neq",
     "in",
     "order",
     "range",
@@ -23,7 +24,10 @@ function createThenableBuilder(result: QueryResult) {
     "or",
     "lt",
     "gt",
+    "gte",
+    "lte",
     "ilike",
+    "not",
     "upsert",
     "delete",
     "update",

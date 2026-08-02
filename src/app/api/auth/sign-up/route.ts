@@ -4,7 +4,8 @@ import { z } from "zod";
 import { RateLimitExceededError } from "@/lib/domain/api-errors";
 import { isEmailConfirmationEnforced, requiresEmailConfirmation } from "@/lib/domain/auth-gates";
 import { getSiteUrl } from "@/lib/domain/deploy-config";
-import { resolveRegistrationAccount } from "@/lib/domain/registration-account";
+import { validateInviteCodeFormat } from "@/lib/domain/invite-codes";
+import { resolveRegistrationAccount, REGISTRATION_ACCOUNT_KIND_VALUES } from "@/lib/domain/registration-account";
 import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
 import {
   authEmailSchema,
@@ -14,6 +15,23 @@ import {
 } from "@/lib/server/auth-request";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
+
+async function tryRedeemInvite(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  inviteCode: string | undefined,
+) {
+  if (!inviteCode) return;
+  const validated = validateInviteCodeFormat(inviteCode);
+  if (!validated.ok) return;
+  try {
+    await supabase.rpc("redeem_invite_code", { raw_code: validated.code, redeemer: userId });
+  } catch {
+    // Invite redeem is best-effort during signup.
+  }
+}
 
 const authSchema = z.object({
   email: authEmailSchema,
@@ -24,10 +42,11 @@ const authSchema = z.object({
     .max(100, "Ad soyad en fazla 100 karakter olabilir."),
   password: registrationPasswordSchema,
   role: z.enum(["teacher", "parent", "student"]).optional(),
-  accountKind: z.enum(["student", "parent", "teacher", "institution", "platform"]).optional(),
+  accountKind: z.enum(REGISTRATION_ACCOUNT_KIND_VALUES).optional(),
   organizationType: z
-    .enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu"])
+    .enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu", "yayinevi"])
     .nullish(),
+  inviteCode: z.string().trim().min(4).max(32).optional(),
   recaptchaToken: z.string().trim().min(1).optional(),
 }).refine((value) => Boolean(value.role || value.accountKind), {
   message: "Hesap türü seçin.",
@@ -109,6 +128,9 @@ export async function POST(request: Request) {
       }
 
       await persistRememberMePreference(true);
+      if (signInData.user?.id) {
+        await tryRedeemInvite(supabase, signInData.user.id, body.inviteCode);
+      }
 
       return NextResponse.json({
         data: {
@@ -151,6 +173,9 @@ export async function POST(request: Request) {
       await supabase.auth.signOut();
     } else if (data.session) {
       await persistRememberMePreference(true);
+      if (data.user?.id) {
+        await tryRedeemInvite(supabase, data.user.id, body.inviteCode);
+      }
     }
 
     return NextResponse.json({
@@ -206,7 +231,7 @@ function getSignUpStatus(message: string, status?: number) {
 }
 
 function getSignUpSuccessMessage(needsEmailConfirmation: boolean) {
-  const campaignMessage = isSubscriptionCampaignActive() ? " 7 gün deneme süresi ile başlayın." : "";
+  const campaignMessage = isSubscriptionCampaignActive() ? " 30 gün ücretsiz deneme süresi ile başlayın." : "";
   return needsEmailConfirmation
     ? `Hesap oluşturuldu. E-postanı doğrula, ardından giriş yap.${campaignMessage}`
     : `Hesap oluşturuldu. Kuruluma devam et.${campaignMessage}`;

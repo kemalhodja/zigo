@@ -1,8 +1,21 @@
 import Link from "next/link";
 
+import { ShareLearningCardButton } from "@/components/share-learning-card-button";
 import type { Messages } from "@/lib/i18n/server";
 
-export function TodayLearningCard({ copy }: { copy: Messages["feedEnhancements"] }) {
+export function TodayLearningCard({
+  copy,
+  streakDays = 0,
+  points = 0,
+  missionDone = 0,
+  missionTotal = 5,
+}: {
+  copy: Messages["feedEnhancements"];
+  streakDays?: number;
+  points?: number;
+  missionDone?: number;
+  missionTotal?: number;
+}) {
   return (
     <section className="-mx-4 px-4">
       <div className="overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-night via-violet-900 to-crystal p-4 text-white shadow-sm">
@@ -24,6 +37,12 @@ export function TodayLearningCard({ copy }: { copy: Messages["feedEnhancements"]
             <p className="mt-1 text-[0.65rem] font-bold text-white/75">{copy.startDuel}</p>
           </Link>
         </div>
+        <ShareLearningCardButton
+          missionDone={missionDone}
+          missionTotal={missionTotal}
+          points={points}
+          streakDays={streakDays}
+        />
       </div>
     </section>
   );

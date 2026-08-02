@@ -1,14 +1,45 @@
 import { z } from "zod";
 
-export const createQuizSchema = z.object({
-  teacherId: z.string().uuid(),
-  areaId: z.coerce.number().int().positive(),
-  title: z.string().trim().min(3).max(255),
+/** Professional teacher quizzes ship with exactly 10 scored items. */
+export const TEACHER_QUIZ_QUESTION_COUNT = 10;
+export const TEACHER_QUIZ_OPTION_COUNT = 4;
+
+export const quizQuestionInputSchema = z.object({
   questionText: z.string().trim().min(10).max(1000),
-  options: z.array(z.string().trim().min(1).max(255)).min(2).max(6),
-  correctOption: z.coerce.number().int().min(0),
-  pointsReward: z.coerce.number().int().min(1).max(100).default(10),
+  options: z
+    .array(z.string().trim().min(1).max(255))
+    .length(TEACHER_QUIZ_OPTION_COUNT),
+  correctOption: z.coerce.number().int().min(0).max(TEACHER_QUIZ_OPTION_COUNT - 1),
 });
+
+export const createQuizSchema = z
+  .object({
+    teacherId: z.string().uuid(),
+    areaId: z.coerce.number().int().positive(),
+    title: z.string().trim().min(3).max(255),
+    questions: z.array(quizQuestionInputSchema).length(TEACHER_QUIZ_QUESTION_COUNT),
+    pointsReward: z.coerce.number().int().min(10).max(200).default(100),
+  })
+  .superRefine((value, ctx) => {
+    value.questions.forEach((question, index) => {
+      if (question.correctOption >= question.options.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Question ${index + 1}: correct option must match one of the options.`,
+          path: ["questions", index, "correctOption"],
+        });
+      }
+
+      const uniqueOptions = new Set(question.options.map((option) => option.toLocaleLowerCase("tr-TR")));
+      if (uniqueOptions.size !== question.options.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Question ${index + 1}: options must be unique.`,
+          path: ["questions", index, "options"],
+        });
+      }
+    });
+  });
 
 export const submitQuizSchema = z.object({
   quizId: z.string().uuid(),

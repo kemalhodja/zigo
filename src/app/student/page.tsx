@@ -7,6 +7,7 @@ import { GradeLevelForm } from "@/components/grade-level-form";
 import { LearningProgressCard } from "@/components/learning-progress-card";
 import { RecentLearningCard } from "@/components/recent-learning-card";
 import { StateCard } from "@/components/state-card";
+import { StudentLeaderboardCard } from "@/components/student-leaderboard-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
@@ -21,6 +22,11 @@ import {
 } from "@/lib/domain/learning";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { buildStudentGamification, LEAGUE_PATH } from "@/lib/domain/student-gamification";
+import {
+  getAreaLeaderboard,
+  getPrimaryInterestAreaId,
+} from "@/lib/domain/student-leaderboard-service";
+import type { AreaLeaderboardEntry } from "@/lib/domain/student-leaderboard";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
@@ -58,7 +64,7 @@ export default async function StudentPage() {
         </section>
         <StateCard
           action={
-            <Link className="font-black text-crystal" href="/profiles">
+            <Link className="font-black text-crystal" href="/auth">
               {d.switchMode}
             </Link>
           }
@@ -141,6 +147,16 @@ export default async function StudentPage() {
         labels={d.student}
       />
 
+      {data.leaderboardAreaName ? (
+        <StudentLeaderboardCard
+          areaName={data.leaderboardAreaName}
+          empty="Bu alanda henüz sıralama yok. İlk puanı sen kazan."
+          entries={data.leaderboard}
+          title="Alan ligi"
+          viewerId={data.viewerId}
+        />
+      ) : null}
+
       {data.focusAnalytics ? <FocusAnalyticsCard analytics={data.focusAnalytics} messages={m} showPreview={data.showPreview} /> : null}
 
       <DailyMissionsCard />
@@ -173,6 +189,9 @@ async function getStudentDashboardData(): Promise<{
   district: string | null;
   schoolName: string | null;
   planGroups: ReturnType<typeof resolveProfilePlanGroups>;
+  leaderboard: AreaLeaderboardEntry[];
+  leaderboardAreaName: string | null;
+  viewerId: string | null;
 }> {
   if (!hasSupabaseEnv()) {
     return allowDemoContent()
@@ -200,6 +219,12 @@ async function getStudentDashboardData(): Promise<{
           district: null,
           schoolName: null,
           planGroups: resolveProfilePlanGroups("student"),
+          leaderboard: [
+            { userId: "demo-1", fullName: "Ada", totalPoints: 240, rank: 1 },
+            { userId: "demo-2", fullName: "Bora", totalPoints: 180, rank: 2 },
+          ],
+          leaderboardAreaName: "LGS Matematik",
+          viewerId: "demo-1",
         }
       : {
           history: [],
@@ -217,6 +242,9 @@ async function getStudentDashboardData(): Promise<{
           district: null,
           schoolName: null,
           planGroups: [],
+          leaderboard: [],
+          leaderboardAreaName: null,
+          viewerId: null,
         };
   }
 
@@ -245,6 +273,12 @@ async function getStudentDashboardData(): Promise<{
         district: null as string | null,
         schoolName: null as string | null,
         planGroups: resolveProfilePlanGroups("student"),
+        leaderboard: [
+          { userId: "demo-1", fullName: "Ada", totalPoints: 240, rank: 1 },
+          { userId: "demo-2", fullName: "Bora", totalPoints: 180, rank: 2 },
+        ],
+        leaderboardAreaName: "LGS Matematik",
+        viewerId: "demo-1",
       }
     : {
         history: [] as LearningHistoryItem[],
@@ -262,6 +296,9 @@ async function getStudentDashboardData(): Promise<{
         district: null,
         schoolName: null,
         planGroups: [],
+        leaderboard: [],
+        leaderboardAreaName: null,
+        viewerId: null,
       };
 
   return withSupabaseFallback(async () => {
@@ -284,6 +321,9 @@ async function getStudentDashboardData(): Promise<{
       district: null,
       schoolName: null,
       planGroups: [],
+      leaderboard: [],
+      leaderboardAreaName: null,
+      viewerId: null,
     };
   }
 
@@ -304,16 +344,32 @@ async function getStudentDashboardData(): Promise<{
       district: null,
       schoolName: null,
       planGroups: [],
+      leaderboard: [],
+      leaderboardAreaName: null,
+      viewerId: profile.id,
     };
   }
 
-  const [stats, history, missions, focusAnalytics, subscription] = await Promise.all([
+  const [stats, history, missions, focusAnalytics, subscription, areaId] = await Promise.all([
     getLearningProgressStats(supabase, profile.id),
     getRecentLearningHistory(supabase, profile.id),
     getDailyMissionProgress(supabase, profile.id),
     getStudentFocusAnalytics(supabase),
     getUserSubscription(supabase, profile.id),
+    getPrimaryInterestAreaId(supabase, profile.id),
   ]);
+
+  let leaderboard: AreaLeaderboardEntry[] = [];
+  let leaderboardAreaName: string | null = null;
+  if (areaId) {
+    const area = await supabase.from("education_areas").select("area_name").eq("id", areaId).maybeSingle();
+    leaderboardAreaName = area.data?.area_name ?? null;
+    try {
+      leaderboard = await getAreaLeaderboard(supabase, areaId, 8);
+    } catch {
+      leaderboard = [];
+    }
+  }
 
   return {
     history,
@@ -331,6 +387,9 @@ async function getStudentDashboardData(): Promise<{
     district: profile.district,
     schoolName: profile.school_name,
     planGroups: resolveProfilePlanGroups("student", false, parseOrganizationType(profile.organization_type)),
+    leaderboard,
+    leaderboardAreaName,
+    viewerId: profile.id,
   };
   }, previewFallback);
 }

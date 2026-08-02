@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 const root = process.cwd();
 
 const PILLARS = [
-  { id: "migrations", label: "Migrations 001-066", weight: 8, check: () => existsSync(join(root, "supabase/migrations/066_ad_state_and_premium_system.sql")) },
+  { id: "migrations", label: "Migrations 001-078", weight: 8, check: () => existsSync(join(root, "supabase/migrations/078_admin_billing_grants.sql")) },
   { id: "compliance", label: "KVKK export & delete API", weight: 8, check: () => fileIncludes("src/app/api/account/export/route.ts", "exportUserData") && fileIncludes("src/app/api/account/delete-request/route.ts", "requestAccountDeletion") },
   { id: "cookie", label: "Cookie consent banner", weight: 5, check: () => fileIncludes("src/components/cookie-consent-banner.tsx", "CookieConsentBanner") },
   { id: "video", label: "Video CDN helper wired", weight: 5, check: () => fileIncludes("src/components/social-media-frame.tsx", "getMediaPlaybackUrl") && fileIncludes("src/lib/domain/video-delivery.ts", "getVideoPlaybackUrl") },

@@ -45,20 +45,42 @@ export async function POST(request: Request) {
     const extension = EXTENSION_BY_TYPE.get(file.type) ?? "bin";
     const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
 
-    const { error } = await supabase.storage.from("avatars").upload(objectPath, file, {
+    let avatarUrl = "";
+    let uploadError = null;
+
+    // 1. Try uploading to 'avatars' storage bucket
+    const { error: primaryError } = await supabase.storage.from("avatars").upload(objectPath, file, {
       contentType: file.type,
-      upsert: false,
+      upsert: true,
     });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (!primaryError) {
+      avatarUrl = supabase.storage.from("avatars").getPublicUrl(objectPath).data.publicUrl;
+    } else {
+      // 2. Fallback to 'social-media' storage bucket if 'avatars' bucket is missing or restricted
+      const fallbackPath = `avatars/${objectPath}`;
+      const { error: fallbackError } = await supabase.storage.from("social-media").upload(fallbackPath, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+      if (!fallbackError) {
+        avatarUrl = supabase.storage.from("social-media").getPublicUrl(fallbackPath).data.publicUrl;
+      } else {
+        uploadError = primaryError.message || fallbackError.message;
+      }
     }
 
-    const { data } = supabase.storage.from("avatars").getPublicUrl(objectPath);
+    if (uploadError || !avatarUrl) {
+      return NextResponse.json({ error: uploadError || "Profil fotoğrafı yüklenemedi." }, { status: 400 });
+    }
+
+    // Automatically update the user profile's avatar_url in the database
+    await supabase.from("users").update({ avatar_url: avatarUrl }).eq("id", profile.id);
 
     return NextResponse.json({
       data: {
-        avatarUrl: data.publicUrl,
+        avatarUrl,
         objectPath,
       },
     });

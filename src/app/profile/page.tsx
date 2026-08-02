@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FollowButton } from "@/components/follow-button";
+import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -10,9 +11,10 @@ import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
+import { getOrgDashboardSnapshot } from "@/lib/domain/org-dashboard";
 import { getProfileBillingSection } from "@/lib/domain/profile-billing";
-import { getCurrentProfile, getUserInterestAreaNames, type UserProfile } from "@/lib/domain/profiles";
-import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
+import { getCurrentProfile, getUserInterestAreaNames, parseOrganizationType, type UserProfile } from "@/lib/domain/profiles";
+import { emptyProfilePrimaryHref } from "@/lib/domain/role-navigation";
 import {
   getProfileSocialStats,
   getSavedSocialPosts,
@@ -22,6 +24,7 @@ import {
   type ProfileSocialStats,
   type SuggestedCreator,
 } from "@/lib/domain/social";
+import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import type { SocialPostRow } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
@@ -47,6 +50,11 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         ? "saved"
         : "posts";
   const profile = await getProfileData(activeTab);
+  const organizationType = parseOrganizationType(profile.organization_type);
+  const orgDashboard =
+    hasSupabaseEnv() && organizationType && profile.id && !profile.isSignedOut
+      ? await getOrgDashboardSnapshot(await createClient(), profile.id, organizationType)
+      : null;
   const billingSection = hasSupabaseEnv()
     ? await getProfileBillingSection(await createClient())
     : null;
@@ -56,6 +64,26 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     { label: m.common.followers, value: profile.stats.followers.toLocaleString() },
     { label: m.common.following, value: profile.stats.following.toLocaleString() },
   ];
+  const orgCopy = {
+    eyebrow: m.dashboard.teacher.orgEyebrow,
+    titleInstitution: m.dashboard.teacher.orgTitleInstitution,
+    titlePlatform: m.dashboard.teacher.orgTitlePlatform,
+    titlePublisher: m.dashboard.teacher.orgTitlePublisher,
+    descInstitution: m.dashboard.teacher.orgDescInstitution,
+    descPlatform: m.dashboard.teacher.orgDescPlatform,
+    descPublisher: m.dashboard.teacher.orgDescPublisher,
+    metricPosts7d: m.dashboard.teacher.orgMetricPosts7d,
+    metricPostsTotal: m.dashboard.teacher.orgMetricPostsTotal,
+    metricFollowers: m.dashboard.teacher.orgMetricFollowers,
+    metricAreas: m.dashboard.teacher.orgMetricAreas,
+    metricSponsored: m.dashboard.teacher.orgMetricSponsored,
+    metricOpenQuestions: m.dashboard.teacher.orgMetricOpenQuestions,
+    areasEmpty: m.dashboard.teacher.orgAreasEmpty,
+    openStudio: m.dashboard.teacher.orgOpenStudio,
+    openCreate: m.dashboard.teacher.orgOpenCreate,
+    openQuestions: m.dashboard.teacher.orgOpenQuestions,
+    openAdvertise: m.dashboard.teacher.orgOpenAdvertise,
+  };
   return (
     <div className="space-y-0 pb-3">
       <section className="-mx-4 bg-white px-4 pb-4">
@@ -64,13 +92,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <h1 className="truncate text-xl font-black text-night">@{profile.handle}</h1>
             {profile.isVerified ? <VerifiedBadge className="size-4" /> : null}
           </div>
-          <Link className="tap-scale flex size-9 items-center justify-center text-night" href="/profiles" aria-label={p.profileModesAria}>
-            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M4 7h16" />
-              <path d="M4 12h16" />
-              <path d="M4 17h16" />
-            </svg>
-          </Link>
         </div>
         <div className="flex items-center gap-5">
           <SocialAvatar
@@ -104,6 +125,27 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <br />
             {profile.bio}
           </p>
+          
+          {profile.role === "student" && (
+            <div className="mt-4 rounded-xl bg-gradient-to-r from-fuchsia-50 to-pink-50 p-4 border border-fuchsia-100">
+              <h3 className="font-black text-fuchsia-900 text-sm mb-2">Öğrenci Gelişimi</h3>
+              <div className="flex gap-2">
+                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">🏆 Gümüş Lig</span>
+                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">⭐ {profile.stats.followers * 10} Puan</span>
+              </div>
+            </div>
+          )}
+
+          {profile.role === "parent" && (
+            <div className="mt-4 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 p-4 border border-cyan-100">
+              <h3 className="font-black text-cyan-900 text-sm mb-2">Veli Özeti</h3>
+              <div className="flex gap-2">
+                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">👨‍👩‍👧 2 Bağlı Profil</span>
+                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">✅ 0 Bekleyen Onay</span>
+              </div>
+            </div>
+          )}
+
           {profile.role === "teacher" && (profile.isVerified || profile.branches.length > 0) ? (
             <div className="mt-3">
               <TeacherTrustBadges
@@ -112,6 +154,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 verified={profile.isVerified}
                 verifiedLabel={m.teacherBadges.verifiedTeacher}
               />
+            </div>
+          ) : null}
+
+          {orgDashboard ? (
+            <div className="mt-4">
+              <OrgDashboardPanel copy={orgCopy} embedded snapshot={orgDashboard} />
             </div>
           ) : null}
         </div>
@@ -161,6 +209,18 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           ) : null}
         </div>
       </section>
+
+      {!profile.isSignedOut ? (
+        <section className="-mx-4 bg-white px-4 py-3 border-b border-slate-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-black text-slate-700">Uygulama Dili</p>
+              <p className="text-[0.68rem] text-slate-400 mt-0.5">TR · EN seçeneği ile değiştirin</p>
+            </div>
+            <LocaleSwitcher />
+          </div>
+        </section>
+      ) : null}
 
       <ProfileHighlights />
 
@@ -264,9 +324,25 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </p>
             <Link
               className="tap-scale mt-4 inline-flex rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-black text-night"
-              href={profile.isSignedOut ? "/auth" : activeTab === "saved" ? "/collections" : "/create"}
+              href={
+                profile.isSignedOut
+                  ? "/auth"
+                  : activeTab === "saved"
+                    ? "/collections"
+                    : emptyProfilePrimaryHref(profile.role)
+              }
             >
-              {profile.isSignedOut ? m.common.signIn : activeTab === "saved" ? p.saved : m.header.create}
+              {profile.isSignedOut
+                ? m.common.signIn
+                : activeTab === "saved"
+                  ? p.saved
+                  : profile.role === "teacher"
+                    ? m.header.create
+                    : profile.role === "student"
+                      ? m.dashboard.student.mode
+                      : profile.role === "parent"
+                        ? m.profilesPage.familySetup
+                        : m.common.open}
             </Link>
           </div>
         ) : (
@@ -312,6 +388,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           groups={billingSection.groups}
           hidePrices={billingSection.hidePrices}
           isPremium={billingSection.isPremium}
+          isTrial={billingSection.isTrial}
+          organizationName={billingSection.organizationName}
+          organizationType={billingSection.organizationType}
+          userCreatedAt={billingSection.userCreatedAt}
         />
       ) : null}
 
@@ -336,7 +416,11 @@ function ProfileGridModeStrip({
     { href: "/profile?tab=micro", id: "reels", label: messages.nav.micro, meta: "Video" },
     { href: "/profile?tab=saved", id: "saved", label: g.privateSaved, meta: g.privateSaved },
   ] as const;
-  const actionHref = isSignedOut ? "/auth" : activeTab === "saved" ? "/collections" : "/create";
+  const actionHref = isSignedOut
+    ? "/auth"
+    : activeTab === "saved"
+      ? "/collections"
+      : "/profile";
   const actionLabel = isSignedOut ? g.signIn : activeTab === "saved" ? g.openSaved : g.createTile;
 
   return (
@@ -428,12 +512,11 @@ function ProfileActionBar({
   messages: Messages;
   role: UserProfile["role"] | "guest";
 }) {
-  const dashboardHref = getRoleDashboardHref(role);
   const actions =
     role === "teacher"
       ? [
-          { href: isSignedOut ? "/auth" : "/create?mode=story", label: messages.zigo.spark, tone: "from-crystal to-berry" },
-          { href: isSignedOut ? "/auth" : "/create?mode=reel", label: messages.zigo.micro, tone: "from-aqua to-mint" },
+          { href: isSignedOut ? "/auth" : "/create", label: messages.header.create, tone: "from-crystal to-berry" },
+          { href: isSignedOut ? "/auth" : "/create?mode=micro", label: messages.zigo.micro, tone: "from-aqua to-mint" },
           { href: isSignedOut ? "/auth" : "/teacher", label: messages.dashboard.teacher.studio, tone: "from-sun to-peach" },
         ]
       : role === "student"
@@ -449,8 +532,8 @@ function ProfileActionBar({
               { href: isSignedOut ? "/auth" : "/questions", label: messages.nav.ask, tone: "from-sun to-peach" },
             ]
           : [
-              { href: isSignedOut ? "/auth" : "/questions", label: messages.nav.ask, tone: "from-crystal to-berry" },
-              { href: dashboardHref, label: messages.nav.profile, tone: "from-aqua to-mint" },
+              { href: "/auth", label: messages.common.signIn, tone: "from-crystal to-berry" },
+              { href: "/explore", label: messages.nav.search, tone: "from-aqua to-mint" },
               { href: "/collections", label: messages.profile.saved, tone: "from-sun to-peach" },
             ];
 

@@ -49,6 +49,7 @@ function statusLabel(status: RequestItem["status"], labels: ReturnType<typeof us
 
 export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, childrenOptions = [] }: LessonRequestsPanelProps) {
   const lr = useMessages().lessonRequests;
+  const b = useMessages().billingUi;
   const router = useRouter();
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
@@ -232,19 +233,17 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
       {message ? <p className="mt-3 text-sm font-bold text-crystal">{message}</p> : null}
 
       {showComposer && role === "parent" && !isSubscriber ? (
-        <div className="mt-4 relative rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-purple-50 p-5 text-center shadow-sm">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gradient-to-r from-crystal to-berry text-white text-xl shadow-md">
+        <div className="relative mt-4 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-purple-50 p-5 text-center shadow-sm">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gradient-to-r from-crystal to-berry text-xl text-white shadow-md">
             👑
           </div>
-          <h3 className="mt-2.5 text-sm font-black text-night">Öğretmenlerle Doğrudan Mesajlaşma (DM) Abone Özeldir</h3>
-          <p className="mt-1 text-xs leading-5 text-slate-600 max-w-md mx-auto">
-            Öğretmenlere ders talebi göndermek, özel soru sormak ve birebir mesajlaşmak için Veli Aboneliği (Zigo Plus) gereklidir.
-          </p>
+          <h3 className="mt-2.5 text-sm font-black text-night">{b.lessonLockTitle}</h3>
+          <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-slate-600">{b.lessonLockDesc}</p>
           <a
             href="#zigo-plus-plans"
             className="mt-3.5 inline-block rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-2.5 text-xs font-black text-white shadow transition hover:opacity-95"
           >
-            Veli Aboneliği Al & DM Özelliğini Aç
+            {b.lessonLockCta}
           </a>
         </div>
       ) : showComposer && role === "parent" ? (
@@ -389,9 +388,14 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                         )}
                         {role === "parent" && !isSubscriber ? (
                           <div className="rounded-xl border border-pink-200 bg-pink-50/70 p-3.5 text-center">
-                            <p className="text-xs font-black text-night">👑 DM Yöneticisi Abone Özeldir</p>
-                            <p className="mt-0.5 text-[0.7rem] text-slate-600">Öğretmene doğrudan mesaj atmak için aboneliğe geçin.</p>
-                            <a href="#zigo-plus-plans" className="mt-2 inline-block rounded-lg bg-gradient-to-r from-crystal to-berry px-3 py-1.5 text-[0.7rem] font-black text-white">Veli Aboneliği Al</a>
+                            <p className="text-xs font-black text-night">{b.lessonThreadLockTitle}</p>
+                            <p className="mt-0.5 text-[0.7rem] text-slate-600">{b.lessonThreadLockDesc}</p>
+                            <a
+                              href="#zigo-plus-plans"
+                              className="mt-2 inline-block rounded-lg bg-gradient-to-r from-crystal to-berry px-3 py-1.5 text-[0.7rem] font-black text-white"
+                            >
+                              {b.lessonThreadLockCta}
+                            </a>
                           </div>
                         ) : (
                           <>

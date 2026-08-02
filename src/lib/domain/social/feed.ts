@@ -73,6 +73,10 @@ export async function getSocialFeed(
         organization_type,
         avatar_url
       ),
+      co_author:co_author_id (
+        id,
+        full_name
+      ),
       area:area_id (
         area_name
       )
@@ -154,6 +158,10 @@ export async function searchSocialPosts(
         is_verified,
         organization_type,
         avatar_url
+      ),
+      co_author:co_author_id (
+        id,
+        full_name
       ),
       area:area_id (
         area_name
@@ -443,7 +451,7 @@ export async function getNotifications(
       lesson_request_id,
       is_read,
       created_at,
-      actor:actor_id!notifications_actor_id_fkey (
+      actor:users!notifications_actor_id_fkey (
         id,
         full_name,
         role,
@@ -456,8 +464,23 @@ export async function getNotifications(
     .order("created_at", { ascending: false })
     .limit(30);
 
-  if (error) throw error;
-  return (data ?? []) as SocialNotification[];
+  if (error) {
+    // Fallback without embed if relationship metadata is unavailable on older schemas.
+    const basic = await supabase
+      .from("notifications")
+      .select("id, kind, message, post_id, lesson_request_id, is_read, created_at, actor_id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    if (basic.error) throw basic.error;
+    return (basic.data ?? []).map((row) => ({
+      ...row,
+      actor: null,
+    })) as SocialNotification[];
+  }
+
+  return (data ?? []) as unknown as SocialNotification[];
 }
 
 export async function getUnreadNotificationCount(

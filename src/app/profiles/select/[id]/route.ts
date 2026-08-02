@@ -12,27 +12,28 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
+/** Parent selects an active child profile cookie, then continues into learning. */
 export async function GET(request: Request, context: RouteContext) {
   const { id: childProfileId } = await context.params;
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    return NextResponse.redirect(new URL("/auth?next=/profiles", request.url));
+    return NextResponse.redirect(new URL("/auth?next=/family", request.url));
   }
 
   if (profile.role !== "parent") {
-    return NextResponse.redirect(new URL("/profiles", request.url));
+    return NextResponse.redirect(new URL("/family", request.url));
   }
 
   const children = await getChildProfiles(supabase);
   const child = children.find((entry) => entry.id === childProfileId);
   if (!child) {
-    return NextResponse.redirect(new URL("/profiles", request.url));
+    return NextResponse.redirect(new URL("/family", request.url));
   }
 
-  const next = new URL(request.url).searchParams.get("next") ?? "/student";
-  const redirectUrl = new URL(next.startsWith("/") ? next : "/student", request.url);
+  const next = new URL(request.url).searchParams.get("next") ?? "/learn";
+  const redirectUrl = new URL(next.startsWith("/") ? next : "/learn", request.url);
   redirectUrl.searchParams.set("childProfileId", childProfileId);
 
   const response = NextResponse.redirect(redirectUrl);

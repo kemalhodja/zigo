@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { contentReportStatusSchema, moderationActionSchema } from "@/lib/domain/social/schemas";
+import { resolveAtForStatus } from "@/lib/domain/moderation-sla";
 import type {
   ActiveStory,
   CreatorSafetyQueueItem,
@@ -181,6 +182,7 @@ export async function updateContentReportStatus(
       id,
       post_id,
       status,
+      resolved_at,
       post:post_id (
         author_id
       )
@@ -205,7 +207,10 @@ export async function updateContentReportStatus(
 
   const { data, error } = await supabase
     .from("content_reports")
-    .update({ status: parsed.status })
+    .update({
+      status: parsed.status,
+      resolved_at: resolveAtForStatus(parsed.status, report.resolved_at),
+    })
     .eq("id", parsed.reportId)
     .select("*")
     .single();

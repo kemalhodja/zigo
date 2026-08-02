@@ -1,34 +1,27 @@
 /**
  * GET /api/ads/state
- * 
- * Returns the ad state for a given user ID.
- * Query params: userId
+ *
+ * Returns ad-free state for the signed-in user.
  */
 
 import { NextResponse } from "next/server";
 
+import { getCurrentProfile } from "@/lib/domain/profiles";
 import { isUserAdFree } from "@/lib/server/ad-state-manager";
+import { createClient } from "@/lib/supabase/server";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "userId is required" },
-        { status: 400 }
-      );
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const adState = await isUserAdFree(userId);
-
+    const adState = await isUserAdFree(profile.id);
     return NextResponse.json(adState);
   } catch (error) {
     console.error("Error fetching ad state:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch ad state" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch ad state" }, { status: 500 });
   }
 }

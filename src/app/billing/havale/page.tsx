@@ -12,7 +12,11 @@ import {
   hasBankTransferConfigured,
   resolveBankTransferPlan,
 } from "@/lib/domain/bank-transfer";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import {
+  buildOrganizationSalesWhatsAppUrl,
+  shouldBlockSelfServeOrgCheckout,
+} from "@/lib/domain/organization-sales";
+import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
@@ -23,17 +27,19 @@ type BillingHavalePageProps = {
 
 export default async function BillingHavalePage({ searchParams }: BillingHavalePageProps) {
   const { planId = "student-monthly" } = await searchParams;
+  const messages = await getServerMessages();
+  const h = messages.billingUi.havale;
 
   if (!hasSupabaseEnv()) {
     return (
       <StateCard
         action={
           <Link className="font-black text-crystal" href="/setup">
-            Kurulumu aç
+            {h.openSetup}
           </Link>
         }
-        description="Havale/EFT ödemesi için Supabase bağlantısı gerekli."
-        title="Supabase yapılandırması eksik"
+        description={h.setupMissingDesc}
+        title={h.setupMissingTitle}
       />
     );
   }
@@ -52,11 +58,37 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
       <StateCard
         action={
           <Link className="font-black text-crystal" href="/profile">
-            Profile dön
+            {h.backProfile}
           </Link>
         }
-        description="Geçerli bir Zigo Plus planı seçin."
-        title="Geçersiz plan"
+        description={h.invalidPlanDesc}
+        title={h.invalidPlanTitle}
+      />
+    );
+  }
+
+  const organizationType = parseOrganizationType(profile.organization_type);
+  if (shouldBlockSelfServeOrgCheckout(organizationType, planId)) {
+    const salesUrl = buildOrganizationSalesWhatsAppUrl({
+      organizationType,
+      organizationName: profile.full_name,
+      planTitle: planBundle.group.title,
+    });
+    return (
+      <StateCard
+        action={
+          salesUrl ? (
+            <a className="font-black text-crystal" href={salesUrl} rel="noopener noreferrer" target="_blank">
+              {h.orgSalesCta}
+            </a>
+          ) : (
+            <Link className="font-black text-crystal" href="/profile">
+              {h.backProfile}
+            </Link>
+          )
+        }
+        description={h.orgSalesDesc}
+        title={h.orgSalesTitle}
       />
     );
   }
@@ -71,14 +103,10 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
 
   const configured = hasBankTransferConfigured();
   const banks = getBankTransferAccounts();
-  const messages = await getServerMessages();
 
   return (
-    <LegalLayout title="Havale / EFT ile Zigo Plus">
-      <p>
-        iOS PWA ve tarayıcı kullanıcıları banka havalesi veya EFT ile abonelik satın alabilir. Ödeme onaylandıktan
-        sonra Zigo Plus otomatik açılır (genelde 1–2 iş günü).
-      </p>
+    <LegalLayout title={h.pageTitle}>
+      <p>{h.pageIntro}</p>
       <BankTransferCheckoutPanel
         amountTry={planBundle.plan.priceTry}
         banks={banks}
@@ -105,7 +133,8 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
 }
 
 export async function generateMetadata() {
+  const messages = await getServerMessages();
   return {
-    title: "Havale / EFT · Zigo Plus",
+    title: messages.billingUi.havale.metaTitle,
   };
 }

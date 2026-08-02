@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales";
+import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
 const googlePlaySchema = z.object({
@@ -22,6 +23,17 @@ export async function POST(request: Request) {
     }
 
     const body = googlePlaySchema.parse(await request.json().catch(() => ({})));
+
+    if (shouldBlockSelfServeOrgCheckout(parseOrganizationType(profile.organization_type), body.planId)) {
+      return NextResponse.json(
+        {
+          error:
+            "Kurumsal abonelikler satış ekibi üzerinden açılır. WhatsApp ile kurumsal teklif alın.",
+          code: "ORG_SALES_ASSISTED",
+        },
+        { status: 403 },
+      );
+    }
 
     const { data, error } = await supabase.rpc("record_google_play_purchase", {
       p_user_id: profile.id,

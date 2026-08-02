@@ -6,6 +6,7 @@ import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { ensureLearningReminderNotification } from "@/lib/domain/learning-reminder-service";
 import { getNotifications, type SocialNotification } from "@/lib/domain/social";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import type { UserRole } from "@/lib/supabase/database.types";
@@ -97,7 +98,13 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         {notifications.length > 0 ? <MarkNotificationsReadButton initialUnreadCount={unreadCount} /> : null}
       </section>
       <ActivityDigestHero
-        activeFilter={activeFilter}
+        filterLabel={
+          activeFilter === "all"
+            ? m.common.all
+            : activeFilter === "unread"
+              ? m.common.unread
+              : activityFilters.find((item) => item.category === activeFilter)?.label ?? m.common.all
+        }
         messages={m}
         totalCount={notifications.length}
         unreadCount={unreadCount}
@@ -192,12 +199,12 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
 }
 
 function ActivityDigestHero({
-  activeFilter,
+  filterLabel,
   messages,
   totalCount,
   unreadCount,
 }: {
-  activeFilter: NotificationFilter;
+  filterLabel: string;
   messages: Messages;
   totalCount: number;
   unreadCount: number;
@@ -213,7 +220,7 @@ function ActivityDigestHero({
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           <DigestStat label={n.statTotal} value={totalCount} />
           <DigestStat label={n.statUnread} value={unreadCount} />
-          <DigestStat label={n.statFilter} value={activeFilter} />
+          <DigestStat label={n.statFilter} value={filterLabel} />
         </div>
       </div>
     </section>
@@ -282,50 +289,62 @@ function getNotificationFilter(value?: string): NotificationFilter {
 async function getNotificationItems(): Promise<{ isSignedOut: boolean; profileRole: UserRole; notifications: NotificationItem[] }> {
   const m = await getServerMessages();
 
-  const emptyFallback = { isSignedOut: true, profileRole: "student" as const, notifications: [] as NotificationItem[] };
+  const demoItems = () =>
+    buildDemoNotifications(m).map((notification) => ({
+      ...notification,
+      category: getNotificationCategory(notification.title, notification.detail),
+      id: notification.title,
+      isRead: false,
+    }));
 
   if (!hasSupabaseEnv()) {
     if (allowDemoContent()) {
-      return {
-        isSignedOut: false,
-        profileRole: "student" as const,
-        notifications: buildDemoNotifications(m).map((notification) => ({
-          ...notification,
-          category: getNotificationCategory(notification.title, notification.detail),
-          id: notification.title,
-          isRead: false,
-        })),
-      };
+      return { isSignedOut: false, profileRole: "student", notifications: demoItems() };
     }
-    return emptyFallback;
+    return { isSignedOut: true, profileRole: "student", notifications: [] };
   }
 
-  const demoFallback: Awaited<ReturnType<typeof getNotificationItems>> = allowDemoContent()
-    ? {
-        isSignedOut: false,
-        profileRole: "student" as const,
-        notifications: buildDemoNotifications(m).map((notification) => ({
-          ...notification,
-          category: getNotificationCategory(notification.title, notification.detail),
-          id: notification.title,
-          isRead: false,
-        })),
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { isSignedOut: true, profileRole: "student", notifications: [] };
+    }
+
+    // Session exists from here on — never show the login CTA on query/profile failures.
+    const profile = await withSupabaseFallback(
+      () => getCurrentProfile(supabase),
+      null,
+      null,
+    );
+
+    if (!profile) {
+      return { isSignedOut: false, profileRole: "student", notifications: [] };
+    }
+
+    try {
+      if (profile.role === "student") {
+        await ensureLearningReminderNotification(supabase, profile.id, profile.role).catch(() => null);
       }
-    : emptyFallback;
-
-  return withSupabaseFallback(async () => {
-  const supabase = await createClient();
-  const profile = await getCurrentProfile(supabase);
-
-  if (!profile) return { isSignedOut: true, profileRole: "student" as const, notifications: [] };
-
-  const notifications = await getNotifications(supabase, profile.id);
-  return {
-    isSignedOut: false,
-    profileRole: profile.role,
-    notifications: notifications.map((item) => toNotificationItem(item, m, profile.role)),
-  };
-  }, demoFallback, emptyFallback);
+      const notifications = await getNotifications(supabase, profile.id);
+      return {
+        isSignedOut: false,
+        profileRole: profile.role,
+        notifications: notifications.map((item) => toNotificationItem(item, m, profile.role)),
+      };
+    } catch {
+      return { isSignedOut: false, profileRole: profile.role, notifications: [] };
+    }
+  } catch {
+    if (allowDemoContent()) {
+      return { isSignedOut: false, profileRole: "student", notifications: demoItems() };
+    }
+    // Prefer empty inbox over a false "sign in" when auth client itself fails.
+    return { isSignedOut: false, profileRole: "student", notifications: [] };
+  }
 }
 
 function toNotificationItem(notification: SocialNotification, m: Messages, profileRole: UserRole): NotificationItem {

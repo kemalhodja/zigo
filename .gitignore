@@ -36,9 +36,17 @@ Zigo-release.aab
 coverage/
 playwright-report/
 test-results/
+.playwright-godaddy/
+godaddy-*.png
+
 
 # generated migration bundle
 supabase/zigo-full-migrations.sql
 launch-status.json
 .vercel
 .env*
+
+# local deploy artifacts / secrets
+zigo.tar.gz
+*.tar.gz
+scripts/_tmp-*.mjs

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { isTeacherGeneralInterestSelection } from "@/lib/domain/general-interest-areas";
+import { assertAreaIdsAllowedUnderLaunchFreeze } from "@/lib/domain/launch-scope";
 import { getCurrentProfile, getEducationAreas, setUserInterests } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,9 +17,9 @@ export async function PUT(request: Request) {
 
     const body = await request.json();
     const areaIds = Array.isArray(body.areaIds) ? body.areaIds.map(Number) : [];
+    const areas = await getEducationAreas(supabase);
 
     if (profile.role === "teacher") {
-      const areas = await getEducationAreas(supabase);
       const selected = areas.filter((area) => areaIds.includes(area.id));
 
       if (!isTeacherGeneralInterestSelection(selected)) {
@@ -27,6 +28,13 @@ export async function PUT(request: Request) {
           { status: 403 },
         );
       }
+    } else {
+      assertAreaIdsAllowedUnderLaunchFreeze(
+        areas,
+        areaIds,
+        "learner_demand",
+        profile.grade_level,
+      );
     }
 
     await setUserInterests(supabase, {
@@ -36,11 +44,12 @@ export async function PUT(request: Request) {
 
     return NextResponse.json({ data: true });
   } catch (error) {
-    const message = error instanceof z.ZodError
-      ? "Choose between 1 and 20 valid education areas."
-      : error instanceof Error
-        ? error.message
-        : "Interests could not be saved.";
+    const message =
+      error instanceof z.ZodError
+        ? "Choose between 1 and 20 valid education areas."
+        : error instanceof Error
+          ? error.message
+          : "Interests could not be saved.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

@@ -68,7 +68,7 @@ export function ZigoPlusUpsell({
     return (
       <section className="-mx-4 bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-4 text-night">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-night/70">Zigo Plus aktif</p>
-        <p className="mt-1 text-sm font-black">Gelişmiş analitik, kişisel planlar ve reklamsız odak açık.</p>
+        <p className="mt-1 text-sm font-black">Gelişmiş analitik, kişisel planlar ve odak panelleri açık.</p>
       </section>
     );
   }
@@ -99,7 +99,7 @@ export function ZigoPlusUpsell({
         </ul>
       ) : (
         <p className="mt-2 text-sm font-bold text-white/80">
-          Analitik, kişisel planlar ve reklamsız odak — aylık abonelik.
+          Analitik, kişisel planlar ve odak panelleri — aylık abonelik.
           {campaignActive ? ` ${SUBSCRIPTION_CAMPAIGN.description}` : ""}
         </p>
       )}

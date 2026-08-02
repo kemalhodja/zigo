@@ -18,6 +18,9 @@ const REQUIRED_CHECKPOINTS = [
   "023_moderation_audit_log.sql",
   "055_demo_social_interactions_reset.sql",
   "066_ad_state_and_premium_system.sql",
+  "077_moderation_report_resolved_at.sql",
+  "078_admin_billing_grants.sql",
+  "079_update_own_account_kind.sql",
 ];
 
 function check(name, ok, message = "") {

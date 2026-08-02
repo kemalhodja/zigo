@@ -12,15 +12,18 @@ export async function createTeacherQuiz(
 ) {
   const parsed = createQuizSchema.parse(input);
 
-  if (parsed.correctOption >= parsed.options.length) {
-    throw new Error("Correct option must match one of the quiz options.");
-  }
-
-  const [title, questionText, options] = await Promise.all([
+  const [title, moderatedQuestions] = await Promise.all([
     assertSafeStudentTextAsync(parsed.title),
-    assertSafeStudentTextAsync(parsed.questionText),
-    Promise.all(parsed.options.map((option) => assertSafeStudentTextAsync(option))),
+    Promise.all(
+      parsed.questions.map(async (question) => ({
+        questionText: await assertSafeStudentTextAsync(question.questionText),
+        options: await Promise.all(question.options.map((option) => assertSafeStudentTextAsync(option))),
+        correctOption: question.correctOption,
+      })),
+    ),
   ]);
+
+  const moderatedFirst = moderatedQuestions[0]!;
 
   const { data, error } = await supabase
     .from("quizzes")
@@ -28,9 +31,10 @@ export async function createTeacherQuiz(
       teacher_id: parsed.teacherId,
       area_id: parsed.areaId,
       title,
-      question_text: questionText,
-      options,
-      correct_option: parsed.correctOption,
+      // Legacy single-question columns keep Q1 for older feed/list surfaces.
+      question_text: moderatedFirst.questionText,
+      options: moderatedFirst.options,
+      correct_option: moderatedFirst.correctOption,
       points_reward: parsed.pointsReward,
     })
     .select("*")
@@ -38,11 +42,20 @@ export async function createTeacherQuiz(
 
   if (error) throw error;
 
-  const { error: syncQuestionsError } = await supabase.rpc("sync_quiz_questions_for_quiz", {
-    target_quiz_id: data.id,
-  });
+  const { error: questionsError } = await supabase.from("quiz_questions").insert(
+    moderatedQuestions.map((question, index) => ({
+      quiz_id: data.id,
+      question_text: question.questionText,
+      options: question.options,
+      correct_option: question.correctOption,
+      sort_order: index,
+    })),
+  );
 
-  if (syncQuestionsError) throw syncQuestionsError;
+  if (questionsError) {
+    await supabase.from("quizzes").delete().eq("id", data.id);
+    throw questionsError;
+  }
 
   const { error: syncFeedError } = await supabase.rpc("sync_quiz_feed_post", {
     target_quiz_id: data.id,

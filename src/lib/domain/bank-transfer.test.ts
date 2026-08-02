@@ -4,10 +4,33 @@ import {
   getBankTransferAccounts,
   getBankTransferConfig,
   hasBankTransferConfigured,
+  reviewBankTransferSchema,
 } from "@/lib/domain/bank-transfer";
 import { findPlanById, resolveSubscriptionPeriodEnd } from "@/lib/domain/subscription-plans";
 
 describe("bank-transfer", () => {
+  it("parses review payloads with optional admin note", () => {
+    const requestId = "c3333333-d444-4333-8333-333333333333";
+    expect(
+      reviewBankTransferSchema.parse({
+        requestId,
+        status: "approved",
+        adminNote: " Dekont OK ",
+      }),
+    ).toEqual({
+      requestId,
+      status: "approved",
+      adminNote: "Dekont OK",
+    });
+
+    expect(
+      reviewBankTransferSchema.parse({
+        requestId,
+        status: "rejected",
+      }).adminNote,
+    ).toBeUndefined();
+  });
+
   it("detects bank transfer env configuration", () => {
     const keys = [
       "ZIGO_BANK_IBAN",

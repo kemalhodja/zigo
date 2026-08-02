@@ -19,7 +19,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof z.ZodError
       ? "Invalid status parameters"
-      : (error as any)?.message || "Failed to update user status";
+      : error instanceof Error
+        ? error.message
+        : "Failed to update user status";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

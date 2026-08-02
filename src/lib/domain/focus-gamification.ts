@@ -13,7 +13,7 @@ export const FOCUS_PRODUCT_POSITIONING = {
 export const ZIGO_PLUS_BENEFITS = [
   "Veli ve öğrenci için gelişmiş öğrenme analitiği",
   "Eğitim alanlarına uygun kişisel çalışma planları",
-  "Reklamsız, dikkat dağıtmayan odak modu",
+  "Odak oturumları ve streak takibi için gelişmiş paneller",
   "Doğrulanmış öğretmenlerden YKS/LGS yazılı hazırlık kaynakları",
 ] as const;
 

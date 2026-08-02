@@ -11,6 +11,7 @@ import type {
 
 export type RawSocialPost = SocialPostRow & {
   author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "organization_type" | "avatar_url"> | null;
+  co_author?: Pick<UserRow, "id" | "full_name"> | null;
   area: Pick<EducationAreaRow, "area_name"> | null;
 };
 
@@ -20,12 +21,18 @@ export function filterPostsForAudience(
   viewerProfile?: { id?: string; role?: string | null; grade_level?: string | null } | null,
 ): RawSocialPost[] {
   return posts.filter((post) => {
+    // ── Öğrenci ve Veli gönderileri Keşfete düşmez (Yalnızca Öğretmen, Kurum, Platform ve Yayınevi düşer)
+    if (post.author && (post.author.role === "student" || post.author.role === "parent")) {
+      if (viewerId && post.author_id === viewerId) return true;
+      return false;
+    }
+
     if (!post.target_audience || post.target_audience === "all") return true;
     if (
       post.author &&
       "organization_type" in post.author &&
       post.author.organization_type &&
-      ["egitim_platformu", "egitim_kurumu", "okul", "kurs"].includes(String(post.author.organization_type))
+      ["egitim_platformu", "egitim_kurumu", "okul", "kurs", "yayinevi"].includes(String(post.author.organization_type))
     ) {
       return true;
     }
@@ -39,6 +46,13 @@ export function filterPostsForAudience(
         return true;
       }
       if (viewerProfile?.role === "student") {
+        if (
+          post.target_grade.includes("Hepsi") ||
+          post.target_grade.includes("Tüm") ||
+          post.target_grade === "Hepsi (Tüm Sınıflar)"
+        ) {
+          return true;
+        }
         return viewerProfile.grade_level === post.target_grade;
       }
       return false;
@@ -87,6 +101,7 @@ export async function hydrateSocialPosts(
 
     return {
       ...visiblePost,
+      co_author: post.co_author,
       premium_prep_label: post.premium_prep_label,
       sponsored_label: post.sponsored_label,
       sponsored_disclosure: post.sponsored_disclosure,

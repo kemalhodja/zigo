@@ -19,13 +19,14 @@ const demoAreas: ComposerArea[] = [
 ];
 
 type CreatePageProps = {
-  searchParams: Promise<{ mode?: string }>;
+  searchParams: Promise<{ mode?: string; pack?: string }>;
 };
 
 export default async function CreatePage({ searchParams }: CreatePageProps) {
   const m = await getServerMessages();
   const params = await searchParams;
   const initialMode = resolveCreateMode(params.mode);
+  const pack = params.pack === "micro-quiz" ? "micro-quiz" : null;
   const { areas, canCreate, lockReason, teacherCreatorPlus, allowDevActivate } = await getCreatePageData();
 
   if (!canCreate) {
@@ -44,6 +45,20 @@ export default async function CreatePage({ searchParams }: CreatePageProps) {
         <span className="w-9" />
       </section>
 
+      {pack ? (
+        <section className="-mx-4 border-b border-violet-100 bg-violet-50 px-4 py-3">
+          <p className="text-sm font-black text-night">Adım: kısa ders, sonra quiz</p>
+          <div className="mt-2 flex gap-2">
+            <Link className="tap-scale rounded-lg bg-crystal px-3 py-2 text-xs font-black text-white" href="/create?mode=micro&pack=micro-quiz">
+              Kısa ders
+            </Link>
+            <Link className="tap-scale rounded-lg bg-night px-3 py-2 text-xs font-black text-white" href="/teacher?pack=micro-quiz">
+              Quiz
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
       <CreateStudioHero areaCount={areas.length} createStudio={m.createStudio} initialMode={initialMode} />
       <CreateModeComposer
         allowDevActivate={allowDevActivate}
@@ -51,7 +66,15 @@ export default async function CreatePage({ searchParams }: CreatePageProps) {
         initialMode={initialMode}
         teacherCreatorPlus={teacherCreatorPlus}
       />
-      <CreatePublishSafetyLane createStudio={m.createStudio} />
+      {!pack ? (
+        <p className="-mx-4 border-t border-slate-100 bg-white px-4 py-3 text-center text-xs font-bold text-slate-500">
+          İstersen{" "}
+          <Link className="text-crystal" href="/create?mode=micro&pack=micro-quiz">
+            kısa ders + quiz
+          </Link>{" "}
+          birlikte yayınla.
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -66,24 +89,27 @@ function CreateStudioHero({
   initialMode: "post" | "reel" | "story";
 }) {
   const studioModes = [
-    { href: "/create", label: createStudio.post, value: "post" },
-    { href: "/create?mode=micro", label: createStudio.micro, value: "reel" },
-    { href: "/create?mode=spark", label: createStudio.spark, value: "story" },
-  ] as const;
+    { href: "/create", label: createStudio.post, value: "post" as const },
+    { href: "/create?mode=micro", label: createStudio.micro, value: "reel" as const },
+    { href: "/create?mode=spark", label: createStudio.spark, value: "story" as const },
+  ];
+
+  const modeLabel =
+    initialMode === "reel"
+      ? createStudio.micro
+      : initialMode === "story"
+        ? createStudio.spark
+        : createStudio.post;
 
   return (
     <section className="-mx-4 border-b border-slate-100 bg-white">
       <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-4 text-white">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-white/70">{createStudio.creatorStudio}</p>
         <h2 className="mt-1.5 text-xl font-black leading-tight">{createStudio.publishFeed}</h2>
-        <p className="mt-2 text-sm font-bold leading-6 text-white/80">
-          {createStudio.publishDesc}
+        <p className="mt-2 text-sm font-bold leading-6 text-white/80">{createStudio.publishDesc}</p>
+        <p className="mt-3 text-xs font-black uppercase tracking-[0.14em] text-white/75">
+          {modeLabel} · {areaCount} {createStudio.statAreas}
         </p>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <StudioStat label={createStudio.statAreas} value={areaCount} />
-          <StudioStat label={createStudio.statMode} value={initialMode} />
-          <StudioStat label={createStudio.statSafety} value="RLS" />
-        </div>
       </div>
       <div className="zigo-action-grid px-4 py-3">
         {studioModes.map((mode) => {
@@ -101,42 +127,6 @@ function CreateStudioHero({
             </Link>
           );
         })}
-      </div>
-    </section>
-  );
-}
-
-function StudioStat({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="rounded-xl bg-white/14 px-2 py-2 backdrop-blur">
-      <p className="zigo-fit-text text-sm font-black">{value}</p>
-      <p className="mt-0.5 text-[0.65rem] font-black uppercase tracking-[0.1em] text-white/70">{label}</p>
-    </div>
-  );
-}
-
-function CreatePublishSafetyLane({ createStudio }: { createStudio: Messages["createStudio"] }) {
-  const steps = [
-    createStudio.verifiedTeacher,
-    createStudio.matchFeedArea,
-    createStudio.mediaCleaned,
-    createStudio.studentSafe,
-  ];
-
-  return (
-    <section className="-mx-4 border-t border-slate-100 bg-slate-50 px-4 py-4">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{createStudio.safetyLane}</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {steps.map((step) => (
-          <div className="rounded-xl bg-white px-3 py-3 shadow-sm" key={step}>
-            <span className="flex size-7 items-center justify-center rounded-lg bg-crystal text-white">
-              <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                <path d="m5 12 4 4L19 6" />
-              </svg>
-            </span>
-            <p className="mt-2 text-xs font-black text-night">{step}</p>
-          </div>
-        ))}
       </div>
     </section>
   );
@@ -235,9 +225,9 @@ const createLockedCopy = (c: Messages["createPage"], common: Messages["common"],
       title: c.signInTitle,
     },
     "not-teacher": {
-      action: nav.ask,
+      action: nav.home,
       description: c.notTeacherDesc,
-      href: "/questions",
+      href: "/",
       title: c.notTeacherTitle,
     },
     setup: {

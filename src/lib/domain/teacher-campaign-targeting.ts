@@ -95,6 +95,8 @@ export function gradeBandsForGradeLevel(gradeLevel: string | null | undefined, r
     if (grade >= 11) bands.push("yks");
   }
 
+  const upper = gradeLevel.toLocaleUpperCase("tr-TR");
+  if (upper.includes("YKS") || upper === "TYT" || upper === "AYT") bands.push("yks");
   if (gradeLevel.toLowerCase().includes("okul öncesi") || gradeLevel.toLowerCase().includes("okul oncesi")) {
     bands.push("okul_oncesi");
   }

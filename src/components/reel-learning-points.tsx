@@ -1,18 +1,27 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { buildLearnContinueHref } from "@/lib/domain/habit-loop";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type ReelLearningPointsProps = {
   reelId: string;
   requiresPlayback?: boolean;
+  areaId?: number | null;
+  quizId?: string | null;
 };
 
 const storageKey = "zigo:watched-reels";
 const requiredWatchSeconds = 60;
 
-export function ReelLearningPoints({ reelId, requiresPlayback = false }: ReelLearningPointsProps) {
+export function ReelLearningPoints({
+  reelId,
+  requiresPlayback = false,
+  areaId = null,
+  quizId = null,
+}: ReelLearningPointsProps) {
   const { actions: a } = useMessages();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isClaimed, setIsClaimed] = useState(false);
@@ -140,6 +149,7 @@ export function ReelLearningPoints({ reelId, requiresPlayback = false }: ReelLea
 
   const remainingSeconds = Math.max(0, requiredWatchSeconds - secondsWatched);
   const canClaim = isClaimed || secondsWatched >= requiredWatchSeconds;
+  const continueHref = buildLearnContinueHref({ areaId, quizId });
 
   return (
     <div className="space-y-2" ref={containerRef}>
@@ -171,6 +181,14 @@ export function ReelLearningPoints({ reelId, requiresPlayback = false }: ReelLea
         <p className="text-xs font-bold text-white/70">{a.playReelForPoints}</p>
       ) : null}
       {message ? <p className="text-xs font-bold text-white/80">{message}</p> : null}
+      {isClaimed ? (
+        <Link
+          className="inline-flex rounded-lg bg-white/95 px-3 py-1.5 text-[0.68rem] font-black text-crystal"
+          href={continueHref}
+        >
+          {a.continueWithQuiz}
+        </Link>
+      ) : null}
     </div>
   );
 }

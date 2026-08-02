@@ -100,9 +100,17 @@ export default async function FamilyPage() {
                   </p>
                   <h3 className="mt-1 text-xl font-black text-night">{child.display_name}</h3>
                 </div>
-                <div className="rounded-lg bg-slate-100 px-4 py-2 text-right">
-                  <p className="text-xs font-black text-slate-500">{f.points}</p>
-                  <p className="text-lg font-black text-night">{child.total_points}</p>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="rounded-lg bg-slate-100 px-4 py-2 text-right">
+                    <p className="text-xs font-black text-slate-500">{f.points}</p>
+                    <p className="text-lg font-black text-night">{child.total_points}</p>
+                  </div>
+                  <Link
+                    className="tap-scale rounded-lg bg-night px-3 py-2 text-xs font-black text-white"
+                    href={`/profiles/select/${child.id}?next=/learn`}
+                  >
+                    {f.openLearn}
+                  </Link>
                 </div>
               </div>
 
@@ -130,6 +138,7 @@ export default async function FamilyPage() {
               <ChildAreaSelector
                 areas={areas}
                 childProfileId={child.id}
+                initialGradeLevel={child.grade_level}
                 initialSelectedAreaIds={selectedAreaIds}
               />
               <ChildQuizActivityPanel

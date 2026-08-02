@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { VerifiedBadge } from "@/components/social-primitives";
+import { formatSponsoredCtr } from "@/lib/domain/sponsored-ads";
 import { resolveTeacherCampaignHref } from "@/lib/domain/teacher-campaign";
 import type { SponsoredTeacherCampaignSummary } from "@/lib/supabase/database.types";
 
@@ -12,6 +13,7 @@ type TeacherCampaignCardProps = {
 
 export function TeacherCampaignCard({ campaign, sponsoredLabel }: TeacherCampaignCardProps) {
   const handle = campaign.teacher_name.toLowerCase().replaceAll(" ", "");
+  const ctrLabel = formatSponsoredCtr(campaign.click_count, campaign.view_count);
 
   return (
     <Link
@@ -31,7 +33,7 @@ export function TeacherCampaignCard({ campaign, sponsoredLabel }: TeacherCampaig
             {sponsoredLabel}
           </span>
           <span className="text-[0.65rem] font-bold text-slate-500">
-            {campaign.view_count} · {campaign.click_count}
+            {campaign.view_count} · {campaign.click_count} · {ctrLabel}
           </span>
         </div>
         <div className="mt-3 flex items-center gap-2">

@@ -372,6 +372,17 @@ export type ModerationAuditRow = {
   created_at: string;
 };
 
+export type AdminBillingGrantRow = {
+  id: string;
+  admin_id: string;
+  user_id: string;
+  kind: "plus" | "sponsor";
+  duration_days: number;
+  note: string | null;
+  period_ends_at: string | null;
+  created_at: string;
+};
+
 export type ModerationViolationRow = {
   id: string;
   user_id: string;
@@ -419,6 +430,7 @@ export type ContentReportRow = {
   status: ContentReportStatus;
   details: string | null;
   created_at: string;
+  resolved_at: string | null;
 };
 
 export type AwardLearningPointsResult = {
@@ -1217,6 +1229,53 @@ export type Database = {
           },
         ];
       };
+      invite_codes: {
+        Row: {
+          id: string;
+          code: string;
+          owner_id: string;
+          role_hint: "teacher" | "parent" | "student" | null;
+          max_uses: number;
+          use_count: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          owner_id: string;
+          role_hint?: "teacher" | "parent" | "student" | null;
+          max_uses?: number;
+          use_count?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          code?: string;
+          max_uses?: number;
+          use_count?: number;
+          is_active?: boolean;
+        };
+        Relationships: [];
+      };
+      invite_redemptions: {
+        Row: {
+          id: string;
+          invite_code_id: string;
+          redeemer_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          invite_code_id: string;
+          redeemer_id: string;
+          created_at?: string;
+        };
+        Update: {
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       moderation_audit_log: {
         Row: ModerationAuditRow;
         Insert: {
@@ -1235,6 +1294,39 @@ export type Database = {
           {
             foreignKeyName: "moderation_audit_log_moderator_id_fkey";
             columns: ["moderator_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      admin_billing_grants: {
+        Row: AdminBillingGrantRow;
+        Insert: {
+          id?: string;
+          admin_id: string;
+          user_id: string;
+          kind: "plus" | "sponsor";
+          duration_days: number;
+          note?: string | null;
+          period_ends_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          note?: string | null;
+          period_ends_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_billing_grants_admin_id_fkey";
+            columns: ["admin_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "admin_billing_grants_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
             referencedColumns: ["id"];
@@ -1659,12 +1751,14 @@ export type Database = {
           status?: ContentReportStatus;
           details?: string | null;
           created_at?: string;
+          resolved_at?: string | null;
         };
         Update: {
           reason?: ContentReportReason;
           status?: ContentReportStatus;
           details?: string | null;
           created_at?: string;
+          resolved_at?: string | null;
         };
         Relationships: [
           {
@@ -2076,7 +2170,14 @@ export type Database = {
         Args: {
           next_bio?: string | null;
           next_avatar_url?: string | null;
-          next_city?: string | null;
+          next_full_name?: string | null;
+        };
+        Returns: UserRow;
+      };
+      update_own_account_kind: {
+        Args: {
+          next_role: UserRole;
+          next_organization_type?: string | null;
         };
         Returns: UserRow;
       };
@@ -2452,6 +2553,25 @@ export type Database = {
           sponsored_click_count: number;
           created_at: string;
         }[];
+      };
+      get_area_leaderboard: {
+        Args: {
+          target_area_id: number;
+          limit_count?: number;
+        };
+        Returns: {
+          user_id: string;
+          full_name: string;
+          total_points: number;
+          rank: number;
+        }[];
+      };
+      redeem_invite_code: {
+        Args: {
+          raw_code: string;
+          redeemer?: string;
+        };
+        Returns: string;
       };
       upsert_teacher_campaign: {
         Args: {

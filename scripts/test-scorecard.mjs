@@ -7,13 +7,13 @@ import { join } from "node:path";
 const root = process.cwd();
 
 const STATIC_PILLARS = [
-  { id: "migrations", label: "Migration 066", pts: 5, ok: () => existsSync(join(root, "supabase/migrations/066_ad_state_and_premium_system.sql")) },
+  { id: "migrations", label: "Migration 078", pts: 5, ok: () => existsSync(join(root, "supabase/migrations/078_admin_billing_grants.sql")) },
   { id: "compliance", label: "KVKK API + UI", pts: 5, ok: () => fileHas("src/app/api/account/export/route.ts", "exportUserData") && fileHas("src/app/legal/delete-account/page.tsx", "exportData") },
   { id: "video", label: "Video CDN wired", pts: 5, ok: () => fileHas("src/components/social-media-frame.tsx", "getMediaPlaybackUrl") },
   { id: "push", label: "Push panel wired", pts: 5, ok: () => fileHas("src/app/notifications/page.tsx", "PushNotificationPanel") },
   { id: "cookie", label: "Cookie consent", pts: 3, ok: () => fileHas("src/components/app-shell.tsx", "CookieConsentBanner") },
   { id: "stripe", label: "Stripe webhook", pts: 5, ok: () => fileHas("src/lib/domain/stripe-webhook.ts", "verifyStripeWebhookSignature") },
-  { id: "bundle", label: "66-migration bundle", pts: 2, ok: () => fileHas("supabase/zigo-full-migrations.sql", "066_ad_state_and_premium_system") },
+  { id: "bundle", label: "78-migration bundle", pts: 2, ok: () => fileHas("supabase/zigo-full-migrations.sql", "078_admin_billing_grants") || fileHas("src/lib/domain/migration-target.ts", "078_admin_billing_grants.sql") },
   { id: "audits", label: "audit:all wired", pts: 3, ok: () => fileHas("package.json", '"audit:all"') && fileHas("scripts/audit-all.mjs", "production-readiness-check") },
 ];
 
@@ -93,7 +93,7 @@ async function runtimeChecks(baseUrl) {
       run: async () => {
         const r = await fetch(`${baseUrl}/api/setup/health`);
         const b = await r.json().catch(() => ({}));
-        return r.ok && b?.data?.migrationTarget === 66;
+        return r.ok && b?.data?.migrationTarget === 77;
       },
     },
     {

@@ -16,6 +16,8 @@ export const createSocialPostSchema = z.object({
   premiumPrepUrl: z.string().url().max(2048).optional(),
   sponsoredLabel: z.string().trim().min(3).max(120).optional(),
   sponsoredTargetUrl: z.string().url().max(2048).optional(),
+  externalUrl: z.string().url().max(2048).optional(),
+  coAuthorId: z.string().uuid().optional(),
 }).superRefine((value, ctx) => {
   const hasLabel = Boolean(value.premiumPrepLabel?.trim());
   const hasUrl = Boolean(value.premiumPrepUrl?.trim());

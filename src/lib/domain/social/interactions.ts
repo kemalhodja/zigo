@@ -55,6 +55,8 @@ export async function createSocialPost(
     premiumPrepUrl?: string;
     sponsoredLabel?: string;
     sponsoredTargetUrl?: string;
+    externalUrl?: string;
+    coAuthorId?: string;
   },
 ) {
   const parsed = createSocialPostSchema.parse(input);
@@ -98,7 +100,9 @@ export async function createSocialPost(
           premium_prep_url: parsed.premiumPrepUrl ?? null,
           sponsored_label: parsed.sponsoredLabel ?? null,
           sponsored_target_url: parsed.sponsoredTargetUrl ?? null,
-        })
+          external_url: parsed.externalUrl ?? null,
+          co_author_id: parsed.coAuthorId ?? null,
+        } as Database["public"]["Tables"]["social_posts"]["Insert"])
         .select("*")
         .single();
 

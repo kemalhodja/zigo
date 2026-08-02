@@ -10,20 +10,19 @@ export async function GET(request: Request) {
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "UNAUTHORIZED", code: "UNAUTHORIZED" }, { status: 401 });
     }
 
     if (profile.role !== "teacher") {
-      return NextResponse.json({ error: "Only teachers can manage sponsored ads." }, { status: 403 });
+      return NextResponse.json({ error: "TEACHER_ONLY", code: "TEACHER_ONLY" }, { status: 403 });
     }
 
     const rawLimit = Number(new URL(request.url).searchParams.get("limit") ?? 20);
     const limit = Number.isFinite(rawLimit) ? Math.min(50, Math.max(1, rawLimit)) : 20;
-    const ads = await listTeacherSponsoredAds(supabase, limit);
+    const ads = await listTeacherSponsoredAds(supabase, profile.id, limit);
 
     return NextResponse.json({ data: ads, meta: { count: ads.length, limit } });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Sponsored ads could not be loaded.";
-    return NextResponse.json({ error: message }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: "LOAD_FAILED", code: "LOAD_FAILED" }, { status: 400 });
   }
 }

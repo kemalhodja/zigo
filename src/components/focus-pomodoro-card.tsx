@@ -9,6 +9,7 @@ import {
   POMODORO_SECONDS,
   pomodoroProgress,
 } from "@/lib/domain/focus-gamification";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type FocusAreaOption = {
@@ -20,13 +21,19 @@ type FocusPomodoroCardProps = {
   areas: FocusAreaOption[];
   isPremium?: boolean;
   initialTopic?: string;
+  userId?: string | null;
 };
 
 type FocusPhase = "idle" | "running" | "complete" | "shared";
 
 const TOPIC_PRESET_KEYS = ["presetMath", "presetScience", "presetCoding", "presetExam"] as const;
 
-export function FocusPomodoroCard({ areas, isPremium = false, initialTopic }: FocusPomodoroCardProps) {
+export function FocusPomodoroCard({
+  areas,
+  isPremium = false,
+  initialTopic,
+  userId = null,
+}: FocusPomodoroCardProps) {
   const m = useMessages();
   const fc = m.focusCard;
   const z = m.zigo;
@@ -303,7 +310,7 @@ export function FocusPomodoroCard({ areas, isPremium = false, initialTopic }: Fo
               >
                 {areas.map((area) => (
                   <option className="text-night" key={area.id} value={area.id}>
-                    {area.area_name}
+                    {displayEducationAreaName(area.area_name)}
                   </option>
                 ))}
               </select>
@@ -324,7 +331,9 @@ export function FocusPomodoroCard({ areas, isPremium = false, initialTopic }: Fo
         <div className="space-y-3">
           <p className="text-sm font-bold text-white/90">
             {topicLabel}
-            {areaId !== "" ? ` · ${areas.find((area) => area.id === areaId)?.area_name ?? fc.matchedArea}` : ""}
+            {areaId !== ""
+              ? ` · ${displayEducationAreaName(areas.find((area) => area.id === areaId)?.area_name) || fc.matchedArea}`
+              : ""}
           </p>
           <p className="text-xs font-bold text-white/75">{fc.keepScreenOpen}</p>
           {tabHiddenWarning ? (

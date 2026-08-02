@@ -21,7 +21,7 @@ export function ParentFocusOverviewCard({ overview, showPreview = false }: Paren
           <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">{p.focusPulse}</p>
           <h2 className="mt-1 text-lg font-black">{p.studyActivityAreas}</h2>
         </div>
-        <Link className="text-xs font-black text-amber-200" href="/focus">
+        <Link className="text-xs font-black text-amber-200" href="/family">
           {p.studentFocus}
         </Link>
       </div>

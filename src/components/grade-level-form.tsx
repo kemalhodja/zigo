@@ -3,7 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
+import {
+  EXAM_GRADE_LEVELS,
+  GRADE_LEVEL_OPTIONS,
+  isAutoInterestGradeLevel,
+} from "@/lib/domain/grade-level";
 
 type GradeLevelFormProps = {
   initialGradeLevel?: string | null;
@@ -13,16 +17,21 @@ type GradeLevelFormProps = {
 
 export function GradeLevelForm({
   initialGradeLevel = "",
-  title = "Sınıf güncelle",
-  description = "Eşleşen içerik ve yazılı hazırlık önerileri için sınıfınızı seçin.",
+  title = "Sınıf seç",
+  description = "Sınıfınızı seçin. 1-8. sınıflarda dersler otomatik atanır; diğer kademelerde branş seçimi yapılır.",
 }: GradeLevelFormProps) {
   const router = useRouter();
   const [gradeLevel, setGradeLevel] = useState(initialGradeLevel ?? "");
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [message, setMessage] = useState("");
 
-  async function save() {
-    if (!gradeLevel) {
+  const classOptions = GRADE_LEVEL_OPTIONS.filter(
+    (option) => !(EXAM_GRADE_LEVELS as readonly string[]).includes(option),
+  );
+  const examOptions = [...EXAM_GRADE_LEVELS];
+
+  async function save(nextGrade = gradeLevel) {
+    if (!nextGrade) {
       setStatus("error");
       setMessage("Lütfen bir sınıf seçin.");
       return;
@@ -35,9 +44,13 @@ export function GradeLevelForm({
       const response = await fetch("/api/profile/grade", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gradeLevel }),
+        body: JSON.stringify({ gradeLevel: nextGrade }),
       });
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        autoAssigned?: boolean;
+        areaIds?: number[];
+      } | null;
 
       if (!response.ok) {
         setStatus("error");
@@ -45,8 +58,17 @@ export function GradeLevelForm({
         return;
       }
 
+      setGradeLevel(nextGrade);
       setStatus("saved");
-      setMessage("Sınıf kaydedildi.");
+      if (payload?.autoAssigned) {
+        setMessage(
+          `Sınıf kaydedildi. ${payload.areaIds?.length ?? 0} ders otomatik seçildi.`,
+        );
+      } else if (isAutoInterestGradeLevel(nextGrade)) {
+        setMessage("Sınıf kaydedildi.");
+      } else {
+        setMessage("Sınıf kaydedildi. Şimdi branş seçin.");
+      }
       router.refresh();
     } catch {
       setStatus("error");
@@ -60,39 +82,67 @@ export function GradeLevelForm({
       <h2 className="mt-1 text-lg font-black text-night">{title}</h2>
       <p className="mt-1 text-sm font-semibold text-slate-500">{description}</p>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <label htmlFor="grade-level" className="sr-only">Sınıf seviyesi</label>
-        <select
-          id="grade-level"
-          className="min-w-0 flex-1 rounded-lg bg-slate-100 px-3 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-crystal focus:ring-offset-2"
-          onChange={(event) => {
-            setGradeLevel(event.target.value);
-            setStatus("idle");
-          }}
-          value={gradeLevel}
-          aria-describedby={message ? "grade-level-message" : undefined}
-          aria-invalid={status === "error"}
-        >
-          <option value="">Sınıf seçin</option>
-          {GRADE_LEVEL_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <button
-          className="tap-scale rounded-lg bg-night px-4 py-3 text-sm font-black text-white disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-crystal focus:ring-offset-2"
-          disabled={status === "saving"}
-          onClick={() => void save()}
-          type="button"
-          aria-busy={status === "saving"}
-        >
-          {status === "saving" ? "Kaydediliyor..." : "Kaydet"}
-        </button>
+      <div className="mt-4 space-y-3">
+        <p className="text-[0.65rem] font-black uppercase tracking-[0.16em] text-slate-500">Sınıf</p>
+        <div className="flex flex-wrap gap-2">
+          {classOptions.map((option) => {
+            const isActive = gradeLevel === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                disabled={status === "saving"}
+                onClick={() => {
+                  setGradeLevel(option);
+                  setStatus("idle");
+                  void save(option);
+                }}
+                className={`tap-scale rounded-lg px-3 py-2 text-xs font-black transition ${
+                  isActive
+                    ? "bg-night text-white"
+                    : "border border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                }`}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="pt-1 text-[0.65rem] font-black uppercase tracking-[0.16em] text-slate-500">
+          Sınav / hazırlık
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {examOptions.map((option) => {
+            const isActive = gradeLevel === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                disabled={status === "saving"}
+                onClick={() => {
+                  setGradeLevel(option);
+                  setStatus("idle");
+                  void save(option);
+                }}
+                className={`tap-scale rounded-lg px-3 py-2 text-xs font-black transition ${
+                  isActive
+                    ? "bg-gradient-to-r from-crystal to-berry text-white"
+                    : "border border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300"
+                }`}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {message ? (
-        <p className={`mt-2 text-sm font-bold ${status === "error" ? "text-red-600" : "text-emerald-600"}`}>
+        <p
+          className={`mt-3 text-sm font-bold ${status === "error" ? "text-red-600" : "text-emerald-600"}`}
+          id="grade-level-message"
+        >
           {message}
         </p>
       ) : null}

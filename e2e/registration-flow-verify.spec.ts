@@ -21,7 +21,7 @@ test.describe("registration flow UI verification", () => {
     await page.getByPlaceholder("Zigo Kullanıcı").fill("UI Verify User");
     await page.getByPlaceholder("sen@ornek.com").fill(email);
     await page.getByPlaceholder(/en az|password/i).fill(PASS);
-    await page.getByTestId("registration-account-student").click();
+    await page.getByTestId("registration-primary-student").click();
 
     const signUpResponse = page.waitForResponse(
       (response) => response.url().includes("/api/auth/sign-up") && response.status() === 200,

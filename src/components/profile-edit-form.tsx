@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ProfileFeedbackBox } from "@/components/profile-feedback-box";
 import { RegistrationAccountPicker } from "@/components/registration-account-picker";
 import { SocialAvatar } from "@/components/social-primitives";
 import { pickProfilePhoto } from "@/lib/client/pick-profile-photo";
@@ -274,6 +275,8 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
           {isSavingKind ? pe.saving : pe.accountKindSave}
         </button>
       </section>
+
+      <ProfileFeedbackBox />
 
       {message ? (
         <p

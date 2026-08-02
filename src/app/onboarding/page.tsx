@@ -142,6 +142,7 @@ export default async function OnboardingPage() {
       ) : (
         <InterestSelector
           areas={areas}
+          gradeLevel={profile.grade_level}
           initialOrganizationType={parseOrganizationType(profile.organization_type)}
           initialSelectedAreaIds={selectedAreaIds}
           role={profile.role}

@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { canUseDevBillingBypass } from "@/lib/domain/billing";
+import {
+  buildSponsorSalesWhatsAppUrl,
+  shouldBlockSelfServeSponsorCheckout,
+} from "@/lib/domain/organization-sales";
+import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
+import {
+  activateSponsorBoost,
+  createSponsorBoostCheckoutSession,
+} from "@/lib/domain/sponsor-activation";
 import { getSponsorPricingOptions } from "@/lib/domain/sponsored-pricing";
-import { getTeacherCampaign, upsertTeacherCampaign } from "@/lib/domain/teacher-campaign";
 import { createClient } from "@/lib/supabase/server";
 
 const sponsorCheckoutSchema = z.object({
@@ -22,7 +30,10 @@ export async function POST(request: Request) {
 
     if (profile.role !== "teacher") {
       return NextResponse.json(
-        { error: "Sponsorlu reklam vermek için öğretmen, kurum veya platform profiline sahip olmalısınız." },
+        {
+          error:
+            "Sponsorlu reklam vermek için öğretmen, kurum veya platform profiline sahip olmalısınız.",
+        },
         { status: 403 },
       );
     }
@@ -35,66 +46,84 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Geçersiz sponsorluk paketi süresi." }, { status: 400 });
     }
 
-    // Dev billing bypass or local checkout simulation for instant activation
-    const currentCampaign = await getTeacherCampaign(supabase, profile.id);
-    const headline = body.headline || currentCampaign?.headline || `${profile.full_name} - Öne Çıkan Profil`;
-    const expiresAt = new Date(Date.now() + body.packageDays * 24 * 60 * 60 * 1000).toISOString();
+    const organizationType = parseOrganizationType(profile.organization_type);
 
-    await upsertTeacherCampaign(supabase, {
-      headline,
-      tagline: currentCampaign?.tagline ?? `${selectedOption.durationLabel} Sponsorlu Profil`,
-      pitch: currentCampaign?.pitch ?? null,
-      ctaLabel: currentCampaign?.cta_label ?? "İletişime Geç",
-      ctaUrl: currentCampaign?.cta_url ?? null,
-      coverImageUrl: currentCampaign?.cover_image_url ?? null,
-      isPublished: true,
-      isSponsored: true,
-      sponsoredPackageDays: body.packageDays,
-    });
+    if (canUseDevBillingBypass()) {
+      const result = await activateSponsorBoost(supabase, {
+        userId: profile.id,
+        fullName: profile.full_name,
+        packageDays: body.packageDays,
+        headline: body.headline,
+        priceTry: selectedOption.priceTry,
+      });
 
-    // Update status and expiration directly if RLS/table allows, or fallback via SQL/post updates
-    const { error: campaignUpdateError } = await supabase
-      .from("teacher_campaigns")
-      .update({
-        is_sponsored: true,
-        is_published: true,
-        sponsored_status: "active",
-        sponsored_package_days: body.packageDays,
-        sponsored_expires_at: expiresAt,
-      })
-      .eq("teacher_id", profile.id);
-
-    if (campaignUpdateError) {
-      // Log non-fatal if table update has strict RLS, upsert already marked it sponsored
-      console.warn("Could not set active status via direct update:", campaignUpdateError.message);
+      return NextResponse.json({
+        data: {
+          success: true,
+          mode: "dev_bypass",
+          packageDays: body.packageDays,
+          priceTry: selectedOption.priceTry,
+          expiresAt: result.expiresAt,
+          message: `${selectedOption.label} başarıyla aktifleştirildi! (${selectedOption.priceTry} TL · dev)`,
+        },
+      });
     }
 
-    // Also update their latest social posts to have sponsored badge active
-    await supabase
-      .from("social_posts")
-      .update({
-        sponsored_status: "active",
-        sponsored_expires_at: expiresAt,
-        sponsored_disclosure: "Sponsorlu",
-        sponsored_label: `${profile.full_name} • Sponsorlu`,
-      })
-      .eq("author_id", profile.id);
+    if (shouldBlockSelfServeSponsorCheckout(organizationType)) {
+      const salesUrl = buildSponsorSalesWhatsAppUrl({
+        organizationType,
+        organizationName: profile.full_name,
+        packageLabel: selectedOption.label,
+        packageDays: body.packageDays,
+      });
+      return NextResponse.json(
+        {
+          error:
+            "Kurumsal sponsorluk satış ekibi üzerinden açılır. WhatsApp ile teklif alın.",
+          code: "ORG_SPONSOR_SALES_ASSISTED",
+          data: { salesUrl },
+        },
+        { status: 403 },
+      );
+    }
+
+    if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+      return NextResponse.json(
+        {
+          error:
+            "Ödeme henüz yapılandırılmadı. Üretimde Stripe gerekir; yerel test için ZIGO_BILLING_DEV_BYPASS=true kullanın.",
+        },
+        { status: 402 },
+      );
+    }
+
+    const session = await createSponsorBoostCheckoutSession({
+      userId: profile.id,
+      email: profile.email,
+      fullName: profile.full_name,
+      packageDays: body.packageDays,
+      priceTry: selectedOption.priceTry,
+      label: selectedOption.label,
+      headline: body.headline,
+    });
 
     return NextResponse.json({
       data: {
         success: true,
+        mode: "stripe",
+        checkoutUrl: session.url,
         packageDays: body.packageDays,
         priceTry: selectedOption.priceTry,
-        expiresAt,
-        message: `${selectedOption.label} başarıyla aktifleştirildi! (${selectedOption.priceTry} TL)`,
+        message: "Ödeme sayfasına yönlendiriliyorsunuz…",
       },
     });
   } catch (error) {
-    const message = error instanceof z.ZodError
-      ? "Lütfen 7 veya 30 günlük geçerli bir paket seçin."
-      : error instanceof Error
-        ? error.message
-        : "Sponsorluk işlemi tamamlanamadı.";
+    const message =
+      error instanceof z.ZodError
+        ? "Lütfen 7 veya 30 günlük geçerli bir paket seçin."
+        : error instanceof Error
+          ? error.message
+          : "Sponsorluk işlemi tamamlanamadı.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

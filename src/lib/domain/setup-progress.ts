@@ -3,7 +3,6 @@ import { hasSiteUrlConfigured, isProductionSiteUrl } from "@/lib/domain/deploy-c
 import type { LiveGatesReport } from "@/lib/domain/live-gates";
 import { mapLiveGatesToChecklist } from "@/lib/domain/live-gates";
 import type { Messages } from "@/lib/i18n/server";
-import { hasServiceRoleEnv } from "@/lib/supabase/admin";
 
 export type SetupProgressStep = {
   id: string;
@@ -12,13 +11,17 @@ export type SetupProgressStep = {
   ready: boolean;
   href?: string;
   command?: string;
+  ctaLabel?: string;
 };
 
 type SetupProgressLabels = Messages["ops"]["setupProgress"];
 
+/**
+ * Launch path is intentionally 4 gates only.
+ * Service role, Android, full test matrix, and the 71-file migration list live under Advanced.
+ */
 export function buildSetupProgress(report: LiveGatesReport, sp: SetupProgressLabels): SetupProgressStep[] {
   const live = mapLiveGatesToChecklist(report);
-  const gate = (id: string) => report.gates.find((item) => item.id === id)?.ready ?? false;
 
   return [
     {
@@ -26,55 +29,38 @@ export function buildSetupProgress(report: LiveGatesReport, sp: SetupProgressLab
       title: sp.envTitle,
       detail: sp.envDetail,
       ready: hasSupabaseEnv(),
-      command: "npm run env:check",
-      href: "/setup",
-    },
-    {
-      id: "site_url",
-      title: sp.siteUrlTitle,
-      detail: isProductionSiteUrl() ? sp.siteUrlProd : sp.siteUrlLocal,
-      ready: hasSiteUrlConfigured(),
-      href: "/setup",
+      command: "npm run setup:env",
+      href: "/setup#env",
+      ctaLabel: sp.ctaEnv,
     },
     {
       id: "migrations",
       title: sp.migrationsTitle,
       detail: sp.migrationsDetail,
       ready: Boolean(live.coreSchema && live.rlsPolicies),
+      command: "npm run migrations:bundle",
       href: "/setup#migrations",
-    },
-    {
-      id: "service_role",
-      title: sp.serviceRoleTitle,
-      detail: sp.serviceRoleDetail,
-      ready: hasServiceRoleEnv(),
-      command: "npm run test:live",
+      ctaLabel: sp.ctaMigrations,
     },
     {
       id: "auth_redirect",
       title: sp.authRedirectTitle,
-      detail: sp.authRedirectDetail,
-      ready: gate("auth_callback") && hasSiteUrlConfigured(),
+      detail: hasSiteUrlConfigured()
+        ? isProductionSiteUrl()
+          ? sp.authRedirectDetail
+          : `${sp.authRedirectDetail} ${sp.siteUrlLocal}`
+        : sp.authRedirectDetail,
+      ready: Boolean(live.authCallback && live.siteUrl),
       href: "/setup#hosted-deploy",
+      ctaLabel: sp.ctaAuth,
     },
     {
-      id: "mvp_content",
-      title: sp.mvpTitle,
-      detail: sp.mvpDetail,
-      ready: live.mvpSeed ?? false,
-      href: "/create",
-    },
-    {
-      id: "verify",
-      title: sp.verifyTitle,
-      detail: sp.verifyDetail,
-      ready:
-        hasSupabaseEnv() &&
-        hasSiteUrlConfigured() &&
-        report.readyCount === report.totalCount &&
-        report.totalCount > 0,
-      command: "npm run setup:verify",
-      href: "/readiness",
+      id: "try_now",
+      title: sp.tryNowTitle,
+      detail: sp.tryNowDetail,
+      ready: Boolean(live.registrationMatrix || live.mvpSeed),
+      href: "/auth",
+      ctaLabel: sp.ctaTryNow,
     },
   ];
 }
@@ -86,4 +72,8 @@ export function summarizeSetupProgress(steps: SetupProgressStep[]) {
     totalCount: steps.length,
     percent: steps.length > 0 ? Math.round((readyCount / steps.length) * 100) : 0,
   };
+}
+
+export function getNextSetupStep(steps: SetupProgressStep[]) {
+  return steps.find((step) => !step.ready) ?? null;
 }

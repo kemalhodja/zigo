@@ -5,9 +5,10 @@ import {
   type EducationOrganizationType,
   isEducationOrganizationType,
 } from "@/lib/domain/education-organization";
-import { updateGradeLevelSchema } from "@/lib/domain/grade-level";
+import { updateGradeLevelSchema, isAutoInterestGradeLevel, resolveAutoInterestAreaIds } from "@/lib/domain/grade-level";
 import { assertModeratedOptionalText } from "@/lib/domain/moderation";
 import {
+  REGISTRATION_ACCOUNT_KIND_VALUES,
   type RegistrationAccountKind,
   resolveRegistrationAccount,
 } from "@/lib/domain/registration-account";
@@ -18,20 +19,20 @@ export type UserProfile = Database["public"]["Tables"]["users"]["Row"];
 export const createProfileSchema = z.object({
   fullName: z.string().trim().min(2).max(100),
   role: z.enum(["teacher", "parent", "student"]).optional(),
-  accountKind: z.enum(["student", "parent", "teacher", "institution", "platform"]).optional(),
+  accountKind: z.enum(REGISTRATION_ACCOUNT_KIND_VALUES).optional(),
 }).refine((value) => Boolean(value.role || value.accountKind), {
-  message: "Choose student, parent, teacher, institution or platform.",
+  message: "Choose student, parent, teacher, kurs, okul, institution, platform or publisher.",
 });
 
 export const setInterestsSchema = z.object({
-  areaIds: z.array(z.coerce.number().int().positive()).min(1).max(20),
+  areaIds: z.array(z.coerce.number().int().positive()).min(1).max(50),
   organizationType: z
-    .enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu"])
+    .enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu", "yayinevi"])
     .optional(),
 });
 
 export const setOrganizationTypeSchema = z.object({
-  organizationType: z.enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu"]),
+  organizationType: z.enum(["kurs", "okul", "egitim_kurumu", "egitim_platformu", "yayinevi"]),
 });
 
 export const updateUserProfileSchema = z
@@ -189,6 +190,26 @@ export async function updateUserProfile(
   return data;
 }
 
+export const updateAccountKindSchema = z.object({
+  accountKind: z.enum(REGISTRATION_ACCOUNT_KIND_VALUES),
+});
+
+export async function updateOwnAccountKind(
+  supabase: SupabaseClient<Database>,
+  input: z.infer<typeof updateAccountKindSchema>,
+) {
+  const parsed = updateAccountKindSchema.parse(input);
+  const account = resolveRegistrationAccount(parsed.accountKind);
+
+  const { data, error } = await supabase.rpc("update_own_account_kind", {
+    next_role: account.role,
+    next_organization_type: account.organizationType,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function submitStudentDocument(
   supabase: SupabaseClient<Database>,
   input: z.infer<typeof submitStudentDocumentSchema>,
@@ -215,4 +236,22 @@ export async function updateUserGradeLevel(
 
   if (error) throw error;
   return data;
+}
+
+export async function applyAutoInterestsForGrade(
+  supabase: SupabaseClient<Database>,
+  gradeLevel: string,
+) {
+  if (!isAutoInterestGradeLevel(gradeLevel)) {
+    return { autoAssigned: false as const, areaIds: [] as number[] };
+  }
+
+  const areas = await getEducationAreas(supabase);
+  const areaIds = resolveAutoInterestAreaIds(areas, gradeLevel);
+  if (areaIds.length === 0) {
+    return { autoAssigned: false as const, areaIds: [] as number[] };
+  }
+
+  await setUserInterests(supabase, { areaIds });
+  return { autoAssigned: true as const, areaIds };
 }

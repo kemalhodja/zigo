@@ -4,6 +4,7 @@ import { isLocalDemoSupabase } from "@/lib/domain/demo-env";
 import { getSiteUrl } from "@/lib/domain/deploy-config";
 import { ensureStripeCampaignCoupon } from "@/lib/domain/stripe-campaign-provision";
 import {
+  calculateDynamicPrice,
   getSubscriptionCampaignStripeCouponId,
   isSubscriptionCampaignActive,
 } from "@/lib/domain/subscription-campaign";
@@ -28,6 +29,7 @@ export async function createZigoPlusCheckoutSession(
   userId: string,
   email: string,
   planId = "student-monthly",
+  userCreatedAt?: string | Date | null,
 ) {
   const secret = process.env.STRIPE_SECRET_KEY?.trim();
   const priceId = resolveStripePriceId(planId);
@@ -36,7 +38,7 @@ export async function createZigoPlusCheckoutSession(
   }
 
   const siteUrl = getSiteUrl();
-  const cancelPath = findPlanGroup(planId)?.cancelPath ?? "/student?billing=cancelled";
+  const cancelPath = findPlanGroup(planId, userCreatedAt)?.cancelPath ?? "/student?billing=cancelled";
   const body = new URLSearchParams({
     mode: "subscription",
     success_url: `${siteUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -48,18 +50,21 @@ export async function createZigoPlusCheckoutSession(
     "metadata[plan_id]": planId,
   });
 
+  const dynamicPricing = calculateDynamicPrice(100, userCreatedAt);
+  const discountPercent = dynamicPricing.discountPercent;
+
   if (isSubscriptionCampaignActive()) {
     try {
       await ensureStripeCampaignCoupon(secret);
     } catch {
       // Checkout can still proceed; coupon may already exist in Stripe.
     }
-    const couponId = getSubscriptionCampaignStripeCouponId();
+    const couponId = getSubscriptionCampaignStripeCouponId(discountPercent);
     if (couponId) {
       body.set("discounts[0][coupon]", couponId);
-      body.set("metadata[campaign_id]", "yaz-2026-75");
+      body.set("metadata[campaign_id]", dynamicPricing.isWithinTrialWindow ? "zigo-trial-50" : "zigo-standard-15");
     }
-    body.set("subscription_data[trial_period_days]", "30"); // Added Trial Logic
+    body.set("subscription_data[trial_period_days]", "30"); // 30-Day Trial Logic
   }
 
   const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {

@@ -97,7 +97,7 @@ export default async function FocusPage() {
         </p>
       </section>
 
-      <FocusPomodoroCard areas={areas} isPremium={subscription.isPremium} />
+      <FocusPomodoroCard areas={areas} isPremium={subscription.isPremium} userId={profile.id} />
       <FocusAnalyticsCard analytics={analytics} messages={m} />
       <StudyWithMeRail moments={moments} />
       <StudyPlanCard analytics={analytics} areas={areas} isPremium={subscription.isPremium} />

@@ -22,16 +22,14 @@ export async function POST(request: Request) {
     }
 
     const subscription = await getUserSubscription(supabase, profile.id);
-    assertTeacherCreatorPlus(subscription, profile.role, "mini quiz oluşturma");
+    assertTeacherCreatorPlus(subscription, profile.role, "quiz oluşturma");
 
     const body = await request.json();
     const quiz = await createTeacherQuiz(supabase, {
       teacherId: profile.id,
       areaId: body.areaId,
       title: body.title,
-      questionText: body.questionText,
-      options: body.options,
-      correctOption: body.correctOption,
+      questions: body.questions,
       pointsReward: body.pointsReward,
     });
 
@@ -39,7 +37,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Choose a valid area, title, question, 2-6 options, correct option and reward points." },
+        {
+          error:
+            "10 soruluk quiz için başlık, alan ve her soruda 4 benzersiz seçenek ile doğru cevap gerekli.",
+        },
         { status: 400 },
       );
     }

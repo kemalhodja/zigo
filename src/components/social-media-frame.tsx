@@ -39,7 +39,7 @@ export function SocialMediaFrame({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           alt={alt}
-          className="absolute inset-0 size-full object-cover"
+          className="absolute inset-0 size-full object-contain"
           decoding="async"
           fetchPriority={priority ? "high" : "low"}
           loading={priority ? "eager" : "lazy"} // loading="lazy"
@@ -49,7 +49,7 @@ export function SocialMediaFrame({
       {isVideo ? (
         <video
           aria-label={alt || "Video preview"}
-          className="absolute inset-0 size-full object-cover"
+          className="absolute inset-0 size-full object-contain"
           controls={controls}
           loop={!controls}
           muted={!controls}

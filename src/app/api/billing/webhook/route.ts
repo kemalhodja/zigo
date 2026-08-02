@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 import { activateZigoPlus, deactivateZigoPlus } from "@/lib/domain/billing";
 import {
+  activateSponsorBoost,
+} from "@/lib/domain/sponsor-activation";
+import type { SponsorPackageDuration } from "@/lib/domain/sponsored-pricing";
+import {
   resolveUserIdByStripeCustomer,
   resolveUserIdByStripeSubscription,
   verifyStripeWebhookSignature,
@@ -18,9 +22,16 @@ type StripeEvent = {
       subscription?: string;
       current_period_end?: number;
       status?: string;
+      metadata?: Record<string, string | undefined>;
+      mode?: string;
     };
   };
 };
+
+function parseSponsorPackageDays(value: string | undefined): SponsorPackageDuration | null {
+  if (value === "7" || value === "30") return Number(value) as SponsorPackageDuration;
+  return null;
+}
 
 export async function POST(request: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
@@ -51,19 +62,37 @@ export async function POST(request: Request) {
 
   try {
     if (event.type === "checkout.session.completed" && object?.client_reference_id) {
-      await activateZigoPlus(admin, object.client_reference_id, {
-        stripeCustomerId: typeof object.customer === "string" ? object.customer : undefined,
-        stripeSubscriptionId: typeof object.subscription === "string" ? object.subscription : undefined,
-        currentPeriodEnd: object.current_period_end
-          ? new Date(object.current_period_end * 1000).toISOString()
-          : undefined,
-      });
+      const kind = object.metadata?.kind;
+
+      if (kind === "sponsor_boost") {
+        const packageDays = parseSponsorPackageDays(object.metadata?.package_days);
+        if (!packageDays) {
+          throw new Error("Sponsor checkout missing package_days.");
+        }
+        await activateSponsorBoost(admin, {
+          userId: object.client_reference_id,
+          fullName: object.metadata?.full_name?.trim() || "Sponsorlu Profil",
+          packageDays,
+          headline: object.metadata?.headline,
+        });
+      } else {
+        await activateZigoPlus(admin, object.client_reference_id, {
+          stripeCustomerId: typeof object.customer === "string" ? object.customer : undefined,
+          stripeSubscriptionId:
+            typeof object.subscription === "string" ? object.subscription : undefined,
+          currentPeriodEnd: object.current_period_end
+            ? new Date(object.current_period_end * 1000).toISOString()
+            : undefined,
+        });
+      }
     }
 
     if (
       event.type === "customer.subscription.deleted" ||
       (event.type === "customer.subscription.updated" &&
-        (object?.status === "canceled" || object?.status === "unpaid" || object?.status === "incomplete_expired"))
+        (object?.status === "canceled" ||
+          object?.status === "unpaid" ||
+          object?.status === "incomplete_expired"))
     ) {
       const subscriptionId = object?.id;
       const customerId = typeof object?.customer === "string" ? object.customer : undefined;

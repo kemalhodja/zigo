@@ -252,7 +252,7 @@ export function isOrganizationRegistrationType(
 }
 
 export function shouldHideOrganizationPlanPrices(
-  organizationType: EducationOrganizationType | null | undefined,
+  _organizationType: EducationOrganizationType | null | undefined,
 ) {
-  return isOrganizationRegistrationType(organizationType);
+  return false;
 }

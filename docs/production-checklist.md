@@ -1,12 +1,12 @@
 # Zigo production launch checklist
 
-Use this after local gates pass (`npm run test:repo`) and migrations **001–066** are applied on Supabase Cloud.
+Use this after local gates pass (`npm run test:repo`) and migrations **001–086** are applied on Supabase Cloud.
 
 ## 1. Supabase Cloud
 
 - [ ] Create production project (EU region recommended for KVKK)
 - [ ] Run `supabase/zigo-full-migrations.sql` in SQL Editor (or `npm run migrations:cloud`)
-- [ ] Confirm `/api/setup/health` reports `migrationTarget: 66`
+- [ ] Confirm `/api/setup/health` reports `migrationTarget: 86`
 - [ ] Enable email auth + set site URL and redirect URLs (`/auth/callback`, `/auth/verify-email`)
 - [ ] Create `social-media` storage bucket (public read if using direct URLs)
 - [ ] Set `SUPABASE_SERVICE_ROLE_KEY` only on server (Vercel env, never client)

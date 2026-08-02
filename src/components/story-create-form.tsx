@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/types";
 
@@ -21,7 +22,7 @@ type StoryArea = {
 };
 
 export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
-  const { storyUi: s, common: c } = useMessages();
+  const { storyUi: s, socialCreate: sc, common: c } = useMessages();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<Status>("idle");
@@ -39,11 +40,11 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       const draft = JSON.parse(rawDraft) as { areaId?: string; caption?: string };
       setSelectedAreaId(draft.areaId ?? areas[0]?.id.toString() ?? "");
       setCaption(draft.caption ?? "");
-      setMessage("Story draft restored. Media files are not stored in draft.");
+      setMessage(sc.draftRestored);
     } catch {
       window.localStorage.removeItem(draftKey);
     }
-  }, []);
+  }, [areas, sc.draftRestored]);
 
   useEffect(() => {
     try {
@@ -66,7 +67,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
 
     if (!allowedMediaTypes.has(file.type)) {
       setStatus("error");
-      setMessage("Use JPG, PNG, WEBP, GIF, MP4 or WEBM media.");
+      setMessage(sc.mediaTypeError);
       setPreview(null);
       setSelectedFile(null);
       return;
@@ -74,7 +75,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
 
     if (file.size > maxFileSizeBytes) {
       setStatus("error");
-      setMessage("Story media must be 100 MB or smaller.");
+      setMessage(sc.mediaSizeError);
       setPreview(null);
       setSelectedFile(null);
       return;
@@ -82,7 +83,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
 
     setSelectedFile(file);
     setStatus("idle");
-    setMessage("Sparks expire after 24 hours.");
+    setMessage(s.expiresNote);
     setPreview({
       url: URL.createObjectURL(file),
       type: file.type.startsWith("video/") ? "video" : "image",
@@ -94,7 +95,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
 
     setStatus("saving");
     setStep("uploading");
-    setMessage("Creating story...");
+    setMessage(s.creating);
 
     let mediaUrl = "";
     let uploadedObjectPath = "";
@@ -111,7 +112,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       } catch {
         setStatus("error");
         setStep("idle");
-        setMessage("Upload connection failed. Try again.");
+        setMessage(sc.uploadFailed);
         return;
       }
 
@@ -119,7 +120,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
         const payload = (await uploadResponse.json().catch(() => null)) as { error?: string } | null;
         setStatus("error");
         setStep("idle");
-        setMessage(payload?.error ?? "Story media upload failed.");
+        setMessage(payload?.error ?? sc.uploadError);
         return;
       }
 
@@ -144,7 +145,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       await cleanupUploadedMedia(uploadedObjectPath);
       setStatus("error");
       setStep("idle");
-      setMessage("Story connection failed. Try again.");
+      setMessage(sc.publishFailed);
       return;
     }
 
@@ -153,13 +154,13 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       await cleanupUploadedMedia(uploadedObjectPath);
       setStatus("error");
       setStep("idle");
-      setMessage(payload?.error ?? "Story could not be created.");
+      setMessage(payload?.error ?? s.createFailed);
       return;
     }
 
     setStatus("saved");
     setStep("done");
-    setMessage("Story created.");
+    setMessage(s.created);
     window.localStorage.removeItem(draftKey);
     setCaption("");
     setSelectedAreaId(areas[0]?.id.toString() ?? "");
@@ -252,7 +253,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
           <option value="">{s.chooseArea}</option>
           {areas.map((area) => (
             <option key={area.id} value={area.id}>
-              {area.area_name}
+              {displayEducationAreaName(area.area_name)}
             </option>
           ))}
         </select>

@@ -10,6 +10,8 @@ type ModerationQueueItemProps = {
   kind: string;
   sourceTitle?: string;
   status: string;
+  ageLabel?: string;
+  slaBreached?: boolean;
 };
 
 export function ModerationQueueItem({
@@ -18,6 +20,8 @@ export function ModerationQueueItem({
   kind,
   sourceTitle,
   status,
+  ageLabel,
+  slaBreached = false,
 }: ModerationQueueItemProps) {
   const { actions: a, moderationPage: mp } = useMessages();
   const [currentStatus, setCurrentStatus] = useState(status);
@@ -69,23 +73,33 @@ export function ModerationQueueItem({
   }
 
   return (
-    <article className="py-4">
+    <article className={`py-4 ${slaBreached ? "rounded-lg bg-amber-50/70 px-2 -mx-2" : ""}`}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">{kind}</p>
           {sourceTitle ? <p className="mt-1 text-xs font-bold text-slate-500">{sourceTitle}</p> : null}
         </div>
-        <span className={`rounded-lg px-3 py-1 text-xs font-black ${statusClass}`}>
-          {currentStatus}
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {slaBreached ? (
+            <span className="rounded-lg bg-amber-200 px-2.5 py-1 text-[0.65rem] font-black text-amber-900">
+              {mp.slaBreachBadge}
+            </span>
+          ) : null}
+          {ageLabel ? (
+            <span className="rounded-lg bg-white px-2.5 py-1 text-[0.65rem] font-black text-slate-600">
+              {mp.slaAgeLabel.replace("{age}", ageLabel)}
+            </span>
+          ) : null}
+          <span className={`rounded-lg px-3 py-1 text-xs font-black ${statusClass}`}>{currentStatus}</span>
+        </div>
       </div>
       <p className="mt-2 text-sm leading-6 text-slate-700">{content}</p>
       {currentStatus === "pending" ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
-            className="tap-scale zigo-cta tap-scale rounded-lg px-3 py-2 text-xs font-black text-white disabled:opacity-60"
+            className="tap-scale zigo-cta rounded-lg px-3 py-2 text-xs font-black text-white disabled:opacity-60"
             disabled={isSaving}
-            onClick={() => moderate("approved")}
+            onClick={() => void moderate("approved")}
             type="button"
           >
             {isSaving ? a.working : a.approve}
@@ -93,7 +107,7 @@ export function ModerationQueueItem({
           <button
             className="tap-scale rounded-lg bg-rose-50 px-3 py-2 text-xs font-black text-rose-600 disabled:opacity-60"
             disabled={isSaving}
-            onClick={() => moderate("rejected")}
+            onClick={() => void moderate("rejected")}
             type="button"
           >
             {isSaving ? a.working : a.reject}

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { attachBankTransferReceipt, getBankTransferRequestById } from "@/lib/domain/bank-transfer";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
@@ -19,6 +20,9 @@ const receiptSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const messages = await getServerMessages();
+  const h = messages.billingUi.havale;
+
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
@@ -33,23 +37,23 @@ export async function POST(request: Request) {
     });
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Dekont dosyası gerekli." }, { status: 400 });
+      return NextResponse.json({ error: h.apiReceiptRequired }, { status: 400 });
     }
 
     if (!ALLOWED_TYPES.has(file.type)) {
-      return NextResponse.json({ error: "Desteklenmeyen dosya türü." }, { status: 400 });
+      return NextResponse.json({ error: h.apiUnsupportedType }, { status: 400 });
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return NextResponse.json({ error: "Dekont en fazla 10 MB olabilir." }, { status: 400 });
+      return NextResponse.json({ error: h.apiFileTooLarge }, { status: 400 });
     }
 
     const transferRequest = await getBankTransferRequestById(supabase, parsed.requestId);
     if (transferRequest.user_id !== profile.id) {
-      return NextResponse.json({ error: "Bu havale talebine erişiminiz yok." }, { status: 403 });
+      return NextResponse.json({ error: h.apiNoAccess }, { status: 403 });
     }
     if (transferRequest.status !== "pending") {
-      return NextResponse.json({ error: "Bu talep artık bekleyen durumda değil." }, { status: 400 });
+      return NextResponse.json({ error: h.apiNotPending }, { status: 400 });
     }
 
     const extension = EXTENSION_BY_TYPE.get(file.type) ?? "bin";
@@ -69,9 +73,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ data: updated });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Geçersiz dekont yükleme isteği." }, { status: 400 });
+      return NextResponse.json({ error: h.apiInvalidReceipt }, { status: 400 });
     }
-    const message = error instanceof Error ? error.message : "Dekont yüklenemedi.";
+    const message = error instanceof Error ? error.message : h.receiptFailed;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

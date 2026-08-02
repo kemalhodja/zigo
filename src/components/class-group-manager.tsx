@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
+import { useMessages } from "@/lib/i18n/locale-context";
 
 type ClassGroupManagerProps = {
   isSubscriber: boolean;
@@ -46,6 +47,8 @@ export function ClassGroupManager({
   initialClassroom = "",
   userRole = "student",
 }: ClassGroupManagerProps) {
+  const b = useMessages().billingUi;
+  const plansHref = userRole === "parent" ? "/parent#zigo-plus-plans" : "/student#zigo-plus-plans";
   const [city, setCity] = useState(initialCity ?? "");
   const [district, setDistrict] = useState(initialDistrict ?? "");
   const [schoolName, setSchoolName] = useState(initialSchoolName ?? "");
@@ -185,7 +188,7 @@ export function ClassGroupManager({
               : "bg-slate-100 text-slate-600"
           }`}
         >
-          {isSubscriber ? "👑 Abone Özel Özellik" : "🔒 Abone Olmayan Modu"}
+          {isSubscriber ? b.lockBadgeSubscriber : b.lockBadgeLocked}
         </span>
       </div>
 
@@ -196,22 +199,19 @@ export function ClassGroupManager({
               👑
             </div>
             <div className="space-y-2 text-sm">
-              <h3 className="font-black text-night">Sınıf Gruplarına Katılın & Zigo Puan Toplayın!</h3>
-              <p className="font-semibold leading-relaxed text-slate-600">
-                Abone olan öğrenciler ve veliler <strong className="text-night">İl, İlçe, Okul ve Sınıf</strong> bilgilerini
-                girerek sınıf gruplarını oluşturur ve isteğe bağlı gruba katılarak yardımlaşır.
-              </p>
+              <h3 className="font-black text-night">{b.classGroupLockTitle}</h3>
+              <p className="font-semibold leading-relaxed text-slate-600">{b.classGroupLockDesc}</p>
               <ul className="list-inside list-disc space-y-1 text-xs font-bold text-slate-700">
-                <li>✨ Reklam izlemeden kesintisiz ve güvenli içerik akışı</li>
-                <li>💎 Reels izleyerek, mini quiz çözerek ve düellolarla <strong className="text-crystal">Zigo Puanı kazanıp mağazadan alışveriş yapma</strong></li>
-                <li>🏫 Okul ve sınıf grubunuza isteğe bağlı girme ve çıkma özgürlüğü</li>
+                <li>{b.classGroupLockBenefitAds}</li>
+                <li>{b.classGroupLockBenefitPoints}</li>
+                <li>{b.classGroupLockBenefitGroups}</li>
               </ul>
               <div className="pt-2">
                 <Link
-                  href="/student#zigo-plus"
+                  href={plansHref}
                   className="tap-scale inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-night via-crystal to-berry px-5 py-3 text-sm font-black text-white shadow-lg shadow-crystal/25 transition-all hover:opacity-95"
                 >
-                  Abone Ol & Özelliklerin Kilidini Aç →
+                  {b.classGroupLockCta}
                 </Link>
               </div>
             </div>

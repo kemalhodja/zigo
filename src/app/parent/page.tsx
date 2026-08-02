@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FamilyEntitlementCard } from "@/components/family-entitlement-card";
 import { ChildActivityTimeline } from "@/components/child-activity-timeline";
 import { ClassGroupManager } from "@/components/class-group-manager";
 import { GradeLevelForm } from "@/components/grade-level-form";
@@ -7,6 +8,8 @@ import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
 import { ParentChildrenFocusCard } from "@/components/parent-children-focus-card";
 import { ParentFocusOverviewCard } from "@/components/parent-focus-overview-card";
+import { ParentWeeklyReviewCard } from "@/components/parent-weekly-review-card";
+import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { SocialAvatar, SocialPill } from "@/components/social-primitives";
 import { StateCard } from "@/components/state-card";
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
@@ -14,7 +17,9 @@ import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
+import { buildFamilyEntitlementSummary } from "@/lib/domain/family-entitlement";
 import { getParentChildrenFocusStats, getParentFocusOverview } from "@/lib/domain/focus-analytics";
+import { buildParentWeeklyReview } from "@/lib/domain/habit-loop";
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";
@@ -34,6 +39,29 @@ export default async function ParentPage() {
     await getParentData();
   const d = messages.dashboard;
   const pp = messages.parentPage;
+  const familyEntitlement = buildFamilyEntitlementSummary({
+    isParentPremium: isPremium || allowDevActivate,
+    childCount: children.length,
+  });
+  const childrenUnlocked = familyEntitlement.childrenCovered || mode === "preview";
+  const weeklyReview = buildParentWeeklyReview({
+    children,
+    activityByChildId: childActivityById,
+  });
+  const weeklyCopy = {
+    eyebrow: d.parent.weeklyEyebrow,
+    title: d.parent.weeklyTitle,
+    desc: d.parent.weeklyDesc,
+    emptyTitle: d.parent.weeklyEmptyTitle,
+    emptyDesc: d.parent.weeklyEmptyDesc,
+    metricActions: d.parent.weeklyActions,
+    metricPoints: d.parent.weeklyPoints,
+    metricMicro: d.parent.weeklyMicro,
+    metricQuiz: d.parent.weeklyQuiz,
+    metricDuel: d.parent.weeklyDuel,
+    openFamily: d.parent.weeklyOpenFamily,
+    openLearn: d.parent.weeklyOpenLearn,
+  };
 
   return (
     <div className="space-y-4 pb-3">
@@ -47,11 +75,36 @@ export default async function ParentPage() {
       </section>
 
       {mode === "parent" || mode === "preview" ? (
-        <ParentFocusOverviewCard overview={focusOverview} showPreview={mode === "preview" || (!isPremium && !allowDevActivate)} />
+        <>
+          <ParentWeeklyReviewCard copy={weeklyCopy} summary={weeklyReview} />
+          <InviteCodesPanel canCreate={mode === "parent"} />
+        </>
+      ) : null}
+
+      {mode === "parent" && children.length > 0 ? (
+        <FamilyEntitlementCard
+          childCount={familyEntitlement.childCount}
+          childrenCovered={familyEntitlement.childrenCovered}
+          copy={{
+            eyebrow: pp.familyCoverEyebrow,
+            titleActive: pp.familyCoverTitleActive,
+            titleLocked: pp.familyCoverTitleLocked,
+            descActive: pp.familyCoverDescActive,
+            descLocked: pp.familyCoverDescLocked,
+            coveredLabel: pp.familyCoverCount,
+            openPlans: pp.familyCoverOpenPlans,
+            openFamily: pp.family,
+          }}
+          coveredChildCount={familyEntitlement.coveredChildCount}
+        />
       ) : null}
 
       {mode === "parent" || mode === "preview" ? (
-        <ParentChildrenFocusCard showPreview={mode === "preview" || (!isPremium && !allowDevActivate)} stats={childrenFocusStats} />
+        <ParentFocusOverviewCard overview={focusOverview} showPreview={mode === "preview" || !childrenUnlocked} />
+      ) : null}
+
+      {mode === "parent" || mode === "preview" ? (
+        <ParentChildrenFocusCard showPreview={mode === "preview" || !childrenUnlocked} stats={childrenFocusStats} />
       ) : null}
 
       {mode === "parent" ? (
@@ -62,7 +115,7 @@ export default async function ParentPage() {
             title={pp.gradeTitle}
           />
           <ClassGroupManager
-            isSubscriber={isPremium}
+            isSubscriber={familyEntitlement.childrenCovered}
             initialCity={city}
             initialDistrict={district}
             initialSchoolName={schoolName}
@@ -89,7 +142,7 @@ export default async function ParentPage() {
             title={d.parent.parentRequired}
             description={d.parent.parentRequiredDesc}
             action={
-              <Link className="font-black text-crystal" href="/profiles">
+              <Link className="font-black text-crystal" href="/auth">
                 {d.switchMode}
               </Link>
             }
@@ -124,7 +177,7 @@ export default async function ParentPage() {
                 <div className="mt-4">
                   <ChildActivityTimeline
                     activity={childActivityById[child.id] ?? []}
-                    isLocked={!isPremium && !allowDevActivate}
+                    isLocked={!childrenUnlocked}
                     labels={{
                       title: d.parent.activityTitle,
                       empty: d.parent.activityEmpty,
@@ -159,7 +212,7 @@ export default async function ParentPage() {
       {mode === "parent" && profileId ? (
         <LessonRequestsPanel
           childrenOptions={children.map((child) => ({ id: child.id, name: child.name }))}
-          isSubscriber={isPremium || allowDevActivate}
+          isSubscriber={familyEntitlement.childrenCovered}
           role="parent"
           viewerId={profileId}
         />

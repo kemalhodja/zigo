@@ -1,4 +1,7 @@
+"use client";
+
 import type { ChildActivityItem } from "@/lib/domain/parent-dashboard";
+import { useLocale, useMessages } from "@/lib/i18n/locale-context";
 
 type ChildActivityTimelineProps = {
   activity: ChildActivityItem[];
@@ -13,24 +16,25 @@ type ChildActivityTimelineProps = {
 };
 
 export function ChildActivityTimeline({ activity, isLocked = false, labels }: ChildActivityTimelineProps) {
+  const b = useMessages().billingUi;
+  const locale = useLocale();
+
   return (
     <section className="rounded-lg border border-slate-100 bg-slate-50/80 p-4" data-testid="child-activity-timeline">
       <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{labels.title}</p>
 
       {isLocked ? (
-        <div className="mt-3 relative rounded-xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-purple-50 p-5 text-center shadow-sm">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gradient-to-r from-crystal to-berry text-white text-xl shadow-md">
+        <div className="relative mt-3 rounded-xl border border-pink-200 bg-gradient-to-br from-pink-50 via-white to-purple-50 p-5 text-center shadow-sm">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-gradient-to-r from-crystal to-berry text-xl text-white shadow-md">
             👑
           </div>
-          <h3 className="mt-2.5 text-sm font-black text-night">Öğrenci Detaylı Takip Modu Abone Özeldir</h3>
-          <p className="mt-1 text-xs leading-5 text-slate-600 max-w-sm mx-auto">
-            Çocuğunuzun günlük çalışma adımlarını, izlediği içerikleri, quiz skorlarını ve zaman çizelgesini canlı takip etmek için Veli Aboneliği (Zigo Plus) gereklidir.
-          </p>
+          <h3 className="mt-2.5 text-sm font-black text-night">{b.activityLockTitle}</h3>
+          <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-slate-600">{b.activityLockDesc}</p>
           <a
             href="#zigo-plus-plans"
             className="mt-3 inline-block rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-2 text-xs font-black text-white shadow transition hover:opacity-95"
           >
-            Veli Aboneliği Al & Detayları Aç
+            {b.activityLockCta}
           </a>
         </div>
       ) : activity.length === 0 ? (
@@ -62,7 +66,7 @@ export function ChildActivityTimeline({ activity, isLocked = false, labels }: Ch
                       {labels.points.replace("{points}", String(item.points_awarded))}
                     </p>
                     <p className="mt-0.5 text-[0.65rem] font-bold text-slate-400">
-                      {new Date(item.created_at).toLocaleDateString("tr-TR", {
+                      {new Date(item.created_at).toLocaleDateString(locale === "en" ? "en-GB" : "tr-TR", {
                         day: "numeric",
                         month: "short",
                         hour: "2-digit",

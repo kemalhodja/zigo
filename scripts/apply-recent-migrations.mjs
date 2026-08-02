@@ -8,14 +8,26 @@ import pg from "pg";
 
 const root = process.cwd();
 const MIGRATIONS = [
-  "061_user_blocks.sql",
-  "062_registration_trial.sql",
   "063_lesson_requests_professional_comms.sql",
   "064_lesson_requests_hardening.sql",
   "065_lesson_request_notifications.sql",
   "066_ad_state_and_premium_system.sql",
   "067_subscriber_class_groups_and_ad_gates.sql",
   "068_post_audience_and_parent_dm_gates.sql",
+  "069_google_play_billing.sql",
+  "070_avatars_storage.sql",
+  "071_class_groups_section.sql",
+  "072_generic_user_verification.sql",
+  "073_admin_user_controls.sql",
+  "074_auto_verify_teachers.sql",
+  "075_yayinevi_organization_type.sql",
+  "076_exam_track_education_areas.sql",
+  "077_moderation_report_resolved_at.sql",
+  "078_admin_billing_grants.sql",
+  "079_update_own_account_kind.sql",
+  "080_expand_general_interest_expertise.sql",
+  "081_student_area_leaderboard.sql",
+  "082_invite_codes.sql",
 ];
 
 function loadEnvFile(name) {

@@ -40,7 +40,7 @@ Health runtime probe expects `migrationTarget: 66` on `/api/setup/health`.
 
 ## Pillar map (acceptance)
 
-- Migrations **001–066**
+- Migrations **001–077**
 - KVKK export/delete, cookie consent, video CDN, push scaffold, Stripe webhook
 - Full role journeys + staging preflight
 - `test:repo` (+20) and `test:live` (+15) when env available

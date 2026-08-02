@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { findPlanById, formatTryPrice } from "@/lib/domain/subscription-plans";
+import { useMessages } from "@/lib/i18n/locale-context";
 import type { BankTransferRequestStatus } from "@/lib/supabase/database.types";
 
 type AdminBankTransferRow = {
@@ -22,9 +23,13 @@ type AdminBankTransferRow = {
 };
 
 export function AdminBankTransferActions({ request }: { request: AdminBankTransferRow }) {
+  const {
+    ops: { admin: a, common: c },
+  } = useMessages();
   const router = useRouter();
   const [loading, setLoading] = useState<BankTransferRequestStatus | null>(null);
   const [message, setMessage] = useState("");
+  const [adminNote, setAdminNote] = useState("");
   const plan = findPlanById(request.plan_id);
 
   async function review(status: BankTransferRequestStatus) {
@@ -36,19 +41,24 @@ export function AdminBankTransferActions({ request }: { request: AdminBankTransf
       const response = await fetch("/api/admin/bank-transfer/review", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: request.id, status }),
+        body: JSON.stringify({
+          requestId: request.id,
+          status,
+          adminNote: adminNote.trim() || undefined,
+        }),
       });
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
       if (!response.ok) {
-        setMessage(payload?.error ?? "İşlem kaydedilemedi.");
+        setMessage(payload?.error ?? a.bankTransferReviewFailed);
         setLoading(null);
         return;
       }
 
-      setMessage(status === "approved" ? "Onaylandı — Zigo Plus açıldı." : "Talep güncellendi.");
+      setMessage(status === "approved" ? a.bankTransferApproved : a.bankTransferRejected);
+      setAdminNote("");
       router.refresh();
     } catch {
-      setMessage("Bağlantı hatası.");
+      setMessage(c.connectionFailed);
     } finally {
       setLoading(null);
     }
@@ -59,17 +69,28 @@ export function AdminBankTransferActions({ request }: { request: AdminBankTransf
       const response = await fetch(`/api/admin/bank-transfer/receipt-url?requestId=${request.id}`);
       const payload = (await response.json().catch(() => null)) as { data?: { url?: string }; error?: string } | null;
       if (!response.ok || !payload?.data?.url) {
-        setMessage(payload?.error ?? "Dekont açılamadı.");
+        setMessage(payload?.error ?? a.bankTransferReceiptFailed);
         return;
       }
       window.open(payload.data.url, "_blank", "noopener,noreferrer");
     } catch {
-      setMessage("Bağlantı hatası.");
+      setMessage(c.connectionFailed);
     }
   }
 
   return (
     <div className="space-y-2">
+      <label className="block">
+        <span className="sr-only">{a.bankTransferNoteLabel}</span>
+        <input
+          className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[0.7rem] font-semibold text-night placeholder:text-slate-400"
+          maxLength={500}
+          onChange={(event) => setAdminNote(event.target.value)}
+          placeholder={a.bankTransferNotePlaceholder}
+          type="text"
+          value={adminNote}
+        />
+      </label>
       <div className="flex flex-wrap gap-2">
         <button
           className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-black text-white disabled:opacity-60"
@@ -77,7 +98,7 @@ export function AdminBankTransferActions({ request }: { request: AdminBankTransf
           onClick={() => void review("approved")}
           type="button"
         >
-          {loading === "approved" ? "..." : "Onayla"}
+          {loading === "approved" ? "..." : a.bankTransferApprove}
         </button>
         <button
           className="rounded-lg bg-rose-600 px-3 py-2 text-xs font-black text-white disabled:opacity-60"
@@ -85,7 +106,7 @@ export function AdminBankTransferActions({ request }: { request: AdminBankTransf
           onClick={() => void review("rejected")}
           type="button"
         >
-          {loading === "rejected" ? "..." : "Reddet"}
+          {loading === "rejected" ? "..." : a.bankTransferReject}
         </button>
         {request.receipt_storage_path ? (
           <button
@@ -93,7 +114,7 @@ export function AdminBankTransferActions({ request }: { request: AdminBankTransf
             onClick={() => void openReceipt()}
             type="button"
           >
-            Dekontu aç
+            {a.bankTransferOpenReceipt}
           </button>
         ) : null}
       </div>

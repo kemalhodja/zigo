@@ -58,9 +58,6 @@ async function AuthPremiumHero() {
         <span className="zigo-stat-chip rounded-xl bg-pink-50 text-berry">{a.pickRole}</span>
         <span className="zigo-stat-chip rounded-xl bg-cyan-50 text-aqua">{a.startFeed}</span>
       </div>
-      <div className="px-4 pb-3">
-        <p className="text-xs font-semibold leading-5 text-slate-600">Registration path: Choose role → Setup → Start feed</p>
-      </div>
     </section>
   );
 }

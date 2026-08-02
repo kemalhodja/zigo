@@ -18,7 +18,9 @@ export function resolveSponsorCategory(profile?: {
   if (!profile) return "teacher";
   const orgType = profile.organization_type;
   if (orgType === "egitim_platformu") return "platform";
-  if (orgType === "kurs" || orgType === "okul" || orgType === "egitim_kurumu") return "institution";
+  if (orgType === "kurs" || orgType === "okul" || orgType === "egitim_kurumu" || orgType === "yayinevi") {
+    return "institution";
+  }
   return "teacher";
 }
 

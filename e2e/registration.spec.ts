@@ -7,28 +7,59 @@ test.describe("registration account kinds", () => {
     await dismissAppIntro(page);
   });
 
-  test("sign-up shows five account types", async ({ page }) => {
+  test("sign-up shows four primary account groups", async ({ page }) => {
     await page.goto("/auth");
     await page.getByTestId("auth-mode-sign-up").click();
 
-    await expect(page.getByTestId("registration-account-student")).toBeVisible();
-    await expect(page.getByTestId("registration-account-parent")).toBeVisible();
-    await expect(page.getByTestId("registration-account-teacher")).toBeVisible();
-    await expect(page.getByTestId("registration-account-institution")).toBeVisible();
-    await expect(page.getByTestId("registration-account-platform")).toBeVisible();
+    await expect(page.getByTestId("registration-primary-student")).toBeVisible();
+    await expect(page.getByTestId("registration-primary-parent")).toBeVisible();
+    await expect(page.getByTestId("registration-primary-teacher")).toBeVisible();
+    await expect(page.getByTestId("registration-primary-education")).toBeVisible();
+
+    await expect(page.getByTestId("registration-account-kurs")).toHaveCount(0);
   });
 
-  test("institution selection highlights kurumsal account copy", async ({ page }) => {
+  test("education reveals kurs okul platform publisher", async ({ page }) => {
     await page.goto("/auth");
     await page.getByTestId("auth-mode-sign-up").click();
-    await page.getByTestId("registration-account-institution").click();
-    await expect(page.getByText(/Kurs, okul ve kurumsal/i)).toBeVisible();
+    await page.getByTestId("registration-primary-education").click();
+
+    await expect(page.getByTestId("registration-account-kurs")).toBeVisible();
+    await expect(page.getByTestId("registration-account-okul")).toBeVisible();
+    await expect(page.getByTestId("registration-account-platform")).toBeVisible();
+    await expect(page.getByTestId("registration-account-publisher")).toBeVisible();
+    await expect(page.getByTestId("registration-account-institution")).toHaveCount(0);
+  });
+
+  test("kurs selection highlights kurs account copy", async ({ page }) => {
+    await page.goto("/auth");
+    await page.getByTestId("auth-mode-sign-up").click();
+    await page.getByTestId("registration-primary-education").click();
+    await page.getByTestId("registration-account-kurs").click();
+    await expect(page.getByText(/Kurs merkezi veya özel ders|course center|private lesson/i)).toBeVisible();
+  });
+
+  test("okul selection highlights okul account copy", async ({ page }) => {
+    await page.goto("/auth");
+    await page.getByTestId("auth-mode-sign-up").click();
+    await page.getByTestId("registration-primary-education").click();
+    await page.getByTestId("registration-account-okul").click();
+    await expect(page.getByText(/Okul ve kampüs|school and campus/i)).toBeVisible();
   });
 
   test("platform selection highlights platform account copy", async ({ page }) => {
     await page.goto("/auth");
     await page.getByTestId("auth-mode-sign-up").click();
+    await page.getByTestId("registration-primary-education").click();
     await page.getByTestId("registration-account-platform").click();
-    await expect(page.getByText(/Dijital platform/i)).toBeVisible();
+    await expect(page.getByText(/Dijital eğitim platformu|digital education platform|content network/i)).toBeVisible();
+  });
+
+  test("publisher selection highlights yayınevi account copy", async ({ page }) => {
+    await page.goto("/auth");
+    await page.getByTestId("auth-mode-sign-up").click();
+    await page.getByTestId("registration-primary-education").click();
+    await page.getByTestId("registration-account-publisher").click();
+    await expect(page.getByText(/Eğitim yayınları|education publishing|publisher/i)).toBeVisible();
   });
 });

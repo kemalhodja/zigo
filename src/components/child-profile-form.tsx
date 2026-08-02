@@ -85,7 +85,7 @@ export function ChildProfileForm() {
             {m.interest.selectArea}
           </option>
           <option value="Okul Öncesi">Okul Öncesi</option>
-          {GRADE_LEVEL_OPTIONS.filter((option) => option !== "Veli").map((option) => (
+          {GRADE_LEVEL_OPTIONS.map((option) => (
             <option key={option} value={option}>
               {option}
             </option>

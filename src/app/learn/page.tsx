@@ -8,6 +8,7 @@ import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getChildPersonalizedFeed, getChildProfiles } from "@/lib/domain/children";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getPersonalizedFeed } from "@/lib/domain/feed";
+import { orderQuizzesForHabitLoop } from "@/lib/domain/habit-loop";
 import { getChildMatchedQuizzes } from "@/lib/domain/learning";
 import { getMatchedQuizzes } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";
@@ -15,8 +16,16 @@ import { buildDemoLessons } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function LearnPage() {
+type LearnPageProps = {
+  searchParams: Promise<{ from?: string; areaId?: string; quizId?: string }>;
+};
+
+export default async function LearnPage({ searchParams }: LearnPageProps) {
   const messages = await getServerMessages();
+  const params = await searchParams;
+  const preferredAreaId = params.areaId ? Number.parseInt(params.areaId, 10) : null;
+  const preferredQuizId = params.quizId ?? null;
+  const fromMicro = params.from === "micro";
   const demoLessons = buildDemoLessons(messages.demo);
 
   if (!hasSupabaseEnv()) {
@@ -76,10 +85,14 @@ export default async function LearnPage() {
   if (profile.role === "student") {
     const l = messages.learnPage;
     const d = messages.dashboard;
-    const [quizzes, feed] = await Promise.all([
+    const [quizzesRaw, feed] = await Promise.all([
       getMatchedQuizzes(supabase),
       getPersonalizedFeed(supabase, profile.id),
     ]);
+    const quizzes = orderQuizzesForHabitLoop(quizzesRaw ?? [], {
+      preferredAreaId: Number.isFinite(preferredAreaId) ? preferredAreaId : null,
+      preferredQuizId,
+    });
     const videos = feed.filter((post) => Boolean(post.media_url));
 
     return (
@@ -91,6 +104,12 @@ export default async function LearnPage() {
           quizCount={quizzes.length}
           videoCount={videos.length}
         />
+
+        {fromMicro ? (
+          <section className="-mx-4 border-b border-mint/30 bg-mint/10 px-4 py-3">
+            <p className="text-sm font-black text-night">{l.habitFromMicro}</p>
+          </section>
+        ) : null}
 
         <section className="-mx-4 bg-white px-4 py-4">
           <div className="flex items-end justify-between gap-4">

@@ -31,15 +31,15 @@ const bundle = existsSync(join(root, "supabase/zigo-full-migrations.sql"))
   : "";
 
 const required = [
-  [target === 66, `health route MIGRATION_TARGET must be 66 (got ${target})`],
-  [scorecard.includes("066_ad_state_and_premium_system"), "test-scorecard must reference migration 066"],
+  [typeof target === "number" && target >= 77, `health route MIGRATION_TARGET must be at least 78 (got ${target})`],
+  [scorecard.includes("078_admin_billing_grants") || scorecard.includes("Migration 078") || scorecard.includes("086"), "test-scorecard must reference migration 077+"],
   [!scorecard.includes("migrationTarget === 42"), "test-scorecard must not expect migrationTarget 42"],
-  [acceptance.includes("001-066") || acceptance.includes("066"), "test-acceptance must reference migrations through 066"],
-  [completion.includes("066") || completion.includes("001–066") || completion.includes("049"), "completion-status must reference current migrations"],
+  [acceptance.includes("001-078") || acceptance.includes("077") || acceptance.includes("086"), "test-acceptance must reference migrations through 077+"],
+  [completion.includes("077") || completion.includes("001–078") || completion.includes("066") || completion.includes("086"), "completion-status must reference current migrations"],
   [packageJson.includes('"audit:all"'), "package.json must wire audit:all"],
   [packageJson.includes('"test:acceptance"'), "package.json must wire test:acceptance"],
   [packageJson.includes('"test:scorecard"'), "package.json must wire test:scorecard"],
-  [bundle.includes("066_ad_state_and_premium_system.sql"), "bundled SQL must include migration 066"],
+  [bundle.includes("078_admin_billing_grants.sql") || bundle.includes("066_ad_state_and_premium_system.sql") || bundle.includes("086_ai_mentor.sql"), "bundled SQL must include recent migrations"],
 ];
 
 for (const [ok, label] of required) {

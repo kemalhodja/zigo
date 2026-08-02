@@ -35,10 +35,11 @@ test.describe("demo auth flows", () => {
     await expect(page.locator("#main-content")).toBeVisible();
   });
 
-  test("student can open profiles switcher after login", async ({ page }) => {
+  test("student /profiles redirects to student hub after login", async ({ page }) => {
     await demoLogin(page, "student");
     await page.goto("/profiles");
-    await expect(page.locator("body")).toContainText(/mode|profile|student|parent|teacher/i);
+    await expect(page).toHaveURL(/\/(student|learn|$)/);
+    await expect(page.locator("body")).toBeVisible();
   });
 
   test("student can open learn hub after login", async ({ page }) => {

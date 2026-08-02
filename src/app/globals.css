@@ -25,6 +25,13 @@
   box-sizing: border-box;
 }
 
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+
 body {
   min-height: 100vh;
   min-height: 100dvh;
@@ -51,6 +58,37 @@ a:not([class*="text-"]):not([class*="zigo-"]) {
   background: linear-gradient(135deg, #7c3aed 0%, #a855f7 52%, #ec4899 100%);
   color: #ffffff !important;
   box-shadow: 0 8px 20px rgb(124 58 237 / 0.18);
+  transition:
+    transform 160ms ease,
+    filter 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.zigo-cta:active,
+.tap-scale.zigo-cta:active {
+  transform: scale(0.97);
+  filter: brightness(1.06) saturate(1.08);
+  box-shadow: 0 6px 16px rgb(124 58 237 / 0.28);
+}
+
+.role-theme-parent .zigo-cta {
+  background: linear-gradient(135deg, #0e7490 0%, #0891b2 55%, #06b6d4 100%);
+  box-shadow: 0 8px 20px rgb(8 145 178 / 0.2);
+}
+
+.role-theme-parent .zigo-cta:active,
+.role-theme-parent .tap-scale.zigo-cta:active {
+  box-shadow: 0 6px 16px rgb(8 145 178 / 0.3);
+}
+
+.role-theme-teacher .zigo-cta {
+  background: linear-gradient(135deg, #101828 0%, #1e293b 55%, #334155 100%);
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.22);
+}
+
+.role-theme-teacher .zigo-cta:active,
+.role-theme-teacher .tap-scale.zigo-cta:active {
+  box-shadow: 0 6px 16px rgb(15 23 42 / 0.32);
 }
 
 .zigo-media-overlay {
@@ -98,6 +136,8 @@ a,
   transition:
     transform 160ms ease,
     opacity 160ms ease,
+    filter 160ms ease,
+    box-shadow 160ms ease,
     background-color 160ms ease;
 }
 
@@ -206,7 +246,58 @@ a,
   background: #ffffff;
   box-shadow:
     0 1px 0 rgb(15 23 42 / 0.03),
-    0 12px 32px rgb(124 58 237 / 0.04);
+    0 10px 28px rgb(15 23 42 / 0.035);
+}
+
+.zigo-feed-card-enter {
+  animation: feed-card-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.zigo-empty-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 18% 20%, rgb(124 58 237 / 0.16), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgb(236 72 153 / 0.12), transparent 46%),
+    linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgb(226 232 240 / 0.9);
+  box-shadow: 0 18px 40px rgb(15 23 42 / 0.06);
+}
+
+.zigo-empty-hero::before {
+  content: "";
+  position: absolute;
+  inset: auto -20% -35% auto;
+  width: 12rem;
+  height: 12rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgb(124 58 237 / 0.18), transparent 68%);
+  animation: float-soft 5.2s ease-in-out infinite;
+  z-index: -1;
+}
+
+.role-theme-parent .zigo-empty-hero {
+  background:
+    radial-gradient(circle at 18% 20%, rgb(8 145 178 / 0.14), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgb(6 182 212 / 0.1), transparent 46%),
+    linear-gradient(160deg, #ffffff 0%, #f0fdfa 100%);
+}
+
+.role-theme-parent .zigo-empty-hero::before {
+  background: radial-gradient(circle, rgb(8 145 178 / 0.16), transparent 68%);
+}
+
+.role-theme-teacher .zigo-empty-hero {
+  background:
+    radial-gradient(circle at 18% 20%, rgb(16 24 40 / 0.1), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgb(51 65 85 / 0.08), transparent 46%),
+    linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.role-theme-teacher .zigo-empty-hero::before {
+  background: radial-gradient(circle, rgb(16 24 40 / 0.12), transparent 68%);
 }
 
 .zigo-input {
@@ -248,6 +339,17 @@ a,
     radial-gradient(circle at top right, rgb(236 72 153 / 0.22), transparent 42%),
     linear-gradient(135deg, #101828 0%, #4c1d95 48%, #7c3aed 100%);
   color: #ffffff;
+  position: relative;
+}
+
+.feed-pulse-hero::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgb(255 255 255 / 0.07) 48%, transparent 72%);
+  transform: translateX(-120%);
+  animation: pulse-sheen 7s ease-in-out infinite;
 }
 
 .feed-pulse-hero p,
@@ -389,7 +491,8 @@ a,
   box-shadow:
     0 0 0 3px rgb(255 255 255),
     0 0 0 5px rgb(236 72 153 / 0.72),
-    0 0 0 7px rgb(124 58 237 / 0.28);
+    0 0 0 7px rgb(124 58 237 / 0.28),
+    0 8px 18px rgb(124 58 237 / 0.18);
 }
 
 .story-ring {
@@ -401,6 +504,26 @@ a,
 
 .story-live-pulse {
   animation: story-live-pulse 2.6s ease-in-out infinite;
+}
+
+.story-ring-spin {
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+}
+
+.story-ring-spin::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: conic-gradient(from 90deg, #ec4899, #7c3aed, #06b6d4, #f59e0b, #ec4899);
+  animation: story-ring-spin 3.8s linear infinite;
+  z-index: -1;
+}
+
+.story-ring-spin-mission::before {
+  background: conic-gradient(from 90deg, #f59e0b, #f97316, #eab308, #fb923c, #f59e0b);
 }
 
 .premium-action-dock {
@@ -489,6 +612,35 @@ a,
   }
 }
 
+@keyframes story-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-sheen {
+  0%,
+  68% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes feed-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes premium-dock-sheen {
   0%,
   70% {
@@ -501,15 +653,25 @@ a,
 }
 
 .role-theme-student .feed-pulse-hero {
-  box-shadow: inset 0 -3px 0 rgb(124 58 237 / 0.35);
+  background:
+    radial-gradient(circle at 88% 12%, rgb(251 113 133 / 0.28), transparent 38%),
+    radial-gradient(circle at 12% 80%, rgb(124 58 237 / 0.35), transparent 42%),
+    linear-gradient(135deg, #1e1035 0%, #5b21b6 46%, #db2777 100%);
+  box-shadow: inset 0 -3px 0 rgb(236 72 153 / 0.35);
 }
 
 .role-theme-parent .feed-pulse-hero {
-  box-shadow: inset 0 -3px 0 rgb(6 182 212 / 0.28);
+  background:
+    radial-gradient(circle at 90% 10%, rgb(34 211 238 / 0.22), transparent 40%),
+    linear-gradient(135deg, #0f172a 0%, #0e7490 52%, #0891b2 100%);
+  box-shadow: inset 0 -3px 0 rgb(6 182 212 / 0.35);
 }
 
 .role-theme-teacher .feed-pulse-hero {
-  box-shadow: inset 0 -3px 0 rgb(16 24 40 / 0.2);
+  background:
+    radial-gradient(circle at 85% 15%, rgb(148 163 184 / 0.18), transparent 36%),
+    linear-gradient(135deg, #020617 0%, #111827 48%, #1e293b 100%);
+  box-shadow: inset 0 -3px 0 rgb(248 250 252 / 0.12);
 }
 
 .role-theme-student .role-accent-chip {
@@ -555,22 +717,23 @@ a,
 
 body.role-theme-student {
   background:
-    radial-gradient(circle at top, rgb(124 58 237 / 0.08), transparent 28rem),
-    radial-gradient(circle at bottom right, rgb(236 72 153 / 0.06), transparent 24rem),
+    radial-gradient(circle at top, rgb(124 58 237 / 0.1), transparent 26rem),
+    radial-gradient(circle at bottom right, rgb(236 72 153 / 0.08), transparent 22rem),
     #faf5ff;
 }
 
 body.role-theme-parent {
   background:
-    radial-gradient(circle at top, rgb(8 145 178 / 0.07), transparent 28rem),
-    radial-gradient(circle at bottom right, rgb(14 116 144 / 0.05), transparent 24rem),
+    radial-gradient(circle at top, rgb(8 145 178 / 0.09), transparent 26rem),
+    radial-gradient(circle at bottom right, rgb(14 116 144 / 0.06), transparent 22rem),
     #f8fafc;
 }
 
 body.role-theme-teacher {
   background:
-    radial-gradient(circle at top, rgb(16 24 40 / 0.05), transparent 28rem),
-    #f8fafc;
+    radial-gradient(circle at top, rgb(16 24 40 / 0.07), transparent 26rem),
+    radial-gradient(circle at bottom right, rgb(51 65 85 / 0.05), transparent 22rem),
+    #f1f5f9;
 }
 
 .role-theme-student .zigo-shell-bg {
@@ -578,11 +741,53 @@ body.role-theme-teacher {
 }
 
 .role-theme-parent .zigo-shell-bg {
-  background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #ecfeff 100%);
 }
 
 .role-theme-teacher .zigo-shell-bg {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.role-theme-student .zigo-feed-card {
+  box-shadow:
+    0 1px 0 rgb(15 23 42 / 0.03),
+    0 14px 32px rgb(124 58 237 / 0.06);
+}
+
+.role-theme-parent .zigo-feed-card {
+  box-shadow:
+    0 1px 0 rgb(15 23 42 / 0.03),
+    0 14px 32px rgb(8 145 178 / 0.05);
+}
+
+.role-theme-teacher .zigo-feed-card {
+  box-shadow:
+    0 1px 0 rgb(15 23 42 / 0.04),
+    0 14px 32px rgb(15 23 42 / 0.05);
+}
+
+.role-theme-student .zigo-quick-action-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+}
+
+.role-theme-parent .zigo-quick-action-primary {
+  background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%);
+  box-shadow: 0 10px 24px rgb(8 145 178 / 0.22);
+}
+
+.role-theme-teacher .zigo-quick-action-primary {
+  background: linear-gradient(135deg, #101828 0%, #334155 100%);
+  box-shadow: 0 10px 24px rgb(15 23 42 / 0.22);
+}
+
+.role-theme-parent .zigo-quick-action-secondary {
+  background: #ecfeff;
+  color: #0e7490 !important;
+}
+
+.role-theme-teacher .zigo-quick-action-secondary {
+  background: #f1f5f9;
+  color: #101828 !important;
 }
 
 .role-theme-student .zigo-nav-label {
@@ -630,6 +835,11 @@ body.role-theme-teacher {
 .role-theme-student .role-welcome-dismiss {
   background: #7c3aed;
   color: #ffffff;
+  box-shadow: 0 8px 18px rgb(124 58 237 / 0.22);
+}
+
+.role-theme-student .role-welcome-dismiss:active {
+  filter: brightness(1.08);
 }
 
 .role-theme-parent .role-welcome-strip {
@@ -640,6 +850,11 @@ body.role-theme-teacher {
 .role-theme-parent .role-welcome-dismiss {
   background: #0891b2;
   color: #ffffff;
+  box-shadow: 0 8px 18px rgb(8 145 178 / 0.22);
+}
+
+.role-theme-parent .role-welcome-dismiss:active {
+  filter: brightness(1.08);
 }
 
 .role-theme-teacher .role-welcome-strip {
@@ -650,6 +865,11 @@ body.role-theme-teacher {
 .role-theme-teacher .role-welcome-dismiss {
   background: #101828;
   color: #ffffff;
+  box-shadow: 0 8px 18px rgb(15 23 42 / 0.2);
+}
+
+.role-theme-teacher .role-welcome-dismiss:active {
+  filter: brightness(1.12);
 }
 
 .role-theme-student .zigo-compact-pill {
@@ -697,14 +917,21 @@ body.role-theme-teacher {
   .float-soft,
   .skeleton-shimmer::after,
   .story-live-pulse,
+  .story-ring-spin::before,
+  .feed-pulse-hero::after,
+  .zigo-feed-card-enter,
+  .zigo-empty-hero::before,
   .premium-action-dock::before {
     animation: none;
   }
 
   .tap-scale,
-  .tap-scale:active {
+  .tap-scale:active,
+  .zigo-cta:active,
+  .tap-scale.zigo-cta:active {
     transition: none;
     transform: none;
+    filter: none;
   }
 }
 

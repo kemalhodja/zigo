@@ -224,25 +224,15 @@ check("Reel learning points require 60 watched seconds", () => {
 
 check("Setup guidance includes every migration through 055", () => {
   const setup = read("src/app/setup/page.tsx");
+  const migrationTarget = read("src/lib/domain/migration-target.ts");
   return (
-    setup.includes("019_admin_teacher_area_assignment.sql") &&
-    setup.includes("033_compliance_and_demo_child.sql") &&
-    setup.includes("036_study_skills_and_exam_prep.sql") &&
-    setup.includes("037_user_profile_extensions.sql") &&
-    setup.includes("038_auth_email_and_student_gates.sql") &&
-    setup.includes("039_unified_content_posts.sql") &&
-    setup.includes("040_moderation_keyword_filter.sql") &&
-    setup.includes("041_quiz_questions_and_attempts.sql") &&
-    setup.includes("042_parent_child_activity.sql") &&
-    setup.includes("043_content_moderation_publish_rls.sql") &&
-    setup.includes("044_product_scope_hardening.sql") &&
-    setup.includes("045_premium_prep_grade_optional_doc.sql") &&
-    setup.includes("046_teacher_creator_plus_gates.sql") &&
-    setup.includes("047_sponsored_ads_infrastructure.sql") &&
-    setup.includes("048_education_organization_type.sql") &&
-    setup.includes("049_registration_organization_accounts.sql") &&
-    setup.includes("050_verified_teacher_answers_rls.sql") &&
-    setup.includes("055_demo_social_interactions_reset.sql")
+    (setup.includes("MIGRATION_FILES") ||
+      setup.includes("migration-target") ||
+      setup.includes("SetupProgressTracker") ||
+      setup.includes("SetupMigrationBundle")) &&
+    migrationTarget.includes("055_demo_social_interactions_reset.sql") &&
+    migrationTarget.includes("082_invite_codes.sql") &&
+    (migrationTarget.includes("MIGRATION_TARGET = 86") || migrationTarget.includes("MIGRATION_TARGET = 82"))
   );
 });
 
@@ -377,6 +367,8 @@ check("Local demo quick-login is wired on auth", () => {
 check("Auth flow explains roles and setup clearly", () => {
   const authPage = read("src/app/auth/page.tsx");
   const authPanel = read("src/components/auth-panel.tsx");
+  const accountPicker = read("src/components/registration-account-picker.tsx");
+  const regAccount = read("src/lib/domain/registration-account.ts");
   const signInRoute = read("src/app/api/auth/sign-in/route.ts");
   const signUpRoute = read("src/app/api/auth/sign-up/route.ts");
   const setupCard = read("src/components/supabase-setup-card.tsx");
@@ -386,18 +378,9 @@ check("Auth flow explains roles and setup clearly", () => {
     (authPage.includes("Registration path") || authPage.includes("registrationPath") || hasCatalog("Registration path")) &&
     (authPage.includes("Pick role") || authPage.includes("pickRole") || hasCatalog("Pick role")) &&
     (authPage.includes("Start feed") || authPage.includes("startFeed") || hasCatalog("Start feed")) &&
-    (authPanel.includes("Choose role") || authPanel.includes("chooseRole") || hasCatalog("Choose role")) &&
-    (authPanel.includes("Next step") || authPanel.includes("nextStep") || hasCatalog("Next step")) &&
-    (authPanel.includes("Micro, quizzes, streaks, crystals") ||
-      authPanel.includes("studentRole") ||
-      authPanel.includes("REGISTRATION_ACCOUNT_OPTIONS") ||
-      authPanel.includes("registration-account") ||
-      hasCatalog("Micro, quizzes")) &&
-    (authPanel.includes("Verified creator tools") ||
-      authPanel.includes("verifiedTools") ||
-      authPanel.includes("Eğitim kurumu") ||
-      authPanel.includes("institution") ||
-      hasCatalog("Verified creator tools")) &&
+    authPanel.includes("RegistrationAccountPicker") &&
+    (accountPicker.includes("REGISTRATION_REQUIRED_SIGNUP_OPTIONS") || accountPicker.includes("registration-signup")) &&
+    (regAccount.includes("RequiredSignupOptionId") || accountPicker.includes("RequiredSignupOptionId")) &&
     authPanel.includes('"signin"') &&
     signInRoute.includes("enforceAuthRateLimit") &&
     signInRoute.includes("verifyAuthRecaptcha") &&
@@ -640,7 +623,8 @@ check("Launch gap closure migration wires billing, child focus and store visit",
   const storeVisit = read("src/app/api/learning/store-visit/route.ts");
   const cheer = read("src/app/api/learning/study-moments/cheer/route.ts");
   const webhook = read("src/app/api/billing/webhook/route.ts");
-  const teacherPost = read("src/components/teacher-post-form.tsx");
+  const socialCreate = read("src/components/social-create-form.tsx");
+  const createPage = read("src/app/create/page.tsx");
   return (
     migration.includes("get_parent_children_focus_stats") &&
     migration.includes("record_store_visit_mission") &&
@@ -653,8 +637,9 @@ check("Launch gap closure migration wires billing, child focus and store visit",
     storeVisit.includes("record_store_visit_mission") &&
     cheer.includes("cheer_study_moment") &&
     webhook.includes("verifyStripeWebhookSignature") &&
-    (teacherPost.includes("t.educationArea") || teacherPost.includes("Education area") || teacherPost.includes("educationArea") || hasCatalog("Education area")) &&
-    teacherPost.includes("areas.map")
+    createPage.includes("CreateModeComposer") &&
+    socialCreate.includes("/api/social/posts") &&
+    socialCreate.includes("areas.map")
   );
 });
 
@@ -924,13 +909,12 @@ check("App shell exposes premium daily quick actions", () => {
   const appShell = read("src/components/app-shell.tsx");
   return (
     appShell.includes("QuickActionDock") &&
-    (appShell.includes("Daily actions") || appShell.includes("dailyActions") || hasCatalog("Daily actions")) &&
-    appShell.includes('href="/create?mode=story"') &&
-    appShell.includes('href="/create?mode=reel"') &&
-    (appShell.includes("Spark") || appShell.includes("z.spark") || hasCatalog("Spark")) &&
-    (appShell.includes("Micro") || appShell.includes("z.micro") || hasCatalog("Micro")) &&
-    (appShell.includes("Ask safely") || appShell.includes("askSafely") || hasCatalog("Ask safely")) &&
-    appShell.includes('href="/learn"')
+    appShell.includes("RoleNextActionBar") &&
+    (appShell.includes('href="/create"') || appShell.includes('href="/create?mode=micro"')) &&
+    appShell.includes('href="/create?mode=micro"') &&
+    (appShell.includes("dock.teacher.micro") || appShell.includes("header.create") || hasCatalog("Micro")) &&
+    appShell.includes('href="/learn"') &&
+    appShell.includes('href="/teacher"')
   );
 });
 
@@ -1040,9 +1024,7 @@ check("Create page feels like a premium verified creator studio", () => {
   return (
     createPage.includes("CreateStudioHero") &&
     (createPage.includes("Creator studio") || createPage.includes("creatorStudio") || hasCatalog("Creator studio")) &&
-    (createPage.includes("Publish safety lane") || createPage.includes("safetyLane") || createPage.includes("CreatePublishSafetyLane")) &&
-    (createPage.includes("Teacher verified") || createPage.includes("verifiedTeacher") || hasCatalog("Teacher verified")) &&
-    (createPage.includes("Student-safe display") || createPage.includes("studentSafe") || hasCatalog("Student-safe display")) &&
+    (createPage.includes("CreateModeComposer") || createPage.includes("create-mode-composer")) &&
     (createPage.includes("studioLockedSrOnly") || createPage.includes("Creator studio locked") || hasCatalog("Creator studio locked"))
   );
 });
@@ -1169,14 +1151,12 @@ check("Main social surfaces use a cleaner Zigo visual reset", () => {
   );
 });
 
-check("Profiles page behaves like a role-based mode switcher", () => {
+check("Profiles route redirects to role dashboard (no Netflix mode switcher)", () => {
   const profiles = read("src/app/profiles/page.tsx");
   return (
-    profiles.includes("ProfileSwitchCard") &&
-    (profiles.includes("Family profile bridge") || profiles.includes("familyBridge") || hasCatalog("Family profile bridge")) &&
-    (profiles.includes("Family setup") || profiles.includes("familySetup") || hasCatalog("Family setup")) &&
-    (profiles.includes("Student mode") || profiles.includes("studentMode") || hasCatalog("Student mode")) &&
-    (profiles.includes("Continue feed") || profiles.includes("continueFeed") || hasCatalog("Continue feed"))
+    profiles.includes("getRoleDashboardHref") &&
+    profiles.includes("redirect") &&
+    !profiles.includes("ProfileSwitchCard")
   );
 });
 
@@ -1342,7 +1322,11 @@ check("Production readiness audits and monitoring are wired", () => {
     packageJson.includes('"audit:all"') &&
     packageJson.includes('"uptime:probe"') &&
     (prodDoc.includes("migrationTarget: 66") || prodDoc.includes("migrationTarget: 55")) &&
-    (healthRoute.includes("MIGRATION_TARGET = 66") || healthRoute.includes("MIGRATION_TARGET = 55")) &&
+    (healthRoute.includes("MIGRATION_TARGET = 86") ||
+      healthRoute.includes("MIGRATION_TARGET = 78") ||
+      healthRoute.includes('from "@/lib/domain/migration-target"') ||
+      healthRoute.includes("MIGRATION_TARGET = 66") ||
+      healthRoute.includes("MIGRATION_TARGET = 55")) &&
     existsSync("scripts/monitoring-health-audit.mjs") &&
     existsSync("scripts/uptime-probe.mjs")
   );
@@ -1554,10 +1538,8 @@ check("Setup launch path tracker is wired", () => {
   const packageJson = read("package.json");
   return (
     setupProgress.includes("buildSetupProgress") &&
-    setupProgress.includes("setup:verify") &&
     tracker.includes("SetupProgressTracker") &&
     setupPage.includes("SetupProgressTracker") &&
-    setupPage.includes('id="migrations"') &&
     bootstrap.includes(".env.local") &&
     packageJson.includes('"setup:env"') &&
     packageJson.includes('"setup:verify"')

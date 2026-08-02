@@ -25,7 +25,7 @@ npm run test:acceptance    # platform score ≥95
 
 ## Migration target
 
-Current bundle: **001–066** (`MIGRATION_TARGET = 66` on `/api/setup/health`).
+Current bundle: **001–086** (`MIGRATION_TARGET = 86` on `/api/setup/health`). Numbering skips 057–062 (never shipped).
 
 Apply on every hosted Supabase project before launch:
 

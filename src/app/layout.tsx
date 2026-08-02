@@ -8,7 +8,7 @@ import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
 import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { getRoleAccentLabel, getRoleThemeClass, getRoleThemeColor, type ViewerRole } from "@/lib/domain/role-theme";
 import { getUnreadNotificationCount } from "@/lib/domain/social";
 import { getTeacherInboxCount } from "@/lib/domain/teacher-inbox";
@@ -82,6 +82,7 @@ export default async function RootLayout({
           <AppShell
           canCreateSocialPost={shellState.canCreateSocialPost}
           isPreviewMode={!hasSupabaseEnv()}
+          isPlatformAdmin={shellState.isPlatformAdmin}
           roleAccentLabel={getRoleAccentLabel(shellState.viewerRole, messages, {
             isPlatformAdmin: shellState.isPlatformAdmin,
           })}
@@ -110,7 +111,7 @@ export default async function RootLayout({
 
 async function getShellState() {
   if (!hasSupabaseEnv()) {
-    return { canCreateSocialPost: true, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
+    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
   }
 
   try {
@@ -123,9 +124,13 @@ async function getShellState() {
     const teacherInboxCount =
       profile.role === "teacher" ? await getTeacherInboxCount(supabase, profile.id) : 0;
     const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
+    const canCreateSocialPost =
+      profile.role === "teacher" &&
+      profile.is_verified &&
+      (await getUserInterestAreaIds(supabase, profile.id)).length > 0;
 
     return {
-      canCreateSocialPost: profile.role === "teacher" && profile.is_verified,
+      canCreateSocialPost,
       unreadCount: await getUnreadNotificationCount(supabase, profile.id),
       teacherInboxCount,
       viewerRole: profile.role as ViewerRole,

@@ -9,22 +9,21 @@ import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
 import { LegalFooter } from "@/components/legal-footer";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
-import { RoleWelcomeStrip } from "@/components/role-welcome-strip";
+import { RoleNextActionBar } from "@/components/role-next-action-bar";
 import {
   getHeaderPrimaryAction,
-  getRoleDashboardHref,
   isParentSupervisionRole,
   isStudentGamificationRole,
   isTeacherStudioRole,
 } from "@/lib/domain/role-navigation";
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
-import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;
   children: ReactNode;
   isPreviewMode?: boolean;
+  isPlatformAdmin?: boolean;
   roleAccentLabel: string;
   teacherInboxCount?: number;
   unreadCount: number;
@@ -35,6 +34,7 @@ export function AppShell({
   canCreateSocialPost,
   children,
   isPreviewMode = false,
+  isPlatformAdmin = false,
   roleAccentLabel,
   teacherInboxCount = 0,
   unreadCount,
@@ -45,18 +45,17 @@ export function AppShell({
   const isStories = pathname.startsWith("/sparks");
   const isReels = pathname.startsWith("/micro");
   const isImmersive = isStories || isReels;
-  const isSocialSurface =
-    pathname === "/" ||
-    pathname.startsWith("/explore") ||
-    pathname.startsWith("/profile") ||
-    pathname.startsWith("/post");
   const hideQuickDock =
     isImmersive ||
-    isSocialSurface ||
+    pathname === "/" ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/create") ||
     pathname.startsWith("/questions") ||
-    pathname.startsWith("/setup");
+    pathname.startsWith("/setup") ||
+    pathname.startsWith("/learn") ||
+    pathname.startsWith("/teacher") ||
+    pathname.startsWith("/parent") ||
+    pathname.startsWith("/student");
 
   return (
     <div
@@ -65,7 +64,7 @@ export function AppShell({
       }`}
     >
       {isPreviewMode ? <PreviewModeBanner /> : null}
-      {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
+      {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} isPlatformAdmin={isPlatformAdmin} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
 
       {!isImmersive ? (
         <a
@@ -78,13 +77,13 @@ export function AppShell({
       ) : null}
 
       <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3"}`} id="main-content">
-        {!isImmersive && !pathname.startsWith("/auth") ? (
-          <RoleWelcomeStrip viewerRole={viewerRole} />
+        {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
+          <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
         ) : null}
         {children}
       </main>
 
-      {hideQuickDock ? null : (
+      {hideQuickDock || isPlatformAdmin ? null : (
         <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
       )}
 
@@ -96,6 +95,7 @@ export function AppShell({
         <div className={isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}>
           <BottomNav
             canCreateSocialPost={canCreateSocialPost}
+            isPlatformAdmin={isPlatformAdmin}
             teacherInboxCount={teacherInboxCount}
             unreadCount={unreadCount}
             variant={isReels ? "overlay" : "default"}
@@ -118,9 +118,7 @@ function QuickActionDock({
   viewerRole: ViewerRole;
 }) {
   const m = useMessages();
-  const d = m.dock;
   const dock = m.dockByRole;
-  const dashboardHref = getRoleDashboardHref(viewerRole);
 
   if (isStudentGamificationRole(viewerRole)) {
     return (
@@ -153,8 +151,8 @@ function QuickActionDock({
           <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/family">
             {dock.parent.family}
           </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
-            {dock.parent.learn}
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/store">
+            {dock.parent.rewards}
           </Link>
           <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/questions">
             {dock.parent.ask}
@@ -170,10 +168,10 @@ function QuickActionDock({
         <div className="flex flex-wrap justify-center gap-1.5">
           {canCreateSocialPost ? (
             <>
-              <Link className="zigo-compact-pill tap-scale rounded-xl bg-night text-white" href="/create?mode=story">
-                {dock.teacher.spark}
+              <Link className="zigo-compact-pill tap-scale rounded-xl bg-night text-white" href="/create">
+                {m.header.create}
               </Link>
-              <Link className="zigo-compact-pill tap-scale rounded-xl bg-night text-white" href="/create?mode=reel">
+              <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/create?mode=micro">
                 {dock.teacher.micro}
               </Link>
             </>
@@ -192,11 +190,11 @@ function QuickActionDock({
   return (
     <section className="premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
       <div className="flex flex-wrap justify-center gap-1.5">
-        <Link aria-label={d.askSafely} className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/questions">
-          {m.nav.ask}
+        <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/auth">
+          {m.common.signIn}
         </Link>
-        <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href={dashboardHref}>
-          {m.nav.profile}
+        <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/explore">
+          {m.nav.search}
         </Link>
       </div>
     </section>
@@ -205,18 +203,20 @@ function QuickActionDock({
 
 function Header({
   canCreateSocialPost,
+  isPlatformAdmin = false,
   roleAccentLabel,
   unreadCount,
   viewerRole,
 }: {
   canCreateSocialPost: boolean;
+  isPlatformAdmin?: boolean;
   roleAccentLabel: string;
   unreadCount: number;
   viewerRole: ViewerRole;
 }) {
   const m = useMessages();
   const h = m.header;
-  const primaryAction = getHeaderPrimaryAction(viewerRole, canCreateSocialPost);
+  const primaryAction = getHeaderPrimaryAction(viewerRole, canCreateSocialPost, { isPlatformAdmin });
 
   return (
     <header className="safe-top zigo-topbar sticky top-0 z-10 px-4 py-2">
@@ -230,13 +230,16 @@ function Header({
           ) : null}
         </Link>
         <div className="flex shrink-0 items-center gap-2">
-          <LocaleSwitcher compact />
           <Link
-            aria-label={primaryAction.isCreate ? h.create : h.askQuestion}
+            aria-label={primaryAction.isAdmin ? "Yönetici Paneli" : primaryAction.isCreate ? h.create : h.askQuestion}
             className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-crystal"
             href={primaryAction.href}
           >
-            {primaryAction.isCreate ? (
+            {primaryAction.isAdmin ? (
+              <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            ) : primaryAction.isCreate ? (
               <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <rect height="18" rx="5" width="18" x="3" y="3" />
                 <path d="M12 8v8" />
@@ -261,12 +264,7 @@ function Header({
               </span>
             ) : null}
           </Link>
-          <Link aria-label={h.switchProfile} className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-aqua" href="/profiles">
-            <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 20a8 8 0 0 1 16 0" />
-            </svg>
-          </Link>
+
         </div>
       </div>
     </header>

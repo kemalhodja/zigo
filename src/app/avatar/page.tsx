@@ -166,7 +166,7 @@ async function AvatarPreview({
           <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3" key={item.label}>
             <div>
               <p className="font-black text-night">{item.label}</p>
-              <p className="text-xs font-bold text-slate-500">{item.price} crystals</p>
+              <p className="text-xs font-bold text-slate-500">{item.price} {a.pointsLabel}</p>
             </div>
             <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-night">{a.equip}</span>
           </div>

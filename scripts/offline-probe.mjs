@@ -23,7 +23,7 @@ function check(name, ok, message = "") {
 function main() {
   const checks = [
     check("Migration 055 demo social reset", existsSync(join(root, "supabase/migrations/055_demo_social_interactions_reset.sql"))),
-    check("Health targets migration target", fileHas("src/app/api/setup/health/route.ts", "MIGRATION_TARGET = 66")),
+    check("Health targets migration target", fileHas("src/lib/domain/migration-target.ts", "MIGRATION_TARGET = 82")),
     check("Answers API requires verified teacher", fileHas("src/app/api/answers/route.ts", "is_verified")),
     check("Canonical social posts API", fileHas("src/app/api/social/posts/route.ts", "createSocialPost")),
     check("Legacy posts route removed", !existsSync(join(root, "src/app/api/posts/route.ts"))),
@@ -54,7 +54,7 @@ function main() {
     check("Unit tests: api routes", existsSync(join(root, "src/app/api/api-routes.test.ts"))),
     check("Vitest coverage config", fileHas("vitest.config.ts", "thresholds")),
     check("Unit tests: learning", existsSync(join(root, "src/lib/domain/learning.test.ts"))),
-    check("Teacher form uses social API", fileHas("src/components/teacher-post-form.tsx", "/api/social/posts")),
+    check("Teacher create uses social API", fileHas("src/components/social-create-form.tsx", "/api/social/posts")),
     check("Family quiz activity panel", fileHas("src/components/child-quiz-activity-panel.tsx", "ChildQuizActivityPanel")),
     check("Family activity timeline", fileHas("src/components/child-activity-timeline.tsx", "ChildActivityTimeline")),
     check("CI runs lint and unit", fileHas(".github/workflows/ci.yml", "test:repo") && fileHas(".github/workflows/ci.yml", "playwright install")),

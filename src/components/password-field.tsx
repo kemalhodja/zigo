@@ -55,20 +55,25 @@ export function PasswordField({
         <button
           aria-label={visible ? hideLabel : showLabel}
           aria-pressed={visible}
-          className="tap-scale absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500"
-          onClick={() => setVisible((current) => !current)}
+          className="tap-scale absolute inset-y-0 right-0 z-10 flex w-12 items-center justify-center text-slate-500 hover:text-slate-700 focus:outline-none cursor-pointer select-none"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setVisible((current) => !current);
+          }}
+          onMouseDown={(e) => e.preventDefault()}
           type="button"
         >
           {visible ? (
-            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M3 3l18 18" />
-              <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-              <path d="M9.9 5.1A9.8 9.8 0 0 1 12 5c5 0 9.3 3.1 11 7.5a11.2 11.2 0 0 1-2.1 3.4" />
-              <path d="M6.2 6.2A11.2 11.2 0 0 0 3 12.5C4.7 16.9 9 20 14 20a9.8 9.8 0 0 0 2.1-.2" />
+            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+              <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+              <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+              <line x1="2" x2="22" y1="2" y2="22" />
             </svg>
           ) : (
-            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3-7-10-7-10 7-10 7Z" />
               <circle cx="12" cy="12" r="3" />
             </svg>
           )}

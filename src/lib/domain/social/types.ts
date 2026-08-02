@@ -7,6 +7,7 @@ import type {
 
 export type SocialFeedPost = Omit<SocialPostRow, "premium_prep_url" | "sponsored_target_url"> & {
   author: Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "avatar_url"> | null;
+  co_author?: Pick<UserRow, "id" | "full_name"> | null;
   area: Pick<EducationAreaRow, "area_name"> | null;
   likes_count: number;
   comments_count: number;

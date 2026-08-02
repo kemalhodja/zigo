@@ -9,6 +9,7 @@ import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
 import { compressVideo, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
+import { INDIVIDUAL_GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/server";
 
@@ -43,13 +44,15 @@ export function SocialCreateForm({
   const [preview, setPreview] = useState<{ url: string; type: "image" | "video" } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState("");
-  const [targetAudience, setTargetAudience] = useState<"all" | "parent_only" | "grade">("all");
-  const [targetGrade, setTargetGrade] = useState("");
+  const [targetAudience, setTargetAudience] = useState<"all" | "parent_only" | "grade">("grade");
+  const [targetGrade, setTargetGrade] = useState("Hepsi (Tüm Sınıflar)");
   const [shareAsReel, setShareAsReel] = useState(forceReel);
   const [premiumPrepLabel, setPremiumPrepLabel] = useState("");
   const [premiumPrepUrl, setPremiumPrepUrl] = useState("");
   const [sponsoredLabel, setSponsoredLabel] = useState("");
   const [sponsoredTargetUrl, setSponsoredTargetUrl] = useState("");
+  const [externalUrl, setExternalUrl] = useState("");
+  const [coAuthorId, setCoAuthorId] = useState("");
 
   useEffect(() => {
     try {
@@ -122,30 +125,32 @@ export function SocialCreateForm({
     }
 
     if (file.type.startsWith("video/")) {
+      const blobUrl = URL.createObjectURL(file);
+      setSelectedFile(file);
+      setMediaTypeValue("video");
+      setStatus("idle");
+      setMessage("");
+      setPreview({
+        url: blobUrl,
+        type: "video",
+      });
+
       const video = document.createElement("video");
       video.preload = "metadata";
       video.onloadedmetadata = () => {
-        window.URL.revokeObjectURL(video.src);
-        if (video.duration > 60) {
+        if (video.duration > 90) {
           setStatus("error");
-          setMessage("Video 60 saniyeden uzun olamaz.");
-          setPreview(null);
+          setMessage("Video süresi 90 saniyeden uzun olamaz.");
           setSelectedFile(null);
-          return;
+          setPreview(null);
         }
-        setSelectedFile(file);
-        setStatus("idle");
-        setMessage("");
-        setPreview({
-          url: URL.createObjectURL(file),
-          type: "video",
-        });
       };
-      video.src = URL.createObjectURL(file);
+      video.src = blobUrl;
       return;
     }
 
     setSelectedFile(file);
+    setMediaTypeValue("image");
     setStatus("idle");
     setMessage("");
     setPreview({
@@ -156,6 +161,13 @@ export function SocialCreateForm({
 
   async function publish(formData: FormData) {
     if (status === "saving") return;
+
+    if (!targetGrade || !targetGrade.trim()) {
+      setStatus("error");
+      setStep("idle");
+      setMessage("Paylaşım yapabilmek için lütfen hedef sınıf seviyesini (ör. Hepsi - Tüm Sınıflar) seçin.");
+      return;
+    }
 
     setStatus("saving");
     setMessage(sc.publishing);
@@ -251,6 +263,8 @@ export function SocialCreateForm({
           targetAudience,
           targetGrade: targetAudience === "grade" ? targetGrade : null,
           isReel: forceReel || formData.get("isReel") === "on",
+          externalUrl: externalUrl.trim() ? externalUrl.trim() : undefined,
+          coAuthorId: coAuthorId.trim() ? coAuthorId.trim() : undefined,
           ...(teacherCreatorPlus && premiumPrepLabel.trim() && premiumPrepUrl.trim()
             ? { premiumPrepLabel: premiumPrepLabel.trim(), premiumPrepUrl: premiumPrepUrl.trim() }
             : {}),
@@ -443,24 +457,31 @@ export function SocialCreateForm({
               </button>
             </div>
             <input type="hidden" name="targetAudience" value={targetAudience} />
-            {targetAudience === "grade" ? (
-              <div className="mt-2.5 border-t border-slate-200 pt-2.5">
-                <label className="mb-1.5 block text-xs font-bold text-slate-600">{sc.audienceGradePick}</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {["Okul Öncesi", "1-4. Sınıf", "5-8. Sınıf", "9-12. Sınıf"].map((lvl) => (
-                    <button
-                      key={lvl}
-                      type="button"
-                      onClick={() => setTargetGrade(lvl)}
-                      className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${targetGrade === lvl ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200"}`}
-                    >
-                      {lvl}
-                    </button>
-                  ))}
-                </div>
-                <input type="hidden" name="targetGrade" value={targetGrade} />
+            <div className="mt-2.5 border-t border-slate-200 pt-2.5">
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-xs font-black uppercase tracking-wider text-indigo-700">
+                  Sınıf Seviyesi Seçimi <span className="text-rose-500 font-bold">* Zorunlu</span>
+                </label>
+                <span className="text-[0.65rem] font-bold text-slate-500">Seçilen: {targetGrade || "Seçilmedi"}</span>
               </div>
-            ) : null}
+              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4">
+                {INDIVIDUAL_GRADE_LEVEL_OPTIONS.map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setTargetGrade(lvl)}
+                    className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${
+                      targetGrade === lvl
+                        ? "bg-indigo-600 text-white ring-2 ring-indigo-400"
+                        : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                    }`}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+              <input type="hidden" name="targetGrade" value={targetGrade} />
+            </div>
           </div>
 
           <input
@@ -512,6 +533,24 @@ export function SocialCreateForm({
               />
             </TeacherCreatorPlusLock>
           </div>
+        <div className="mt-3">
+          <input
+            className="w-full rounded-lg bg-white px-4 py-3.5 text-sm font-semibold text-night shadow-sm outline-none ring-1 ring-inset ring-slate-100 placeholder:text-slate-400 focus:bg-slate-50 focus:ring-2 focus:ring-crystal"
+            onChange={(event) => setExternalUrl(event.target.value)}
+            placeholder="Dış Bağlantı URL (İsteğe bağlı)"
+            type="url"
+            value={externalUrl}
+          />
+        </div>
+        <div className="mt-3">
+          <input
+            className="w-full rounded-lg bg-white px-4 py-3.5 text-sm font-semibold text-night shadow-sm outline-none ring-1 ring-inset ring-slate-100 placeholder:text-slate-400 focus:bg-slate-50 focus:ring-2 focus:ring-crystal"
+            onChange={(event) => setCoAuthorId(event.target.value)}
+            placeholder="Ortak Yazar ID (Öğretmen - İsteğe Bağlı)"
+            type="text"
+            value={coAuthorId}
+          />
+        </div>
         {forceReel ? (
           <input name="isReel" type="hidden" value="on" />
         ) : (

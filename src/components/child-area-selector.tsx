@@ -3,8 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import type { GradeCategoryKey } from "@/lib/domain/education-catalog";
-import { groupEducationAreasByGrade, resolveGradeCategory } from "@/lib/domain/education-catalog";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
+import { isGeneralInterestArea } from "@/lib/domain/general-interest-areas";
+import {
+  EXAM_GRADE_LEVELS,
+  GRADE_LEVEL_OPTIONS,
+  filterAreasForGradeLevel,
+  isAutoInterestGradeLevel,
+  resolveAutoInterestAreaIds,
+} from "@/lib/domain/grade-level";
+import {
+  filterAreasForLaunchScopedSelection,
+  isLaunchBlockedExamTrack,
+} from "@/lib/domain/launch-scope";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -14,57 +25,55 @@ type ChildAreaSelectorProps = {
   childProfileId: string;
   areas: EducationArea[];
   initialSelectedAreaIds: number[];
+  initialGradeLevel?: string | null;
 };
 
 export function ChildAreaSelector({
   childProfileId,
   areas,
   initialSelectedAreaIds,
+  initialGradeLevel = null,
 }: ChildAreaSelectorProps) {
   const m = useMessages();
   const c = m.childAreas;
-  const gradeLabels = m.education.gradeCategories;
   const router = useRouter();
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(initialGradeLevel);
   const [selectedAreaIds, setSelectedAreaIds] = useState(() => new Set(initialSelectedAreaIds));
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [gradeFilter, setGradeFilter] = useState<GradeCategoryKey | "all">(() => {
-    if (initialSelectedAreaIds.length > 0) {
-      const areaMap = new Map(areas.map((a) => [a.id, a]));
-      for (const id of initialSelectedAreaIds) {
-        const found = areaMap.get(id);
-        if (found) {
-          const cat = resolveGradeCategory(found.age_group);
-          if (cat === "primary" || cat === "middle" || cat === "high" || cat === "preschool") {
-            return cat;
-          }
-        }
-      }
-    }
-    return "primary";
-  });
-  const [showOtherGrades, setShowOtherGrades] = useState(false);
 
-  const groupedAreas = useMemo(() => groupEducationAreasByGrade(areas), [areas]);
-  const { matchingGradeAreas, generalHobbies, otherGradeAreas } = useMemo(() => {
-    const matching: EducationArea[] = [];
-    const hobbies: EducationArea[] = [];
-    const others: EducationArea[] = [];
+  const classOptions = GRADE_LEVEL_OPTIONS.filter(
+    (option) => !(EXAM_GRADE_LEVELS as readonly string[]).includes(option),
+  );
+  const examOptions = [...EXAM_GRADE_LEVELS].filter((option) => !isLaunchBlockedExamTrack(option));
+  const autoGrade = isAutoInterestGradeLevel(selectedGrade);
+  const gradeScopedAreas = useMemo(() => {
+    if (!selectedGrade) return [];
+    return filterAreasForLaunchScopedSelection(
+      filterAreasForGradeLevel(areas, selectedGrade),
+      selectedGrade,
+    );
+  }, [areas, selectedGrade]);
+  const generalHobbies = useMemo(
+    () =>
+      filterAreasForLaunchScopedSelection(areas, selectedGrade).filter((area) =>
+        isGeneralInterestArea(area),
+      ),
+    [areas, selectedGrade],
+  );
 
-    for (const area of areas) {
-      const cat = resolveGradeCategory(area.age_group);
-      if (cat === gradeFilter) {
-        matching.push(area);
-      } else if (cat === "generalInterest" || cat === "general") {
-        hobbies.push(area);
-      } else {
-        others.push(area);
-      }
+  function selectGrade(grade: string) {
+    setSelectedGrade(grade);
+    setMessage("");
+    if (isAutoInterestGradeLevel(grade)) {
+      setSelectedAreaIds(new Set(resolveAutoInterestAreaIds(areas, grade)));
+    } else {
+      setSelectedAreaIds(new Set());
     }
-    return { matchingGradeAreas: matching, generalHobbies: hobbies, otherGradeAreas: others };
-  }, [areas, gradeFilter]);
+  }
 
   function toggleArea(areaId: number) {
+    if (autoGrade) return;
     setSelectedAreaIds((current) => {
       const next = new Set(current);
       if (next.has(areaId)) next.delete(areaId);
@@ -73,24 +82,21 @@ export function ChildAreaSelector({
     });
   }
 
-  function cleanAreaName(name: string) {
-    return name
-      .replace(/^(1-4\.\s*Sınıf|5-8\.\s*Sınıf|9-12\.\s*Sınıf|Okul Öncesi|LGS|YKS|TYT|AYT)\s*/i, "")
-      .trim();
-  }
-
   async function saveAreas() {
-    if (isSaving) return;
+    if (!selectedGrade) {
+      setMessage("Önce sınıf seçin.");
+      return;
+    }
     if (selectedAreaIds.size === 0) {
       setMessage(c.selectOne);
       return;
     }
 
     setIsSaving(true);
-    setMessage(c.saving);
+    setMessage("");
 
     try {
-      const response = await fetch("/api/children/interests", {
+      const response = await fetch("/api/children/areas", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -102,113 +108,116 @@ export function ChildAreaSelector({
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
         setMessage(payload?.error ?? c.saveFailed);
+        setIsSaving(false);
         return;
       }
 
       setMessage(c.saved);
+      setIsSaving(false);
       router.refresh();
     } catch {
-      setMessage(m.actions.tryAgain);
-    } finally {
+      setMessage(m.common.connectionFailed);
       setIsSaving(false);
     }
   }
 
   return (
-    <div className="space-y-3 rounded-lg bg-slate-50 p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{c.step}</p>
-          <p className="mt-1 text-sm font-black text-night">{c.title}</p>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{c.desc}</p>
-        </div>
-        <button
-          className="tap-scale rounded-lg bg-crystal px-4 py-2 text-xs font-black text-white disabled:opacity-60"
-          disabled={isSaving}
-          onClick={saveAreas}
-          type="button"
-        >
-          {m.common.save}
-        </button>
-      </div>
-
-      {message ? <p className="text-xs font-bold text-slate-600">{message}</p> : null}
-
-      <section className="space-y-2 rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-white to-pink-50/40 p-3.5 shadow-sm">
-        <div>
-          <p className="text-[0.62rem] font-black uppercase tracking-[0.18em] text-crystal">
-            1. Adım: Çocuğunuzun Kademesini Seçin
-          </p>
-          <p className="mt-0.5 text-xs font-bold text-slate-600">
-            Sınıfa uygun okul derslerini ve branşları görmek için kademe seçin:
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {[
-            { key: "preschool" as const, label: gradeLabels.preschool, icon: "🧸" },
-            { key: "primary" as const, label: gradeLabels.primary, icon: "🎒" },
-            { key: "middle" as const, label: gradeLabels.middle, icon: "📐" },
-            { key: "high" as const, label: gradeLabels.high, icon: "🎓" },
-            { key: "all" as const, label: "Tümü", icon: "🌟" },
-          ].map((item) => {
-            const isActive = gradeFilter === item.key;
+    <div className="space-y-4">
+      <section className="space-y-2.5 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/70 via-white to-pink-50/40 p-4">
+        <p className="text-[0.65rem] font-black uppercase tracking-[0.14em] text-crystal">Sınıf seç</p>
+        <div className="flex flex-wrap gap-1.5">
+          {classOptions.map((option) => {
+            const isActive = selectedGrade === option;
             return (
               <button
-                key={item.key}
+                key={option}
                 type="button"
-                onClick={() => {
-                  setGradeFilter(item.key);
-                  setShowOtherGrades(false);
-                }}
-                className={`tap-scale flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black transition-all ${
-                  isActive
-                    ? "bg-gradient-to-r from-crystal to-berry text-white shadow-sm scale-[1.02]"
-                    : "border border-slate-200 bg-white text-slate-700 hover:border-crystal hover:bg-violet-50/50"
+                onClick={() => selectGrade(option)}
+                className={`tap-scale rounded-lg px-2.5 py-1.5 text-xs font-black ${
+                  isActive ? "bg-night text-white" : "border border-slate-200 bg-white text-slate-700"
                 }`}
               >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
+                {option}
+              </button>
+            );
+          })}
+        </div>
+        <p className="pt-1 text-[0.65rem] font-black uppercase tracking-[0.14em] text-slate-500">
+          Sınav / hazırlık
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {examOptions.map((option) => {
+            const isActive = selectedGrade === option;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => selectGrade(option)}
+                className={`tap-scale rounded-lg px-2.5 py-1.5 text-xs font-black ${
+                  isActive
+                    ? "bg-gradient-to-r from-crystal to-berry text-white"
+                    : "border border-slate-200 bg-white text-slate-700"
+                }`}
+              >
+                {option}
               </button>
             );
           })}
         </div>
       </section>
 
-      <div className="space-y-5">
-        {gradeFilter !== "all" ? (
-          <>
-            <div className="space-y-2">
-              <p className="text-[0.65rem] font-black uppercase tracking-[0.14em] text-indigo-600">
-                📚 Branşlar ve Okul Dersleri ({matchingGradeAreas.length})
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {matchingGradeAreas.length > 0 ? (
-                  matchingGradeAreas.map((area) => {
-                    const isSelected = selectedAreaIds.has(area.id);
-                    return (
-                      <button
-                        className={`tap-scale rounded-xl border px-3 py-1.5 text-xs font-black transition ${
-                          isSelected
-                            ? "border-crystal bg-crystal text-white shadow-sm"
-                            : "border-slate-200 bg-white text-night hover:border-crystal"
-                        }`}
-                        key={area.id}
-                        onClick={() => toggleArea(area.id)}
-                        type="button"
-                      >
-                        {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <p className="text-xs font-semibold text-slate-500">Bu kademeye özel branş bulunamadı, aşağıdan genel alanları seçebilirsiniz.</p>
-                )}
-              </div>
-            </div>
-
+      {!selectedGrade ? (
+        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">
+          Önce sınıf veya sınav kademesini seçin.
+        </p>
+      ) : autoGrade ? (
+        <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3">
+          <p className="text-xs font-bold text-emerald-800">
+            {selectedGrade} için tüm dersler otomatik seçildi ({selectedAreaIds.size} alan).
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {gradeScopedAreas
+              .filter((area) => selectedAreaIds.has(area.id))
+              .map((area) => (
+                <span
+                  key={area.id}
+                  className="rounded-xl border border-emerald-200 bg-white px-3 py-1.5 text-xs font-black text-emerald-800"
+                >
+                  ✓ {displayEducationAreaName(area.area_name)}
+                </span>
+              ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-[0.65rem] font-black uppercase tracking-[0.14em] text-indigo-600">
+            Branş seçimi ({gradeScopedAreas.length})
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {gradeScopedAreas.map((area) => {
+              const isSelected = selectedAreaIds.has(area.id);
+              return (
+                <button
+                  className={`tap-scale rounded-xl border px-3 py-1.5 text-xs font-black transition ${
+                    isSelected
+                      ? "border-crystal bg-crystal text-white shadow-sm"
+                      : "border-slate-200 bg-white text-night hover:border-crystal"
+                  }`}
+                  key={area.id}
+                  onClick={() => toggleArea(area.id)}
+                  type="button"
+                >
+                  {isSelected
+                    ? `✓ ${displayEducationAreaName(area.area_name)}`
+                    : `+ ${displayEducationAreaName(area.area_name)}`}
+                </button>
+              );
+            })}
+          </div>
+          {generalHobbies.length > 0 ? (
             <div className="space-y-2 border-t border-slate-200/80 pt-3">
               <p className="text-[0.65rem] font-black uppercase tracking-[0.14em] text-purple-600">
-                ✨ Diğer İlgi Alanları & Hobi ({generalHobbies.length})
+                İsteğe bağlı ilgi alanları
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {generalHobbies.map((area) => {
@@ -224,80 +233,28 @@ export function ChildAreaSelector({
                       onClick={() => toggleArea(area.id)}
                       type="button"
                     >
-                      {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
+                      {isSelected
+                        ? `✓ ${displayEducationAreaName(area.area_name)}`
+                        : `+ ${displayEducationAreaName(area.area_name)}`}
                     </button>
                   );
                 })}
               </div>
             </div>
+          ) : null}
+        </div>
+      )}
 
-            {otherGradeAreas.length > 0 ? (
-              <div className="space-y-2 border-t border-slate-200/80 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowOtherGrades(!showOtherGrades)}
-                  className="tap-scale flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-100/70 px-3.5 py-2 text-left text-xs font-black text-slate-700 hover:bg-slate-200/60"
-                >
-                  <span>🌍 Diğer Sınıfların Dersleri ({otherGradeAreas.length} Branş)</span>
-                  <span className="font-bold text-crystal">{showOtherGrades ? "Gizle ▲" : "Göster ▼"}</span>
-                </button>
-                {showOtherGrades ? (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {otherGradeAreas.map((area) => {
-                      const isSelected = selectedAreaIds.has(area.id);
-                      return (
-                        <button
-                          className={`tap-scale rounded-xl border px-3 py-1.5 text-xs font-black transition ${
-                            isSelected
-                              ? "border-crystal bg-crystal text-white shadow-sm"
-                              : "border-slate-200 bg-white text-night hover:border-crystal"
-                          }`}
-                          key={area.id}
-                          onClick={() => toggleArea(area.id)}
-                          type="button"
-                        >
-                          {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-          </>
-        ) : (
-          groupedAreas.map((group) => (
-            <div key={group.key}>
-              <p className="mb-2 text-[0.65rem] font-black uppercase tracking-[0.14em] text-slate-500">
-                {gradeLabels[group.key]}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {group.areas.map((area) => {
-                  const isSelected = selectedAreaIds.has(area.id);
-                  return (
-                    <button
-                      className={`tap-scale rounded-full border px-3 py-1.5 text-xs font-black ${
-                        isSelected
-                          ? "border-crystal bg-crystal text-white shadow-sm"
-                          : "border-slate-200 bg-white text-night hover:border-crystal"
-                      }`}
-                      key={area.id}
-                      onClick={() => toggleArea(area.id)}
-                      type="button"
-                    >
-                      {isSelected ? `✓ ${cleanAreaName(area.area_name)}` : `+ ${cleanAreaName(area.area_name)}`}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      <button
+        className="tap-scale w-full rounded-lg bg-night px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+        disabled={isSaving || !selectedGrade || selectedAreaIds.size === 0}
+        onClick={() => void saveAreas()}
+        type="button"
+      >
+        {isSaving ? m.common.saving : m.common.save}
+      </button>
 
-      {selectedAreaIds.size === 0 ? (
-        <p className="text-xs font-bold text-amber-700">{c.selectArea}</p>
-      ) : null}
+      {message ? <p className="text-xs font-bold text-slate-600">{message}</p> : null}
     </div>
   );
 }

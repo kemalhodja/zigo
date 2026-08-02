@@ -1,29 +1,46 @@
 import Link from "next/link";
 
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
-import { OrganizationTypeForm } from "@/components/organization-type-form";
-import { TeacherPostForm } from "@/components/teacher-post-form";
+import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
+import { isMicroQuizPack } from "@/lib/domain/micro-quiz-pack";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
+import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
+import { getOrgDashboardSnapshot } from "@/lib/domain/org-dashboard";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrganizationType } from "@/lib/domain/profiles";
 import { isOrganizationRegistrationType, shouldHideOrganizationPlanPrices } from "@/lib/domain/registration-account";
+import { resolveWrongRoleStudioHref } from "@/lib/domain/role-next-action";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { canTeacherUseCreatorPlusTools } from "@/lib/domain/teacher-creator-plus";
+import {
+  getTeacherActivationState,
+  type ActivationStepStatus,
+  type TeacherActivationState,
+  type TeacherActivationStepId,
+} from "@/lib/domain/verification-activation";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function TeacherPage() {
+export default async function TeacherPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ pack?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const showMicroQuizPack = isMicroQuizPack(params.pack);
+
   if (!hasSupabaseEnv()) {
-    return <TeacherPreview mode="preview" />;
+    return <TeacherPreview mode="preview" showMicroQuizPack={showMicroQuizPack} />;
   }
 
-  const previewFallback = await TeacherPreview({ mode: "preview" });
+  const previewFallback = await TeacherPreview({ mode: "preview", showMicroQuizPack });
 
   return withSupabaseFallback(async () => {
   const supabase = await createClient();
@@ -34,27 +51,56 @@ export default async function TeacherPage() {
   }
 
   if (profile.role !== "teacher") {
-    return <TeacherPreview mode="role-preview" />;
+    return <TeacherPreview mode="role-preview" viewerRole={profile.role} />;
   }
 
-  const [allAreas, areaIds, subscription] = await Promise.all([
+  const [allAreas, areaIds, subscription, activation] = await Promise.all([
     getEducationAreas(supabase),
     getUserInterestAreaIds(supabase, profile.id),
     getUserSubscription(supabase, profile.id),
+    getTeacherActivationState(supabase, {
+      userId: profile.id,
+      fullName: profile.full_name,
+      isVerified: profile.is_verified,
+    }),
   ]);
+  const organizationType = parseOrganizationType(profile.organization_type);
+  const orgDashboard = organizationType
+    ? await getOrgDashboardSnapshot(supabase, profile.id, organizationType)
+    : null;
   const assignedAreas = allAreas.filter((area) => areaIds.includes(area.id));
   const teacherCreatorPlus = canTeacherUseCreatorPlusTools(subscription, profile.role);
   const allowDevActivate = canUseDevBillingBypass();
   const planGroups = resolveProfilePlanGroups(
     "teacher",
     false,
-    parseOrganizationType(profile.organization_type),
+    organizationType,
   );
   const m = await getServerMessages();
   const d = m.dashboard;
   const h = m.header;
   const tb = m.teacherBadges;
-  const branchNames = assignedAreas.map((area) => area.area_name);
+  const branchNames = assignedAreas.map((area) => displayEducationAreaName(area.area_name));
+  const orgCopy = {
+    eyebrow: d.teacher.orgEyebrow,
+    titleInstitution: d.teacher.orgTitleInstitution,
+    titlePlatform: d.teacher.orgTitlePlatform,
+    titlePublisher: d.teacher.orgTitlePublisher,
+    descInstitution: d.teacher.orgDescInstitution,
+    descPlatform: d.teacher.orgDescPlatform,
+    descPublisher: d.teacher.orgDescPublisher,
+    metricPosts7d: d.teacher.orgMetricPosts7d,
+    metricPostsTotal: d.teacher.orgMetricPostsTotal,
+    metricFollowers: d.teacher.orgMetricFollowers,
+    metricAreas: d.teacher.orgMetricAreas,
+    metricSponsored: d.teacher.orgMetricSponsored,
+    metricOpenQuestions: d.teacher.orgMetricOpenQuestions,
+    areasEmpty: d.teacher.orgAreasEmpty,
+    openStudio: d.teacher.orgOpenStudio,
+    openCreate: d.teacher.orgOpenCreate,
+    openQuestions: d.teacher.orgOpenQuestions,
+    openAdvertise: d.teacher.orgOpenAdvertise,
+  };
 
   return (
     <div className="space-y-5 pb-3">
@@ -79,7 +125,18 @@ export default async function TeacherPage() {
         </span>
       </section>
 
-      <LessonRequestsPanel role="teacher" viewerId={profile.id} />
+      {orgDashboard ? <OrgDashboardPanel copy={orgCopy} snapshot={orgDashboard} /> : null}
+
+      {profile.is_verified && !activation.hasAreas ? (
+        <section className="-mx-4 border-b border-amber-100 bg-amber-50 px-4 py-4">
+          <p className="text-sm font-black text-amber-900">{m.teacherPage.chooseAreas}</p>
+          <p className="mt-1 text-sm font-bold leading-6 text-amber-800">{m.teacherPage.whatNowDesc}</p>
+        </section>
+      ) : null}
+
+      {!isOrganizationRegistrationType(organizationType) ? (
+        <LessonRequestsPanel role="teacher" viewerId={profile.id} />
+      ) : null}
 
       {profile.is_verified ? (
         <>
@@ -89,32 +146,37 @@ export default async function TeacherPage() {
           </section>
           {!teacherCreatorPlus ? (
             <p className="-mx-4 border-b border-amber-100 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
-              Paylaşım ve yorum ücretsiz. Yazılı hazırlık, quiz ve sponsorlu reklam için Creator Plus gerekir.
+              {m.billingUi.creatorPlusHint}
             </p>
           ) : null}
-          <TeacherPostForm areas={assignedAreas} />
+          {showMicroQuizPack ? (
+            <section className="-mx-4 border-b border-violet-100 bg-violet-50 px-4 py-3">
+              <p className="text-[0.65rem] font-black uppercase tracking-[0.16em] text-crystal">Mikro + quiz paketi</p>
+              <p className="mt-1 text-sm font-black text-night">10 soruluk quiz oluştur (A–D)</p>
+              <Link className="mt-2 inline-flex text-xs font-black text-crystal" href="/create?mode=micro&pack=micro-quiz">
+                Mikro ders adımına dön
+              </Link>
+            </section>
+          ) : null}
           <TeacherQuizForm areas={assignedAreas} canCreateQuizzes={teacherCreatorPlus} allowDevActivate={allowDevActivate} />
-          <TeacherSponsoredAdsPanel canManage={teacherCreatorPlus} />
+          <TeacherSponsoredAdsPanel profile={profile} />
+          <InviteCodesPanel canCreate />
         </>
       ) : (
-        <VerificationRequired messages={m.teacherPage} support={m.support} />
+        <VerificationRequired activation={activation} messages={m.teacherPage} support={m.support} />
       )}
       <section className="grid grid-cols-2 gap-2">
         <TeacherLink accent="from-sun to-peach" href="/moderation" label={d.teacher.moderation} text={d.teacher.reviewComments} />
         <TeacherLink accent="from-berry to-peach" href="/questions" label={d.teacher.qa} text={d.teacher.answerSafely} />
       </section>
 
-      {!isOrganizationRegistrationType(parseOrganizationType(profile.organization_type)) ? (
-        <OrganizationTypeForm
-          initialOrganizationType={parseOrganizationType(profile.organization_type)}
-        />
-      ) : null}
-
       <ZigoPlusPlansSection
         allowDevActivate={allowDevActivate}
         groups={planGroups}
-        hidePrices={shouldHideOrganizationPlanPrices(parseOrganizationType(profile.organization_type))}
+        hidePrices={shouldHideOrganizationPlanPrices(organizationType)}
         isPremium={teacherCreatorPlus}
+        organizationName={profile.full_name}
+        organizationType={organizationType}
       />
 
       <WhatsAppSupportCard
@@ -133,16 +195,44 @@ export default async function TeacherPage() {
   }, previewFallback);
 }
 
-async function TeacherPreview({ mode }: { mode: "preview" | "signed-out" | "role-preview" }) {
+async function TeacherPreview({
+  mode,
+  viewerRole = "guest",
+  showMicroQuizPack = false,
+}: {
+  mode: "preview" | "signed-out" | "role-preview";
+  viewerRole?: "student" | "parent" | "teacher" | "guest";
+  showMicroQuizPack?: boolean;
+}) {
   const messages = await getServerMessages();
   const t = messages.dashboard.teacher;
   const tp = messages.teacherPage;
-  const h = messages.header;
+  void showMicroQuizPack;
   const note = {
     preview: t.previewNote,
     "signed-out": t.signInNote,
     "role-preview": t.roleNote,
   }[mode];
+
+  // Wrong-role / signed-out users should not see teacher create tools.
+  if (mode === "signed-out" || mode === "role-preview") {
+    const href = mode === "signed-out" ? "/auth" : resolveWrongRoleStudioHref(viewerRole);
+    return (
+      <div className="space-y-4 pb-3">
+        <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">{t.studio}</p>
+          <h1 className="mt-1 text-2xl font-black leading-tight text-night">{t.verifiedTools}.</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">{note}</p>
+          <Link
+            className="tap-scale mt-4 inline-flex rounded-lg bg-night px-4 py-3 text-sm font-black text-white"
+            href={href}
+          >
+            {mode === "signed-out" ? messages.common.signIn : messages.nav.home}
+          </Link>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 pb-3">
@@ -152,9 +242,9 @@ async function TeacherPreview({ mode }: { mode: "preview" | "signed-out" | "role
         <p className="mt-2 text-sm leading-6 text-slate-500">{note}</p>
       </section>
       <section className="grid grid-cols-2 gap-2">
-        <TeacherLink accent="from-crystal to-berry" href="/create" label={h.create} text={tp.postOrStory} />
-        <TeacherLink accent="from-sun to-peach" href="/moderation" label={messages.dashboard.teacher.moderation} text={tp.safetyQueue} />
-        <TeacherLink accent="from-berry to-peach" href="/questions" label={messages.dashboard.teacher.qa} text={tp.teacherAnswers} />
+        <TeacherLink accent="from-crystal to-berry" href="/create" label={messages.header.create} text={tp.postOrStory} />
+        <TeacherLink accent="from-sun to-peach" href="/moderation" label={t.moderation} text={tp.safetyQueue} />
+        <TeacherLink accent="from-berry to-peach" href="/questions" label={t.qa} text={tp.teacherAnswers} />
         <TeacherLink accent="from-aqua to-mint" href="/onboarding" label={tp.areas} text={tp.expertiseSetup} />
       </section>
     </div>
@@ -162,18 +252,32 @@ async function TeacherPreview({ mode }: { mode: "preview" | "signed-out" | "role
 }
 
 function VerificationRequired({
+  activation,
   messages: t,
   support,
 }: {
+  activation: TeacherActivationState;
   messages: Awaited<ReturnType<typeof getServerMessages>>["teacherPage"];
   support: Awaited<ReturnType<typeof getServerMessages>>["support"];
 }) {
-  const verificationSteps = [
-    { label: t.completeProfile, state: t.done },
-    { label: t.chooseAreas, state: t.required },
-    { label: t.platformVerifies, state: t.pending },
-    { label: t.publishingUnlocks, state: t.locked },
-  ];
+  const stepLabels: Record<TeacherActivationStepId, string> = {
+    completeProfile: t.completeProfile,
+    assignAreas: t.chooseAreas,
+    platformVerify: t.platformVerifies,
+    publishingUnlock: t.publishingUnlocks,
+  };
+  const statusLabels: Record<ActivationStepStatus, string> = {
+    done: t.done,
+    pending: t.pending,
+    required: t.required,
+    locked: t.locked,
+  };
+  const statusClass: Record<ActivationStepStatus, string> = {
+    done: "bg-emerald-50 text-emerald-700",
+    pending: "bg-amber-50 text-amber-700",
+    required: "bg-rose-50 text-rose-700",
+    locked: "bg-slate-100 text-slate-500",
+  };
 
   return (
     <section className="-mx-4 space-y-4 bg-white px-4 py-5">
@@ -208,10 +312,12 @@ function VerificationRequired({
       </div>
 
       <div className="grid gap-2">
-        {verificationSteps.map((step) => (
-          <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3" key={step.label}>
-            <span className="text-sm font-black text-night">{step.label}</span>
-            <span className="rounded-lg bg-white px-3 py-1 text-xs font-black text-crystal">{step.state}</span>
+        {activation.steps.map((step) => (
+          <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3" key={step.id}>
+            <span className="text-sm font-black text-night">{stepLabels[step.id]}</span>
+            <span className={`rounded-lg px-3 py-1 text-xs font-black ${statusClass[step.status]}`}>
+              {statusLabels[step.status]}
+            </span>
           </div>
         ))}
       </div>
@@ -219,13 +325,20 @@ function VerificationRequired({
       <div className="rounded-lg bg-violet-50 px-4 py-3">
         <p className="text-sm font-black text-night">{t.whatNow}</p>
         <p className="mt-1 text-sm font-bold leading-6 text-slate-600">
-          {t.whatNowDesc}
+          {activation.isVerified && activation.hasAreas ? t.activationReady : t.whatNowDesc}
         </p>
       </div>
 
-      <Link className="tap-scale block rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-3 text-center text-sm font-black text-white" href="/onboarding">
-        {t.updateAreas}
-      </Link>
+      <div className="grid gap-2">
+        <Link className="tap-scale block rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-3 text-center text-sm font-black text-white" href="/onboarding">
+          {t.updateAreas}
+        </Link>
+        {activation.isVerified && activation.hasAreas ? (
+          <Link className="tap-scale block rounded-lg border border-slate-200 bg-white px-4 py-3 text-center text-sm font-black text-night" href="/create">
+            {t.openCreate}
+          </Link>
+        ) : null}
+      </div>
     </section>
   );
 }

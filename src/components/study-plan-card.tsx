@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import type { StudentFocusAnalytics } from "@/lib/domain/focus-analytics";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 
 type StudyPlanCardProps = {
   analytics: StudentFocusAnalytics;
@@ -100,7 +101,7 @@ export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProp
               >
                 {areas.map((area) => (
                   <option className="text-night" key={area.id} value={area.id}>
-                    {area.area_name}
+                    {displayEducationAreaName(area.area_name)}
                   </option>
                 ))}
               </select>

@@ -22,23 +22,64 @@ export function FeedPostCard({
   feedExtras,
   feedEnhancements,
   priorityMedia = false,
+  viewerRole = null,
+  enterDelayMs = 0,
 }: {
   post: DisplayPost;
   teacherBadges: { verifiedTeacher: string; moreAreas: string };
   feedExtras: Messages["feedExtras"];
   feedEnhancements: Messages["feedEnhancements"];
   priorityMedia?: boolean;
+  viewerRole?: import("@/lib/supabase/database.types").UserRole | "guest" | null;
+  enterDelayMs?: number;
 }) {
   const postKey = post.postId ?? post.handle;
+  const isMicro = post.badge === "Micro" || post.mediaType === "video";
 
   return (
     <DismissibleFeedPost postKey={postKey}>
-      <article className="zigo-feed-card -mx-4 overflow-hidden">
+      <article
+        className="zigo-feed-card zigo-feed-card-enter -mx-4 overflow-hidden"
+        style={enterDelayMs > 0 ? { animationDelay: `${enterDelayMs}ms` } : undefined}
+      >
+        <DoubleTapLikeLink
+          href={post.postId ? `/post/${post.postId}` : "/micro"}
+          initialLiked={post.isLiked}
+          postId={post.postId}
+        >
+          <SocialMediaFrame
+            alt={post.caption.slice(0, 80)}
+            className="zigo-media"
+            gradient={post.gradient}
+            mediaType={post.mediaType}
+            mediaUrl={post.mediaUrl}
+            priority={priorityMedia}
+            scene={post.scene}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="zigo-meta-badge rounded-full bg-black/30 px-2.5 py-1 text-white backdrop-blur-md">
+                {isMicro ? feedEnhancements.oneMinLesson : post.area}
+              </span>
+              {post.mediaType === "video" ? (
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-black/35 text-xs font-black text-white backdrop-blur-md">
+                  <svg aria-hidden="true" className="ml-0.5 size-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </span>
+              ) : null}
+            </div>
+            <div />
+          </SocialMediaFrame>
+        </DoubleTapLikeLink>
+
         <div className="flex items-center justify-between px-4 py-2.5">
           <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
             <SocialAvatar className="size-9" label={post.authorName} />
             <div className="min-w-0">
-              <p className="truncate text-zigo-body font-bold text-night">{post.handle}</p>
+              <p className="truncate text-zigo-body font-bold text-night">
+                {post.handle}
+                {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
+              </p>
               {post.verified ? (
                 <div className="mt-1">
                   <TeacherTrustBadges
@@ -59,42 +100,7 @@ export function FeedPostCard({
           </div>
         </div>
 
-        <DoubleTapLikeLink
-          href={post.postId ? `/post/${post.postId}` : "/micro"}
-          initialLiked={post.isLiked}
-          postId={post.postId}
-        >
-          <SocialMediaFrame
-            alt={post.caption.slice(0, 80)}
-            className="zigo-media border-y border-slate-50"
-            gradient={post.gradient}
-            mediaType={post.mediaType}
-            mediaUrl={post.mediaUrl}
-            priority={priorityMedia}
-            scene={post.scene}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="zigo-meta-badge rounded-full bg-black/25 px-2.5 py-1 text-white backdrop-blur">
-                  {post.badge}
-                </span>
-                <span className="zigo-meta-badge rounded-full bg-white/20 px-2.5 py-1 text-white backdrop-blur">
-                  {post.area}
-                </span>
-              </div>
-              {post.mediaType === "video" ? (
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-black/25 text-xs font-black text-white backdrop-blur">
-                  <svg aria-hidden="true" className="ml-0.5 size-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </span>
-              ) : null}
-            </div>
-            <div />
-          </SocialMediaFrame>
-        </DoubleTapLikeLink>
-
-        <div className="space-y-2 px-4 pb-3 pt-2.5">
+        <div className="space-y-2 px-4 pb-3">
           <SocialPostActions
             initialComments={post.comments}
             initialLiked={post.isLiked}
@@ -103,16 +109,34 @@ export function FeedPostCard({
             postId={post.postId}
             variant="compact"
           />
+          <p className="text-zigo-body leading-relaxed text-slate-800">
+            <span className="font-bold text-night">{post.handle}</span>{" "}
+            {post.caption.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+              /(https?:\/\/[^\s]+)/g.test(part) ? (
+                <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
+                  {part}
+                </a>
+              ) : (
+                part
+              )
+            )}
+          </p>
+          {(() => {
+            const extUrl = (post as Record<string, unknown>).externalUrl as string | undefined || (post as Record<string, unknown>).external_url as string | undefined;
+            return extUrl ? (
+              <a href={extUrl} target="_blank" rel="noopener noreferrer" className="mt-3 block w-full rounded-xl bg-crystal py-2.5 text-center font-bold text-white shadow-sm hover:bg-crystal-dark transition-colors">
+                Bağlantıya Git
+              </a>
+            ) : null;
+          })()}
           <FeedEducationBadges
             area={post.area}
             badge={post.badge}
             copy={feedEnhancements}
-            isMicro={post.badge === "Micro" || post.mediaType === "video"}
+            isMicro={isMicro}
             postId={post.postId}
+            viewerRole={viewerRole}
           />
-          <p className="text-zigo-body leading-relaxed text-slate-800">
-            <span className="font-bold text-night">{post.handle}</span> {post.caption}
-          </p>
           {post.showPremiumPrep && post.premiumPrepLabel && post.postId ? (
             <PremiumPrepLink
               canOpen={Boolean(post.canOpenPremiumPrep)}
@@ -191,18 +215,18 @@ export function FollowingStarter({
 }) {
   const f = messages.feedExtras;
   return (
-    <section className="-mx-4 px-6 py-14 text-center">
-      <span className="mx-auto flex size-20 items-center justify-center rounded-lg border-2 border-night text-2xl font-black text-night">
+    <section className="zigo-empty-hero -mx-4 px-6 py-12 text-center">
+      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-night text-2xl font-black text-white shadow-lg shadow-slate-900/20">
         +
       </span>
-      <h2 className="zigo-section-title mt-4 text-night">{f.followCreators}</h2>
+      <h2 className="zigo-section-title mt-5 text-night">{f.followCreators}</h2>
       <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-600">{f.followCreatorsDesc}</p>
-      <Link className="tap-scale mt-4 inline-flex zigo-cta tap-scale rounded-lg px-5 py-2.5 text-zigo-body font-bold text-white" href="/explore?q=Teachers">
+      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white" href="/explore?q=Teachers">
         {f.exploreTeachers}
       </Link>
-      <div className="no-scrollbar mt-6 flex gap-3 overflow-x-auto pb-1 text-left">
+      <div className="no-scrollbar mt-7 flex gap-3 overflow-x-auto pb-1 text-left">
         {creators.map((creator) => (
-          <article className="min-w-32 rounded-lg border border-slate-200 bg-white p-3" key={creator.id ?? creator.handle}>
+          <article className="min-w-32 rounded-xl border border-slate-200/80 bg-white/90 p-3 shadow-sm" key={creator.id ?? creator.handle}>
             <Link className="tap-scale block" href={creator.href}>
               <SocialAvatar className="size-10" label={creator.name} ring={false} />
               <p className="zigo-fit-text mt-3 text-zigo-body font-bold text-night">@{creator.handle}</p>
@@ -222,13 +246,13 @@ export function ForYouStarter({ messages }: { messages: Messages }) {
   const f = messages.feedExtras;
   const o = messages.onboarding;
   return (
-    <section className="-mx-4 px-6 py-14 text-center">
-      <span className="mx-auto flex size-20 items-center justify-center rounded-lg bg-gradient-to-br from-crystal to-fuchsia-500 text-2xl font-black text-white">
+    <section className="zigo-empty-hero -mx-4 px-6 py-12 text-center">
+      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry text-2xl font-black text-white shadow-lg shadow-crystal/25">
         Z
       </span>
-      <h2 className="zigo-section-title mt-4 text-night">{f.buildFeed}</h2>
+      <h2 className="zigo-section-title mt-5 text-night">{f.buildFeed}</h2>
       <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-600">{f.buildFeedDesc}</p>
-      <Link className="tap-scale mt-4 inline-flex zigo-cta tap-scale rounded-lg px-5 py-2.5 text-zigo-body font-bold text-white" href="/onboarding">
+      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white" href="/onboarding">
         {o.chooseInterests}
       </Link>
     </section>

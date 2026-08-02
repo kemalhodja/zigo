@@ -2,9 +2,10 @@ export type EducationOrganizationType =
   | "kurs"
   | "okul"
   | "egitim_kurumu"
-  | "egitim_platformu";
+  | "egitim_platformu"
+  | "yayinevi";
 
-export type EducationOrganizationBillingTier = "institution" | "platform";
+export type EducationOrganizationBillingTier = "institution" | "platform" | "publisher";
 
 export type EducationOrganizationOption = {
   id: EducationOrganizationType;
@@ -37,6 +38,12 @@ export const EDUCATION_ORGANIZATION_OPTIONS: readonly EducationOrganizationOptio
     label: "Eğitim platformu",
     description: "Dijital eğitim platformu ve içerik ağı",
     billingTier: "platform",
+  },
+  {
+    id: "yayinevi",
+    label: "Yayınevi",
+    description: "Eğitim yayınları ve materyal hesabı",
+    billingTier: "publisher",
   },
 ] as const;
 

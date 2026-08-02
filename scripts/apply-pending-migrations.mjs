@@ -87,6 +87,116 @@ const PENDING = [
     file: "066_ad_state_and_premium_system.sql",
     probe: async (admin) => !((await admin.from("users").select("is_premium").limit(1)).error),
   },
+  {
+    id: "067",
+    file: "067_subscriber_class_groups_and_ad_gates.sql",
+    probe: async (admin) => !((await admin.from("class_groups").select("id").limit(1)).error),
+  },
+  {
+    id: "068",
+    file: "068_post_audience_and_parent_dm_gates.sql",
+    probe: async (admin) => !((await admin.from("social_posts").select("target_audience").limit(1)).error),
+  },
+  {
+    id: "069",
+    file: "069_google_play_billing.sql",
+    probe: async (admin) => !((await admin.from("google_play_purchases").select("id").limit(1)).error),
+  },
+  {
+    id: "070",
+    file: "070_avatars_storage.sql",
+    probe: async (admin) => {
+      const { data, error } = await admin.storage.listBuckets();
+      if (error) return false;
+      return (data ?? []).some((bucket) => bucket.name === "avatars");
+    },
+  },
+  {
+    id: "071",
+    file: "071_class_groups_section.sql",
+    probe: async (admin) => !((await admin.from("users").select("classroom").limit(1)).error),
+  },
+  {
+    id: "072",
+    file: "072_generic_user_verification.sql",
+    probe: async (admin) => {
+      const result = await admin.rpc("verify_user", { target_user_id: "00000000-0000-0000-0000-000000000000" });
+      const message = result.error?.message ?? "";
+      return !message.includes("Could not find the function") && !message.includes("schema cache");
+    },
+  },
+  {
+    id: "073",
+    file: "073_admin_user_controls.sql",
+    probe: async (admin) => !((await admin.from("admin_messages").select("id").limit(1)).error),
+  },
+  {
+    id: "074",
+    file: "074_auto_verify_teachers.sql",
+    probe: async () => probeAutoVerifyTeachers(),
+  },
+  {
+    id: "075",
+    file: "075_yayinevi_organization_type.sql",
+    probe: async () => probeYayineviOrganizationType(),
+  },
+  {
+    id: "076",
+    file: "076_exam_track_education_areas.sql",
+    probe: async (admin) => {
+      const { data, error } = await admin
+        .from("education_areas")
+        .select("id")
+        .eq("age_group", "TYT")
+        .limit(1);
+      return !error && (data?.length ?? 0) > 0;
+    },
+  },
+    {
+    id: "077",
+    file: "077_moderation_report_resolved_at.sql",
+    probe: async (admin) => !((await admin.from("content_reports").select("resolved_at").limit(1)).error),
+  },
+  {
+    id: "078",
+    file: "078_admin_billing_grants.sql",
+    probe: async (admin) => !((await admin.from("admin_billing_grants").select("id").limit(1)).error),
+  },
+  {
+    id: "079",
+    file: "079_update_own_account_kind.sql",
+    probe: async (admin) => {
+      const { error } = await admin.rpc("update_own_account_kind", {
+        next_role: "student",
+        next_organization_type: null,
+      });
+      if (!error) return true;
+      if (/does not exist/i.test(error.message ?? "")) return false;
+      return /authentication is required/i.test(error.message ?? "");
+    },
+  },
+  {
+    id: "080",
+    file: "080_expand_general_interest_expertise.sql",
+    probe: async () => probeExpandedGeneralInterestExpertise(),
+  },
+  {
+    id: "081",
+    file: "081_student_area_leaderboard.sql",
+    probe: async (admin) => {
+      const { error } = await admin.rpc("get_area_leaderboard", {
+        target_area_id: 1,
+        limit_count: 1,
+      });
+      if (!error) return true;
+      return !/does not exist/i.test(error.message ?? "");
+    },
+  },
+  {
+    id: "082",
+    file: "082_invite_codes.sql",
+    probe: async (admin) => !((await admin.from("invite_codes").select("id").limit(1)).error),
+  },
 ];
 
 function loadEnvFile(name) {
@@ -178,6 +288,28 @@ function probeGeneralInterestAreas() {
   return String(result.stdout ?? "").trim() === "1";
 }
 
+function probeExpandedGeneralInterestExpertise() {
+  const container = getLocalDbContainer();
+  const result = spawnSync(
+    "docker",
+    [
+      "exec",
+      container,
+      "psql",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-tAc",
+      "SELECT count(*) FROM public.education_areas WHERE age_group = 'Genel İlgi' AND area_name IN ('Yapay Zeka', 'Eğitim ve Pedagoji', 'Satranç');",
+    ],
+    { encoding: "utf8", shell: false },
+  );
+
+  if (result.status !== 0) return false;
+  return String(result.stdout ?? "").trim() === "3";
+}
+
 async function probeObscenityModeration(admin) {
   const { data, error } = await admin
     .from("blocked_keywords")
@@ -254,6 +386,48 @@ function probeModerationStrikesFix() {
 
   if (result.status !== 0) return false;
   return String(result.stdout ?? "").trim() === "1";
+}
+
+function probeAutoVerifyTeachers() {
+  const container = getLocalDbContainer();
+  const result = spawnSync(
+    "docker",
+    [
+      "exec",
+      container,
+      "psql",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-tAc",
+      "SELECT count(*) FROM pg_proc WHERE proname = 'handle_new_auth_user' AND pg_get_functiondef(oid) LIKE '%automatically verify teachers%';",
+    ],
+    { encoding: "utf8", shell: false },
+  );
+  if (result.status !== 0) return false;
+  return String(result.stdout ?? "").trim() === "1";
+}
+
+function probeYayineviOrganizationType() {
+  const container = getLocalDbContainer();
+  const result = spawnSync(
+    "docker",
+    [
+      "exec",
+      container,
+      "psql",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-tAc",
+      "SELECT count(*) FROM pg_constraint WHERE conname LIKE '%organization_type%' AND pg_get_constraintdef(oid) LIKE '%yayinevi%';",
+    ],
+    { encoding: "utf8", shell: false },
+  );
+  if (result.status !== 0) return false;
+  return Number(String(result.stdout ?? "").trim()) > 0;
 }
 
 function applySqlViaDocker(container, relativePath) {

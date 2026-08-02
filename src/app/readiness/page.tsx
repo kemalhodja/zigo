@@ -307,7 +307,7 @@ export default async function ReadinessPage() {
       </section>
 
       <section className="grid grid-cols-2 gap-3">
-        <Link className="rounded-lg bg-white p-4 text-center" href="/profiles">
+        <Link className="rounded-lg bg-white p-4 text-center" href="/auth">
           <p className="text-lg font-black text-night">{r.footerProfiles}</p>
           <p className="mt-1 text-xs font-bold text-slate-500">{r.footerProfilesSub}</p>
         </Link>

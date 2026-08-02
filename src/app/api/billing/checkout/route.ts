@@ -3,8 +3,10 @@ import { z } from "zod";
 
 import { createZigoPlusCheckoutSession, hasStripeConfigured } from "@/lib/domain/billing";
 import { getBillingPlatformMessage, isWebCheckoutAllowedForRequest } from "@/lib/domain/billing-platform";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales";
+import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { findPlanGroup } from "@/lib/domain/subscription-plans";
+import { getServerLocale } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
 const checkoutSchema = z.object({
@@ -21,8 +23,9 @@ export async function POST(request: Request) {
     }
 
     if (!isWebCheckoutAllowedForRequest(request)) {
+      const locale = await getServerLocale();
       return NextResponse.json(
-        { error: getBillingPlatformMessage("tr"), code: "PLAY_STORE_BILLING_REQUIRED" },
+        { error: getBillingPlatformMessage(locale), code: "PLAY_STORE_BILLING_REQUIRED" },
         { status: 403 },
       );
     }
@@ -46,7 +49,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Geçersiz abonelik planı." }, { status: 400 });
     }
 
-    const session = await createZigoPlusCheckoutSession(profile.id, profile.email, planId);
+    if (shouldBlockSelfServeOrgCheckout(parseOrganizationType(profile.organization_type), planId)) {
+      return NextResponse.json(
+        {
+          error:
+            "Kurumsal abonelikler satış ekibi üzerinden açılır. WhatsApp ile kurumsal teklif alın.",
+          code: "ORG_SALES_ASSISTED",
+        },
+        { status: 403 },
+      );
+    }
+
+    const session = await createZigoPlusCheckoutSession(
+      profile.id,
+      profile.email,
+      planId,
+      profile.created_at,
+    );
     return NextResponse.json({ data: { url: session.url, planId } });
   } catch (error) {
     if (error instanceof z.ZodError) {

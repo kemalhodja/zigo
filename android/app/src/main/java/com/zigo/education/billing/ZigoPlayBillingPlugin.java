@@ -7,6 +7,7 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
@@ -32,10 +33,13 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
 
   private BillingClient getBillingClient() {
     if (billingClient == null) {
+      PendingPurchasesParams pendingPurchasesParams = PendingPurchasesParams.newBuilder()
+        .enableOneTimeProducts()
+        .build();
       billingClient =
         BillingClient.newBuilder(getContext())
           .setListener(this)
-          .enablePendingPurchases()
+          .enablePendingPurchases(pendingPurchasesParams)
           .build();
     }
     return billingClient;
@@ -96,11 +100,16 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
         getBillingClient()
           .queryProductDetailsAsync(
             QueryProductDetailsParams.newBuilder().setProductList(products).build(),
-            (billingResult, productDetailsList) -> {
+            (billingResult, productDetailsResult) -> {
               if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                 call.reject(billingResult.getDebugMessage());
                 return;
               }
+
+              List<ProductDetails> productDetailsList =
+                productDetailsResult != null && productDetailsResult.getProductDetailsList() != null
+                  ? productDetailsResult.getProductDetailsList()
+                  : Collections.emptyList();
 
               JSArray result = new JSArray();
               for (ProductDetails details : productDetailsList) {
@@ -165,11 +174,17 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
         getBillingClient()
           .queryProductDetailsAsync(
             QueryProductDetailsParams.newBuilder().setProductList(products).build(),
-            (billingResult, productDetailsList) -> {
+            (billingResult, productDetailsResult) -> {
               if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                 rejectPendingPurchase(billingResult.getDebugMessage());
                 return;
               }
+
+              List<ProductDetails> productDetailsList =
+                productDetailsResult != null && productDetailsResult.getProductDetailsList() != null
+                  ? productDetailsResult.getProductDetailsList()
+                  : Collections.emptyList();
+
               if (productDetailsList.isEmpty()) {
                 rejectPendingPurchase("Google Play ürünü bulunamadı: " + productId);
                 return;

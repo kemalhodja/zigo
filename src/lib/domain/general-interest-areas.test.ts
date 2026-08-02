@@ -5,6 +5,7 @@ import {
   filterAreasForInterestSelection,
   isGeneralInterestArea,
   isTeacherGeneralInterestSelection,
+  GENERAL_INTEREST_EXPERTISE_AREAS,
 } from "@/lib/domain/general-interest-areas";
 
 describe("general interest areas", () => {
@@ -17,8 +18,8 @@ describe("general interest areas", () => {
     expect(isGeneralInterestArea(math)).toBe(false);
   });
 
-  it("filters teacher areas to general interest only", () => {
-    expect(filterAreasForInterestSelection([general, math], "teacher")).toEqual([general]);
+  it("allows teachers, parents, and students to select academic and general interest areas", () => {
+    expect(filterAreasForInterestSelection([general, math], "teacher")).toEqual([general, math]);
     expect(filterAreasForInterestSelection([general, math], "student")).toEqual([general, math]);
   });
 
@@ -26,5 +27,12 @@ describe("general interest areas", () => {
     expect(isTeacherGeneralInterestSelection([general])).toBe(true);
     expect(isTeacherGeneralInterestSelection([general, general])).toBe(false);
     expect(isTeacherGeneralInterestSelection([math])).toBe(false);
+  });
+
+  it("ships an expanded expertise matrix for teachers", () => {
+    expect(GENERAL_INTEREST_EXPERTISE_AREAS.length).toBeGreaterThanOrEqual(40);
+    expect(GENERAL_INTEREST_EXPERTISE_AREAS).toContain("Yapay Zeka");
+    expect(GENERAL_INTEREST_EXPERTISE_AREAS).toContain("Eğitim ve Pedagoji");
+    expect(GENERAL_INTEREST_EXPERTISE_AREAS).toContain("Satranç");
   });
 });

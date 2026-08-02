@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   canViewerOpenSponsoredAd,
+  computeSponsoredCtr,
+  formatSponsoredCtr,
   isSponsoredAdActive,
   isSponsoredAdConfigured,
 } from "@/lib/domain/sponsored-ads";
@@ -37,5 +39,11 @@ describe("sponsored-ads", () => {
   it("allows authenticated viewers to open active ads", () => {
     expect(canViewerOpenSponsoredAd("user-1", basePost as SocialPostRow)).toBe(true);
     expect(canViewerOpenSponsoredAd(undefined, basePost as SocialPostRow)).toBe(false);
+  });
+
+  it("computes CTR from clicks and views", () => {
+    expect(computeSponsoredCtr(25, 100)).toBe(0.25);
+    expect(computeSponsoredCtr(1, 0)).toBe(0);
+    expect(formatSponsoredCtr(1, 4, "en-GB")).toMatch(/%/);
   });
 });

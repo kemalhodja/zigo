@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
+import type { EducationOrganizationType } from "@/lib/domain/education-organization";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { shouldHideOrganizationPlanPrices } from "@/lib/domain/registration-account";
 import { getUserSubscription } from "@/lib/domain/subscription";
@@ -12,7 +13,11 @@ export type ProfileBillingSectionProps = {
   groups: SubscriptionPlanGroup[];
   hidePrices: boolean;
   isPremium: boolean;
+  isTrial: boolean;
+  userCreatedAt: string | null;
   allowDevActivate: boolean;
+  organizationType: EducationOrganizationType | null;
+  organizationName: string | null;
 };
 
 export async function getProfileBillingSection(
@@ -28,15 +33,21 @@ export async function getProfileBillingSection(
   }
 
   const subscription = await getUserSubscription(supabase, profile.id);
+  const organizationType = parseOrganizationType(profile.organization_type);
 
   return {
     groups: resolveProfilePlanGroups(
       profile.role,
       hasLinkedChildren,
-      parseOrganizationType(profile.organization_type),
+      organizationType,
+      profile.created_at,
     ),
-    hidePrices: shouldHideOrganizationPlanPrices(parseOrganizationType(profile.organization_type)),
+    hidePrices: shouldHideOrganizationPlanPrices(organizationType),
     isPremium: subscription.isPremium,
+    isTrial: Boolean(subscription.isTrial),
+    userCreatedAt: profile.created_at ?? null,
     allowDevActivate: canUseDevBillingBypass(),
+    organizationType,
+    organizationName: profile.full_name,
   };
 }

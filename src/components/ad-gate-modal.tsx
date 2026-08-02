@@ -1,31 +1,31 @@
 /**
- * AdGateModal Component
- * 
- * Modal that appears when user tries to perform a gated action
- * (e.g., share reel, create post) without ad-free access.
- * Prompts user to watch a rewarded ad or upgrade to premium.
+ * AdGateModal — rewarded ad or Zigo Plus upgrade for gated actions.
  */
 
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { useWatchAd } from "@/lib/hooks/use-ad-state";
+import { useMessages } from "@/lib/i18n/locale-context";
 
 interface AdGateModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
   actionName: string;
+  userId: string | null | undefined;
 }
 
-export function AdGateModal({ isOpen, onClose, onSuccess, actionName }: AdGateModalProps) {
+export function AdGateModal({ isOpen, onClose, onSuccess, actionName, userId }: AdGateModalProps) {
+  const b = useMessages().billingUi;
   const [mode, setMode] = useState<"watch" | "upgrade">("watch");
-  const { watchAd, watching, result } = useWatchAd(null);
+  const { watchAd, watching, result } = useWatchAd(userId);
 
   const handleWatchAd = async () => {
-    const adResult = await watchAd(2); // Grant 2 hours of ad-free time
-    
+    const adResult = await watchAd(2);
+
     if (adResult?.success) {
       onSuccess();
       onClose();
@@ -36,101 +36,88 @@ export function AdGateModal({ isOpen, onClose, onSuccess, actionName }: AdGateMo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6">
+      <div className="w-full max-w-md space-y-6 rounded-2xl bg-white p-6 shadow-2xl">
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500">
+            <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
               />
               <path
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Reklam İzle ve {actionName}
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">
+            {b.adGateTitle.replace("{action}", actionName)}
           </h2>
-          <p className="text-gray-600">
-            Bu işlemi yapmak için 2 saatlik reklamsız erişim kazanmak için
-            kısa bir reklam izleyebilir veya Premium'a geçebilirsiniz.
-          </p>
+          <p className="text-gray-600">{b.adGateDesc}</p>
         </div>
 
         <div className="space-y-3">
           {mode === "watch" ? (
             <>
               <button
-                onClick={handleWatchAd}
-                disabled={watching}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3 font-semibold text-white transition-all hover:from-violet-700 hover:to-fuchsia-700 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={watching || !userId}
+                onClick={() => void handleWatchAd()}
+                type="button"
               >
                 {watching ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    İzleniyor...
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    {b.adGateWatching}
                   </>
                 ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                    Reklam İzle (2 Saat Reklamsız)
-                  </>
+                  b.adGateWatch
                 )}
               </button>
 
               <button
+                className="w-full rounded-xl bg-gray-100 px-6 py-3 font-semibold text-gray-700 transition-all hover:bg-gray-200"
                 onClick={() => setMode("upgrade")}
-                className="w-full bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-200 transition-all"
+                type="button"
               >
-                Premium'a Geç (Reklamsız)
+                {b.adGateUpgrade}
               </button>
             </>
           ) : (
             <>
-              <button
-                onClick={() => {
-                  // TODO: Implement premium upgrade flow
-                  alert("Premium upgrade flow will be implemented here");
-                }}
-                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all"
+              <Link
+                className="block w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 text-center font-semibold text-night transition-all hover:from-amber-500 hover:to-orange-600"
+                href="/profile#zigo-plus-plans"
+                onClick={onClose}
               >
-                Premium'a Geç
-              </button>
+                {b.adGateOpenPlans}
+              </Link>
 
               <button
+                className="w-full rounded-xl bg-gray-100 px-6 py-3 font-semibold text-gray-700 transition-all hover:bg-gray-200"
                 onClick={() => setMode("watch")}
-                className="w-full bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-xl hover:bg-gray-200 transition-all"
+                type="button"
               >
-                Geri Dön
+                {b.adGateBack}
               </button>
             </>
           )}
         </div>
 
-        {result?.error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {result.error}
-          </div>
-        )}
+        {result?.error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{result.error}</div>
+        ) : null}
 
         <button
+          className="w-full py-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-700"
           onClick={onClose}
-          className="w-full text-gray-500 hover:text-gray-700 text-sm font-medium py-2 transition-colors"
+          type="button"
         >
-          İptal
+          {b.adGateCancel}
         </button>
       </div>
     </div>

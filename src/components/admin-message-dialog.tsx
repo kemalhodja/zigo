@@ -40,9 +40,9 @@ export function AdminMessageDialog({
         onClose();
         router.refresh();
       }, 1500);
-    } catch (error: any) {
+    } catch (error) {
       setStatus("error");
-      setErrorMsg(error.message);
+      setErrorMsg(error instanceof Error ? error.message : "Mesaj gönderilemedi");
     }
   }
 

@@ -35,8 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!["teacher", "student"].includes(profile.role) || !profile.is_verified) {
-      return NextResponse.json({ error: "Yalnızca doğrulanmış öğretmenler ve öğrenciler medya yükleyebilir." }, { status: 403 });
+    if (profile.account_status === "closed" || profile.account_status === "suspended") {
+      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya yükleyemez." }, { status: 403 });
     }
 
     const formData = await request.formData();
@@ -93,8 +93,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!["teacher", "student"].includes(profile.role) || !profile.is_verified) {
-      return NextResponse.json({ error: "Yalnızca doğrulanmış öğretmenler ve öğrenciler medya silebilir." }, { status: 403 });
+    if (profile.account_status === "closed" || profile.account_status === "suspended") {
+      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya silebilir." }, { status: 403 });
     }
 
     const body = cleanupUploadSchema.parse(await request.json());

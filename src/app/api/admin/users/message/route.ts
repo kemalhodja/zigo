@@ -20,7 +20,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof z.ZodError
       ? "Invalid message parameters"
-      : (error as any)?.message || "Failed to send message";
+      : error instanceof Error
+        ? error.message
+        : "Failed to send message";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

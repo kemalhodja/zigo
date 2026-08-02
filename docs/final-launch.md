@@ -33,7 +33,7 @@ npm run test:ci
 
 ## Hosted launch sequence
 
-1. Apply migrations **001–066** on Supabase Cloud
+1. Apply migrations **001–077** on Supabase Cloud
 2. Vercel env from `.env.staging.example` (billing bypass **off**)
 3. Auth redirect URLs from `/setup` Hosted deploy card
 4. `npm run staging:preflight` against production/staging URL

@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { respondWithDomainError } from "@/lib/domain/api-errors";
-import { getCurrentProfile, updateUserGradeLevel } from "@/lib/domain/profiles";
+import {
+  applyAutoInterestsForGrade,
+  getCurrentProfile,
+  updateUserGradeLevel,
+} from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
 export async function PATCH(request: Request) {
@@ -23,8 +27,13 @@ export async function PATCH(request: Request) {
 
     const body = await request.json();
     const updated = await updateUserGradeLevel(supabase, { gradeLevel: body.gradeLevel });
+    const autoInterests = await applyAutoInterestsForGrade(supabase, body.gradeLevel);
 
-    return NextResponse.json({ data: updated });
+    return NextResponse.json({
+      data: updated,
+      autoAssigned: autoInterests.autoAssigned,
+      areaIds: autoInterests.areaIds,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Choose a valid grade level." }, { status: 400 });

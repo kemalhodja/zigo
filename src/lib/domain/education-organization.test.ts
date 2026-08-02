@@ -16,12 +16,17 @@ describe("education-organization", () => {
     expect(resolveOrganizationBillingTier("egitim_platformu")).toBe("platform");
   });
 
-  it("exposes four organization options", () => {
+  it("maps yayinevi to publisher billing", () => {
+    expect(resolveOrganizationBillingTier("yayinevi")).toBe("publisher");
+  });
+
+  it("exposes five organization options", () => {
     expect(EDUCATION_ORGANIZATION_OPTIONS.map((option) => option.id)).toEqual([
       "kurs",
       "okul",
       "egitim_kurumu",
       "egitim_platformu",
+      "yayinevi",
     ]);
   });
 });
