@@ -53,6 +53,8 @@ export function SocialCreateForm({
   const [sponsoredTargetUrl, setSponsoredTargetUrl] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
   const [coAuthorId, setCoAuthorId] = useState("");
+  const [objectFit, setObjectFit] = useState<"contain" | "cover">("contain");
+  const [scale, setScale] = useState<number>(1);
 
   useEffect(() => {
     try {
@@ -329,6 +331,8 @@ export function SocialCreateForm({
           controls
           mediaType={preview.type}
           mediaUrl={preview.url}
+          objectFit={objectFit}
+          scale={scale}
         >
           <div className="flex items-start justify-between">
             <span className="rounded-lg bg-black/30 px-3 py-1 text-xs font-black text-white">
@@ -364,23 +368,86 @@ export function SocialCreateForm({
 
       <div className="space-y-4 px-4 py-4">
         {preview ? (
-          <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-3">
-            <p className="min-w-0 truncate text-xs font-bold text-slate-500">
-              {selectedFile?.name ?? sc.mediaReady}
-            </p>
-            <label className="shrink-0 cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night">
-              {sc.change}
-              <input
-                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
-                className="sr-only"
-                name="file"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  setFilePreview(file);
-                }}
-                type="file"
-              />
-            </label>
+          <div className="space-y-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="min-w-0 truncate text-xs font-bold text-slate-600">
+                {selectedFile?.name ?? sc.mediaReady}
+              </p>
+              <label className="shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-night shadow-sm hover:bg-slate-100">
+                {sc.change}
+                <input
+                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                  className="sr-only"
+                  name="file"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    setFilePreview(file);
+                  }}
+                  type="file"
+                />
+              </label>
+            </div>
+
+            {/* ── Izgaraya Sığdırma & Zoom / Ölçeklendirme Kontrolleri ── */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 pt-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-slate-500">Izgara Ayarı:</span>
+                <button
+                  type="button"
+                  onClick={() => setObjectFit("contain")}
+                  className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                    objectFit === "contain"
+                      ? "bg-night text-white shadow-sm"
+                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  🔍 Tam Görsel (Sığdır)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setObjectFit("cover")}
+                  className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                    objectFit === "cover"
+                      ? "bg-night text-white shadow-sm"
+                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  🖼️ Kırp (Doldur)
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-slate-500">Ölçek:</span>
+                <button
+                  type="button"
+                  onClick={() => setScale((s) => Math.max(0.7, Number((s - 0.1).toFixed(2))))}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white font-black text-slate-700 hover:bg-slate-100"
+                  title="Küçült"
+                >
+                  -
+                </button>
+                <span className="min-w-10 text-center font-bold text-slate-800">
+                  {Math.round(scale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setScale((s) => Math.min(2.0, Number((s + 0.1).toFixed(2))))}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white font-black text-slate-700 hover:bg-slate-100"
+                  title="Büyüt"
+                >
+                  +
+                </button>
+                {scale !== 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setScale(1)}
+                    className="rounded-lg bg-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-300"
+                  >
+                    Sıfırla
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </div>
         ) : null}
 

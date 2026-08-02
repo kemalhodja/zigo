@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { SocialMediaScene, type SocialMediaSceneName } from "@/components/social-media-scenes";
 import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
+
 type SocialMediaFrameProps = {
   mediaUrl?: string | null;
   mediaType?: string | null;
@@ -12,6 +13,8 @@ type SocialMediaFrameProps = {
   scene?: SocialMediaSceneName;
   alt?: string;
   priority?: boolean;
+  objectFit?: "contain" | "cover" | "fill";
+  scale?: number;
 };
 
 export function SocialMediaFrame({
@@ -24,44 +27,62 @@ export function SocialMediaFrame({
   scene = "math",
   alt = "",
   priority = false,
+  objectFit = "contain",
+  scale = 1,
 }: SocialMediaFrameProps) {
   const playbackUrl = mediaUrl ? getMediaPlaybackUrl(mediaUrl) : undefined;
   const hasMedia = Boolean(playbackUrl);
   const isVideo = Boolean(playbackUrl && mediaType === "video");
   const isImage = Boolean(playbackUrl && mediaType === "image");
 
+  const fitClass =
+    objectFit === "cover" ? "object-cover" : objectFit === "fill" ? "object-fill" : "object-contain";
+  const transformStyle = scale && scale !== 1 ? { transform: `scale(${scale})` } : undefined;
+
   return (
     <div
       className={`relative overflow-hidden ${hasMedia ? "bg-night" : `bg-gradient-to-br ${gradient}`} ${className}`}
     >
-      {!hasMedia ? <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.2),transparent_15rem)]" /> : null}
+      {!hasMedia ? (
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.2),transparent_15rem)]" />
+      ) : null}
       {isImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           alt={alt}
-          className="absolute inset-0 size-full object-contain"
+          className={`absolute inset-0 size-full transition-transform duration-200 ${fitClass}`}
           decoding="async"
           fetchPriority={priority ? "high" : "low"}
-          loading={priority ? "eager" : "lazy"} // loading="lazy"
+          loading={priority ? "eager" : "lazy"}
           src={playbackUrl}
+          style={transformStyle}
         />
       ) : null}
       {isVideo ? (
         <video
           aria-label={alt || "Video preview"}
-          className="absolute inset-0 size-full object-contain"
+          className={`absolute inset-0 size-full transition-transform duration-200 ${fitClass}`}
           controls={controls}
           loop={!controls}
           muted={!controls}
           playsInline
           preload={controls ? "metadata" : "none"}
           src={playbackUrl}
+          style={transformStyle}
         />
       ) : null}
       {!hasMedia ? <SocialMediaScene scene={scene} /> : null}
-      {hasMedia ? <div className="absolute inset-0 bg-gradient-to-t from-black/24 via-transparent to-black/5" /> : null}
-      {!hasMedia ? <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/10 to-transparent" /> : null}
-      {children ? <div className="zigo-media-overlay relative z-[1] flex size-full flex-col justify-between p-4 text-white">{children}</div> : null}
+      {hasMedia ? (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/24 via-transparent to-black/5" />
+      ) : null}
+      {!hasMedia ? (
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/10 to-transparent" />
+      ) : null}
+      {children ? (
+        <div className="zigo-media-overlay relative z-[1] flex size-full flex-col justify-between p-4 text-white">
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
