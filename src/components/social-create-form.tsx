@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import type { ComposerArea } from "@/components/create-mode-composer";
-import { SocialMediaFrame } from "@/components/social-media-frame";
+import { SocialMediaFrame, type MediaFilterPreset } from "@/components/social-media-frame";
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
 import { compressVideo, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
@@ -55,6 +55,7 @@ export function SocialCreateForm({
   const [coAuthorId, setCoAuthorId] = useState("");
   const [objectFit, setObjectFit] = useState<"contain" | "cover">("contain");
   const [scale, setScale] = useState<number>(1);
+  const [filterPreset, setFilterPreset] = useState<MediaFilterPreset>("normal");
 
   useEffect(() => {
     try {
@@ -329,11 +330,41 @@ export function SocialCreateForm({
         <SocialMediaFrame
           className={forceReel ? "aspect-[9/16] min-h-[34rem] media-polish" : "zigo-media"}
           controls
+          filterPreset={filterPreset}
           mediaType={preview.type}
           mediaUrl={preview.url}
           objectFit={objectFit}
           scale={scale}
         >
+
+...
+
+            {/* ── Renk Filtresi & Görsel Tonlama ── */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200/80 pt-2 text-xs">
+              <span className="font-black text-slate-500">Renk Filtresi:</span>
+              <div className="flex flex-wrap items-center gap-1">
+                {[
+                  { key: "normal", label: "Orijinal" },
+                  { key: "vivid", label: "✨ Canlı" },
+                  { key: "contrast", label: "🎯 Netleş" },
+                  { key: "warm", label: "☀️ Sıcak" },
+                  { key: "bw", label: "🖤 S/B" },
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setFilterPreset(f.key as MediaFilterPreset)}
+                    className={`rounded-lg px-2 py-1 text-[11px] font-bold transition ${
+                      filterPreset === f.key
+                        ? "bg-indigo-600 text-white shadow-sm font-black"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           <div className="flex items-start justify-between">
             <span className="rounded-lg bg-black/30 px-3 py-1 text-xs font-black text-white">
               {forceReel ? sc.reelPreview : sc.postPreview}

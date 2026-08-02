@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { SocialMediaScene, type SocialMediaSceneName } from "@/components/social-media-scenes";
 import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
 
+export type MediaFilterPreset = "normal" | "vivid" | "contrast" | "warm" | "bw";
+
 type SocialMediaFrameProps = {
   mediaUrl?: string | null;
   mediaType?: string | null;
@@ -15,6 +17,15 @@ type SocialMediaFrameProps = {
   priority?: boolean;
   objectFit?: "contain" | "cover" | "fill";
   scale?: number;
+  filterPreset?: MediaFilterPreset;
+};
+
+const filterCssMap: Record<MediaFilterPreset, string> = {
+  normal: "none",
+  vivid: "saturate(1.4) contrast(1.1)",
+  contrast: "contrast(1.25) brightness(1.05)",
+  warm: "sepia(0.25) saturate(1.2) contrast(1.05)",
+  bw: "grayscale(1)",
 };
 
 export function SocialMediaFrame({
@@ -29,6 +40,7 @@ export function SocialMediaFrame({
   priority = false,
   objectFit = "contain",
   scale = 1,
+  filterPreset = "normal",
 }: SocialMediaFrameProps) {
   const playbackUrl = mediaUrl ? getMediaPlaybackUrl(mediaUrl) : undefined;
   const hasMedia = Boolean(playbackUrl);
@@ -37,7 +49,11 @@ export function SocialMediaFrame({
 
   const fitClass =
     objectFit === "cover" ? "object-cover" : objectFit === "fill" ? "object-fill" : "object-contain";
-  const transformStyle = scale && scale !== 1 ? { transform: `scale(${scale})` } : undefined;
+  const filterCss = filterCssMap[filterPreset] ?? "none";
+  const combinedStyle = {
+    transform: scale && scale !== 1 ? `scale(${scale})` : undefined,
+    filter: filterCss !== "none" ? filterCss : undefined,
+  };
 
   return (
     <div
@@ -50,25 +66,25 @@ export function SocialMediaFrame({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           alt={alt}
-          className={`absolute inset-0 size-full transition-transform duration-200 ${fitClass}`}
+          className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
           decoding="async"
           fetchPriority={priority ? "high" : "low"}
           loading={priority ? "eager" : "lazy"}
           src={playbackUrl}
-          style={transformStyle}
+          style={combinedStyle}
         />
       ) : null}
       {isVideo ? (
         <video
           aria-label={alt || "Video preview"}
-          className={`absolute inset-0 size-full transition-transform duration-200 ${fitClass}`}
+          className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
           controls={controls}
           loop={!controls}
           muted={!controls}
           playsInline
           preload={controls ? "metadata" : "none"}
           src={playbackUrl}
-          style={transformStyle}
+          style={combinedStyle}
         />
       ) : null}
       {!hasMedia ? <SocialMediaScene scene={scene} /> : null}
