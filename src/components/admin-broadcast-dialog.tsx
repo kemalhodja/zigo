@@ -79,7 +79,7 @@ export function AdminBroadcastDialog({ onClose }: { onClose: () => void }) {
               </label>
               <select
                 value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value as any)}
+                onChange={(e) => setTargetRole(e.target.value as "all" | "student" | "teacher" | "parent")}
                 className="w-full rounded-xl border border-slate-200 p-3 text-sm font-bold focus:border-crystal focus:outline-none"
               >
                 <option value="all">👥 Tüm Kullanıcılar (Öğrenci, Öğretmen, Veli)</option>
