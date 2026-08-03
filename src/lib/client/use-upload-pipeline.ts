@@ -19,6 +19,7 @@ import { useRef, useState } from "react";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { compressVideo, validateVideoLimits, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -105,11 +106,24 @@ export function useUploadPipeline() {
   }
 
   async function run(input: PublishInput): Promise<void> {
-    if (runningRef.current) return;
+    console.log("[POST_PIPELINE_START]", {
+      caption: input.caption,
+      areaId: input.areaId,
+      hasFile: Boolean(input.file),
+      fileName: input.file?.name,
+      fileSizeMB: input.file ? (input.file.size / (1024 * 1024)).toFixed(2) : 0,
+      fileType: input.file?.type,
+    });
+
+    if (runningRef.current) {
+      console.warn("[POST_PIPELINE] Pipeline is already running.");
+      return;
+    }
     runningRef.current = true;
 
     // ── Client-side daily limit pre-check ──────────────────────────────
     if (readDailyCount() >= MAX_DAILY_POSTS) {
+      console.warn("[POST_PIPELINE] Daily post limit reached.");
       setPhase("error");
       setError("Günlük maksimum 5 gönderi sınırına ulaştınız. Yarın tekrar deneyin.");
       runningRef.current = false;
@@ -129,6 +143,7 @@ export function useUploadPipeline() {
       // ── Validate (size + duration for videos) ──────────────────────────
       const validation = await validateVideoLimits(input.file);
       if (!validation.valid) {
+        console.error("[POST_PIPELINE] Video validation failed:", validation.error);
         setPhase("error");
         setError(validation.error ?? "Dosya doğrulanamadı. Lütfen farklı bir dosya seçin.");
         runningRef.current = false;
@@ -149,14 +164,13 @@ export function useUploadPipeline() {
           fileToUpload = await compressVideo(input.file, {
             signal: ctrl.signal,
             onProgress: (ratio) => {
-              // Progress: 10% → 50% during compression
               setProgress(10 + Math.round(ratio * 40));
               setMessage(`Video optimize ediliyor… ${Math.round(ratio * 100)}%`);
             },
           });
 
-          // Post-compression size guard
           if (fileToUpload.size > VIDEO_MAX_SIZE_BYTES) {
+            console.error("[POST_PIPELINE] Post-compression size exceeds limit:", fileToUpload.size);
             setPhase("error");
             setError(
               `Video sıkıştırıldıktan sonra hâlâ ${Math.round(fileToUpload.size / 1024 / 1024)} MB. ` +
@@ -167,14 +181,14 @@ export function useUploadPipeline() {
           }
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") {
-            // User cancelled compression
+            console.log("[POST_PIPELINE] Video compression cancelled by user.");
             runningRef.current = false;
             setPhase("idle");
             setProgress(0);
             setMessage("");
             return;
           }
-          // Non-fatal: fall back to original file (server will reject if still too large)
+          console.warn("[POST_PIPELINE] Video compression failed, falling back to original file:", err);
           fileToUpload = input.file;
         } finally {
           abortCtrlRef.current = null;
@@ -186,38 +200,94 @@ export function useUploadPipeline() {
       setProgress(55);
       setMessage("Medya yükleniyor…");
 
-      const uploadData = new FormData();
-      uploadData.set("file", fileToUpload);
+      console.log("[POST_PIPELINE_UPLOAD_START] Attempting direct Supabase storage upload...", {
+        name: fileToUpload.name,
+        size: fileToUpload.size,
+        type: fileToUpload.type,
+      });
 
-      let uploadRes: Response;
+      let directSuccess = false;
       try {
-        uploadRes = await fetchWithRetry("/api/social/upload", {
-          method: "POST",
-          body: uploadData,
-        });
-      } catch {
-        setPhase("error");
-        setError(
-          "Yükleme başarısız oldu. Bağlantınızı kontrol edip tekrar deneyin.",
-        );
-        runningRef.current = false;
-        return;
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          const extension = fileToUpload.name.split(".").pop() || (fileToUpload.type.startsWith("video/") ? "mp4" : "jpg");
+          const objectPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+          const { error: directErr } = await supabase.storage
+            .from("social-media")
+            .upload(objectPath, fileToUpload, { contentType: fileToUpload.type, upsert: false });
+
+          if (!directErr) {
+            const { data: publicData } = supabase.storage.from("social-media").getPublicUrl(objectPath);
+            if (publicData?.publicUrl) {
+              mediaUrl = publicData.publicUrl;
+              mediaType = fileToUpload.type.startsWith("video/") ? "video" : "image";
+              uploadedObjectPath = objectPath;
+              directSuccess = true;
+              console.log("[POST_PIPELINE_DIRECT_UPLOAD_SUCCESS]", { mediaUrl, mediaType, objectPath });
+            }
+          } else {
+            console.warn("[POST_PIPELINE_DIRECT_UPLOAD_FALLBACK] Direct upload warning, trying signed upload URL fallback:", directErr.message);
+
+            // Attempt 2: Fetch Signed Upload URL from server
+            const signedRes = await fetch(`/api/social/upload?fileType=${encodeURIComponent(fileToUpload.type)}&filename=${encodeURIComponent(fileToUpload.name)}`);
+            if (signedRes.ok) {
+              const signedBody = await signedRes.json();
+              if (signedBody?.data?.signedUrl && signedBody?.data?.path && signedBody?.data?.token) {
+                const { error: signedUploadErr } = await supabase.storage
+                  .from("social-media")
+                  .uploadToSignedUrl(signedBody.data.path, signedBody.data.token, fileToUpload);
+
+                if (!signedUploadErr) {
+                  mediaUrl = signedBody.data.mediaUrl;
+                  mediaType = signedBody.data.mediaType;
+                  uploadedObjectPath = signedBody.data.objectPath;
+                  directSuccess = true;
+                  console.log("[POST_PIPELINE_SIGNED_UPLOAD_SUCCESS]", { mediaUrl, mediaType, uploadedObjectPath });
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[POST_PIPELINE_DIRECT_UPLOAD_EXCEPTION] Falling back to /api/social/upload:", err);
       }
 
-      if (!uploadRes.ok) {
-        const body = (await uploadRes.json().catch(() => null)) as { error?: string } | null;
-        setPhase("error");
-        setError(body?.error ?? "Medya yüklenemedi. Lütfen tekrar deneyin.");
-        runningRef.current = false;
-        return;
-      }
+      if (!directSuccess) {
+        const uploadData = new FormData();
+        uploadData.set("file", fileToUpload);
 
-      const uploadBody = (await uploadRes.json()) as {
-        data: { mediaUrl: string; mediaType: "image" | "video"; objectPath: string };
-      };
-      mediaUrl = uploadBody.data.mediaUrl;
-      mediaType = uploadBody.data.mediaType;
-      uploadedObjectPath = uploadBody.data.objectPath;
+        let uploadRes: Response;
+        try {
+          uploadRes = await fetchWithRetry("/api/social/upload", {
+            method: "POST",
+            body: uploadData,
+          });
+        } catch (err) {
+          console.error("[POST_PIPELINE_UPLOAD_ERROR] Network error during upload:", err);
+          setPhase("error");
+          setError("Yükleme başarısız oldu. Bağlantınızı kontrol edip tekrar deneyin.");
+          runningRef.current = false;
+          return;
+        }
+
+        if (!uploadRes.ok) {
+          const body = (await uploadRes.json().catch(() => null)) as { error?: string } | null;
+          console.error("[POST_PIPELINE_UPLOAD_FAILED] HTTP", uploadRes.status, body);
+          setPhase("error");
+          setError(body?.error ?? "Medya yüklenemedi. Lütfen tekrar deneyin.");
+          runningRef.current = false;
+          return;
+        }
+
+        const uploadBody = (await uploadRes.json()) as {
+          data: { mediaUrl: string; mediaType: "image" | "video"; objectPath: string };
+        };
+        console.log("[POST_PIPELINE_UPLOAD_SUCCESS]", uploadBody.data);
+        mediaUrl = uploadBody.data.mediaUrl;
+        mediaType = uploadBody.data.mediaType;
+        uploadedObjectPath = uploadBody.data.objectPath;
+      }
       setProgress(75);
     }
 
@@ -226,29 +296,34 @@ export function useUploadPipeline() {
     setProgress(80);
     setMessage("Paylaşım tamamlanıyor…");
 
+    const payload = {
+      caption: input.caption,
+      mediaUrl,
+      mediaType,
+      areaId: input.areaId,
+      targetAudience: input.targetGrade?.trim() ? "grade" : "all",
+      targetGrade: input.targetGrade?.trim() || null,
+      isReel: input.isReel,
+      externalUrl: input.externalUrl?.trim() || undefined,
+      ...(input.teacherCreatorPlus && input.premiumPrepLabel && input.premiumPrepUrl
+        ? { premiumPrepLabel: input.premiumPrepLabel, premiumPrepUrl: input.premiumPrepUrl }
+        : {}),
+      ...(input.teacherCreatorPlus && input.sponsoredLabel && input.sponsoredTargetUrl
+        ? { sponsoredLabel: input.sponsoredLabel, sponsoredTargetUrl: input.sponsoredTargetUrl }
+        : {}),
+    };
+
+    console.log("[POST_PIPELINE_PUBLISH_START] Sending post payload to /api/social/posts:", payload);
+
     let publishRes: Response;
     try {
       publishRes = await fetchWithRetry("/api/social/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          caption: input.caption,
-          mediaUrl,
-          mediaType,
-          areaId: input.areaId,
-          targetAudience: "grade",
-          targetGrade: input.targetGrade,
-          isReel: input.isReel,
-          externalUrl: input.externalUrl?.trim() || undefined,
-          ...(input.teacherCreatorPlus && input.premiumPrepLabel && input.premiumPrepUrl
-            ? { premiumPrepLabel: input.premiumPrepLabel, premiumPrepUrl: input.premiumPrepUrl }
-            : {}),
-          ...(input.teacherCreatorPlus && input.sponsoredLabel && input.sponsoredTargetUrl
-            ? { sponsoredLabel: input.sponsoredLabel, sponsoredTargetUrl: input.sponsoredTargetUrl }
-            : {}),
-        }),
+        body: JSON.stringify(payload),
       });
-    } catch {
+    } catch (err) {
+      console.error("[POST_PIPELINE_PUBLISH_ERROR] Network error during post publish:", err);
       await cleanupUploadedMedia(uploadedObjectPath);
       setPhase("error");
       setError(
@@ -260,6 +335,7 @@ export function useUploadPipeline() {
 
     if (!publishRes.ok) {
       const body = (await publishRes.json().catch(() => null)) as { error?: string } | null;
+      console.error("[POST_PIPELINE_PUBLISH_FAILED] HTTP", publishRes.status, body);
       await cleanupUploadedMedia(uploadedObjectPath);
       setPhase("error");
       setError(body?.error ?? "Gönderi paylaşılamadı. Lütfen tekrar deneyin.");
@@ -271,6 +347,7 @@ export function useUploadPipeline() {
       data?: { id?: string };
     } | null;
 
+    console.log("[POST_PIPELINE_PUBLISH_SUCCESS] Published Post ID:", body?.data?.id);
     bumpDailyCount();
     setProgress(100);
     setPhase("done");

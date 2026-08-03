@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { extractErrorMessage } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createStory, createStorySchema, getActiveStories } from "@/lib/domain/social";
 import { createClient } from "@/lib/supabase/server";
@@ -11,7 +12,7 @@ export async function GET() {
     const stories = await getActiveStories(supabase);
     return NextResponse.json({ data: stories });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Stories could not be loaded.";
+    const message = extractErrorMessage(error, "Stories could not be loaded.");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -34,16 +35,14 @@ export async function POST(request: Request) {
       areaId: body.areaId,
       authorId: profile.id,
       caption: body.caption,
-      mediaUrl: body.mediaUrl,
+      mediaUrl: body.mediaUrl ?? undefined,
     });
 
     return NextResponse.json({ data: story }, { status: 201 });
   } catch (error) {
     const message = error instanceof z.ZodError
       ? "Choose an assigned area, keep the story caption under 500 characters, and use a valid media URL."
-      : error instanceof Error
-        ? error.message
-        : "Story could not be created.";
+      : extractErrorMessage(error, "Story could not be created.");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

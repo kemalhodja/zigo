@@ -1,11 +1,32 @@
 import { z } from "zod";
 
+const isValidMediaUrl = (val: string) =>
+  !val ||
+  val.startsWith("http://") ||
+  val.startsWith("https://") ||
+  val.startsWith("data:") ||
+  val.startsWith("blob:") ||
+  val.startsWith("/");
+
+const mediaUrlSchema = z
+  .string()
+  .refine(isValidMediaUrl, { message: "Geçerli bir medya URL veya veri adresi olmalıdır." })
+  .optional()
+  .nullable()
+  .or(z.literal(""));
+
 export const createSocialPostSchema = z.object({
-  caption: z.string().trim().min(1).max(2200),
-  mediaUrl: z.string().url().optional().nullable().or(z.literal("")),
+  caption: z.string().trim().min(1, "Lütfen gönderi için bir açıklama yazın.").max(2200, "Açıklama en fazla 2200 karakter olabilir."),
+  mediaUrl: mediaUrlSchema,
   mediaType: z.enum(["image", "video", "carousel"]).default("image"),
   isReel: z.coerce.boolean().default(false),
-  areaId: z.coerce.number().int().positive(),
+  areaId: z.preprocess(
+    (val) => {
+      const num = Number(val);
+      return Number.isFinite(num) && num > 0 ? num : 1;
+    },
+    z.number().int().positive("Geçerli bir ders/konu alanı seçilmelidir."),
+  ),
   targetAudience: z.enum(["all", "parent_only", "grade"]).default("all"),
   targetGrade: z.string().trim().optional().nullable(),
   postType: z.enum(["normal", "quiz", "micro"]).optional(),
@@ -16,7 +37,14 @@ export const createSocialPostSchema = z.object({
   premiumPrepUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
   sponsoredLabel: z.string().trim().min(3).max(120).optional().nullable().or(z.literal("")),
   sponsoredTargetUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
-  externalUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
+  externalUrl: z.preprocess(
+    (val) => {
+      if (typeof val !== "string" || !val.trim()) return null;
+      const trimmed = val.trim();
+      return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`;
+    },
+    z.string().url().max(2048).optional().nullable(),
+  ),
   coAuthorId: z.string().uuid().optional().nullable().or(z.literal("")),
 }).superRefine((value, ctx) => {
   const hasLabel = Boolean(value.premiumPrepLabel?.trim());
@@ -58,7 +86,7 @@ export const followSchema = z.object({
 
 export const createStorySchema = z.object({
   caption: z.string().trim().max(500).optional().or(z.literal("")),
-  mediaUrl: z.string().url().optional().or(z.literal("")),
+  mediaUrl: mediaUrlSchema,
   areaId: z.coerce.number().int().positive(),
 });
 

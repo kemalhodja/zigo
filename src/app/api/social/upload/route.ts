@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { extractErrorMessage } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +26,56 @@ const EXTENSION_BY_TYPE = new Map([
 const cleanupUploadSchema = z.object({
   objectPath: z.string().min(3).max(500),
 });
+
+export async function GET(request: Request) {
+  try {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+
+    if (!profile) {
+      return NextResponse.json({ error: "İmza adresi almak için lütfen giriş yapın." }, { status: 401 });
+    }
+
+    if (profile.account_status === "closed" || profile.account_status === "suspended") {
+      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya yükleyemez." }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const fileType = searchParams.get("fileType") || "image/jpeg";
+    const filename = searchParams.get("filename") || "media.bin";
+
+    if (!ALLOWED_TYPES.has(fileType)) {
+      return NextResponse.json({ error: "Desteklenmeyen dosya türü." }, { status: 400 });
+    }
+
+    const extension = EXTENSION_BY_TYPE.get(fileType) ?? (filename.split(".").pop() || "bin");
+    const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
+
+    const { data, error } = await supabase.storage
+      .from("social-media")
+      .createSignedUploadUrl(objectPath);
+
+    if (error || !data?.signedUrl) {
+      return NextResponse.json({ error: error?.message || "İmza adresi oluşturulamadı." }, { status: 400 });
+    }
+
+    const { data: publicData } = supabase.storage.from("social-media").getPublicUrl(objectPath);
+
+    return NextResponse.json({
+      data: {
+        signedUrl: data.signedUrl,
+        token: data.token,
+        path: data.path,
+        objectPath,
+        mediaUrl: publicData.publicUrl,
+        mediaType: fileType.startsWith("video/") ? "video" : "image",
+      },
+    });
+  } catch (error) {
+    const message = extractErrorMessage(error, "Yükleme adresi oluşturulamadı.");
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -101,8 +152,9 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    const message = extractErrorMessage(error, "Medya yüklenemedi. Lütfen tekrar deneyin.");
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Medya yüklenemedi. Lütfen tekrar deneyin." },
+      { error: message },
       { status: 400 },
     );
   }

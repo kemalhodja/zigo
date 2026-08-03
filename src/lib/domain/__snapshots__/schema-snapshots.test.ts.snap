@@ -99,6 +99,7 @@ exports[`domain schema snapshots > matches social post schema snapshot 1`] = `
 {
   "areaId": 1,
   "caption": "Kesirler dersi",
+  "externalUrl": null,
   "isReel": true,
   "mediaType": "video",
   "targetAudience": "all",

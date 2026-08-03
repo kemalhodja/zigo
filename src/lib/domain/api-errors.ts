@@ -54,14 +54,34 @@ export function mapDomainError(error: unknown): DomainErrorResponse | null {
   return null;
 }
 
+export function extractErrorMessage(error: unknown, fallbackMessage: string): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string" &&
+    (error as { message: string }).message
+  ) {
+    return (error as { message: string }).message;
+  }
+  if (typeof error === "string" && error.trim()) {
+    return error.trim();
+  }
+  return fallbackMessage;
+}
+
 export function respondWithDomainError(error: unknown, fallbackMessage: string, fallbackStatus = 400) {
   const mapped = mapDomainError(error);
   if (mapped) {
     return NextResponse.json(mapped.body, { status: mapped.status });
   }
 
-  const message = error instanceof Error ? error.message : fallbackMessage;
+  const message = extractErrorMessage(error, fallbackMessage);
   return NextResponse.json({ error: message }, { status: fallbackStatus });
 }
 
 export { DomainForbiddenError, RateLimitExceededError };
+
