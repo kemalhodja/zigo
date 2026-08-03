@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { SocialCreateForm } from "@/components/social-create-form";
+import { PostWizard } from "@/components/post-wizard";
 import { StoryCreateForm } from "@/components/story-create-form";
 import { useMessages } from "@/lib/i18n/locale-context";
 
@@ -24,7 +24,6 @@ export function CreateModeComposer({
   areas,
   initialMode = "post",
   teacherCreatorPlus = false,
-  allowDevActivate = false,
 }: CreateModeComposerProps) {
   const { createComposer: c } = useMessages();
   const modes = useMemo(
@@ -51,11 +50,12 @@ export function CreateModeComposer({
         </p>
         <p className="mt-1 text-sm font-bold text-slate-600">{activeMode.helper}</p>
       </div>
+
       {mode === "story" ? (
         <StoryCreateForm areas={areas} />
       ) : (
-        <SocialCreateForm
-          allowDevActivate={allowDevActivate}
+        /* PostWizard handles both regular posts and reels */
+        <PostWizard
           areas={areas}
           forceReel={mode === "reel"}
           teacherCreatorPlus={teacherCreatorPlus}

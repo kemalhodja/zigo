@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Beğenmek için lütfen giriş yapın." }, { status: 401 });
     }
 
     const body = socialPostActionSchema.parse(await request.json());
@@ -23,10 +23,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ data, meta: { action: "toggle-like" } });
   } catch (error) {
     const message = error instanceof z.ZodError
-      ? "Choose a valid post to like."
+      ? "Lütfen beğenmek için geçerli bir gönderi seçin."
       : error instanceof Error
         ? error.message
-        : "Like action failed.";
+        : "Beğeni işlemi tamamlanamadı. Lütfen tekrar deneyin.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

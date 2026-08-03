@@ -92,7 +92,7 @@ export function InterestSelector({
       ),
     [visibleAreas, gradeLevel, isLearner],
   );
-  const maxSelections = multiple ? 50 : isTeacherNiche ? 1 : 50;
+  const maxSelections = 50;
   const lockedRegistrationOrg = isOrganizationRegistrationType(initialOrganizationType);
   const registrationOrgLabel = getOrganizationOption(initialOrganizationType)?.label;
   const gradeLabels = m.education.gradeCategories;
@@ -153,10 +153,6 @@ export function InterestSelector({
     }
 
     setSelectedAreaIds((current) => {
-      if (!multiple && isTeacherNiche) {
-        return current.has(areaId) ? new Set<number>() : new Set([areaId]);
-      }
-
       const next = new Set(current);
 
       if (next.has(areaId)) {
@@ -179,12 +175,6 @@ export function InterestSelector({
     if (selectedList.length === 0) {
       setStatus("error");
       setMessage(i.selectOne);
-      return;
-    }
-
-    if (isTeacherNiche && selectedList.length !== 1) {
-      setStatus("error");
-      setMessage(i.teacherPickOneGeneral);
       return;
     }
 
@@ -255,11 +245,9 @@ export function InterestSelector({
             {selectedCount} {i.selectedCount}
           </h3>
           <p className="mt-1 text-sm font-semibold text-slate-500">
-            {isTeacherNiche
-              ? i.teacherPickOneGeneral
-              : needsBranchPick
-                ? `${gradeLevel} için branş seçin`
-                : i.chooseOne}
+            {needsBranchPick
+              ? `${gradeLevel} için branş seçin`
+              : "İlgi alanlarınızı seçin (Keşfet akışınız bu alanlara göre kişiselleştirilir)"}
           </p>
           {isLearner ? (
             <p className="mt-2 text-xs font-bold leading-5 text-crystal">{i.launchFreezeHint}</p>

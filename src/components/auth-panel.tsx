@@ -25,7 +25,7 @@ function readRememberPref() {
   if (stored === "0") return false;
   if (stored === "1") return true;
 
-  return isCapacitorClient();
+  return true;
 }
 
 function formatRateLimitMessage(message: string, retryAfterSeconds?: number) {
@@ -81,8 +81,7 @@ export function AuthPanel() {
         }
       }
 
-      const isMobileClient = isCapacitorClient();
-      const rememberMeChecked = isMobileClient ? true : rememberMe;
+      const rememberMeChecked = rememberMe;
       const trimmedEmail = email.trim();
       const trimmedFullName = fullName.trim();
 
@@ -289,16 +288,15 @@ export function AuthPanel() {
         ) : null}
 
         {mode === "sign-in" ? (
-          <label className="flex items-start gap-3 rounded-xl bg-slate-50 px-3 py-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 px-3 py-3">
             <input
               checked={rememberMe}
-              className="mt-0.5 size-4 rounded border-slate-300 text-crystal"
-              disabled={isCapacitorClient()}
+              className="mt-0.5 size-4 cursor-pointer rounded border-slate-300 text-crystal"
               name="rememberMe"
               onChange={(event) => setRememberMe(event.target.checked)}
               type="checkbox"
             />
-            <span>
+            <span className="cursor-pointer">
               <span className="block text-sm font-black text-slate-700">{a.rememberMe}</span>
               <span className="mt-0.5 block text-xs font-semibold leading-5 text-slate-500">
                 {isCapacitorClient() ? a.rememberMeMobileHint : a.rememberMeHint}

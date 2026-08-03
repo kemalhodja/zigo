@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ProfileFeedbackBox } from "@/components/profile-feedback-box";
 import { RegistrationAccountPicker } from "@/components/registration-account-picker";
 import { SocialAvatar } from "@/components/social-primitives";
+import { isCapacitorClient } from "@/lib/client/capacitor-runtime";
 import { pickProfilePhoto } from "@/lib/client/pick-profile-photo";
 import { type RegistrationAccountKind, type RequiredSignupOptionId } from "@/lib/domain/registration-account";
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -36,9 +37,13 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
   const common = m.common;
   const router = useRouter();
 
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
   const [fullName, setFullName] = useState(initialProfile.fullName);
   const [bio, setBio] = useState(initialProfile.bio);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialProfile.avatarUrl);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [accountKind, setAccountKind] = useState<RequiredSignupOptionId>(
     toRequiredId(initialProfile.accountKind),
   );
@@ -48,6 +53,14 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
   const [isSavingKind, setIsSavingKind] = useState(false);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   async function uploadFile(file: File) {
     setIsUploading(true);
@@ -82,11 +95,27 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
     }
   }
 
+  async function handleFile(file: File | null) {
+    if (!file) return;
+    const localPreview = URL.createObjectURL(file);
+    setPreviewUrl(localPreview);
+    await uploadFile(file);
+  }
+
   async function handlePick(source: "camera" | "gallery") {
     if (isUploading || isSaving) return;
-    const file = await pickProfilePhoto(source);
-    if (!file) return;
-    await uploadFile(file);
+
+    if (isCapacitorClient()) {
+      const file = await pickProfilePhoto(source);
+      if (file) await handleFile(file);
+      return;
+    }
+
+    if (source === "camera") {
+      cameraInputRef.current?.click();
+    } else {
+      galleryInputRef.current?.click();
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -170,7 +199,31 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
             accent="from-crystal via-fuchsia-500 to-rose-400"
             className="story-ring size-24 text-4xl shadow-md"
             label={fullName || "User"}
-            imageUrl={avatarUrl}
+            imageUrl={previewUrl || avatarUrl}
+          />
+
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleFile(file);
+              e.target.value = "";
+            }}
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleFile(file);
+              e.target.value = "";
+            }}
           />
 
           <div className="grid w-full max-w-sm grid-cols-2 gap-2">

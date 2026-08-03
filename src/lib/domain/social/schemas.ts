@@ -2,22 +2,22 @@ import { z } from "zod";
 
 export const createSocialPostSchema = z.object({
   caption: z.string().trim().min(1).max(2200),
-  mediaUrl: z.string().url().optional().or(z.literal("")),
+  mediaUrl: z.string().url().optional().nullable().or(z.literal("")),
   mediaType: z.enum(["image", "video", "carousel"]).default("image"),
   isReel: z.coerce.boolean().default(false),
   areaId: z.coerce.number().int().positive(),
   targetAudience: z.enum(["all", "parent_only", "grade"]).default("all"),
   targetGrade: z.string().trim().optional().nullable(),
   postType: z.enum(["normal", "quiz", "micro"]).optional(),
-  title: z.string().trim().max(255).optional(),
-  content: z.string().trim().max(4000).optional(),
-  quizId: z.string().uuid().optional(),
-  premiumPrepLabel: z.string().trim().min(3).max(120).optional(),
-  premiumPrepUrl: z.string().url().max(2048).optional(),
-  sponsoredLabel: z.string().trim().min(3).max(120).optional(),
-  sponsoredTargetUrl: z.string().url().max(2048).optional(),
-  externalUrl: z.string().url().max(2048).optional(),
-  coAuthorId: z.string().uuid().optional(),
+  title: z.string().trim().max(255).optional().nullable().or(z.literal("")),
+  content: z.string().trim().max(4000).optional().nullable().or(z.literal("")),
+  quizId: z.string().uuid().optional().nullable().or(z.literal("")),
+  premiumPrepLabel: z.string().trim().min(3).max(120).optional().nullable().or(z.literal("")),
+  premiumPrepUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
+  sponsoredLabel: z.string().trim().min(3).max(120).optional().nullable().or(z.literal("")),
+  sponsoredTargetUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
+  externalUrl: z.string().url().max(2048).optional().nullable().or(z.literal("")),
+  coAuthorId: z.string().uuid().optional().nullable().or(z.literal("")),
 }).superRefine((value, ctx) => {
   const hasLabel = Boolean(value.premiumPrepLabel?.trim());
   const hasUrl = Boolean(value.premiumPrepUrl?.trim());

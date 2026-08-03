@@ -22,6 +22,21 @@ describe("social interactions schemas", () => {
     expect(parsed.isReel).toBe(true);
   });
 
+  it("accepts create post payload with empty string and null optional fields", () => {
+    const parsed = createSocialPostSchema.parse({
+      caption: "Yeni ders içeriği",
+      areaId: "2",
+      mediaUrl: "",
+      externalUrl: null,
+      coAuthorId: "",
+      quizId: null,
+    });
+
+    expect(parsed.areaId).toBe(2);
+    expect(parsed.mediaUrl).toBe("");
+    expect(parsed.externalUrl).toBeNull();
+  });
+
   it("rejects posts without caption", () => {
     expect(() =>
       createSocialPostSchema.parse({

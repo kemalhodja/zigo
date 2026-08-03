@@ -14,7 +14,6 @@ export function LegalFooter() {
         <Link href="/legal/terms">{t.terms}</Link>
         <Link href="/legal/kvkk">{t.kvkk}</Link>
         <Link href="/legal/delete-account">{t.dataDelete}</Link>
-        <Link href="/setup">{t.setup}</Link>
       </div>
       <p className="mt-1">{t.tagline}</p>
     </footer>

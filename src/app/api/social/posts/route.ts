@@ -23,8 +23,8 @@ export async function GET(request: Request) {
     const postTypeParam = searchParams.get("postType");
     const postTypes = postTypeParam
       ? postTypeParam.split(",").filter((value): value is "normal" | "quiz" | "micro" =>
-          value === "normal" || value === "quiz" || value === "micro",
-        )
+        value === "normal" || value === "quiz" || value === "micro",
+      )
       : undefined;
     const limit = Number.isFinite(rawLimit) ? Math.min(50, Math.max(1, rawLimit)) : 30;
     const offset = Number.isFinite(rawOffset) ? Math.max(0, rawOffset) : 0;
@@ -57,27 +57,19 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Gönderi paylaşmak için lütfen giriş yapın." }, { status: 401 });
     }
 
     if (profile.account_status === "closed" || profile.account_status === "suspended") {
       return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar gönderi yayınlayamaz." }, { status: 403 });
     }
 
-    if (profile.role === "teacher" && !profile.is_verified) {
-      return NextResponse.json({ error: "Only verified teachers can publish posts." }, { status: 403 });
+    if (profile.role !== "teacher" || !profile.is_verified) {
+      return NextResponse.json({ error: "Yalnızca doğrulanmış öğretmenler gönderi yayınlayabilir." }, { status: 403 });
     }
 
     const body = createSocialPostSchema.parse(await request.json());
-    const teacherAreaIds = await getUserInterestAreaIds(supabase, profile.id);
     const areaId = body.areaId;
-
-    if (profile.role === "teacher" && teacherAreaIds.length > 0 && !teacherAreaIds.includes(areaId)) {
-      return NextResponse.json(
-        { error: "Teachers can publish only in assigned education areas." },
-        { status: 403 },
-      );
-    }
 
     const MAX_DAILY_POSTS = 5;
     const startOfDay = new Date();
@@ -86,9 +78,9 @@ export async function POST(request: Request) {
     let dailyPostCount = 0;
     try {
       const { count } = await supabase
-        .from("posts")
+        .from("social_posts")
         .select("id", { count: "exact", head: true })
-        .eq("teacher_id", profile.id)
+        .eq("author_id", profile.id)
         .gte("created_at", startOfDay.toISOString());
       dailyPostCount = count ?? 0;
     } catch {
@@ -143,11 +135,21 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Add a caption, choose an assigned education area, and use a valid media URL/type." },
+        { error: "Lütfen bir açıklama yazın, geçerli bir ders/ilgi alanı seçin ve geçerli bir içerik kullanın." },
         { status: 400 },
       );
     }
 
-    return respondWithDomainError(error, "Post could not be published.");
+    if (error instanceof Error && (error.message.includes("row-level security") || error.message.includes("policy"))) {
+      return NextResponse.json(
+        { error: "Gönderi yayınlama yetkiniz bulunmuyor. Yalnızca doğrulanmış öğretmenler atanan alanlarında gönderi paylaşabilir." },
+        { status: 403 },
+      );
+    }
+
+    return respondWithDomainError(
+      error,
+      error instanceof Error && error.message ? error.message : "Gönderi yayınlanamadı. Lütfen bilgileri kontrol edip tekrar deneyin.",
+    );
   }
 }

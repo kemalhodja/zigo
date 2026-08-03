@@ -7,6 +7,7 @@ import type { ComposerArea } from "@/components/create-mode-composer";
 import { SocialMediaFrame, type MediaFilterPreset } from "@/components/social-media-frame";
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
 import { compressVideo, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
+import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { INDIVIDUAL_GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
@@ -35,17 +36,25 @@ export function SocialCreateForm({
   const { socialCreate: sc } = useMessages();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const isSubmittingRef = useRef(false);
   const [status, setStatus] = useState<Status>("idle");
   const [step, setStep] = useState<PublishStep>("idle");
+  const [isValidating, setIsValidating] = useState(false);
   const compressAbortRef = useRef<AbortController | null>(null);
   const [message, setMessage] = useState("");
   const [caption, setCaption] = useState("");
   const [mediaTypeValue, setMediaTypeValue] = useState(forceReel ? "video" : "image");
   const [preview, setPreview] = useState<{ url: string; type: "image" | "video" } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedAreaId, setSelectedAreaId] = useState("");
+  const [selectedAreaId, setSelectedAreaId] = useState(() => areas[0]?.id.toString() ?? "");
   const [targetAudience, setTargetAudience] = useState<"all" | "parent_only" | "grade">("grade");
   const [targetGrade, setTargetGrade] = useState("Hepsi (Tüm Sınıflar)");
+
+  useEffect(() => {
+    if (!selectedAreaId && areas.length > 0 && areas[0]?.id) {
+      setSelectedAreaId(String(areas[0].id));
+    }
+  }, [areas, selectedAreaId]);
   const [shareAsReel, setShareAsReel] = useState(forceReel);
   const [premiumPrepLabel, setPremiumPrepLabel] = useState("");
   const [premiumPrepUrl, setPremiumPrepUrl] = useState("");
@@ -138,15 +147,20 @@ export function SocialCreateForm({
         type: "video",
       });
 
+      setIsValidating(true);
       const video = document.createElement("video");
       video.preload = "metadata";
       video.onloadedmetadata = () => {
+        setIsValidating(false);
         if (video.duration > 90) {
           setStatus("error");
           setMessage("Video süresi 90 saniyeden uzun olamaz.");
           setSelectedFile(null);
           setPreview(null);
         }
+      };
+      video.onerror = () => {
+        setIsValidating(false);
       };
       video.src = blobUrl;
       return;
@@ -163,12 +177,20 @@ export function SocialCreateForm({
   }
 
   async function publish(formData: FormData) {
-    if (status === "saving") return;
+    if (isSubmittingRef.current || status === "saving") return;
+    if (isValidating) {
+      setStatus("error");
+      setMessage("Video doğrulanıyor, lütfen bekleyin.");
+      return;
+    }
+
+    isSubmittingRef.current = true;
 
     if (!targetGrade || !targetGrade.trim()) {
       setStatus("error");
       setStep("idle");
       setMessage("Paylaşım yapabilmek için lütfen hedef sınıf seviyesini (ör. Hepsi - Tüm Sınıflar) seçin.");
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -225,7 +247,7 @@ export function SocialCreateForm({
 
       let uploadResponse: Response;
       try {
-        uploadResponse = await fetch("/api/social/upload", {
+        uploadResponse = await fetchWithRetry("/api/social/upload", {
           method: "POST",
           body: uploadData,
         });
@@ -233,6 +255,7 @@ export function SocialCreateForm({
         setStatus("error");
         setStep("idle");
         setMessage(sc.uploadFailed);
+        isSubmittingRef.current = false;
         return;
       }
 
@@ -241,6 +264,7 @@ export function SocialCreateForm({
         setStatus("error");
         setStep("idle");
         setMessage(payload?.error ?? sc.uploadError);
+        isSubmittingRef.current = false;
         return;
       }
 
@@ -259,7 +283,7 @@ export function SocialCreateForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          caption: formData.get("caption"),
+          caption,
           mediaUrl,
           mediaType,
           areaId: formData.get("areaId"),
@@ -281,6 +305,7 @@ export function SocialCreateForm({
       setStatus("error");
       setStep("idle");
       setMessage(sc.publishFailed);
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -290,6 +315,7 @@ export function SocialCreateForm({
       setStatus("error");
       setStep("idle");
       setMessage(payload?.error ?? sc.shareError);
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -297,6 +323,7 @@ export function SocialCreateForm({
     setStatus("saved");
     setStep("done");
     setMessage(sc.shared);
+    isSubmittingRef.current = false;
     window.localStorage.removeItem(forceReel ? `${draftKey}:reel` : `${draftKey}:post`);
     setCaption("");
     setMediaTypeValue(forceReel ? "video" : "image");
@@ -674,7 +701,7 @@ export function SocialCreateForm({
 
         <button
           className="tap-scale sticky bottom-20 z-10 w-full zigo-cta tap-scale rounded-lg px-4 py-3.5 text-sm font-black text-white disabled:opacity-60"
-          disabled={status === "saving" || areas.length === 0}
+          disabled={status === "saving" || isValidating || areas.length === 0}
           type="submit"
         >
           {submitLabel}
@@ -691,6 +718,7 @@ export function SocialCreateForm({
     </form>
   );
 }
+
 
 function PublishSteps({
   currentStep,

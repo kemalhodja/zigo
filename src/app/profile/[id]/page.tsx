@@ -96,6 +96,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           </div>
           <p className="mt-1.5 text-sm leading-5 text-slate-600">
             @{handle}
+            {profile.bio ? <><br />{profile.bio}</> : null}
           </p>
           {profile.role === "teacher" ? (
             <div className="mt-3">

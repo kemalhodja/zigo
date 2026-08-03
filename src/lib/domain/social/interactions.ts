@@ -41,22 +41,22 @@ export async function createSocialPost(
   input: {
     authorId: string;
     caption: string;
-    mediaUrl?: string;
+    mediaUrl?: string | null;
     mediaType?: SocialMediaType;
     isReel?: boolean;
     areaId: number;
     targetAudience?: "all" | "parent_only" | "grade";
     targetGrade?: string | null;
     postType?: ContentPostType;
-    title?: string;
-    content?: string;
-    quizId?: string;
-    premiumPrepLabel?: string;
-    premiumPrepUrl?: string;
-    sponsoredLabel?: string;
-    sponsoredTargetUrl?: string;
-    externalUrl?: string;
-    coAuthorId?: string;
+    title?: string | null;
+    content?: string | null;
+    quizId?: string | null;
+    premiumPrepLabel?: string | null;
+    premiumPrepUrl?: string | null;
+    sponsoredLabel?: string | null;
+    sponsoredTargetUrl?: string | null;
+    externalUrl?: string | null;
+    coAuthorId?: string | null;
   },
 ) {
   const parsed = createSocialPostSchema.parse(input);
@@ -80,6 +80,14 @@ export async function createSocialPost(
       const caption = values[index++] ?? parsed.caption;
       const title = parsed.title ? values[index++] ?? null : null;
       const content = parsed.content ? values[index++] ?? null : null;
+
+      try {
+        await supabase
+          .from("user_interests")
+          .insert({ user_id: input.authorId, area_id: parsed.areaId });
+      } catch {
+        // Non-fatal if interest is already linked
+      }
 
       const { data, error } = await supabase
         .from("social_posts")

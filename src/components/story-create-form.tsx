@@ -47,6 +47,12 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
   }, [areas, sc.draftRestored]);
 
   useEffect(() => {
+    if (!selectedAreaId && areas.length > 0 && areas[0]?.id) {
+      setSelectedAreaId(areas[0].id.toString());
+    }
+  }, [areas, selectedAreaId]);
+
+  useEffect(() => {
     try {
       window.localStorage.setItem(draftKey, JSON.stringify({ areaId: selectedAreaId, caption, savedAt: new Date().toISOString() }));
     } catch {

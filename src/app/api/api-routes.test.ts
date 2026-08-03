@@ -141,20 +141,22 @@ describe("API route handlers", () => {
     expect(response.status).toBe(403);
   });
 
-  it("POST /api/social/posts rejects unassigned teacher areas", async () => {
+  it("POST /api/social/posts allows verified teachers to publish in any education area", async () => {
     vi.mocked(getCurrentProfile).mockResolvedValue({
       id: "t1",
       role: "teacher",
       is_verified: true,
     } as never);
-    vi.mocked(getUserInterestAreaIds).mockResolvedValue([2]);
+    vi.mocked(getUserSubscription).mockResolvedValue({ tier: "free", isPremium: false });
+    vi.mocked(createSocialPost).mockResolvedValue({ id: "p1" } as never);
+
     const response = await socialPostsPost(
       new Request("http://localhost/api/social/posts", {
         method: "POST",
         body: JSON.stringify({ caption: "Test", areaId: 1 }),
       }),
     );
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(201);
   });
 
   it("POST /api/social/posts creates posts for verified teachers", async () => {

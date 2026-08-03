@@ -13,18 +13,18 @@ export async function GET(request: Request) {
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Giriş yapmanız gerekmektedir." }, { status: 401 });
     }
 
     const postId = new URL(request.url).searchParams.get("postId");
     if (!postId) {
-      return NextResponse.json({ error: "postId is required." }, { status: 400 });
+      return NextResponse.json({ error: "Geçerli bir gönderi seçilmelidir." }, { status: 400 });
     }
 
     const comments = await getPostComments(supabase, postId);
     return NextResponse.json({ data: comments, meta: { count: comments.length } });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Comments could not be loaded.";
+    const message = error instanceof Error ? error.message : "Yorumlar yüklenemedi.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
@@ -35,13 +35,13 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Yorum yapmak için lütfen giriş yapın." }, { status: 401 });
     }
 
     const rateLimit = checkRateLimit(`comment:${profile.id}`, 10, 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
-        `Too many comments. Try again in ${rateLimit.retryAfterSeconds} seconds.`,
+        `Çok fazla yorum gönderdiniz. Lütfen ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,
         rateLimit.retryAfterSeconds,
       );
     }
@@ -58,11 +58,11 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Comment must be between 1 and 1000 characters for a valid post." },
+        { error: "Yorum 1 ile 1000 karakter arasında olmalıdır." },
         { status: 400 },
       );
     }
 
-    return respondWithDomainError(error, "Comment could not be posted.");
+    return respondWithDomainError(error, "Yorum gönderilemedi. Lütfen tekrar deneyin.");
   }
 }

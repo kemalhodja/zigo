@@ -39,7 +39,7 @@ export const updateUserProfileSchema = z
   .object({
     fullName: z.string().trim().min(2).max(100).optional(),
     bio: z.string().trim().max(500).optional(),
-    avatarUrl: z.string().trim().url().max(500).optional().nullable(),
+    avatarUrl: z.string().trim().max(250000).optional().nullable(),
   })
   .refine((value) => value.fullName !== undefined || value.bio !== undefined || value.avatarUrl !== undefined, {
     message: "Provide fullName, bio or avatarUrl to update.",

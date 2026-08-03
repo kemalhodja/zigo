@@ -74,7 +74,7 @@ export async function persistRememberMePreference(rememberMe: boolean) {
   const cookieStore = await cookies();
 
   cookieStore.set(ZIGO_REMEMBER_ME_COOKIE, rememberMe ? "1" : "0", {
-    maxAge: 60 * 60 * 24 * 365,
+    ...(rememberMe ? { maxAge: 60 * 60 * 24 * 365 } : {}),
     path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

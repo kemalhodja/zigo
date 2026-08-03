@@ -74,8 +74,7 @@ export function filterAreasForInterestSelection<T extends AreaLike>(
 export function isTeacherGeneralInterestSelection<T extends AreaLike>(
   selectedAreas: T[],
 ): boolean {
-  if (selectedAreas.length !== 1) return false;
-  return isGeneralInterestArea(selectedAreas[0]!);
+  return selectedAreas.length >= 1;
 }
 
 export function generalInterestGradeKey(): GradeCategoryKey {

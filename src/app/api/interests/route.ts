@@ -20,22 +20,15 @@ export async function PUT(request: Request) {
     const areas = await getEducationAreas(supabase);
 
     if (profile.role === "teacher") {
-      const selected = areas.filter((area) => areaIds.includes(area.id));
-
-      if (!isTeacherGeneralInterestSelection(selected)) {
-        return NextResponse.json(
-          { error: "Öğretmenler kayıtta yalnızca bir Genel İlgi kategorisi seçebilir." },
-          { status: 403 },
-        );
-      }
-    } else {
-      assertAreaIdsAllowedUnderLaunchFreeze(
-        areas,
-        areaIds,
-        "learner_demand",
-        profile.grade_level,
-      );
+      return NextResponse.json({ error: "Teachers cannot assign their own areas." }, { status: 403 });
     }
+
+    assertAreaIdsAllowedUnderLaunchFreeze(
+      areas,
+      areaIds,
+      "learner_demand",
+      profile.grade_level,
+    );
 
     await setUserInterests(supabase, {
       areaIds: body.areaIds,

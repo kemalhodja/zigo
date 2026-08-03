@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Takip etmek için lütfen giriş yapın." }, { status: 401 });
     }
 
     const body = followSchema.parse(await request.json());
@@ -23,10 +23,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ data, meta: { action: "toggle-follow" } });
   } catch (error) {
     const message = error instanceof z.ZodError
-      ? "Choose a valid creator profile to follow."
+      ? "Lütfen takip etmek için geçerli bir profil seçin."
       : error instanceof Error
         ? error.message
-        : "Follow action failed.";
+        : "Takip işlemi tamamlanamadı. Lütfen tekrar deneyin.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

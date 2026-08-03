@@ -23,10 +23,10 @@ describe("general interest areas", () => {
     expect(filterAreasForInterestSelection([general, math], "student")).toEqual([general, math]);
   });
 
-  it("requires exactly one general interest for teachers", () => {
+  it("allows teachers to select multiple interest areas", () => {
     expect(isTeacherGeneralInterestSelection([general])).toBe(true);
-    expect(isTeacherGeneralInterestSelection([general, general])).toBe(false);
-    expect(isTeacherGeneralInterestSelection([math])).toBe(false);
+    expect(isTeacherGeneralInterestSelection([general, general])).toBe(true);
+    expect(isTeacherGeneralInterestSelection([])).toBe(false);
   });
 
   it("ships an expanded expertise matrix for teachers", () => {
