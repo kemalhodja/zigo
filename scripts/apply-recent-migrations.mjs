@@ -33,6 +33,7 @@ const MIGRATIONS = [
   "085_study_rooms.sql",
   "086_ai_mentor.sql",
   "087_social_media_storage_and_url_size.sql",
+  "088_post_location.sql",
 ];
 
 function loadEnvFile(name) {
@@ -125,6 +126,54 @@ async function probe(admin, migrationId) {
     const { error } = await admin.from("social_posts").select("target_audience").limit(1);
     return !error;
   }
+  if (migrationId === "069") {
+    const { error } = await admin.from("google_play_purchases").select("id").limit(1);
+    return !error;
+  }
+  if (migrationId === "070") {
+    const { data } = await admin.rpc("update_user_profile", { next_full_name: null });
+    return data !== undefined;
+  }
+  if (migrationId === "071") {
+    const { error } = await admin.from("users").select("classroom").limit(1);
+    return !error;
+  }
+  if (migrationId === "072") {
+    return true; // Idempotent: CREATE OR REPLACE + GRANT
+  }
+  if (migrationId === "073") {
+    const { error } = await admin.from("users").select("account_status").limit(1);
+    return !error;
+  }
+  if (migrationId === "074") {
+    return true; // Idempotent: CREATE OR REPLACE trigger function
+  }
+  if (migrationId === "075") {
+    return true; // Idempotent: enum value additions with IF NOT EXISTS
+  }
+  if (migrationId === "076") {
+    return true; // Idempotent: INSERT ON CONFLICT
+  }
+  if (migrationId === "077") {
+    const { error } = await admin.from("content_reports").select("resolved_at").limit(1);
+    return !error;
+  }
+  if (migrationId === "078") {
+    return true; // Idempotent: GRANT statements
+  }
+  if (migrationId === "079") {
+    return true; // Idempotent: CREATE OR REPLACE function
+  }
+  if (migrationId === "080") {
+    return true; // Idempotent: enum value additions
+  }
+  if (migrationId === "081") {
+    return true; // Idempotent: CREATE INDEX IF NOT EXISTS
+  }
+  if (migrationId === "082") {
+    const { error } = await admin.from("invite_codes").select("id").limit(1);
+    return !error;
+  }
   if (migrationId === "083") {
     const { error } = await admin.from("social_posts").select("external_url").limit(1);
     return !error;
@@ -143,6 +192,10 @@ async function probe(admin, migrationId) {
   }
   if (migrationId === "087") {
     return false; // Idempotent migration
+  }
+  if (migrationId === "088") {
+    const { error } = await admin.from("social_posts").select("location_name").limit(1);
+    return !error;
   }
   return false;
 }

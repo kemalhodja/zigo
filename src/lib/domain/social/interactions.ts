@@ -27,6 +27,7 @@ import {
   reelWatchCompletionSchema,
   socialPostActionSchema,
   storyReplySchema,
+  updateSocialPostSchema,
 } from "@/lib/domain/social/schemas";
 import type { LearningAwardResult, UserContentReport } from "@/lib/domain/social/types";
 import type {
@@ -57,6 +58,9 @@ export async function createSocialPost(
     sponsoredTargetUrl?: string | null;
     externalUrl?: string | null;
     coAuthorId?: string | null;
+    locationName?: string | null;
+    city?: string | null;
+    district?: string | null;
   },
 ) {
   const parsed = createSocialPostSchema.parse(input);
@@ -110,7 +114,110 @@ export async function createSocialPost(
           sponsored_target_url: parsed.sponsoredTargetUrl ?? null,
           external_url: parsed.externalUrl ?? null,
           co_author_id: parsed.coAuthorId ?? null,
+          location_name: parsed.locationName ?? null,
+          city: parsed.city ?? null,
+          district: parsed.district ?? null,
         } as Database["public"]["Tables"]["social_posts"]["Insert"])
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  );
+}
+
+export async function updateSocialPost(
+  supabase: SupabaseClient<Database>,
+  input: {
+    postId: string;
+    authorId: string;
+    caption?: string;
+    title?: string | null;
+    content?: string | null;
+    areaId?: number;
+    targetAudience?: "all" | "parent_only" | "grade";
+    targetGrade?: string | null;
+    externalUrl?: string | null;
+    locationName?: string | null;
+    city?: string | null;
+    district?: string | null;
+  },
+) {
+  const parsed = updateSocialPostSchema.parse(input);
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("social_posts")
+    .select("id, author_id")
+    .eq("id", parsed.postId)
+    .single();
+
+  if (fetchError || !existing) {
+    throw new Error("Gönderi bulunamadı.");
+  }
+
+  if (existing.author_id !== input.authorId) {
+    throw new Error("Bu gönderiyi düzenleme yetkiniz yok.");
+  }
+
+  const fields: { label: string; text: string }[] = [];
+  if (parsed.caption) fields.push({ label: "caption", text: parsed.caption });
+  if (parsed.title) fields.push({ label: "title", text: parsed.title });
+  if (parsed.content) fields.push({ label: "content", text: parsed.content });
+
+  if (fields.length === 0) {
+    const updatePayload: Record<string, unknown> = {};
+    if (parsed.areaId !== undefined) updatePayload.area_id = parsed.areaId;
+    if (parsed.targetAudience !== undefined) updatePayload.target_audience = parsed.targetAudience;
+    if (parsed.targetGrade !== undefined) updatePayload.target_grade = parsed.targetGrade;
+    if (parsed.externalUrl !== undefined) updatePayload.external_url = parsed.externalUrl;
+    if (parsed.locationName !== undefined) updatePayload.location_name = parsed.locationName;
+    if (parsed.city !== undefined) updatePayload.city = parsed.city;
+    if (parsed.district !== undefined) updatePayload.district = parsed.district;
+
+    if (Object.keys(updatePayload).length === 0) {
+      throw new Error("Güncellenecek alan belirtilmedi.");
+    }
+
+    const { data, error } = await supabase
+      .from("social_posts")
+      .update(updatePayload as Database["public"]["Tables"]["social_posts"]["Update"])
+      .eq("id", parsed.postId)
+      .eq("author_id", input.authorId)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  return runModeratedFieldsAction(
+    supabase,
+    {
+      userId: input.authorId,
+      contentKind: "social_post",
+      fields,
+    },
+    async (values) => {
+      let index = 0;
+      const updatePayload: Record<string, unknown> = {};
+
+      if (parsed.caption) updatePayload.caption = values[index++] ?? parsed.caption;
+      if (parsed.title) updatePayload.title = values[index++] ?? parsed.title;
+      if (parsed.content) updatePayload.content = values[index++] ?? parsed.content;
+      if (parsed.areaId !== undefined) updatePayload.area_id = parsed.areaId;
+      if (parsed.targetAudience !== undefined) updatePayload.target_audience = parsed.targetAudience;
+      if (parsed.targetGrade !== undefined) updatePayload.target_grade = parsed.targetGrade;
+      if (parsed.externalUrl !== undefined) updatePayload.external_url = parsed.externalUrl;
+      if (parsed.locationName !== undefined) updatePayload.location_name = parsed.locationName;
+      if (parsed.city !== undefined) updatePayload.city = parsed.city;
+      if (parsed.district !== undefined) updatePayload.district = parsed.district;
+
+      const { data, error } = await supabase
+        .from("social_posts")
+        .update(updatePayload as Database["public"]["Tables"]["social_posts"]["Update"])
+        .eq("id", parsed.postId)
+        .eq("author_id", input.authorId)
         .select("*")
         .single();
 

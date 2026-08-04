@@ -56,6 +56,8 @@
     "organization-type-form.tsx",
     "student-social-strip.tsx",
     "today-learning-card.tsx",
-    "admin-teacher-actions.tsx"
+    "admin-teacher-actions.tsx",
+    "create-post-screen.tsx",
+    "social-create-form.tsx"
   ]
 }

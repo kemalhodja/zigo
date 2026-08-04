@@ -62,6 +62,7 @@ export function SocialCreateForm({
   const [sponsoredTargetUrl, setSponsoredTargetUrl] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
   const [coAuthorId, setCoAuthorId] = useState("");
+  const [locationName, setLocationName] = useState("");
   const [objectFit, setObjectFit] = useState<"contain" | "cover">("contain");
   const [scale, setScale] = useState<number>(1);
   const [filterPreset, setFilterPreset] = useState<MediaFilterPreset>("normal");
@@ -292,6 +293,7 @@ export function SocialCreateForm({
           isReel: forceReel || formData.get("isReel") === "on",
           externalUrl: externalUrl.trim() ? externalUrl.trim() : undefined,
           coAuthorId: coAuthorId.trim() ? coAuthorId.trim() : undefined,
+          locationName: locationName.trim() ? locationName.trim() : undefined,
           ...(teacherCreatorPlus && premiumPrepLabel.trim() && premiumPrepUrl.trim()
             ? { premiumPrepLabel: premiumPrepLabel.trim(), premiumPrepUrl: premiumPrepUrl.trim() }
             : {}),
@@ -543,6 +545,16 @@ export function SocialCreateForm({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="relative">
+          <input
+            className="w-full rounded-lg bg-slate-100 px-3.5 py-2.5 text-sm font-medium text-slate-800 outline-none placeholder:text-slate-400 focus:bg-slate-200/60"
+            name="locationName"
+            onChange={(e) => setLocationName(e.target.value)}
+            placeholder="📍 Konum ekle (örn: Kadıköy, İstanbul veya Okul Adı)"
+            value={locationName}
+          />
         </div>
 
         <details className="rounded-lg bg-slate-50 px-3 py-3 text-sm">

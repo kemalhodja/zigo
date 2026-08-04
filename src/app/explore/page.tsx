@@ -96,20 +96,26 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const showSuggestedCreators = !hasQuery && creators.length === 0 && activeFormat !== "teachers";
 
   let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
+  let userCity: string | null = null;
   if (hasSupabaseEnv()) {
     try {
       const supabase = await createClient();
       const profile = await getCurrentProfile(supabase);
       if (profile?.role) viewerRole = profile.role;
+      if (profile?.city) userCity = profile.city;
     } catch {
       viewerRole = "guest";
     }
   }
 
+  const baseCategories = userCity
+    ? [{ label: `📍 ${userCity}`, query: userCity }, ...categories]
+    : categories;
+
   const roleCategories =
     viewerRole === "parent"
-      ? categories
-      : categories.filter((category) => category.query !== "Veli");
+      ? baseCategories
+      : baseCategories.filter((category) => category.query !== "Veli");
 
   return (
     <div className="space-y-3 pb-3">

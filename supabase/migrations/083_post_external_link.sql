@@ -1,4 +1,4 @@
 -- Migration to add external_url column to social_posts table
 
 ALTER TABLE public.social_posts
-ADD COLUMN external_url TEXT CHECK (char_length(external_url) <= 2048);
+ADD COLUMN IF NOT EXISTS external_url TEXT CHECK (char_length(external_url) <= 2048);

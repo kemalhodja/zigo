@@ -1,7 +1,14 @@
--- Migration for Study Rooms feature
+-- Migration for Study Rooms feature (idempotent)
 
-CREATE TYPE public.study_room_status AS ENUM ('active', 'closed');
-CREATE TYPE public.study_room_type AS ENUM ('voice', 'silent');
+do $$ begin
+  create type public.study_room_status as enum ('active', 'closed');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.study_room_type as enum ('voice', 'silent');
+exception when duplicate_object then null;
+end $$;
 
 CREATE TABLE IF NOT EXISTS public.study_rooms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -27,26 +34,27 @@ CREATE TABLE IF NOT EXISTS public.study_room_participants (
 ALTER TABLE public.study_rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.study_room_participants ENABLE ROW LEVEL SECURITY;
 
--- Allow all users to read active rooms
+drop policy if exists "Allow read active rooms" ON public.study_rooms;
 CREATE POLICY "Allow read active rooms" ON public.study_rooms
   FOR SELECT USING (status = 'active');
 
--- Allow authenticated users to create rooms
+drop policy if exists "Allow insert own rooms" ON public.study_rooms;
 CREATE POLICY "Allow insert own rooms" ON public.study_rooms
   FOR INSERT WITH CHECK (auth.uid() = host_id);
 
--- Allow room host to update their room
+drop policy if exists "Allow update own rooms" ON public.study_rooms;
 CREATE POLICY "Allow update own rooms" ON public.study_rooms
   FOR UPDATE USING (auth.uid() = host_id);
 
--- Allow reading participants
+drop policy if exists "Allow read participants" ON public.study_room_participants;
 CREATE POLICY "Allow read participants" ON public.study_room_participants
   FOR SELECT USING (true);
 
--- Allow authenticated users to join/leave rooms
+drop policy if exists "Allow insert own participation" ON public.study_room_participants;
 CREATE POLICY "Allow insert own participation" ON public.study_room_participants
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+drop policy if exists "Allow update own participation" ON public.study_room_participants;
 CREATE POLICY "Allow update own participation" ON public.study_room_participants
   FOR UPDATE USING (auth.uid() = user_id);
 

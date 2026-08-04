@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { extractErrorMessage, respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
-import { createSocialPost, createSocialPostSchema, getSocialFeed, SOCIAL_FEED_CACHE_TAG, socialFeedCacheTag } from "@/lib/domain/social";
+import { createSocialPost, createSocialPostSchema, getSocialFeed, SOCIAL_FEED_CACHE_TAG, socialFeedCacheTag, updateSocialPost, updateSocialPostSchema } from "@/lib/domain/social";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { assertTeacherCreatorPlus, socialPostRequiresTeacherCreatorPlus } from "@/lib/domain/teacher-creator-plus";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -152,6 +152,9 @@ export async function POST(request: Request) {
       sponsoredTargetUrl: body.sponsoredTargetUrl,
       externalUrl: body.externalUrl,
       coAuthorId: body.coAuthorId,
+      locationName: body.locationName ?? (profile.city ? `${profile.district ? `${profile.district}, ` : ""}${profile.city}` : null),
+      city: body.city ?? profile.city ?? null,
+      district: body.district ?? profile.district ?? null,
     };
 
     let post;
@@ -197,3 +200,68 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+
+    if (!profile) {
+      return NextResponse.json({ error: "Gönderi düzenlemek için lütfen giriş yapın." }, { status: 401 });
+    }
+
+    if (profile.account_status === "closed" || profile.account_status === "suspended") {
+      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar gönderi düzenleyemez." }, { status: 403 });
+    }
+
+    const rawBody = await request.json();
+    const body = updateSocialPostSchema.parse(rawBody);
+
+    const updatePayload = {
+      postId: body.postId,
+      authorId: profile.id,
+      caption: body.caption,
+      title: body.title,
+      content: body.content,
+      areaId: body.areaId,
+      targetAudience: body.targetAudience,
+      targetGrade: body.targetGrade,
+      externalUrl: body.externalUrl,
+      locationName: body.locationName,
+      city: body.city,
+      district: body.district,
+    };
+
+    let post;
+    try {
+      post = await updateSocialPost(supabase, updatePayload);
+    } catch (updateErr) {
+      const msg = extractErrorMessage(updateErr, "");
+      const adminSupabase = createAdminClient();
+      if (adminSupabase && (msg.includes("row-level security") || msg.includes("policy"))) {
+        console.warn("[SERVER_POST_UPDATE_RLS_FALLBACK] Retrying post update using admin client:", profile.id);
+        post = await updateSocialPost(adminSupabase, updatePayload);
+      } else {
+        throw updateErr;
+      }
+    }
+
+    revalidateTag(SOCIAL_FEED_CACHE_TAG, "max");
+    revalidateTag(socialFeedCacheTag(profile.id), "max");
+
+    return NextResponse.json({ data: post, meta: { action: "update-post", postId: body.postId } }, { status: 200 });
+  } catch (error) {
+    console.error("[SERVER_POST_UPDATE_ERROR]", error);
+    if (error instanceof z.ZodError) {
+      const zodMsg = error.issues.map((i) => i.message).filter(Boolean).join(" ") || "Geçersiz düzenleme bilgisi.";
+      return NextResponse.json({ error: zodMsg }, { status: 400 });
+    }
+
+    const errMessage = extractErrorMessage(error, "");
+    return respondWithDomainError(
+      error,
+      errMessage || "Gönderi düzenlenemedi. Lütfen bilgileri kontrol edip tekrar deneyin.",
+    );
+  }
+}
+

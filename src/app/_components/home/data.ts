@@ -50,6 +50,11 @@ export type DisplayPost = {
   canOpenSponsored?: boolean;
   isSponsoredActive?: boolean;
   avatarUrl?: string | null;
+  areaId?: number;
+  isOwner?: boolean;
+  locationName?: string | null;
+  city?: string | null;
+  district?: string | null;
 };
 
 export type DisplaySuggestedCreator = {
@@ -186,6 +191,7 @@ export async function getHomePosts(activeFeed: "for-you" | "following"): Promise
         canFollowCreator: Boolean(profile && post.author?.id && post.author.id !== profile.id),
         isFollowingCreator: followingByPost[index] ?? false,
         viewerRole: profile?.role ?? null,
+        viewerId: profile?.id ?? null,
       }),
     );
   } catch {
@@ -319,6 +325,7 @@ function toDisplayPost(
     canFollowCreator?: boolean;
     isFollowingCreator?: boolean;
     viewerRole?: "teacher" | "parent" | "student" | null;
+    viewerId?: string | null;
   } = {},
 ): DisplayPost {
   const authorName = post.author?.full_name ?? "Zigo Creator";
@@ -341,12 +348,14 @@ function toDisplayPost(
     comments: post.comments_count,
     badge: post.is_reel ? "Micro" : "Post",
     area: displayEducationAreaName(post.area?.area_name) || "Eşleşen öğrenme",
+    areaId: post.area_id ?? undefined,
     mediaUrl: post.media_url,
     mediaType: post.media_type,
     isLiked: post.is_liked,
     isSaved: post.is_saved,
     isFollowingCreator: Boolean(followState.isFollowingCreator),
     canFollowCreator: Boolean(followState.canFollowCreator),
+    isOwner: Boolean(followState.viewerId && post.author?.id && followState.viewerId === post.author.id),
     createdAt: post.created_at,
     premiumPrepLabel: post.premium_prep_label ?? undefined,
     showPremiumPrep: Boolean(
@@ -361,6 +370,9 @@ function toDisplayPost(
     canOpenSponsored: post.can_open_sponsored,
     isSponsoredActive: post.is_sponsored_active,
     avatarUrl: post.author?.avatar_url ?? null,
+    locationName: (post as unknown as { location_name?: string | null }).location_name ?? null,
+    city: (post as unknown as { city?: string | null }).city ?? null,
+    district: (post as unknown as { district?: string | null }).district ?? null,
   };
 }
 

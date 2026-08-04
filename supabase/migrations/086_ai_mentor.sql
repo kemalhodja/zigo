@@ -12,7 +12,7 @@ CREATE INDEX IF NOT EXISTS ai_mentor_logs_user_idx ON public.ai_mentor_logs (use
 
 ALTER TABLE public.ai_mentor_logs ENABLE ROW LEVEL SECURITY;
 
--- Allow user to read their own logs
+drop policy if exists "Allow read own ai logs" ON public.ai_mentor_logs;
 CREATE POLICY "Allow read own ai logs" ON public.ai_mentor_logs
   FOR SELECT USING (auth.uid() = user_id);
 

@@ -46,6 +46,9 @@ export const createSocialPostSchema = z.object({
     z.string().url().max(2048).optional().nullable(),
   ),
   coAuthorId: z.string().uuid().optional().nullable().or(z.literal("")),
+  locationName: z.string().trim().max(150).optional().nullable().or(z.literal("")),
+  city: z.string().trim().max(100).optional().nullable().or(z.literal("")),
+  district: z.string().trim().max(100).optional().nullable().or(z.literal("")),
 }).superRefine((value, ctx) => {
   const hasLabel = Boolean(value.premiumPrepLabel?.trim());
   const hasUrl = Boolean(value.premiumPrepUrl?.trim());
@@ -66,6 +69,35 @@ export const createSocialPostSchema = z.object({
       path: hasSponsorLabel ? ["sponsoredTargetUrl"] : ["sponsoredLabel"],
     });
   }
+});
+
+export const updateSocialPostSchema = z.object({
+  postId: z.string().uuid(),
+  caption: z.string().trim().min(1, "Lütfen gönderi için bir açıklama yazın.").max(2200, "Açıklama en fazla 2200 karakter olabilir.").optional(),
+  title: z.string().trim().max(255).optional().nullable().or(z.literal("")),
+  content: z.string().trim().max(4000).optional().nullable().or(z.literal("")),
+  areaId: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null) return undefined;
+      const num = Number(val);
+      return Number.isFinite(num) && num > 0 ? num : undefined;
+    },
+    z.number().int().positive("Geçerli bir ders/konu alanı seçilmelidir.").optional(),
+  ),
+  targetAudience: z.enum(["all", "parent_only", "grade"]).optional(),
+  targetGrade: z.string().trim().optional().nullable(),
+  externalUrl: z.preprocess(
+    (val) => {
+      if (val === undefined || val === null) return undefined;
+      if (typeof val !== "string" || !val.trim()) return null;
+      const trimmed = val.trim();
+      return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`;
+    },
+    z.string().url().max(2048).optional().nullable(),
+  ),
+  locationName: z.string().trim().max(150).optional().nullable().or(z.literal("")),
+  city: z.string().trim().max(100).optional().nullable().or(z.literal("")),
+  district: z.string().trim().max(100).optional().nullable().or(z.literal("")),
 });
 
 export const socialPostActionSchema = z.object({

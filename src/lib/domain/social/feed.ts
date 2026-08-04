@@ -168,7 +168,7 @@ export async function searchSocialPosts(
       )
     `,
     )
-    .ilike("caption", `%${trimmed}%`)
+    .or(`caption.ilike.%${trimmed}%,location_name.ilike.%${trimmed}%,city.ilike.%${trimmed}%,district.ilike.%${trimmed}%`)
     .order("created_at", { ascending: false })
     .limit(30);
 

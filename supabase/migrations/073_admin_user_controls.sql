@@ -1,11 +1,14 @@
--- Create the account_status enum
-create type public.account_status as enum ('active', 'suspended', 'limited', 'closed');
+-- Create the account_status enum (idempotent)
+do $$ begin
+  create type public.account_status as enum ('active', 'suspended', 'limited', 'closed');
+exception when duplicate_object then null;
+end $$;
 
 -- Add the column to users table
-alter table public.users add column account_status public.account_status not null default 'active';
+alter table public.users add column if not exists account_status public.account_status not null default 'active';
 
 -- Create table for admin messages
-create table public.admin_messages (
+create table if not exists public.admin_messages (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
   title varchar(255) not null,
@@ -16,6 +19,7 @@ create table public.admin_messages (
 
 alter table public.admin_messages enable row level security;
 
+drop policy if exists "Users can read their own messages" on public.admin_messages;
 create policy "Users can read their own messages" on public.admin_messages
   for select using (auth.uid() = user_id);
 

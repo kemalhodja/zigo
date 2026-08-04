@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DoubleTapLikeLink } from "@/components/double-tap-like-link";
+import { PostOptionsButton } from "@/components/post-options-button";
 import { PremiumPrepLink } from "@/components/premium-prep-link";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialPostActions } from "@/components/social-post-actions";
@@ -50,29 +51,40 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   return (
     <div className="space-y-0 pb-3">
       <article className="-mx-4 overflow-hidden border-b border-slate-100 bg-white">
-        <Link
-          className="tap-scale flex items-center gap-3 px-4 py-2.5"
-          href={post.author?.id ? `/profile/${post.author.id}` : "/profile"}
-        >
-          <SocialAvatar className="size-9" label={creator} imageUrl={post.author?.avatar_url} />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-black text-night">{creator}</p>
-            {post.author?.is_verified ? (
-              <div className="mt-1">
-                <TeacherTrustBadges
-                  branches={postArea ? [postArea] : []}
-                  moreLabel={m.teacherBadges.moreAreas}
-                  verified
-                  verifiedLabel={m.teacherBadges.verifiedTeacher}
-                />
-              </div>
-            ) : (
-              <p className="text-xs font-bold text-slate-500">
-                @{creator.toLowerCase().replaceAll(" ", "")}
-              </p>
-            )}
+        <div className="flex items-center justify-between px-4 py-2.5">
+          <Link
+            className="tap-scale flex min-w-0 flex-1 items-center gap-3"
+            href={post.author?.id ? `/profile/${post.author.id}` : "/profile"}
+          >
+            <SocialAvatar className="size-9 shrink-0" label={creator} imageUrl={post.author?.avatar_url} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black text-night">{creator}</p>
+              {post.author?.is_verified ? (
+                <div className="mt-1">
+                  <TeacherTrustBadges
+                    branches={postArea ? [postArea] : []}
+                    moreLabel={m.teacherBadges.moreAreas}
+                    verified
+                    verifiedLabel={m.teacherBadges.verifiedTeacher}
+                  />
+                </div>
+              ) : (
+                <p className="text-xs font-bold text-slate-500">
+                  @{creator.toLowerCase().replaceAll(" ", "")}
+                </p>
+              )}
+            </div>
+          </Link>
+          <div className="shrink-0 pl-2">
+            <PostOptionsButton
+              initialAreaId={post.area_id ?? undefined}
+              initialCaption={post.caption}
+              initialSaved={post.is_saved}
+              isOwner={Boolean(profile?.id && post.author?.id && profile.id === post.author.id)}
+              postId={post.id}
+            />
           </div>
-        </Link>
+        </div>
 
         <DoubleTapLikeLink href={`/post/${post.id}`} initialLiked={post.is_liked} postId={post.id}>
           <SocialMediaFrame className="zigo-media border-y border-slate-50" mediaType={post.media_type} mediaUrl={post.media_url}>

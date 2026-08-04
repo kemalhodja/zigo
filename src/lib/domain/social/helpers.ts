@@ -71,11 +71,21 @@ export async function hydrateSocialPosts(
   if (posts.length === 0) return [];
 
   let allowedPosts = posts;
-  if (posts.some((p) => p.target_audience && p.target_audience !== "all")) {
-    const profile = viewerId
-      ? await supabase.from("users").select("id, role, grade_level").eq("id", viewerId).maybeSingle().then((r) => r.data)
-      : null;
-    allowedPosts = filterPostsForAudience(posts, viewerId, profile);
+  let viewerLocation: { city?: string | null; district?: string | null } | null = null;
+  if (viewerId) {
+    const profile = await supabase
+      .from("users")
+      .select("id, role, grade_level, city, district")
+      .eq("id", viewerId)
+      .maybeSingle()
+      .then((r) => r.data);
+
+    if (profile) {
+      viewerLocation = { city: profile.city, district: profile.district };
+      if (posts.some((p) => p.target_audience && p.target_audience !== "all")) {
+        allowedPosts = filterPostsForAudience(posts, viewerId, profile);
+      }
+    }
   }
 
   if (allowedPosts.length === 0) return [];
@@ -113,7 +123,7 @@ export async function hydrateSocialPosts(
       likes_count: likes,
       comments_count: comments,
       saves_count: saves,
-      ranking_score: scoreSocialPost(post, likes, comments, saves),
+      ranking_score: scoreSocialPost(post, likes, comments, saves, viewerLocation),
       is_liked: likedPostIds.has(post.id),
       is_saved: savedPostIds.has(post.id),
     };
@@ -288,11 +298,34 @@ export function rankSocialPosts(posts: SocialFeedPost[]) {
   return [...posts].sort((first, second) => second.ranking_score - first.ranking_score);
 }
 
-function scoreSocialPost(post: SocialPostRow, likes: number, comments: number, saves: number) {
+function scoreSocialPost(
+  post: SocialPostRow,
+  likes: number,
+  comments: number,
+  saves: number,
+  viewerLocation?: { city?: string | null; district?: string | null } | null,
+) {
   const ageHours = Math.max(1, (Date.now() - new Date(post.created_at).getTime()) / 36e5);
   const recency = 120 / Math.sqrt(ageHours);
   const formatBoost = post.is_reel || post.media_type === "video" ? 18 : 0;
-  return recency + likes * 1.5 + comments * 4 + saves * 6 + formatBoost;
+
+  let locationBoost = 0;
+  if (viewerLocation) {
+    const pLoc = post as SocialPostRow & { city?: string | null; district?: string | null };
+    const postCity = pLoc.city ? pLoc.city.trim().toLowerCase() : null;
+    const userCity = viewerLocation.city ? viewerLocation.city.trim().toLowerCase() : null;
+    const postDistrict = pLoc.district ? pLoc.district.trim().toLowerCase() : null;
+    const userDistrict = viewerLocation.district ? viewerLocation.district.trim().toLowerCase() : null;
+
+    if (postCity && userCity && postCity === userCity) {
+      locationBoost += 50;
+    }
+    if (postDistrict && userDistrict && postDistrict === userDistrict) {
+      locationBoost += 100;
+    }
+  }
+
+  return recency + likes * 1.5 + comments * 4 + saves * 6 + formatBoost + locationBoost;
 }
 
 export async function countUserPosts(supabase: SupabaseClient<Database>, userId: string) {

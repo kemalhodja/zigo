@@ -19,13 +19,15 @@ set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
--- RLS policies for avatars storage bucket
+-- RLS policies for avatars storage bucket (idempotent)
+drop policy if exists "Avatars are publicly readable" on storage.objects;
 create policy "Avatars are publicly readable"
 on storage.objects
 for select
 to public
 using (bucket_id = 'avatars');
 
+drop policy if exists "Users can upload their own avatar" on storage.objects;
 create policy "Users can upload their own avatar"
 on storage.objects
 for insert
@@ -35,6 +37,7 @@ with check (
   and owner = auth.uid()
 );
 
+drop policy if exists "Users can update their own avatar" on storage.objects;
 create policy "Users can update their own avatar"
 on storage.objects
 for update
@@ -48,6 +51,7 @@ with check (
   and owner = auth.uid()
 );
 
+drop policy if exists "Users can delete their own avatar" on storage.objects;
 create policy "Users can delete their own avatar"
 on storage.objects
 for delete
@@ -57,7 +61,8 @@ using (
   and owner = auth.uid()
 );
 
--- Drop old update_user_profile function to avoid overload conflicts
+-- Drop all old update_user_profile overloads to avoid parameter-name conflicts
+drop function if exists public.update_user_profile(text, text, text);
 drop function if exists public.update_user_profile(text, text);
 
 -- Re-create update_user_profile with full_name support
