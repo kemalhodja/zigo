@@ -1,8 +1,8 @@
-const ANDROID_CAPACITOR_UA = /Capacitor/i;
+const ANDROID_NATIVE_UA = /Capacitor|TWA|wv|ZigoApp/i;
 
 export function isAndroidCapacitorUserAgent(userAgent: string | null | undefined) {
   if (!userAgent?.trim()) return false;
-  return /Android/i.test(userAgent) && ANDROID_CAPACITOR_UA.test(userAgent);
+  return /Android/i.test(userAgent) && ANDROID_NATIVE_UA.test(userAgent);
 }
 
 export function isWebCheckoutAllowedForRequest(request: Request) {

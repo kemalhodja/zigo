@@ -20,6 +20,76 @@ type BankTransferCheckoutPanelProps = {
   configured: boolean;
 };
 
+function CopyableFieldRow({
+  label,
+  value,
+  textToCopy,
+  isCode = false,
+}: {
+  label: string;
+  value: string;
+  textToCopy: string;
+  isCode?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = textToCopy;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white p-3 shadow-xs transition hover:border-emerald-300 hover:bg-emerald-50/40">
+      <div className="min-w-0 flex-1">
+        <dt className="text-[0.68rem] font-black uppercase tracking-wider text-emerald-800">{label}</dt>
+        <dd className={`truncate font-black ${isCode ? "text-base tracking-wide text-night" : "text-sm text-night"}`}>
+          {value}
+        </dd>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className={`tap-scale flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${
+          copied
+            ? "bg-emerald-600 text-white shadow-xs"
+            : "bg-emerald-100/80 text-emerald-900 border border-emerald-200 hover:bg-emerald-200/70"
+        }`}
+        title={`${label} kopyala`}
+      >
+        {copied ? (
+          <>
+            <svg aria-hidden="true" className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Kopyalandı ✓</span>
+          </>
+        ) : (
+          <>
+            <svg aria-hidden="true" className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>Kopyala</span>
+          </>
+        )}
+      </button>
+    </div>
+  );
+}
+
 function BankAccountDetails({
   account,
   amountTry,
@@ -43,49 +113,61 @@ function BankAccountDetails({
   };
 }) {
   return (
-    <dl className="space-y-2 text-sm">
+    <dl className="space-y-2.5">
       {account.label ? (
-        <div>
-          <dt className="font-bold text-emerald-900">{labels.labelAccount}</dt>
-          <dd className="font-black text-night">{account.label}</dd>
-        </div>
+        <CopyableFieldRow
+          label={labels.labelAccount}
+          textToCopy={account.label}
+          value={account.label}
+        />
       ) : null}
-      <div>
-        <dt className="font-bold text-emerald-900">{labels.labelPayee}</dt>
-        <dd className="font-black text-night">{account.accountName}</dd>
-      </div>
+      <CopyableFieldRow
+        label={labels.labelPayee}
+        textToCopy={account.accountName}
+        value={account.accountName}
+      />
       {account.bankName ? (
-        <div>
-          <dt className="font-bold text-emerald-900">{labels.labelBank}</dt>
-          <dd className="font-black text-night">{account.bankName}</dd>
-        </div>
+        <CopyableFieldRow
+          label={labels.labelBank}
+          textToCopy={account.bankName}
+          value={account.bankName}
+        />
       ) : null}
       {account.branchName ? (
-        <div>
-          <dt className="font-bold text-emerald-900">{labels.labelBranch}</dt>
-          <dd className="font-black text-night">{account.branchName}</dd>
-        </div>
+        <CopyableFieldRow
+          label={labels.labelBranch}
+          textToCopy={account.branchName}
+          value={account.branchName}
+        />
       ) : null}
       {account.accountNumber ? (
-        <div>
-          <dt className="font-bold text-emerald-900">{labels.labelAccountNo}</dt>
-          <dd className="font-black text-night">{account.accountNumber}</dd>
-        </div>
+        <CopyableFieldRow
+          label={labels.labelAccountNo}
+          textToCopy={account.accountNumber}
+          value={account.accountNumber}
+        />
       ) : null}
-      <div>
-        <dt className="font-bold text-emerald-900">{labels.labelIban}</dt>
-        <dd className="break-all font-black tracking-wide text-night">{account.iban}</dd>
-      </div>
+      <CopyableFieldRow
+        isCode
+        label={labels.labelIban}
+        textToCopy={account.iban.replaceAll(" ", "")}
+        value={account.iban}
+      />
       {showReference ? (
         <>
-          <div>
-            <dt className="font-bold text-emerald-900">{labels.labelAmount}</dt>
-            <dd className="font-black text-night">{formatTryPrice(amountTry)}</dd>
-          </div>
-          <div>
-            <dt className="font-bold text-emerald-900">{labels.labelReference}</dt>
-            <dd className="font-black text-crystal">{referenceCode}</dd>
-          </div>
+          <CopyableFieldRow
+            label={labels.labelAmount}
+            textToCopy={String(amountTry)}
+            value={formatTryPrice(amountTry)}
+          />
+          {referenceCode ? (
+            <CopyableFieldRow
+              isCode
+              label={labels.labelReference}
+              textToCopy={referenceCode}
+              value={referenceCode}
+            />
+          ) : null}
         </>
       ) : null}
     </dl>

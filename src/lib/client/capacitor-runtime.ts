@@ -19,5 +19,14 @@ export function isCapacitorAndroidClient() {
     return true;
   }
 
-  return /Android/i.test(navigator.userAgent) && /Capacitor/i.test(navigator.userAgent);
+  const ua = navigator.userAgent || "";
+  const isAndroid = /Android/i.test(ua);
+  const isNativeApp =
+    /Capacitor/i.test(ua) ||
+    /TWA/i.test(ua) ||
+    /wv/i.test(ua) ||
+    /ZigoApp/i.test(ua) ||
+    (typeof document !== "undefined" && document.referrer && document.referrer.startsWith("android-app://"));
+
+  return isAndroid && (isNativeApp || (typeof window !== "undefined" && window.matchMedia?.("(display-mode: standalone)")?.matches));
 }

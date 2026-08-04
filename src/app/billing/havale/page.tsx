@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -12,6 +13,7 @@ import {
   hasBankTransferConfigured,
   resolveBankTransferPlan,
 } from "@/lib/domain/bank-transfer";
+import { getBillingPlatformMessage, isAndroidCapacitorUserAgent } from "@/lib/domain/billing-platform";
 import {
   buildOrganizationSalesWhatsAppUrl,
   shouldBlockSelfServeOrgCheckout,
@@ -29,6 +31,22 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
   const { planId = "student-monthly" } = await searchParams;
   const messages = await getServerMessages();
   const h = messages.billingUi.havale;
+
+  const reqHeaders = await headers();
+  const userAgent = reqHeaders.get("user-agent");
+  if (isAndroidCapacitorUserAgent(userAgent)) {
+    return (
+      <StateCard
+        action={
+          <Link className="font-black text-crystal" href="/profile">
+            {h.backProfile}
+          </Link>
+        }
+        description={getBillingPlatformMessage("tr")}
+        title="Google Play İle Abonelik"
+      />
+    );
+  }
 
   if (!hasSupabaseEnv()) {
     return (
