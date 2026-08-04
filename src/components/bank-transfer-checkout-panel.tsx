@@ -112,65 +112,130 @@ function BankAccountDetails({
     labelReference: string;
   };
 }) {
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  async function handleCopyAll() {
+    const lines = [];
+    if (account.label) lines.push(`${labels.labelAccount}: ${account.label}`);
+    lines.push(`${labels.labelPayee}: ${account.accountName}`);
+    if (account.bankName) lines.push(`${labels.labelBank}: ${account.bankName}`);
+    if (account.branchName) lines.push(`${labels.labelBranch}: ${account.branchName}`);
+    if (account.accountNumber) lines.push(`${labels.labelAccountNo}: ${account.accountNumber}`);
+    lines.push(`${labels.labelIban}: ${account.iban.replaceAll(" ", "")}`);
+    if (showReference) {
+      lines.push(`${labels.labelAmount}: ${formatTryPrice(amountTry)}`);
+      if (referenceCode) lines.push(`${labels.labelReference}: ${referenceCode}`);
+    }
+    const fullText = lines.join("\n");
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(fullText);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = fullText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 2200);
+    } catch {
+      setCopiedAll(false);
+    }
+  }
+
   return (
-    <dl className="space-y-2.5">
-      {account.label ? (
-        <CopyableFieldRow
-          label={labels.labelAccount}
-          textToCopy={account.label}
-          value={account.label}
-        />
-      ) : null}
-      <CopyableFieldRow
-        label={labels.labelPayee}
-        textToCopy={account.accountName}
-        value={account.accountName}
-      />
-      {account.bankName ? (
-        <CopyableFieldRow
-          label={labels.labelBank}
-          textToCopy={account.bankName}
-          value={account.bankName}
-        />
-      ) : null}
-      {account.branchName ? (
-        <CopyableFieldRow
-          label={labels.labelBranch}
-          textToCopy={account.branchName}
-          value={account.branchName}
-        />
-      ) : null}
-      {account.accountNumber ? (
-        <CopyableFieldRow
-          label={labels.labelAccountNo}
-          textToCopy={account.accountNumber}
-          value={account.accountNumber}
-        />
-      ) : null}
-      <CopyableFieldRow
-        isCode
-        label={labels.labelIban}
-        textToCopy={account.iban.replaceAll(" ", "")}
-        value={account.iban}
-      />
-      {showReference ? (
-        <>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2.5">
+        <span className="text-xs font-black uppercase tracking-wider text-emerald-900">Hesap Detayları</span>
+        <button
+          type="button"
+          onClick={handleCopyAll}
+          className={`tap-scale flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${
+            copiedAll
+              ? "bg-emerald-700 text-white shadow-sm"
+              : "bg-emerald-800 text-white shadow-sm hover:bg-emerald-900"
+          }`}
+        >
+          {copiedAll ? (
+            <>
+              <svg aria-hidden="true" className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Tüm Bilgiler Kopyalandı ✓</span>
+            </>
+          ) : (
+            <>
+              <svg aria-hidden="true" className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              <span>📋 Tüm Bilgileri Kopyala</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <dl className="space-y-2.5">
+        {account.label ? (
           <CopyableFieldRow
-            label={labels.labelAmount}
-            textToCopy={String(amountTry)}
-            value={formatTryPrice(amountTry)}
+            label={labels.labelAccount}
+            textToCopy={account.label}
+            value={account.label}
           />
-          {referenceCode ? (
+        ) : null}
+        <CopyableFieldRow
+          label={labels.labelPayee}
+          textToCopy={account.accountName}
+          value={account.accountName}
+        />
+        {account.bankName ? (
+          <CopyableFieldRow
+            label={labels.labelBank}
+            textToCopy={account.bankName}
+            value={account.bankName}
+          />
+        ) : null}
+        {account.branchName ? (
+          <CopyableFieldRow
+            label={labels.labelBranch}
+            textToCopy={account.branchName}
+            value={account.branchName}
+          />
+        ) : null}
+        {account.accountNumber ? (
+          <CopyableFieldRow
+            label={labels.labelAccountNo}
+            textToCopy={account.accountNumber}
+            value={account.accountNumber}
+          />
+        ) : null}
+        <CopyableFieldRow
+          isCode
+          label={labels.labelIban}
+          textToCopy={account.iban.replaceAll(" ", "")}
+          value={account.iban}
+        />
+        {showReference ? (
+          <>
             <CopyableFieldRow
-              isCode
-              label={labels.labelReference}
-              textToCopy={referenceCode}
-              value={referenceCode}
+              label={labels.labelAmount}
+              textToCopy={String(amountTry)}
+              value={formatTryPrice(amountTry)}
             />
-          ) : null}
-        </>
-      ) : null}
-    </dl>
+            {referenceCode ? (
+              <CopyableFieldRow
+                isCode
+                label={labels.labelReference}
+                textToCopy={referenceCode}
+                value={referenceCode}
+              />
+            ) : null}
+          </>
+        ) : null}
+      </dl>
+    </div>
   );
 }
 
