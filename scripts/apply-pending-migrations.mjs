@@ -197,6 +197,31 @@ const PENDING = [
     file: "082_invite_codes.sql",
     probe: async (admin) => !((await admin.from("invite_codes").select("id").limit(1)).error),
   },
+  {
+    id: "083",
+    file: "083_post_external_link.sql",
+    probe: async (admin) => !((await admin.from("social_posts").select("external_url").limit(1)).error),
+  },
+  {
+    id: "084",
+    file: "084_post_co_author.sql",
+    probe: async (admin) => !((await admin.from("social_posts").select("co_author_id").limit(1)).error),
+  },
+  {
+    id: "085",
+    file: "085_study_rooms.sql",
+    probe: async (admin) => !((await admin.from("study_rooms").select("id").limit(1)).error),
+  },
+  {
+    id: "086",
+    file: "086_ai_mentor.sql",
+    probe: async (admin) => !((await admin.from("ai_mentor_logs").select("id").limit(1)).error),
+  },
+  {
+    id: "087",
+    file: "087_social_media_storage_and_url_size.sql",
+    probe: async () => false,
+  },
 ];
 
 function loadEnvFile(name) {

@@ -9,6 +9,8 @@ alter table public.users
     or organization_type in ('kurs', 'okul', 'egitim_kurumu', 'egitim_platformu', 'yayinevi')
   );
 
+drop function if exists public.set_user_organization_type(varchar);
+
 create or replace function public.set_user_organization_type(target_type varchar)
 returns void
 language plpgsql

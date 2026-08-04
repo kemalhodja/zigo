@@ -9,7 +9,7 @@ alter table public.users
 -- Create index for efficient ad state queries
 create index if not exists users_ad_free_until_idx
   on public.users (ad_free_until)
-  where ad_free_until > now();
+  where ad_free_until is not null;
 
 create index if not exists users_is_premium_idx
   on public.users (is_premium)

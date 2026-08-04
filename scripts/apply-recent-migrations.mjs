@@ -28,6 +28,11 @@ const MIGRATIONS = [
   "080_expand_general_interest_expertise.sql",
   "081_student_area_leaderboard.sql",
   "082_invite_codes.sql",
+  "083_post_external_link.sql",
+  "084_post_co_author.sql",
+  "085_study_rooms.sql",
+  "086_ai_mentor.sql",
+  "087_social_media_storage_and_url_size.sql",
 ];
 
 function loadEnvFile(name) {
@@ -119,6 +124,25 @@ async function probe(admin, migrationId) {
   if (migrationId === "068") {
     const { error } = await admin.from("social_posts").select("target_audience").limit(1);
     return !error;
+  }
+  if (migrationId === "083") {
+    const { error } = await admin.from("social_posts").select("external_url").limit(1);
+    return !error;
+  }
+  if (migrationId === "084") {
+    const { error } = await admin.from("social_posts").select("co_author_id").limit(1);
+    return !error;
+  }
+  if (migrationId === "085") {
+    const { error } = await admin.from("study_rooms").select("id").limit(1);
+    return !error;
+  }
+  if (migrationId === "086") {
+    const { error } = await admin.from("ai_mentor_logs").select("id").limit(1);
+    return !error;
+  }
+  if (migrationId === "087") {
+    return false; // Idempotent migration
   }
   return false;
 }
