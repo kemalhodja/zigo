@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FollowButton } from "@/components/follow-button";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { ProfileSocialStats } from "@/components/profile-social-stats";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
@@ -79,11 +80,16 @@ export default async function PublicProfilePage({ params, searchParams }: Public
       <section className="-mx-4 bg-white px-4 py-4">
         <div className="flex items-center gap-5">
           <SocialAvatar accent="from-crystal via-fuchsia-500 to-rose-400" className="story-ring size-[5.25rem] text-3xl" label={profile.full_name} />
-          <div className="grid flex-1 grid-cols-3 gap-2 text-center">
-            <Stat label="posts" value={stats.posts.toLocaleString()} />
-            <Stat label="followers" value={stats.followers.toLocaleString()} />
-            <Stat label="following" value={stats.following.toLocaleString()} />
-          </div>
+          <ProfileSocialStats
+            followersCount={stats.followers}
+            followersLabel={m.common.followers}
+            followingCount={stats.following}
+            followingLabel={m.common.following}
+            postsCount={stats.posts}
+            postsLabel={m.common.posts}
+            targetUserId={profile.id}
+            viewerId={viewer?.id}
+          />
         </div>
 
         <div className="mt-4">

@@ -501,3 +501,144 @@ export async function toggleFollow(
     is_following: true,
   };
 }
+
+export type FollowUserItem = {
+  id: string;
+  fullName: string;
+  handle: string;
+  avatarUrl: string | null;
+  role: string;
+  isVerified: boolean;
+  bio: string | null;
+  isFollowing: boolean;
+};
+
+export async function getUserFollowersList(
+  supabase: SupabaseClient<Database>,
+  targetUserId: string,
+  viewerId?: string | null,
+): Promise<FollowUserItem[]> {
+  const { data: rows, error } = await supabase
+    .from("follows")
+    .select(`
+      follower_id,
+      follower:follower_id (
+        id,
+        full_name,
+        avatar_url,
+        role,
+        is_verified,
+        bio
+      )
+    `)
+    .eq("following_id", targetUserId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+  if (!rows || rows.length === 0) return [];
+
+  let viewerFollowSet = new Set<string>();
+  if (viewerId && rows.length > 0) {
+    const followerIds = rows.map((r) => r.follower_id).filter((id): id is string => Boolean(id));
+    if (followerIds.length > 0) {
+      const { data: followings } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", viewerId)
+        .in("following_id", followerIds);
+      if (followings) {
+        viewerFollowSet = new Set(followings.map((f) => f.following_id));
+      }
+    }
+  }
+
+  return rows
+    .map((row) => {
+      const u = row.follower as unknown as {
+        id: string;
+        full_name: string;
+        avatar_url?: string | null;
+        role: string;
+        is_verified?: boolean;
+        bio?: string | null;
+      } | null;
+      if (!u || !u.id || !u.full_name) return null;
+      return {
+        id: u.id,
+        fullName: u.full_name,
+        handle: u.full_name.toLowerCase().replaceAll(" ", ""),
+        avatarUrl: u.avatar_url ?? null,
+        role: u.role ?? "student",
+        isVerified: Boolean(u.is_verified),
+        bio: u.bio ?? null,
+        isFollowing: viewerFollowSet.has(u.id),
+      };
+    })
+    .filter((item): item is FollowUserItem => item !== null);
+}
+
+export async function getUserFollowingList(
+  supabase: SupabaseClient<Database>,
+  targetUserId: string,
+  viewerId?: string | null,
+): Promise<FollowUserItem[]> {
+  const { data: rows, error } = await supabase
+    .from("follows")
+    .select(`
+      following_id,
+      following:following_id (
+        id,
+        full_name,
+        avatar_url,
+        role,
+        is_verified,
+        bio
+      )
+    `)
+    .eq("follower_id", targetUserId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+  if (!rows || rows.length === 0) return [];
+
+  let viewerFollowSet = new Set<string>();
+  if (viewerId && rows.length > 0) {
+    const followingIds = rows.map((r) => r.following_id).filter((id): id is string => Boolean(id));
+    if (followingIds.length > 0) {
+      const { data: followings } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", viewerId)
+        .in("following_id", followingIds);
+      if (followings) {
+        viewerFollowSet = new Set(followings.map((f) => f.following_id));
+      }
+    }
+  }
+
+  return rows
+    .map((row) => {
+      const u = row.following as unknown as {
+        id: string;
+        full_name: string;
+        avatar_url?: string | null;
+        role: string;
+        is_verified?: boolean;
+        bio?: string | null;
+      } | null;
+      if (!u || !u.id || !u.full_name) return null;
+      return {
+        id: u.id,
+        fullName: u.full_name,
+        handle: u.full_name.toLowerCase().replaceAll(" ", ""),
+        avatarUrl: u.avatar_url ?? null,
+        role: u.role ?? "student",
+        isVerified: Boolean(u.is_verified),
+        bio: u.bio ?? null,
+        isFollowing: viewerFollowSet.has(u.id),
+      };
+    })
+    .filter((item): item is FollowUserItem => item !== null);
+}

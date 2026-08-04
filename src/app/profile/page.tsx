@@ -4,6 +4,7 @@ import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { ProfileSocialStats as ProfileSocialStatsSection } from "@/components/profile-social-stats";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
@@ -100,14 +101,16 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             label={profile.name}
             imageUrl={profile.avatarUrl}
           />
-          <div className="grid flex-1 grid-cols-3 gap-2 text-center">
-            {stats.map((stat) => (
-              <div className="px-1 py-2" key={stat.label}>
-                <p className="text-lg font-black text-night">{stat.value}</p>
-                <p className="text-[0.72rem] font-semibold text-slate-700">{stat.label}</p>
-              </div>
-            ))}
-          </div>
+          <ProfileSocialStatsSection
+            followersCount={profile.stats.followers}
+            followersLabel={m.common.followers}
+            followingCount={profile.stats.following}
+            followingLabel={m.common.following}
+            postsCount={profile.stats.posts}
+            postsLabel={m.common.posts}
+            targetUserId={profile.id}
+            viewerId={profile.id}
+          />
         </div>
 
         <div className="mt-4">
