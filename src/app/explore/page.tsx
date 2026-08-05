@@ -276,19 +276,37 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       <section className="-mx-4 grid auto-rows-[8.35rem] grid-cols-3 gap-px bg-white">
         {tilesToRender.length === 0 ? (
           <div className="col-span-3 px-6 py-14 text-center">
-            <span className="mx-auto flex size-16 items-center justify-center rounded-lg border-2 border-night text-night">
-              <svg aria-hidden="true" className="size-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <span className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry shadow-lg shadow-crystal/20">
+              <svg aria-hidden="true" className="size-9 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M20 20l-4-4" />
               </svg>
             </span>
-            <h2 className="mt-4 text-lg font-black text-night">
+            <h2 className="mt-5 text-xl font-black text-night">
               {hasQuery ? e.noResults : e.noPosts}
             </h2>
-            <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
-              {hasQuery ? e.tryAnother : e.trendDesc}
+            <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-500">
+              {hasQuery
+                ? `"${query}" için sonuç bulunamadı. Farklı bir konu deneyin.`
+                : e.trendDesc}
             </p>
-            <Link className="tap-scale mt-5 inline-flex zigo-cta tap-scale rounded-lg px-5 py-3 text-sm font-black text-white" href={hasQuery || activeFormat !== "all" ? "/explore" : "/onboarding"}>
+            {hasQuery ? (
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {["Matematik", "Fen", "Türkçe", "İngilizce", "LGS"].map((topic) => (
+                  <Link
+                    className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-night transition hover:bg-crystal hover:text-white"
+                    href={`/explore?q=${encodeURIComponent(topic)}`}
+                    key={topic}
+                  >
+                    {topic}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            <Link
+              className="tap-scale zigo-cta mt-6 inline-flex rounded-xl px-5 py-3 text-sm font-black text-white"
+              href={hasQuery || activeFormat !== "all" ? "/explore" : "/onboarding"}
+            >
               {hasQuery || activeFormat !== "all" ? m.common.clearFilters : e.chooseInterests}
             </Link>
           </div>

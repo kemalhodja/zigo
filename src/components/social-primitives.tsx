@@ -5,6 +5,7 @@ type SocialAvatarProps = {
   className?: string;
   imageUrl?: string | null;
   label: string;
+  online?: boolean;
   ring?: boolean;
 };
 
@@ -20,10 +21,11 @@ export function SocialAvatar({
   className = "size-10",
   imageUrl,
   label,
+  online = false,
   ring = true,
 }: SocialAvatarProps) {
   return (
-    <span className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} ${ring ? "p-0.5" : ""} ${className}`}>
+    <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} ${ring ? "p-0.5" : ""} ${className}`}>
       <span className="flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white text-[0.68rem] font-black text-night">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -32,6 +34,11 @@ export function SocialAvatar({
           getInitials(label)
         )}
       </span>
+      {online ? (
+        <span aria-hidden="true" className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-white bg-emerald-400">
+          <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400 opacity-75" />
+        </span>
+      ) : null}
     </span>
   );
 }

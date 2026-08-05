@@ -74,7 +74,7 @@ export function FeedPostCard({
 
         <div className="flex items-center justify-between px-4 py-2.5">
           <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
-            <SocialAvatar className="size-9" label={post.authorName} />
+            <SocialAvatar className="size-9" label={post.authorName} online={post.verified} />
             <div className="min-w-0">
               <p className="truncate text-zigo-body font-bold text-night">
                 {post.handle}
@@ -141,7 +141,7 @@ export function FeedPostCard({
               }
               if (/^@\w+/.test(part)) {
                 return (
-                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(part.slice(1))}`}>
+                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(part.slice(1))}&format=teachers`}>
                     {part}
                   </a>
                 );

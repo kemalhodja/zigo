@@ -129,7 +129,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
               }
               if (/^@\w+/.test(part)) {
                 return (
-                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(part.slice(1))}`}>
+                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(part.slice(1))}&format=teachers`}>
                     {part}
                   </a>
                 );
