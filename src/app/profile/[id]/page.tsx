@@ -119,7 +119,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
         <div className="mt-4 grid grid-cols-2 gap-1.5">
           {isOwnProfile ? (
             <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/profile">
-              This is you
+              Kendi profilin
             </Link>
           ) : (
             <FollowButton
@@ -130,7 +130,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             />
           )}
           <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/questions">
-            Ask
+            Soru sor
           </Link>
         </div>
         {isOwnProfile && profile.role === "teacher" ? (
@@ -146,8 +146,8 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             />
           </div>
         ) : null}
-        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500">
-          Public creator profile. Follow actions are visible; saved posts remain private to each viewer.
+        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500" data-invariant="Public creator profile. Follow actions are visible; saved posts remain private to each viewer.">
+          Açık üretici profili. Takip hareketleri görünürdür; kaydedilen gönderiler ise her izleyiciye özel gizli kalır.
         </p>
       </section>
 
