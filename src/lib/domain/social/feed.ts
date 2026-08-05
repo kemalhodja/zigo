@@ -358,22 +358,69 @@ export async function getFollowingFeed(
 export async function getUserSocialPosts(
   supabase: SupabaseClient<Database>,
   userId: string,
-): Promise<SocialPostRow[]> {
+): Promise<SocialFeedPost[]> {
   const { data, error } = await supabase
     .from("social_posts")
-    .select("*")
+    .select("*, likes_agg:post_likes(count), comments_agg:post_comments(count)")
     .eq("author_id", userId)
     .order("created_at", { ascending: false })
     .limit(30);
 
-  if (error) throw error;
-  return data ?? [];
+  if (error) {
+    // Fallback: if the aggregation isn't available, return without counts
+    const { data: plain, error: plainErr } = await supabase
+      .from("social_posts")
+      .select("*")
+      .eq("author_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (plainErr) throw plainErr;
+    return (plain ?? []).map((p) => ({
+      ...p,
+      author: null,
+      area: null,
+      likes_count: 0,
+      comments_count: 0,
+      saves_count: 0,
+      ranking_score: 0,
+      is_liked: false,
+      is_saved: false,
+      has_premium_prep: Boolean(p.premium_prep_label),
+      has_sponsored: Boolean(p.sponsored_label),
+      is_sponsored_active: p.sponsored_status === "active",
+      can_open_premium_prep: false,
+      can_open_sponsored: false,
+    })) as SocialFeedPost[];
+  }
+
+  return (data ?? []).map((p) => {
+    const likesAgg = p.likes_agg as unknown;
+    const commentsAgg = p.comments_agg as unknown;
+    const likesCount = Array.isArray(likesAgg) && likesAgg[0] ? Number((likesAgg[0] as Record<string, unknown>).count ?? 0) : 0;
+    const commentsCount = Array.isArray(commentsAgg) && commentsAgg[0] ? Number((commentsAgg[0] as Record<string, unknown>).count ?? 0) : 0;
+    return {
+      ...p,
+      author: null,
+      area: null,
+      likes_count: likesCount,
+      comments_count: commentsCount,
+      saves_count: 0,
+      ranking_score: 0,
+      is_liked: false,
+      is_saved: false,
+      has_premium_prep: Boolean(p.premium_prep_label),
+      has_sponsored: Boolean(p.sponsored_label),
+      is_sponsored_active: p.sponsored_status === "active",
+      can_open_premium_prep: false,
+      can_open_sponsored: false,
+    } as SocialFeedPost;
+  });
 }
 
 export async function getUserSocialReels(
   supabase: SupabaseClient<Database>,
   userId: string,
-): Promise<SocialPostRow[]> {
+): Promise<SocialFeedPost[]> {
   const { data, error } = await supabase
     .from("social_posts")
     .select("*")
@@ -383,7 +430,22 @@ export async function getUserSocialReels(
     .limit(30);
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((p) => ({
+    ...p,
+    author: null,
+    area: null,
+    likes_count: 0,
+    comments_count: 0,
+    saves_count: 0,
+    ranking_score: 0,
+    is_liked: false,
+    is_saved: false,
+    has_premium_prep: Boolean(p.premium_prep_label),
+    has_sponsored: Boolean(p.sponsored_label),
+    is_sponsored_active: p.sponsored_status === "active",
+    can_open_premium_prep: false,
+    can_open_sponsored: false,
+  })) as SocialFeedPost[];
 }
 
 export async function getSavedSocialPosts(

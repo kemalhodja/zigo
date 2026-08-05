@@ -123,15 +123,31 @@ export function FeedPostCard({
           />
           <p className="text-zigo-body leading-relaxed text-slate-800">
             <span className="font-bold text-night">{post.handle}</span>{" "}
-            {post.caption.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
-              /(https?:\/\/[^\s]+)/g.test(part) ? (
-                <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline break-all">
-                  {part}
-                </a>
-              ) : (
-                part
-              )
-            )}
+            {post.caption.split(/(https?:\/\/[^\s]+|#[\w\u00C0-\u024F\u1E00-\u1EFF]+|@[\w]+)/g).map((part, i) => {
+              if (/^https?:\/\//i.test(part)) {
+                return (
+                  <a key={i} className="break-all text-blue-500 hover:underline" href={part} rel="noopener noreferrer" target="_blank">
+                    {part}
+                  </a>
+                );
+              }
+              if (/^#[\w\u00C0-\u024F\u1E00-\u1EFF]+/.test(part)) {
+                const tag = part.slice(1);
+                return (
+                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(tag)}`}>
+                    {part}
+                  </a>
+                );
+              }
+              if (/^@\w+/.test(part)) {
+                return (
+                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(part.slice(1))}`}>
+                    {part}
+                  </a>
+                );
+              }
+              return part;
+            })}
           </p>
           {(() => {
             const extUrl = (post as Record<string, unknown>).externalUrl as string | undefined || (post as Record<string, unknown>).external_url as string | undefined;

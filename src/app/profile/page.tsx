@@ -771,7 +771,7 @@ function getProfileGridPosts(
 function toProfileData(
   profile: UserProfile,
   stats: ProfileSocialStats,
-  posts: SocialPostRow[],
+  posts: Pick<SocialPostRow, "id" | "caption" | "media_url" | "media_type">[],
   branches: string[],
   pf: Messages["profile"],
 ) {

@@ -110,7 +110,32 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
             postId={post.id}
           />
           <p className="text-sm leading-5 text-slate-800">
-            <span className="font-black text-night">{creator}</span> {post.caption}
+            <span className="font-black text-night">{creator}</span>{" "}
+            {post.caption.split(/(https?:\/\/[^\s]+|#[\w\u00C0-\u024F\u1E00-\u1EFF]+|@[\w]+)/g).map((part, i) => {
+              if (/^https?:\/\//i.test(part)) {
+                return (
+                  <a key={i} className="break-all text-blue-500 hover:underline" href={part} rel="noopener noreferrer" target="_blank">
+                    {part}
+                  </a>
+                );
+              }
+              if (/^#[\w\u00C0-\u024F\u1E00-\u1EFF]+/.test(part)) {
+                const tag = part.slice(1);
+                return (
+                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(tag)}`}>
+                    {part}
+                  </a>
+                );
+              }
+              if (/^@\w+/.test(part)) {
+                return (
+                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(part.slice(1))}`}>
+                    {part}
+                  </a>
+                );
+              }
+              return part;
+            })}
           </p>
           {showPremiumPrep && post.premium_prep_label ? (
             <PremiumPrepLink

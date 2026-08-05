@@ -195,12 +195,12 @@ export default async function PublicProfilePage({ params, searchParams }: Public
               {activeTab === "reels" ? m.profileGrid.noMicroYet : m.profileGrid.noPostsYet}
             </h2>
             <p className="mt-2 text-sm font-bold leading-6 text-slate-500">
-            New posts from this creator will appear here after publishing.
+              Bu yaratıcının yeni gönderileri yayınlandıktan sonra burada görünecek.
             </p>
           </div>
         ) : (
           posts.map((post, index) => (
-            <Link className="group block text-[0.68rem] font-black text-white" href={`/post/${post.id}`} key={post.id}>
+            <Link className="group relative block text-[0.68rem] font-black text-white" href={`/post/${post.id}`} key={post.id}>
               <SocialMediaFrame
                 className="aspect-square media-polish"
                 gradient={
@@ -217,6 +217,16 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 <div />
                 <div />
               </SocialMediaFrame>
+              <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100">
+                <span className="flex items-center gap-1 font-black">
+                  <svg aria-hidden="true" className="size-4 fill-white" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                  {(post.likes_count ?? 0).toLocaleString("tr-TR")}
+                </span>
+                <span className="flex items-center gap-1 font-black">
+                  <svg aria-hidden="true" className="size-4 fill-white" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                  {(post.comments_count ?? 0).toLocaleString("tr-TR")}
+                </span>
+              </div>
             </Link>
           ))
         )}
