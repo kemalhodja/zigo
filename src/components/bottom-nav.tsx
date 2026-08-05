@@ -79,9 +79,13 @@ export function BottomNav({
             <span className={`max-w-full px-0.5 text-center ${isActive ? "font-bold text-night" : "font-semibold"}`}>
               {item.label}
             </span>
-            {item.href === "/profile" && (unreadCount > 0 || teacherInboxCount > 0) ? (
+            {item.href === "/notifications" && unreadCount > 0 ? (
               <span className="zigo-badge-count absolute right-1 top-0 flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-white">
-                {(unreadCount + teacherInboxCount) > 9 ? "9+" : unreadCount + teacherInboxCount}
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            ) : item.href === "/profile" && teacherInboxCount > 0 ? (
+              <span className="zigo-badge-count absolute right-1 top-0 flex min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-white">
+                {teacherInboxCount > 9 ? "9+" : teacherInboxCount}
               </span>
             ) : null}
             {isActive ? (

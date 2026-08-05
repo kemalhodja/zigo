@@ -108,6 +108,13 @@ export function FeedPostCard({
             </div>
           </Link>
           <div className="flex shrink-0 items-center gap-2">
+            {post.canFollowCreator && post.authorId && !post.isOwner ? (
+              <FollowButton
+                followingId={post.authorId}
+                initialFollowing={post.isFollowingCreator}
+                variant="compact"
+              />
+            ) : null}
             <PostOptionsButton initialAreaId={post.areaId} initialCaption={post.caption} initialLocationName={post.locationName ?? undefined} initialSaved={post.isSaved} isOwner={post.isOwner} postId={post.postId} postKey={postKey} />
           </div>
         </div>

@@ -254,7 +254,7 @@ function MoreFromMatchFeed({ messages: m, posts }: { messages: Messages; posts: 
       </div>
       <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg bg-white">
         {posts.map((item, index) => (
-          <Link className="group block text-[0.62rem] font-black text-white" href={`/post/${item.id}`} key={item.id}>
+          <Link className="group relative block text-[0.62rem] font-black text-white" href={`/post/${item.id}`} key={item.id}>
             <SocialMediaFrame
               className="aspect-square media-polish"
               gradient={
@@ -269,16 +269,24 @@ function MoreFromMatchFeed({ messages: m, posts }: { messages: Messages; posts: 
               scene={index % 3 === 0 ? "math" : index % 3 === 1 ? "science" : "coding"}
             >
               <div className="flex items-start justify-between">
-                <span className="sr-only">
-                  {item.is_reel || item.media_type === "video" ? "reel" : "post"}
-                </span>
+                {item.is_reel || item.media_type === "video" ? (
+                  <span className="flex size-6 items-center justify-center rounded-md bg-black/30 backdrop-blur">
+                    <svg aria-hidden="true" className="ml-0.5 size-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                  </span>
+                ) : <span />}
               </div>
-              <div className="sr-only">
-                <p className="truncate rounded-lg bg-black/35 px-2 py-1 backdrop-blur">
-                  {item.caption}
-                </p>
-              </div>
+              <div />
             </SocialMediaFrame>
+            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100">
+              <span className="flex items-center gap-1 text-xs font-black">
+                <svg aria-hidden="true" className="size-3.5 fill-white" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
+                {item.likes_count.toLocaleString("tr-TR")}
+              </span>
+              <span className="flex items-center gap-1 text-xs font-black">
+                <svg aria-hidden="true" className="size-3.5 fill-white" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                {item.comments_count.toLocaleString("tr-TR")}
+              </span>
+            </div>
           </Link>
         ))}
       </div>
