@@ -141,7 +141,7 @@ export function FeedPostCard({
               if (/^#[\w\u00C0-\u024F\u1E00-\u1EFF]+/.test(part)) {
                 const tag = part.slice(1);
                 return (
-                  <a key={i} className="font-semibold text-crystal" href={`/explore?q=${encodeURIComponent(tag)}`}>
+                  <a key={i} className="font-semibold text-crystal" href={`/tag/${encodeURIComponent(tag)}`}>
                     {part}
                   </a>
                 );

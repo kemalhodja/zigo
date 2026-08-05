@@ -35,6 +35,7 @@ export function StoryViewer({ stories }: StoryViewerProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const touchStartXRef = useRef<number | null>(null);
   const story = stories[activeIndex];
   const storyMediaUrl = story?.mediaUrl ? getMediaPlaybackUrl(story.mediaUrl) : null;
 
@@ -131,6 +132,17 @@ export function StoryViewer({ stories }: StoryViewerProps) {
       onPointerDown={() => setIsPaused(true)}
       onPointerLeave={() => setIsPaused(false)}
       onPointerUp={() => setIsPaused(false)}
+      onTouchStart={(e) => {
+        touchStartXRef.current = e.touches[0]?.clientX ?? null;
+      }}
+      onTouchEnd={(e) => {
+        if (touchStartXRef.current === null) return;
+        const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartXRef.current;
+        touchStartXRef.current = null;
+        if (Math.abs(dx) < 50) return; // not a swipe
+        if (dx < 0) nextStory();
+        else previousStory();
+      }}
     >
       <section className="safe-bottom safe-top relative flex min-h-dvh flex-col justify-between overflow-hidden px-4 pb-5 pt-4 text-white">
         {storyMediaUrl && story.isVideo ? (
@@ -232,7 +244,7 @@ export function StoryViewer({ stories }: StoryViewerProps) {
                 Safe replies
               </span>
               <span className="rounded-lg bg-white/16 px-3 py-1.5 text-[0.68rem] font-black text-white backdrop-blur">
-                Hold to pause
+                Basılı tut: duraklat
               </span>
             </div>
             <h2 className="max-w-[18rem] text-xl font-black leading-tight">{story.caption}</h2>

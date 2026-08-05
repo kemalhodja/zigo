@@ -938,7 +938,7 @@ check("Story viewer supports auto progress and hold-to-pause controls", () => {
     storyViewer.includes("storyDurationMs") &&
     storyViewer.includes("visibilitychange") &&
     storyViewer.includes("videoRef") &&
-    storyViewer.includes("Hold to pause") &&
+    (storyViewer.includes("Hold to pause") || storyViewer.includes("Bas\u0131l\u0131 tut")) &&
     storyViewer.includes("sv.previousSpark") &&
     storyViewer.includes("sv.nextSpark") &&
     storyViewer.includes("{activeIndex + 1}/{stories.length}")
