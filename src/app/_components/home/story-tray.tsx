@@ -91,7 +91,11 @@ function StoryTrayItem({
         )}
       </span>
       <span className="zigo-fit-text mt-2 block max-w-[4.5rem] text-center text-xs font-bold leading-tight text-slate-700">
-        {story.storyKind === "daily-mission" ? fe.dailyMission : story.handle}
+        {story.storyKind === "daily-mission"
+          ? fe.dailyMission
+          : story.status === "create"
+            ? f.createStory
+            : story.handle}
       </span>
       {story.missionMeta ? (
         <span className="zigo-fit-text block max-w-[4.5rem] text-center text-zigo-micro font-semibold text-crystal">{story.missionMeta}</span>
