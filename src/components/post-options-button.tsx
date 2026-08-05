@@ -37,6 +37,39 @@ export function PostOptionsButton({
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [editError, setEditError] = useState("");
+  const [isPinned, setIsPinned] = useState(() => {
+    if (typeof window === "undefined" || !postId) return false;
+    try {
+      const pinned = JSON.parse(window.localStorage.getItem("zigo:pinned-posts") ?? "[]") as string[];
+      return pinned.includes(postId);
+    } catch {
+      return false;
+    }
+  });
+
+  function togglePin() {
+    if (!postId) {
+      complete("Önizleme sabitlendi.");
+      return;
+    }
+    try {
+      const currentPinned = JSON.parse(window.localStorage.getItem("zigo:pinned-posts") ?? "[]") as string[];
+      let nextPinned: string[];
+      if (currentPinned.includes(postId)) {
+        nextPinned = currentPinned.filter((id) => id !== postId);
+        setIsPinned(false);
+        complete("Sabitleme kaldırıldı.");
+      } else {
+        nextPinned = [...currentPinned, postId];
+        setIsPinned(true);
+        complete("Profiline sabitlendi 📌");
+      }
+      window.localStorage.setItem("zigo:pinned-posts", JSON.stringify(nextPinned));
+      window.dispatchEvent(new CustomEvent("zigo:pinned-change"));
+    } catch {
+      complete("Sabitleme kaydedilemedi.");
+    }
+  }
 
   function complete(action: string) {
     setMessage(action);
@@ -194,14 +227,24 @@ export function PostOptionsButton({
             </div>
 
             {isOwner ? (
-              <button
-                className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-sky-600"
-                disabled={isSaving}
-                onClick={() => setIsEditing(true)}
-                type="button"
-              >
-                ✏️ {a.editPost || "Gönderiyi Düzenle"}
-              </button>
+              <>
+                <button
+                  className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-sky-600"
+                  disabled={isSaving}
+                  onClick={() => setIsEditing(true)}
+                  type="button"
+                >
+                  ✏️ {a.editPost || "Gönderiyi Düzenle"}
+                </button>
+                <button
+                  className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-crystal"
+                  disabled={isSaving}
+                  onClick={togglePin}
+                  type="button"
+                >
+                  📌 {isPinned ? "Profilinden Sabitlemeyi Kaldır" : "Profiline Sabitle"}
+                </button>
+              </>
             ) : null}
 
             <button

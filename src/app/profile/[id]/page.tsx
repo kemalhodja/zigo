@@ -77,78 +77,105 @@ export default async function PublicProfilePage({ params, searchParams }: Public
         </Link>
       </div>
 
-      <section className="-mx-4 bg-white px-4 py-4">
-        <div className="flex items-center gap-5">
-          <SocialAvatar accent="from-crystal via-fuchsia-500 to-rose-400" className="story-ring size-[5.25rem] text-3xl" label={profile.full_name} />
-          <ProfileSocialStats
-            followersCount={stats.followers}
-            followersLabel={m.common.followers}
-            followingCount={stats.following}
-            followingLabel={m.common.following}
-            postsCount={stats.posts}
-            postsLabel={m.common.posts}
-            targetUserId={profile.id}
-            viewerId={viewer?.id}
-          />
-        </div>
-
-        <div className="mt-4">
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-black text-night">{profile.full_name}</h1>
-            {profile.is_verified ? <VerifiedBadge className="size-4" /> : null}
-            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em] text-slate-600">
-              {profile.role}
+      {/* Cover banner + avatar overlap */}
+      <section className="-mx-4 bg-white">
+        {/* Cover gradient banner */}
+        <div className="relative h-28 overflow-hidden bg-gradient-to-br from-crystal via-fuchsia-500 to-rose-400">
+          {/* decorative light effect */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.25),transparent_60%)]" />
+          {profile.is_verified ? (
+            <span className="absolute right-3 top-3 rounded-full bg-white/20 px-2.5 py-1 text-[0.6rem] font-black text-white backdrop-blur">
+              ✓ Doğrulanmış Öğretmen
             </span>
-          </div>
-          <p className="mt-1.5 text-sm leading-5 text-slate-600">
-            @{handle}
-            {profile.bio ? <><br />{profile.bio}</> : null}
-          </p>
-          {profile.role === "teacher" ? (
-            <div className="mt-3">
-              <TeacherTrustBadges
-                branches={branches}
-                moreLabel={tb.moreAreas}
-                verified={profile.is_verified}
-                verifiedLabel={tb.verifiedTeacher}
-              />
-            </div>
           ) : null}
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-1.5">
-          {isOwnProfile ? (
-            <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/profile">
-              Kendi profilin
-            </Link>
-          ) : (
-            <FollowButton
-              followingId={profile.id}
-              initialFollowersCount={stats.followers}
-              initialFollowing={following}
-              showCount
-            />
-          )}
-          <Link className="tap-scale rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-black text-night" href="/questions">
-            Soru sor
-          </Link>
-        </div>
-        {isOwnProfile && profile.role === "teacher" ? (
-          <div className="mt-3 flex">
-            <ProfileAdvertiseModal
-              profile={{
-                id: profile.id,
-                role: profile.role,
-                organization_type: profile.organization_type,
-                full_name: profile.full_name,
-              }}
-              isOwner={true}
+        {/* Avatar overlapping cover */}
+        <div className="px-4 pb-4">
+          <div className="flex items-end justify-between">
+            <div className="-mt-10 shrink-0">
+              <SocialAvatar
+                accent="from-crystal via-fuchsia-500 to-rose-400"
+                className="size-20 text-3xl ring-4 ring-white"
+                imageUrl={profile.avatar_url}
+                label={profile.full_name}
+              />
+            </div>
+            <div className="mb-1 flex gap-1.5">
+              {isOwnProfile ? (
+                <Link className="tap-scale rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/profile">
+                  Kendi profilin
+                </Link>
+              ) : (
+                <FollowButton
+                  followingId={profile.id}
+                  initialFollowersCount={stats.followers}
+                  initialFollowing={following}
+                  showCount
+                />
+              )}
+              <Link className="tap-scale rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/questions">
+                Soru sor
+              </Link>
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div className="mt-3">
+            <ProfileSocialStats
+              followersCount={stats.followers}
+              followersLabel={m.common.followers}
+              followingCount={stats.following}
+              followingLabel={m.common.following}
+              postsCount={stats.posts}
+              postsLabel={m.common.posts}
+              targetUserId={profile.id}
+              viewerId={viewer?.id}
             />
           </div>
-        ) : null}
-        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500" data-invariant="Public creator profile. Follow actions are visible; saved posts remain private to each viewer.">
-          Açık üretici profili. Takip hareketleri görünürdür; kaydedilen gönderiler ise her izleyiciye özel gizli kalır.
-        </p>
+
+          {/* Name + bio */}
+          <div className="mt-3">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-black text-night">{profile.full_name}</h1>
+              {profile.is_verified ? <VerifiedBadge className="size-4" /> : null}
+              <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.12em] text-slate-600">
+                {profile.role}
+              </span>
+            </div>
+            <p className="mt-1.5 text-sm leading-5 text-slate-600">
+              @{handle}
+              {profile.bio ? <><br />{profile.bio}</> : null}
+            </p>
+            {profile.role === "teacher" ? (
+              <div className="mt-3">
+                <TeacherTrustBadges
+                  branches={branches}
+                  moreLabel={tb.moreAreas}
+                  verified={profile.is_verified}
+                  verifiedLabel={tb.verifiedTeacher}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          {isOwnProfile && profile.role === "teacher" ? (
+            <div className="mt-3 flex">
+              <ProfileAdvertiseModal
+                profile={{
+                  id: profile.id,
+                  role: profile.role,
+                  organization_type: profile.organization_type,
+                  full_name: profile.full_name,
+                }}
+                isOwner={true}
+              />
+            </div>
+          ) : null}
+          <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500" data-invariant="Public creator profile. Follow actions are visible; saved posts remain private to each viewer.">
+            Açık üretici profili. Takip hareketleri görünürdür; kaydedilen gönderiler ise her izleyiciye özel gizli kalır.
+          </p>
+        </div>
       </section>
 
       <ProfileHighlights />
