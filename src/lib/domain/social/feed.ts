@@ -55,58 +55,67 @@ export async function getSocialFeed(
   query: SocialFeedQuery = {},
 ): Promise<SocialFeedPage> {
   const areaIds = viewerId ? await getUserSocialFeedAreaIds(supabase, viewerId) : [];
-  if (viewerId && areaIds.length === 0) return { posts: [], nextCursor: null };
-
   const limit = Math.min(50, Math.max(1, query.limit ?? 30));
   const decodedCursor = decodeFeedCursor(query.cursor);
 
-  let dbQuery = supabase
-    .from("social_posts")
-    .select(
-      `
-      *,
-      author:author_id (
-        id,
-        full_name,
-        role,
-        is_verified,
-        organization_type,
-        avatar_url
-      ),
-      co_author:co_author_id (
-        id,
-        full_name
-      ),
-      area:area_id (
-        area_name
+  const buildQuery = (filterByAreas: boolean) => {
+    let dbQuery = supabase
+      .from("social_posts")
+      .select(
+        `
+        *,
+        author:author_id (
+          id,
+          full_name,
+          role,
+          is_verified,
+          organization_type,
+          avatar_url
+        ),
+        co_author:co_author_id (
+          id,
+          full_name
+        ),
+        area:area_id (
+          area_name
+        )
+      `,
       )
-    `,
-    )
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
 
-  if (decodedCursor) {
-    dbQuery = dbQuery.or(
-      `created_at.lt.${decodedCursor.createdAt},and(created_at.eq.${decodedCursor.createdAt},id.lt.${decodedCursor.id})`,
-    );
-    dbQuery = dbQuery.limit(limit);
-  } else if (query.offset && query.offset > 0) {
-    dbQuery = dbQuery.range(query.offset, query.offset + limit - 1);
-  } else {
-    dbQuery = dbQuery.limit(limit);
-  }
+    if (decodedCursor) {
+      dbQuery = dbQuery.or(
+        `created_at.lt.${decodedCursor.createdAt},and(created_at.eq.${decodedCursor.createdAt},id.lt.${decodedCursor.id})`,
+      );
+      dbQuery = dbQuery.limit(limit);
+    } else if (query.offset && query.offset > 0) {
+      dbQuery = dbQuery.range(query.offset, query.offset + limit - 1);
+    } else {
+      dbQuery = dbQuery.limit(limit);
+    }
 
-  if (areaIds.length > 0) {
-    dbQuery = dbQuery.in("area_id", areaIds);
-  }
+    if (filterByAreas && areaIds.length > 0) {
+      dbQuery = dbQuery.in("area_id", areaIds);
+    }
 
-  if (query.postTypes && query.postTypes.length > 0) {
-    dbQuery = dbQuery.in("post_type", query.postTypes);
-  }
+    if (query.postTypes && query.postTypes.length > 0) {
+      dbQuery = dbQuery.in("post_type", query.postTypes);
+    }
 
-  const { data, error } = await dbQuery;
+    return dbQuery;
+  };
 
+  let { data, error } = await buildQuery(areaIds.length > 0);
   if (error) throw error;
+
+  // Fallback to general feed if filtered feed returns empty
+  if ((!data || data.length === 0) && areaIds.length > 0) {
+    const fallbackResult = await buildQuery(false);
+    if (!fallbackResult.error && fallbackResult.data) {
+      data = fallbackResult.data;
+    }
+  }
 
   const posts = (data ?? []) as RawSocialPost[];
   if (posts.length === 0) return { posts: [], nextCursor: null };

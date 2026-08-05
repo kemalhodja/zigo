@@ -269,7 +269,7 @@ export async function getUserSocialFeedAreaIds(supabase: SupabaseClient<Database
     .select("area_id")
     .eq("user_id", userId);
 
-  if (error) throw error;
+  if (error) return [];
   return (data ?? []).map((item) => item.area_id);
 }
 

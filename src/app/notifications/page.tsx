@@ -363,15 +363,26 @@ function toNotificationItem(notification: SocialNotification, m: Messages, profi
         ? `/post/${notification.post_id}`
         : "/notifications";
 
+  const formattedMessage =
+    notification.kind === "like"
+      ? "gönderini beğendi."
+      : notification.kind === "comment"
+        ? "gönderine yorum yaptı."
+        : notification.kind === "follow"
+          ? "seni takip etmeye başladı."
+          : isLessonRequest
+            ? "yeni bir ders talebi gönderdi."
+            : notification.message;
+
   return {
     id: notification.id,
-    title: `${actor} ${notification.message}`,
+    title: `${actor} ${formattedMessage}`,
     detail: isLessonRequest
       ? m.common.open
       : isFollow
         ? m.notifications.newFollower
         : m.notifications.openPost,
-    time: new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+    time: new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
       Math.round((new Date(notification.created_at).getTime() - Date.now()) / 60000),
       "minute",
     ),
