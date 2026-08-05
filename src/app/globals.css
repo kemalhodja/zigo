@@ -599,6 +599,28 @@ a,
   }
 }
 
+/* Instagram Story Ring Styles */
+.story-ring-unread {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.story-ring-spin-mission {
+  background: linear-gradient(135deg, #7c3aed, #ec4899, #f59e0b, #10b981);
+}
+
+.story-live-pulse {
+  animation: storyPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes storyPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
 @keyframes story-live-pulse {
   0%,
   100% {

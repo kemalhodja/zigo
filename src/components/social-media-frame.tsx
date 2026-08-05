@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState, useRef } from "react";
 import type { ReactNode } from "react";
 
 import { SocialMediaScene, type SocialMediaSceneName } from "@/components/social-media-scenes";
@@ -7,6 +10,7 @@ export type MediaFilterPreset = "normal" | "vivid" | "contrast" | "warm" | "bw";
 
 type SocialMediaFrameProps = {
   mediaUrl?: string | null;
+  mediaUrls?: string[] | null;
   mediaType?: string | null;
   gradient?: string;
   className?: string;
@@ -30,6 +34,7 @@ const filterCssMap: Record<MediaFilterPreset, string> = {
 
 export function SocialMediaFrame({
   mediaUrl,
+  mediaUrls,
   mediaType,
   gradient = "from-crystal via-fuchsia-500 to-rose-400",
   className = "zigo-media",
@@ -42,10 +47,15 @@ export function SocialMediaFrame({
   scale = 1,
   filterPreset = "normal",
 }: SocialMediaFrameProps) {
-  const playbackUrl = mediaUrl ? getMediaPlaybackUrl(mediaUrl) : undefined;
-  const hasMedia = Boolean(playbackUrl);
-  const isVideo = Boolean(playbackUrl && mediaType === "video");
-  const isImage = Boolean(playbackUrl && mediaType === "image");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Consolidate single url or array into items array
+  const rawUrls = mediaUrls && mediaUrls.length > 0 ? mediaUrls : mediaUrl ? [mediaUrl] : [];
+  const items = rawUrls.map((url) => getMediaPlaybackUrl(url)).filter(Boolean) as string[];
+  const isCarousel = items.length > 1;
+  const hasMedia = items.length > 0;
+  const isVideo = Boolean(hasMedia && mediaType === "video");
 
   const fitClass =
     objectFit === "cover" ? "object-cover" : objectFit === "fill" ? "object-fill" : "object-contain";
@@ -55,6 +65,17 @@ export function SocialMediaFrame({
     filter: filterCss !== "none" ? filterCss : undefined,
   };
 
+  function handleScroll() {
+    if (!containerRef.current) return;
+    const { scrollLeft, clientWidth } = containerRef.current;
+    if (clientWidth > 0) {
+      const idx = Math.round(scrollLeft / clientWidth);
+      if (idx !== currentIndex && idx >= 0 && idx < items.length) {
+        setCurrentIndex(idx);
+      }
+    }
+  }
+
   return (
     <div
       className={`relative overflow-hidden ${hasMedia ? "bg-night" : `bg-gradient-to-br ${gradient}`} ${className}`}
@@ -62,38 +83,94 @@ export function SocialMediaFrame({
       {!hasMedia ? (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.2),transparent_15rem)]" />
       ) : null}
-      {isImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          alt={alt}
-          className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
-          decoding="async"
-          fetchPriority={priority ? "high" : "low"}
-          loading={priority ? "eager" : "lazy"}
-          src={playbackUrl}
-          style={combinedStyle}
-        />
+
+      {isCarousel ? (
+        <div
+          ref={containerRef}
+          onScroll={handleScroll}
+          className="no-scrollbar flex size-full snap-x snap-mandatory overflow-x-auto"
+        >
+          {items.map((url, idx) => (
+            <div key={url + idx} className="relative size-full flex-none snap-center">
+              {isVideo ? (
+                <video
+                  aria-label={alt || `Video ${idx + 1}`}
+                  className={`size-full transition-all duration-200 ${fitClass}`}
+                  controls={controls}
+                  loop={!controls}
+                  muted={!controls}
+                  playsInline
+                  preload={controls ? "metadata" : "none"}
+                  src={url}
+                  style={combinedStyle}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt={alt ? `${alt} (${idx + 1}/${items.length})` : ""}
+                  className={`size-full transition-all duration-200 ${fitClass}`}
+                  decoding="async"
+                  fetchPriority={priority && idx === 0 ? "high" : "low"}
+                  loading={priority && idx === 0 ? "eager" : "lazy"}
+                  src={url}
+                  style={combinedStyle}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : hasMedia ? (
+        isVideo ? (
+          <video
+            aria-label={alt || "Video preview"}
+            className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
+            controls={controls}
+            loop={!controls}
+            muted={!controls}
+            playsInline
+            preload={controls ? "metadata" : "none"}
+            src={items[0]}
+            style={combinedStyle}
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            alt={alt}
+            className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
+            decoding="async"
+            fetchPriority={priority ? "high" : "low"}
+            loading={priority ? "eager" : "lazy"}
+            src={items[0]}
+            style={combinedStyle}
+          />
+        )
       ) : null}
-      {isVideo ? (
-        <video
-          aria-label={alt || "Video preview"}
-          className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
-          controls={controls}
-          loop={!controls}
-          muted={!controls}
-          playsInline
-          preload={controls ? "metadata" : "none"}
-          src={playbackUrl}
-          style={combinedStyle}
-        />
-      ) : null}
+
       {!hasMedia ? <SocialMediaScene scene={scene} /> : null}
+
       {hasMedia ? (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/24 via-transparent to-black/5" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/24 via-transparent to-black/5" />
       ) : null}
-      {!hasMedia ? (
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/10 to-transparent" />
+
+      {/* Carousel dots & badge indicator */}
+      {isCarousel ? (
+        <>
+          <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-black/40 px-2 py-0.5 text-[0.62rem] font-black text-white backdrop-blur">
+            {currentIndex + 1}/{items.length}
+          </span>
+          <div className="pointer-events-none absolute inset-x-0 bottom-2.5 flex justify-center gap-1">
+            {items.map((_, idx) => (
+              <span
+                key={idx}
+                className={`size-1.5 rounded-full transition-all ${
+                  idx === currentIndex ? "w-4 bg-white" : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        </>
       ) : null}
+
       {children ? (
         <div className="zigo-media-overlay relative z-[1] flex size-full flex-col justify-between p-4 text-white">
           {children}
@@ -102,3 +179,4 @@ export function SocialMediaFrame({
     </div>
   );
 }
+
