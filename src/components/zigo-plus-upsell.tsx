@@ -104,29 +104,14 @@ export function ZigoPlusUpsell({
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
-        {stripeReady ? (
-          <button
-            className="tap-scale rounded-lg bg-white px-4 py-2.5 text-xs font-black text-night disabled:opacity-60"
-            disabled={loading}
-            onClick={() => void startCheckout()}
-            type="button"
-          >
-            {campaignActive ? "Kampanyayla abone ol" : "Stripe ile abone ol"}
-          </button>
-        ) : null}
-        {devReady ? (
-          <button
-            className="rounded-lg border border-white/30 px-4 py-2.5 text-xs font-black text-white disabled:opacity-60"
-            disabled={loading}
-            onClick={() => void devActivate()}
-            type="button"
-          >
-            Demo Plus'ı etkinleştir
-          </button>
-        ) : null}
-        {!stripeReady && !devReady ? (
-          <p className="text-xs font-bold text-white/70">Stripe anahtarlarını ekleyin veya yerel demo billing bypass'ı açın.</p>
-        ) : null}
+        <button
+          className="tap-scale rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-xs font-black text-slate-950 shadow-md hover:brightness-105 disabled:opacity-60"
+          disabled={loading}
+          onClick={() => void startCheckout()}
+          type="button"
+        >
+          {loading ? "Ödeme Sayfası Açılıyor..." : campaignActive ? "🔥 Kampanyalı İndirimle Abone Ol" : "💳 Zigo Plus'a Abone Ol"}
+        </button>
       </div>
       {message ? <p className="mt-2 text-sm font-bold text-amber-200">{message}</p> : null}
     </section>

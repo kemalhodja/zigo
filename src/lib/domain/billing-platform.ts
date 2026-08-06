@@ -5,11 +5,8 @@ export function isAndroidCapacitorUserAgent(userAgent: string | null | undefined
   return /Android/i.test(userAgent) && ANDROID_NATIVE_UA.test(userAgent);
 }
 
-export function isWebCheckoutAllowedForRequest(request: Request) {
-  if (process.env.ZIGO_ALLOW_WEB_CHECKOUT_ON_ANDROID === "true") {
-    return true;
-  }
-  return !isAndroidCapacitorUserAgent(request.headers.get("user-agent"));
+export function isWebCheckoutAllowedForRequest(_request: Request) {
+  return true;
 }
 
 export function getBillingPlatformMessage(locale: "tr" | "en" = "tr") {
