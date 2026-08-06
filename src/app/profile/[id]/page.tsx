@@ -244,7 +244,13 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 mediaUrl={post.media_url}
                 scene={index % 4 === 0 ? "math" : index % 4 === 1 ? "science" : index % 4 === 2 ? "coding" : "english"}
               >
-                <div />
+                <div className="flex items-start justify-between">
+                  {post.media_type === "video" ? (
+                    <span className="flex size-6 items-center justify-center rounded-md bg-black/30 backdrop-blur">
+                      <svg aria-hidden="true" className="ml-0.5 size-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                    </span>
+                  ) : <span />}
+                </div>
                 <div />
               </SocialMediaFrame>
               <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100">

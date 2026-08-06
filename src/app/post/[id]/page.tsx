@@ -92,7 +92,13 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
         </div>
 
         <DoubleTapLikeLink href={`/post/${post.id}`} initialLiked={post.is_liked} postId={post.id}>
-          <SocialMediaFrame className="zigo-media border-y border-slate-50" mediaType={post.media_type} mediaUrl={post.media_url}>
+          <SocialMediaFrame
+            className="zigo-media border-y border-slate-50"
+            controls={post.media_type === "video"}
+            mediaType={post.media_type}
+            mediaUrl={post.media_url}
+            objectFit="cover"
+          >
             <div className="flex justify-end">
               {post.media_type === "video" ? (
                 <span className="flex size-8 items-center justify-center rounded-lg bg-black/25 backdrop-blur">

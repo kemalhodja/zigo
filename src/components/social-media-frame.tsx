@@ -99,6 +99,7 @@ export function SocialMediaFrame({
                   controls={controls}
                   loop={!controls}
                   muted={!controls}
+                  onClick={controls ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
                   playsInline
                   preload={controls ? "metadata" : "none"}
                   src={url}
@@ -127,6 +128,7 @@ export function SocialMediaFrame({
             controls={controls}
             loop={!controls}
             muted={!controls}
+            onClick={controls ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
             playsInline
             preload={controls ? "metadata" : "none"}
             src={items[0]}
