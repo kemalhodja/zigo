@@ -67,14 +67,14 @@ type ReelItem = {
 };
 
 type ReelsPageProps = {
-  searchParams: Promise<{ feed?: string }>;
+  searchParams: Promise<{ feed?: string; reelId?: string }>;
 };
 
 export default async function ReelsPage({ searchParams }: ReelsPageProps) {
   const m = await getServerMessages();
   const params = await searchParams;
   const activeFeed = params.feed === "following" ? "following" : "for-you";
-  const reels = await getReels(activeFeed);
+  const reels = await getReels(activeFeed, params.reelId);
   let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
   if (hasSupabaseEnv()) {
     try {
@@ -339,7 +339,7 @@ function ReelsEmptyState({ activeFeed, messages: m }: { activeFeed: "for-you" | 
   );
 }
 
-async function getReels(activeFeed: "for-you" | "following"): Promise<ReelItem[]> {
+async function getReels(activeFeed: "for-you" | "following", targetReelId?: string): Promise<ReelItem[]> {
   const m = await getServerMessages();
 
   if (!hasSupabaseEnv()) {
@@ -376,12 +376,20 @@ async function getReels(activeFeed: "for-you" | "following"): Promise<ReelItem[]
   return withSupabaseFallback(async () => {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
-  const reels =
+  let reels =
     activeFeed === "following" && profile
       ? (await getFollowingFeed(supabase, profile.id)).filter((post) => post.is_reel || post.media_type === "video")
       : await getReelFeed(supabase, profile?.id);
 
   if (reels.length === 0) return [];
+
+  if (targetReelId) {
+    const targetIdx = reels.findIndex((r) => r.id === targetReelId);
+    if (targetIdx > 0) {
+      const [target] = reels.splice(targetIdx, 1);
+      if (target) reels = [target, ...reels];
+    }
+  }
 
   const followingByReel = await Promise.all(
     reels.map((reel) =>

@@ -12,6 +12,7 @@ type DoubleTapLikeLinkProps = {
   href: string;
   initialLiked?: boolean;
   postId?: string;
+  disableNavigation?: boolean;
 };
 
 const doubleTapDelayMs = 280;
@@ -21,6 +22,7 @@ export function DoubleTapLikeLink({
   href,
   initialLiked = false,
   postId,
+  disableNavigation = false,
 }: DoubleTapLikeLinkProps) {
   const router = useRouter();
   const clickTimerRef = useRef<number | null>(null);
@@ -79,9 +81,11 @@ export function DoubleTapLikeLink({
 
     lastClickAtRef.current = now;
     clearClickTimer();
-    clickTimerRef.current = window.setTimeout(() => {
-      router.push(href);
-    }, doubleTapDelayMs);
+    if (!disableNavigation) {
+      clickTimerRef.current = window.setTimeout(() => {
+        router.push(href);
+      }, doubleTapDelayMs);
+    }
   }
 
   return (

@@ -122,18 +122,20 @@ export function SocialMediaFrame({
         </div>
       ) : hasMedia ? (
         isVideo ? (
-          <video
-            aria-label={alt || "Video preview"}
-            className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
-            controls={controls}
-            loop={!controls}
-            muted={!controls}
-            onClick={controls ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
-            playsInline
-            preload={controls ? "metadata" : "none"}
-            src={items[0]}
-            style={combinedStyle}
-          />
+          <div className="relative size-full">
+            <video
+              aria-label={alt || "Video preview"}
+              className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
+              controls={controls}
+              loop={!controls}
+              muted={!controls}
+              onClick={controls ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
+              playsInline
+              preload={controls ? "metadata" : "none"}
+              src={items[0]}
+              style={combinedStyle}
+            />
+          </div>
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -174,7 +176,7 @@ export function SocialMediaFrame({
       ) : null}
 
       {children ? (
-        <div className="zigo-media-overlay relative z-[1] flex size-full flex-col justify-between p-4 text-white">
+        <div className="zigo-media-overlay pointer-events-none relative z-[1] flex size-full flex-col justify-between p-4 text-white">
           {children}
         </div>
       ) : null}

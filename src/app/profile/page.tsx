@@ -790,7 +790,7 @@ function toProfileData(
         ? posts.map((post) => ({
             id: post.id,
             label: post.caption.slice(0, 28) || "Post",
-            href: `/post/${post.id}`,
+            href: post.media_type === "video" ? `/micro?reelId=${post.id}` : `/post/${post.id}`,
             mediaUrl: post.media_url,
             mediaType: post.media_type,
           }))

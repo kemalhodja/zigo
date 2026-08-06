@@ -230,7 +230,11 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           </div>
         ) : (
           posts.map((post, index) => (
-            <Link className="group relative block text-[0.68rem] font-black text-white" href={`/post/${post.id}`} key={post.id}>
+            <Link
+              className="group relative block text-[0.68rem] font-black text-white"
+              href={post.media_type === "video" || activeTab === "reels" ? `/micro?reelId=${post.id}` : `/post/${post.id}`}
+              key={post.id}
+            >
               <SocialMediaFrame
                 className="aspect-square media-polish"
                 gradient={
