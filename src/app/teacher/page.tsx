@@ -104,11 +104,27 @@ export default async function TeacherPage({
 
   return (
     <div className="space-y-5 pb-3">
-      <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{d.teacher.verifiedTools}</p>
-        <h2 className="mt-1 text-2xl font-black text-night">{d.teacher.studio}</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-500">{d.teacher.desc}</p>
-        <div className="mt-3">
+      {/* Studio Header Banner */}
+      <section className="-mx-4 bg-gradient-to-br from-night via-violet-950 to-crystal px-5 py-6 text-white shadow-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="inline-block rounded-md bg-white/15 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.16em] text-white/90 backdrop-blur">
+              {d.teacher.verifiedTools}
+            </span>
+            <h1 className="mt-2 text-2xl font-black tracking-tight">{d.teacher.studio}</h1>
+            <p className="mt-1 text-xs font-bold leading-5 text-white/75">{d.teacher.desc}</p>
+          </div>
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white backdrop-blur">
+            <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <rect height="7" rx="1" width="7" x="3" y="3" />
+              <rect height="7" rx="1" width="7" x="14" y="3" />
+              <rect height="7" rx="1" width="7" x="14" y="14" />
+              <rect height="7" rx="1" width="7" x="3" y="14" />
+            </svg>
+          </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <TeacherTrustBadges
             branches={branchNames}
             maxVisible={4}
@@ -117,12 +133,79 @@ export default async function TeacherPage({
             verifiedLabel={tb.verifiedTeacher}
           />
         </div>
-        <Link className="tap-scale mt-3 inline-flex rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-2 text-xs font-black text-white" href="/">
-          {d.backToFeed}
-        </Link>
-        <span className="ml-2 mt-3 inline-flex rounded-lg bg-gradient-to-r from-aqua/10 to-mint/10 px-3 py-2 text-xs font-black text-aqua">
-          {profile.is_verified ? d.teacher.verified : d.teacher.verificationRequired}
-        </span>
+      </section>
+
+      {/* Quick Content Studio Actions */}
+      <section className="space-y-2">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">İçerik Stüdyosu Eylemleri</p>
+        <div className="grid grid-cols-2 gap-2.5">
+          <Link
+            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-4 text-white shadow-sm transition hover:shadow-md"
+            href="/create?mode=micro"
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect height="16" rx="4" width="18" x="3" y="4" />
+                  <path d="M11 12l4 2.5-4 2.5z" />
+                </svg>
+              </span>
+              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Video</span>
+            </div>
+            <p className="mt-3 text-sm font-black">Mikro Ders Çek</p>
+            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Reel video içeriği yükle</p>
+          </Link>
+
+          <Link
+            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-crystal to-berry p-4 text-white shadow-sm transition hover:shadow-md"
+            href="/create?mode=post"
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </span>
+              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Ders</span>
+            </div>
+            <p className="mt-3 text-sm font-black">Ders Gönderisi</p>
+            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Görselli ders notu veya özet</p>
+          </Link>
+
+          <Link
+            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-4 text-white shadow-sm transition hover:shadow-md"
+            href="/create?mode=spark"
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+              </span>
+              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Spark</span>
+            </div>
+            <p className="mt-3 text-sm font-black">Günlük Spark / Story</p>
+            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Öğrencilerine hızlı duyuru</p>
+          </Link>
+
+          <Link
+            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 p-4 text-white shadow-sm transition hover:shadow-md"
+            href="/profile"
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </span>
+              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Izgara</span>
+            </div>
+            <p className="mt-3 text-sm font-black">İçerik Izgaran</p>
+            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Paylaştığın tüm materyaller</p>
+          </Link>
+        </div>
       </section>
 
       {orgDashboard ? <OrgDashboardPanel copy={orgCopy} snapshot={orgDashboard} /> : null}
@@ -140,10 +223,6 @@ export default async function TeacherPage({
 
       {profile.is_verified ? (
         <>
-          <section className="grid grid-cols-2 gap-2">
-            <TeacherLink accent="from-crystal to-berry" href="/create" label={h.create} text={m.dock.teacherHint} />
-            <TeacherLink accent="from-aqua to-mint" href="/profile" label={m.nav.profile} text={d.teacher.creatorGrid} />
-          </section>
           {!teacherCreatorPlus ? (
             <p className="-mx-4 border-b border-amber-100 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">
               {m.billingUi.creatorPlusHint}
