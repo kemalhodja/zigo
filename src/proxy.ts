@@ -163,15 +163,22 @@ export async function proxy(request: NextRequest) {
 
   // Role-based Route Guard
   if (pathname.startsWith('/teacher') || pathname.startsWith('/parent') || pathname.startsWith('/student')) {
-    const { data: profile } = await supabase
-      .from("profiles")
+    const { data: userRow } = await supabase
+      .from("users")
       .select("role")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
-    const role = (profile as any)?.role;
+    const role = (userRow as any)?.role;
 
-    if (pathname.startsWith('/teacher') && role !== 'teacher') {
+    const isCreatorRole =
+      role === "teacher" ||
+      role === "education_institution" ||
+      role === "education_platform" ||
+      role === "publisher";
+
+    // Teacher & Studio routes accessible to all creator roles
+    if (pathname.startsWith('/teacher') && !isCreatorRole && role !== 'student' && role !== 'parent') {
       return NextResponse.redirect(new URL('/', request.url));
     }
     if (pathname.startsWith('/parent') && role !== 'parent') {
