@@ -50,3 +50,5 @@ launch-status.json
 zigo.tar.gz
 *.tar.gz
 scripts/_tmp-*.mjs
+
+.continue/
