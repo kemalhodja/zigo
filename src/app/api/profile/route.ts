@@ -19,10 +19,15 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
+    if (!body.city || !String(body.city).trim()) {
+      return NextResponse.json({ error: "Kayıt olurken bulunduğunuz şehri (il) seçmeniz zorunludur." }, { status: 400 });
+    }
+
     const profile = await createProfile(supabase, {
       fullName: body.fullName,
       role: body.role,
       accountKind: isRegistrationAccountKind(body.accountKind) ? body.accountKind : undefined,
+      city: String(body.city).trim(),
     });
 
     return NextResponse.json({ data: profile }, { status: 201 });

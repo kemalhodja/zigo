@@ -18,14 +18,16 @@ export function ProfileForm({ redirectTo }: { redirectTo?: string } = {}) {
 
   // null = no selection yet (user MUST pick before submitting)
   const [accountKind, setAccountKind] = useState<RequiredSignupOptionId | null>(null);
+  const [city, setCity] = useState<string>("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string | null>(null);
 
-  const canSubmit = accountKind !== null && status !== "saving";
+  const canSubmit = accountKind !== null && Boolean(city.trim()) && status !== "saving";
 
   async function submitProfile(formData: FormData) {
     if (!canSubmit) {
-      setMessage("Lütfen önce bir hesap türü seçin.");
+      if (!accountKind) setMessage("Lütfen önce bir hesap türü seçin.");
+      else if (!city.trim()) setMessage("Lütfen bulunduğunuz şehri (il) seçin.");
       return;
     }
 
@@ -39,6 +41,7 @@ export function ProfileForm({ redirectTo }: { redirectTo?: string } = {}) {
         body: JSON.stringify({
           fullName: formData.get("fullName"),
           accountKind,
+          city,
         }),
       });
 
@@ -89,6 +92,36 @@ export function ProfileForm({ redirectTo }: { redirectTo?: string } = {}) {
           aria-describedby={status === "error" ? "profile-message" : undefined}
           aria-invalid={status === "error"}
         />
+      </div>
+
+      {/* Mandatory City Selection */}
+      <div>
+        <label htmlFor="city-select" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+          Bulunduğunuz Şehir (İl) *
+        </label>
+        <select
+          id="city-select"
+          required
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="mt-2 w-full rounded-lg border border-slate-200 px-4 py-3 text-sm font-semibold text-night outline-none transition focus:border-night focus:ring-2 focus:ring-crystal focus:ring-offset-2"
+        >
+          <option value="">-- Bulunduğunuz Şehri Seçin --</option>
+          {[
+            "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
+            "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
+            "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
+            "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+            "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
+            "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
+            "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
+            "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
+          ].map((cityName) => (
+            <option key={cityName} value={cityName}>
+              {cityName}
+            </option>
+          ))}
+        </select>
       </div>
 
       <RegistrationAccountPicker value={accountKind} onChange={setAccountKind} />

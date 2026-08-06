@@ -20,6 +20,7 @@ export const createProfileSchema = z.object({
   fullName: z.string().trim().min(2).max(100),
   role: z.enum(["teacher", "parent", "student"]).optional(),
   accountKind: z.enum(REGISTRATION_ACCOUNT_KIND_VALUES).optional(),
+  city: z.string().trim().optional(),
 }).refine((value) => Boolean(value.role || value.accountKind), {
   message: "Choose student, parent, teacher, kurs, okul, institution, platform or publisher.",
 });
@@ -74,7 +75,7 @@ export async function getCurrentProfile(supabase: SupabaseClient<Database>) {
 
 export async function createProfile(
   supabase: SupabaseClient<Database>,
-  input: { fullName: string; role?: UserRole; accountKind?: RegistrationAccountKind },
+  input: { fullName: string; role?: UserRole; accountKind?: RegistrationAccountKind; city?: string },
 ) {
   const parsed = createProfileSchema.parse(input);
   const account = parsed.accountKind
@@ -91,13 +92,22 @@ export async function createProfile(
 
   if (error) throw error;
 
-  if (account.organizationType) {
-    await setUserOrganizationType(supabase, account.organizationType);
-    const refreshed = await getCurrentProfile(supabase);
-    return refreshed ?? data;
+  // Update city if provided
+  if (parsed.city?.trim()) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("users").update({ city: parsed.city.trim() } as any).eq("id", user.id);
+    }
   }
 
-  return data;
+  if (account.organizationType) {
+    await setUserOrganizationType(supabase, account.organizationType);
+  }
+
+  const refreshed = await getCurrentProfile(supabase);
+  return refreshed ?? data;
 }
 
 export async function getEducationAreas(supabase: SupabaseClient<Database>) {
