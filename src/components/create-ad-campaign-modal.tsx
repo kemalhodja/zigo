@@ -50,6 +50,7 @@ export function CreateAdCampaignModal({
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
+  const [buttonText, setButtonText] = useState("📲 WhatsApp'tan Bilgi Al & İletişime Geç");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(existingPostId || null);
@@ -349,16 +350,31 @@ export function CreateAdCampaignModal({
                     />
                   </div>
 
-                  {/* Target URL */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300">Yönlendirme Bağlantısı (İsteğe Bağlı Web / WhatsApp Linki)</label>
-                    <input
-                      type="url"
-                      value={targetUrl}
-                      onChange={(e) => setTargetUrl(e.target.value)}
-                      placeholder="https://wa.me/905... veya https://dijitalkurs.com"
-                      className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    />
+                  {/* Target URL & Button Text */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300">Yönlendirme Linki (WhatsApp / Web)</label>
+                      <input
+                        type="url"
+                        value={targetUrl}
+                        onChange={(e) => setTargetUrl(e.target.value)}
+                        placeholder="https://wa.me/905... veya https://site.com"
+                        className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300">Buton Üzerindeki Yazı (CTA)</label>
+                      <select
+                        value={buttonText}
+                        onChange={(e) => setButtonText(e.target.value)}
+                        className="mt-1 w-full rounded-xl bg-slate-800 px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      >
+                        <option value="📲 WhatsApp'tan Bilgi Al & İletişime Geç">📲 WhatsApp'tan Bilgi Al</option>
+                        <option value="🎓 Kursa / Kampa Hemen Başvur">🎓 Kursa / Kampa Hemen Başvur</option>
+                        <option value="🌐 Web Sitesini Ziyaret Et">🌐 Web Sitesini Ziyaret Et</option>
+                        <option value="📞 Detaylı Bilgi İle İletişime Geç">📞 Detaylı Bilgi İle İletişime Geç</option>
+                      </select>
+                    </div>
                   </div>
 
                   {/* Media Upload & Audio Option */}
@@ -582,7 +598,7 @@ export function CreateAdCampaignModal({
                         rel="noopener noreferrer"
                         className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-2.5 text-xs font-black text-slate-950 shadow-md"
                       >
-                        {targetUrl ? "Detaylı Bilgi & Başvuru ↗" : "Hedef Bağlantı Butonu"}
+                        {buttonText} ↗
                       </a>
                     </div>
                   </div>
