@@ -20,13 +20,8 @@ export function isCapacitorAndroidClient() {
   }
 
   const ua = navigator.userAgent || "";
-  const isAndroid = /Android/i.test(ua);
-  const isNativeApp =
-    /Capacitor/i.test(ua) ||
-    /TWA/i.test(ua) ||
-    /wv/i.test(ua) ||
-    /ZigoApp/i.test(ua) ||
-    (typeof document !== "undefined" && document.referrer && document.referrer.startsWith("android-app://"));
+  const isAndroidDevice = /Android/i.test(ua);
+  const hasAndroidParam = new URLSearchParams(window.location.search).has("android");
 
-  return isAndroid && (isNativeApp || (typeof window !== "undefined" && window.matchMedia?.("(display-mode: standalone)")?.matches));
+  return isAndroidDevice || hasAndroidParam;
 }

@@ -11,16 +11,16 @@ export const SUBSCRIPTION_CAMPAIGN = {
   discountPercent: EARLY_BIRD_DISCOUNT_PERCENT,
   badgeLabel: "30 Gün Ücretsiz Deneme",
   headline: "30 Gün Tam Özellikli Ücretsiz Deneme",
-  description: "Kayıt olan tüm kullanıcılar ilk 30 gün ücretsiz deneme hakkına sahiptir. İlk 30 gün içinde abone olursanız %50, sonrasında %15 indirim uygulanır.",
+  description: "1 Eylül 2026 tarihine kadar kayıt olan tüm kullanıcılar ilk 30 gün ücretsiz deneme hakkına sahiptir. İlk 30 gün içinde abone olursanız %50, sonrasında %15 indirim uygulanır.",
   stripeCouponId: "zigo-50off",
   stripePromotionCode: "ZIGO50",
   stripeCouponEnvKey: "STRIPE_COUPON_50OFF",
   trialDays: SUBSCRIPTION_TRIAL_DAYS,
-  endsAt: new Date("2099-12-31T23:59:59Z"),
+  endsAt: new Date("2026-09-01T23:59:59Z"),
 } as const;
 
-export function isSubscriptionCampaignActive() {
-  return true;
+export function isSubscriptionCampaignActive(now = new Date()) {
+  return now.getTime() <= SUBSCRIPTION_CAMPAIGN.endsAt.getTime();
 }
 
 /**
