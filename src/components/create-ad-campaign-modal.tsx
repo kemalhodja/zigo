@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type CreateAdCampaignModalProps = {
@@ -10,25 +10,22 @@ type CreateAdCampaignModalProps = {
 };
 
 const TURKEY_CITIES = [
-  "Tüm Türkiye (Lokasyon kısıtlamasız)",
-  "İstanbul",
-  "Ankara",
-  "İzmir",
-  "Bursa",
-  "Antalya",
-  "Adana",
-  "Konya",
-  "Gaziantep",
-  "Kocaeli",
-  "Mersin",
-  "Diyarbakır",
-  "Samsun",
-  "Denizli",
-  "Eskişehir",
-  "Kayseri",
-  "Trabzon",
-  "Manisa",
+  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
+  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
+  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
+  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
+  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
+  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
+  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
+  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ];
+
+type UserPost = {
+  id: string;
+  caption?: string | null;
+  media_url?: string | null;
+  created_at: string;
+};
 
 export function CreateAdCampaignModal({
   existingPostId,
@@ -39,23 +36,94 @@ export function CreateAdCampaignModal({
   const [isOpen, setIsOpen] = useState(false);
   const [method, setMethod] = useState<"existing" | "new">(existingPostId ? "existing" : "new");
 
+  // Multi-select Target Audience: "student", "parent"
+  const [selectedAudiences, setSelectedAudiences] = useState<("student" | "parent")[]>(["student", "parent"]);
+  const [targetAll, setTargetAll] = useState(true);
+
+  // Multi-select Cities
+  const [isAllCities, setIsAllCities] = useState(true);
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [district, setDistrict] = useState("");
+
   // Form states
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
-  const [targetAudience, setTargetAudience] = useState<"all" | "student" | "parent">("all");
-  const [selectedCity, setSelectedCity] = useState("Tüm Türkiye (Lokasyon kısıtlamasız)");
-  const [district, setDistrict] = useState("");
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(existingPostId || null);
 
+  // User posts for selection
+  const [userPosts, setUserPosts] = useState<UserPost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
+  // Uploading & Submitting
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  async function handleFileUpload(file: File) {
-    setIsUploading(true);
+  // Fetch user posts if method is existing
+  useEffect(() => {
+    if (isOpen && method === "existing" && userPosts.length === 0) {
+      setLoadingPosts(true);
+      fetch("/api/social/posts?limit=15")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.data && Array.isArray(data.data)) {
+            setUserPosts(data.data);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingPosts(false));
+    }
+  }, [isOpen, method, userPosts.length]);
+
+  function toggleAudience(audience: "student" | "parent") {
+    setTargetAll(false);
+    if (selectedAudiences.includes(audience)) {
+      const filtered = selectedAudiences.filter((a) => a !== audience);
+      if (filtered.length === 0) {
+        setTargetAll(true);
+        setSelectedAudiences(["student", "parent"]);
+      } else {
+        setSelectedAudiences(filtered);
+      }
+    } else {
+      setSelectedAudiences([...selectedAudiences, audience]);
+    }
+  }
+
+  function toggleAllAudiences() {
+    setTargetAll(true);
+    setSelectedAudiences(["student", "parent"]);
+  }
+
+  function toggleCity(city: string) {
+    setIsAllCities(false);
+    if (selectedCities.includes(city)) {
+      const filtered = selectedCities.filter((c) => c !== city);
+      if (filtered.length === 0) {
+        setIsAllCities(true);
+      } else {
+        setSelectedCities(filtered);
+      }
+    } else {
+      setSelectedCities([...selectedCities, city]);
+    }
+  }
+
+  function toggleAllCities() {
+    setIsAllCities(true);
+    setSelectedCities([]);
+  }
+
+  async function handleFileUpload(file: File, isAudio = false) {
+    if (isAudio) setIsUploadingAudio(true);
+    else setIsUploading(true);
     setError(null);
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -66,35 +134,56 @@ export function CreateAdCampaignModal({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.data?.avatarUrl) {
-        throw new Error(data.error || "Görsel yüklenemedi");
+        throw new Error(data.error || "Dosya yüklenemedi");
       }
-      setMediaUrl(data.data.avatarUrl);
+      if (isAudio) {
+        setAudioUrl(data.data.avatarUrl);
+      } else {
+        setMediaUrl(data.data.avatarUrl);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Yükleme hatası");
     } finally {
-      setIsUploading(false);
+      if (isAudio) setIsUploadingAudio(false);
+      else setIsUploading(false);
     }
   }
+
+  const isVideoMedia = mediaUrl ? /\.(mp4|webm|mov|ogg)$/i.test(mediaUrl) || mediaUrl.includes("video") : false;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
-    const cityVal = selectedCity.includes("Tüm Türkiye") ? null : selectedCity;
+    // Resolve Target Audience string
+    let audienceStr: "all" | "student" | "parent" = "all";
+    if (!targetAll) {
+      if (selectedAudiences.includes("student") && selectedAudiences.includes("parent")) {
+        audienceStr = "all";
+      } else if (selectedAudiences.includes("student")) {
+        audienceStr = "student";
+      } else if (selectedAudiences.includes("parent")) {
+        audienceStr = "parent";
+      }
+    }
+
+    // Resolve City String
+    const cityStr = isAllCities || selectedCities.length === 0 ? null : selectedCities.join(", ");
 
     try {
       const res = await fetch("/api/ads/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          existingPostId: method === "existing" ? existingPostId : undefined,
+          existingPostId: method === "existing" ? selectedPostId : undefined,
           title: title.trim(),
           caption: caption.trim(),
           targetUrl: targetUrl.trim() || undefined,
           mediaUrl: mediaUrl || undefined,
-          targetAudience,
-          city: cityVal,
+          audioUrl: audioUrl || undefined,
+          targetAudience: audienceStr,
+          city: cityStr,
           district: district.trim() || undefined,
         }),
       });
@@ -113,13 +202,13 @@ export function CreateAdCampaignModal({
       }
 
       setSuccess(true);
-      if (onSuccess) onSuccess();
       setTimeout(() => {
         setIsOpen(false);
         setSuccess(false);
-      }, 2500);
+        if (onSuccess) onSuccess();
+      }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Reklam oluşturulamadı");
+      setError(err instanceof Error ? err.message : "Sistem hatası");
     } finally {
       setIsSubmitting(false);
     }
@@ -128,213 +217,337 @@ export function CreateAdCampaignModal({
   return (
     <>
       <button
-        type="button"
+        className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-3.5 py-2 text-xs font-black text-slate-950 shadow-sm transition hover:brightness-105"
         onClick={() => setIsOpen(true)}
-        className="inline-flex tap-scale items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-xs font-black text-white shadow-md shadow-amber-500/20 hover:brightness-105"
+        type="button"
       >
-        <span>📢</span>
-        <span>{triggerLabel || (existingPostId ? "Sponsorlu Reklama Dönüştür" : "Reklam Ver (Görsel/Afiş Yükle)")}</span>
+        <span>{triggerLabel || "📢 Sponsorlu Reklam Ver"}</span>
       </button>
 
       {isOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-amber-500/30 bg-slate-900 p-6 text-slate-100 shadow-2xl">
-            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-xs">
+          <div className="relative my-auto w-full max-w-4xl rounded-3xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
-                <span className="inline-block rounded-md bg-amber-500/20 px-2.5 py-0.5 text-[0.65rem] font-black uppercase text-amber-400">
-                  📢 Reklam Yayınlama Merkezi
+                <span className="rounded-full bg-amber-400/20 px-2.5 py-0.5 text-[0.65rem] font-black uppercase tracking-wider text-amber-300">
+                  Sponsorlu Reklam Stüdyosu
                 </span>
-                <h3 className="mt-1 text-xl font-black text-white">Sponsorlu Reklam Oluştur</h3>
-                <p className="mt-0.5 text-xs text-slate-400">İçeriğini hedef kitleye ve lokasyona özel öne çıkar.</p>
+                <h2 className="mt-1 text-xl font-black">Reklam & Afiş Kampanyası Oluştur</h2>
               </div>
               <button
-                type="button"
+                className="tap-scale flex size-8 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-white"
                 onClick={() => setIsOpen(false)}
-                className="rounded-full bg-slate-800 p-2 text-slate-400 hover:text-white"
+                type="button"
               >
                 ✕
               </button>
             </div>
 
-            {/* Success state */}
             {success ? (
-              <div className="my-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-6 text-center text-emerald-300">
-                <div className="text-4xl">⏳</div>
-                <h4 className="mt-2 text-lg font-black text-white">Reklamınız Başarıyla Gönderildi!</h4>
-                <p className="mt-1 text-xs font-bold text-emerald-400">
-                  Reklamınız incelenmek üzere Admin onayına sunuldu. Onaylandıktan sonra seçtiğiniz kitleye yayınlanacaktır.
+              <div className="my-8 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 p-6 text-center">
+                <span className="text-4xl">🎉</span>
+                <h3 className="mt-3 text-lg font-black text-emerald-200">Reklamınız Başarıyla İncelemeye Gönderildi!</h3>
+                <p className="mt-1 text-sm font-semibold text-emerald-100/80">
+                  Tebrikler! Reklamınız yöneticilerimiz tarafından onaylandıktan sonra hedef kitlenizin akışında görünmeye başlayacaktır.
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-                {error ? (
-                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-300">
-                    ⚠️ {error}
-                  </div>
-                ) : null}
-
-                {/* Yöntem seçimi (Eğer existingPostId verilmemişse) */}
-                {!existingPostId ? (
-                  <div className="grid grid-cols-2 gap-2">
+              <div className="mt-4 grid gap-6 lg:grid-cols-12">
+                {/* Form Inputs (Left Column - 7 Cols) */}
+                <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-7">
+                  {/* Method Selection */}
+                  <div className="flex rounded-xl bg-slate-800 p-1">
                     <button
                       type="button"
                       onClick={() => setMethod("new")}
-                      className={`rounded-xl p-3 text-xs font-black transition ${
-                        method === "new" ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-slate-300"
+                      className={`flex-1 rounded-lg py-2 text-xs font-black transition ${
+                        method === "new" ? "bg-amber-400 text-slate-950 shadow-xs" : "text-slate-400 hover:text-white"
                       }`}
                     >
-                      🖼️ Görsel / Afiş Yükle (2. Yöntem)
+                      ✨ Sıfırdan Reklam / Afiş Hazırla
                     </button>
                     <button
                       type="button"
                       onClick={() => setMethod("existing")}
-                      className={`rounded-xl p-3 text-xs font-black transition ${
-                        method === "existing" ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-slate-300"
+                      className={`flex-1 rounded-lg py-2 text-xs font-black transition ${
+                        method === "existing" ? "bg-amber-400 text-slate-950 shadow-xs" : "text-slate-400 hover:text-white"
                       }`}
                     >
-                      📌 Paylaşımı Reklam Yap (1. Yöntem)
+                      📌 Varolan Paylaşımı Reklam Yap
                     </button>
                   </div>
-                ) : null}
 
-                {/* Başlık & Açıklama */}
-                {method === "new" ? (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-[0.68rem] font-black uppercase tracking-wider text-slate-400">Reklam Başlığı / Etiketi</label>
-                      <input
-                        type="text"
-                        required
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Örn: 2026 LGS Matematik Kampı Kayıtları Başladı"
-                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
-                      />
+                  {method === "existing" ? (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300">Önceki Paylaşımlarınızdan Seçin:</label>
+                      {loadingPosts ? (
+                        <p className="mt-2 text-xs text-slate-400 animate-pulse">Paylaşımlarınız yükleniyor...</p>
+                      ) : userPosts.length === 0 ? (
+                        <p className="mt-2 text-xs text-amber-200">Henüz bir paylaşımınız bulunmuyor.</p>
+                      ) : (
+                        <div className="mt-2 max-h-40 overflow-y-auto space-y-2 rounded-xl bg-slate-800/80 p-2">
+                          {userPosts.map((post) => (
+                            <button
+                              key={post.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedPostId(post.id);
+                                if (post.caption) setTitle(post.caption.substring(0, 40));
+                                if (post.media_url) setMediaUrl(post.media_url);
+                              }}
+                              className={`flex w-full items-center gap-3 rounded-lg p-2 text-left transition ${
+                                selectedPostId === post.id ? "bg-amber-500/20 border border-amber-400" : "hover:bg-slate-700/50"
+                              }`}
+                            >
+                              {post.media_url ? (
+                                <img src={post.media_url} alt="" className="size-10 rounded-md object-cover" />
+                              ) : (
+                                <div className="size-10 flex items-center justify-center rounded-md bg-slate-700 text-xs">📝</div>
+                              )}
+                              <div className="flex-1 truncate">
+                                <p className="text-xs font-bold text-white truncate">{post.caption || "Metinsiz Gönderi"}</p>
+                                <p className="text-[0.65rem] text-slate-400">{new Date(post.created_at).toLocaleDateString("tr-TR")}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
+                  ) : null}
 
-                    <div className="space-y-1">
-                      <label className="text-[0.68rem] font-black uppercase tracking-wider text-slate-400">Açıklama / Metin</label>
-                      <textarea
-                        required
-                        value={caption}
-                        onChange={(e) => setCaption(e.target.value)}
-                        rows={3}
-                        placeholder="Reklamında öğrencilere/velilere iletmek istediğin detaylar..."
-                        className="w-full resize-none rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[0.68rem] font-black uppercase tracking-wider text-slate-400">Görsel / Afiş Yükle</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) void handleFileUpload(file);
-                        }}
-                        className="w-full text-xs text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-xs file:font-black file:text-white hover:file:bg-slate-700"
-                      />
-                      {isUploading ? <p className="text-[0.65rem] text-amber-400">Görsel yükleniyor...</p> : null}
-                      {mediaUrl ? <p className="text-[0.65rem] text-emerald-400">✓ Görsel hazır!</p> : null}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[0.68rem] font-black uppercase tracking-wider text-slate-400">Hedef Bağlantı (URL)</label>
-                      <input
-                        type="url"
-                        value={targetUrl}
-                        onChange={(e) => setTargetUrl(e.target.value)}
-                        placeholder="https://siteniz.com veya WhatsApp linki"
-                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
-                      />
-                    </div>
-                  </>
-                ) : null}
-
-                {/* Hedef Kitle Seçimi */}
-                <div className="space-y-1.5 pt-2 border-t border-slate-800">
-                  <label className="text-[0.68rem] font-black uppercase tracking-wider text-amber-400">🎯 Hedef Kitle Seçimi</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setTargetAudience("all")}
-                      className={`rounded-xl p-2.5 text-center text-xs font-black border transition ${
-                        targetAudience === "all" ? "border-amber-500 bg-amber-500/20 text-amber-300" : "border-slate-800 bg-slate-950 text-slate-400"
-                      }`}
-                    >
-                      👥 Herkes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTargetAudience("student")}
-                      className={`rounded-xl p-2.5 text-center text-xs font-black border transition ${
-                        targetAudience === "student" ? "border-amber-500 bg-amber-500/20 text-amber-300" : "border-slate-800 bg-slate-950 text-slate-400"
-                      }`}
-                    >
-                      🎓 Öğrenciler
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTargetAudience("parent")}
-                      className={`rounded-xl p-2.5 text-center text-xs font-black border transition ${
-                        targetAudience === "parent" ? "border-amber-500 bg-amber-500/20 text-amber-300" : "border-slate-800 bg-slate-950 text-slate-400"
-                      }`}
-                    >
-                      👨‍👩‍👧 Veliler
-                    </button>
+                  {/* Title & Caption */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">Reklam Başlığı / Slogan *</label>
+                    <input
+                      type="text"
+                      required
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Örn: 2026 YKS Matematik Derece Kampı Başlıyor!"
+                      className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
                   </div>
-                </div>
 
-                {/* Lokasyon Hedefleme */}
-                <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <label className="text-[0.68rem] font-black uppercase tracking-wider text-amber-400">📍 Lokasyon Hedefleme (İsteğe Bağlı)</label>
-                  <select
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
-                  >
-                    {TURKEY_CITIES.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">Açıklama Metni</label>
+                    <textarea
+                      rows={2}
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      placeholder="Reklam detaylarını ve sunduğunuz fırsatları yazın..."
+                      className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
 
-                  {!selectedCity.includes("Tüm Türkiye") ? (
+                  {/* Target URL */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">Yönlendirme Bağlantısı (İsteğe Bağlı Web / WhatsApp Linki)</label>
+                    <input
+                      type="url"
+                      value={targetUrl}
+                      onChange={(e) => setTargetUrl(e.target.value)}
+                      placeholder="https://wa.me/905... veya https://dijitalkurs.com"
+                      className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
+
+                  {/* Media Upload & Audio Option */}
+                  {method === "new" ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300">Görsel veya Video Afiş</label>
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, false);
+                          }}
+                          className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-400 file:px-3 file:py-1.5 file:text-xs file:font-black file:text-slate-950 hover:file:bg-amber-300"
+                        />
+                        {isUploading ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Medya yükleniyor...</p> : null}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-300">İsteğe Bağlı Arka Plan Sesi (Audio)</label>
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, true);
+                          }}
+                          className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-slate-600"
+                        />
+                        {isUploadingAudio ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Ses yükleniyor...</p> : null}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Multi-Select Target Audience */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">Hedef Kitle Seçimi (Çoklu Seçilebilir)</label>
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={toggleAllAudiences}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                          targetAll ? "bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        🌐 Herkes (Öğrenci + Veli + Tüm Kullanıcılar)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleAudience("student")}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                          !targetAll && selectedAudiences.includes("student")
+                            ? "bg-amber-400 text-slate-950"
+                            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        🎓 Öğrenciler
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleAudience("parent")}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                          !targetAll && selectedAudiences.includes("parent")
+                            ? "bg-amber-400 text-slate-950"
+                            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        }`}
+                      >
+                        👨‍👩‍👧 Veliler
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Multi-Select City & Location */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">Lokasyon / İl Seçimi (Birden Fazla İl Seçilebilir)</label>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-32 overflow-y-auto rounded-xl bg-slate-800/60 p-2 border border-slate-700">
+                      <button
+                        type="button"
+                        onClick={toggleAllCities}
+                        className={`rounded-lg px-2.5 py-1 text-[0.7rem] font-bold transition ${
+                          isAllCities ? "bg-amber-400 text-slate-950 font-black" : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                        }`}
+                      >
+                        🇹🇷 Tüm Türkiye
+                      </button>
+                      {TURKEY_CITIES.map((city) => {
+                        const isSelected = !isAllCities && selectedCities.includes(city);
+                        return (
+                          <button
+                            key={city}
+                            type="button"
+                            onClick={() => toggleCity(city)}
+                            className={`rounded-lg px-2.5 py-1 text-[0.7rem] font-bold transition ${
+                              isSelected ? "bg-amber-400 text-slate-950 font-black" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                            }`}
+                          >
+                            {isSelected ? `✓ ${city}` : city}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {!isAllCities && selectedCities.length > 0 ? (
+                      <p className="mt-1 text-[0.68rem] text-amber-300 font-semibold">
+                        Seçilen İller ({selectedCities.length}): {selectedCities.join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">İlçe / Bölge (İsteğe Bağlı Spesifik İlçe)</label>
                     <input
                       type="text"
                       value={district}
                       onChange={(e) => setDistrict(e.target.value)}
-                      placeholder="İlçe girin (Örn: Kadıköy, Çankaya) - İsteğe bağlı"
-                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                      placeholder="Örn: Kadıköy, Çankaya, Karşıyaka..."
+                      className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
                     />
-                  ) : null}
-                </div>
+                  </div>
 
-                {/* Bilgi Kutusu */}
-                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-[0.68rem] text-amber-300 leading-4">
-                  🛡️ <strong>Admin Onay Süreci:</strong> Oluşturduğunuz reklam Admin onayına sunulacak, onaylandıktan sonra belirlenen kitleye ve konuma yayınlanacaktır.
-                </div>
+                  {error ? <p className="rounded-lg bg-rose-950/80 border border-rose-500/50 p-2.5 text-xs font-bold text-rose-200">{error}</p> : null}
 
-                <div className="flex gap-2 pt-3 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    disabled={isSubmitting}
-                    className="flex-1 rounded-xl bg-slate-800 py-3 text-xs font-black text-slate-300 hover:bg-slate-700"
-                  >
-                    Vazgeç
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || isUploading}
-                    className="tap-scale flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-xs font-black text-slate-950 shadow-md hover:brightness-105 disabled:opacity-60"
-                  >
-                    {isSubmitting ? "Gönderiliyor..." : "Onaya Gönder 🚀"}
-                  </button>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="rounded-xl bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                    >
+                      İptal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || isUploading || isUploadingAudio}
+                      className="tap-scale rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-2.5 text-xs font-black text-slate-950 shadow-md hover:brightness-105 disabled:opacity-60"
+                    >
+                      {isSubmitting ? "Onaya Gönderiliyor..." : "🚀 Onaya Gönder"}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Live Ad Preview Card (Right Column - 5 Cols) */}
+                <div className="lg:col-span-5 border-t border-slate-800 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
+                  <p className="text-xs font-black uppercase tracking-widest text-amber-300">👁️ Canlı Reklam Önizlemesi</p>
+                  <p className="mt-0.5 text-[0.68rem] text-slate-400">Öğrencilerin ve velilerin akışında böyle görünecek:</p>
+
+                  <div className="mt-3 overflow-hidden rounded-2xl border border-amber-400/40 bg-slate-950 p-3.5 shadow-xl">
+                    <div className="flex items-center justify-between">
+                      <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[0.6rem] font-black uppercase text-slate-950">
+                        Sponsorlu Reklam
+                      </span>
+                      <span className="text-[0.65rem] font-bold text-slate-400">
+                        {isAllCities ? "🇹🇷 Tüm Türkiye" : selectedCities.join(", ")}
+                      </span>
+                    </div>
+
+                    <h4 className="mt-2 text-sm font-black text-white leading-snug">
+                      {title || "Reklamınızın Başlığı Burada Görünecek"}
+                    </h4>
+
+                    {caption ? <p className="mt-1 text-xs text-slate-300 leading-relaxed">{caption}</p> : null}
+
+                    {/* Media Container */}
+                    {mediaUrl ? (
+                      <div className="mt-2.5 overflow-hidden rounded-xl bg-slate-900 border border-slate-800">
+                        {isVideoMedia ? (
+                          <video src={mediaUrl} controls autoPlay muted={false} className="max-h-48 w-full object-cover" />
+                        ) : (
+                          <img src={mediaUrl} alt="Reklam Afişi" className="max-h-48 w-full object-cover" />
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-2.5 flex h-32 items-center justify-center rounded-xl bg-slate-800/60 border border-dashed border-slate-700 text-xs text-slate-500">
+                        🖼️ Görsel / Video Afiş Alanı
+                      </div>
+                    )}
+
+                    {/* Background Audio Player if provided */}
+                    {audioUrl ? (
+                      <div className="mt-2 rounded-lg bg-slate-900 p-2 border border-amber-400/30">
+                        <p className="text-[0.62rem] font-bold text-amber-300">🎵 Arka Plan Seslendirmesi / Müzik</p>
+                        <audio src={audioUrl} controls className="mt-1 h-7 w-full" />
+                      </div>
+                    ) : null}
+
+                    {/* Target Link CTA */}
+                    <div className="mt-3">
+                      <a
+                        href={targetUrl || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-2.5 text-xs font-black text-slate-950 shadow-md"
+                      >
+                        {targetUrl ? "Detaylı Bilgi & Başvuru ↗" : "Hedef Bağlantı Butonu"}
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </form>
+              </div>
             )}
           </div>
         </div>
