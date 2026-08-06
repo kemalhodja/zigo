@@ -6,6 +6,7 @@ import Script from "next/script";
 
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import { ToastProvider } from "@/components/ui/toast-system";
 import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
@@ -80,6 +81,7 @@ export default async function RootLayout({
       <body className={`${jakarta.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
         <LocaleProvider initialLocale={locale}>
           <ToastProvider>
+            <OfflineIndicator />
             <AppShell
               canCreateSocialPost={shellState.canCreateSocialPost}
               isPreviewMode={!hasSupabaseEnv()}
