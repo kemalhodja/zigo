@@ -44,13 +44,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     }
   }
 
-  const showTrendRadar = !query.trim();
-
   return (
     <div className="space-y-0 pb-3">
-      {/* Trend Radar hero — only when not searching */}
-      {showTrendRadar ? <ExploreTrendRadar messages={m} query={query} /> : null}
-
       {/* Search bar */}
       <section className="sticky top-[3.45rem] z-10 -mx-4 border-b border-slate-100 bg-white/95 px-4 pb-2.5 pt-2 backdrop-blur">
         <form action="/explore" className="relative">
@@ -191,44 +186,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   );
 }
 
-function ExploreTrendRadar({
-  messages,
-  query,
-}: {
-  messages: Messages;
-  query: string;
-}) {
-  const e = messages.explore;
-  const smartDiscovery = e.smartDiscovery;
-  const radarTitle = query.trim() ? `${e.trendRadar}: ${query.trim()}` : e.trendRadar;
-  const radarCards = [
-    { href: "/explore?q=Kesir&format=micro", label: e.fractions, metric: e.hotMicro, accent: "from-crystal to-berry" },
-    { href: "/explore?q=Fen&format=lessons", label: e.scienceLabs, metric: e.parentSafe, accent: "from-aqua to-mint" },
-    { href: "/explore?format=teachers", label: e.teachers, metric: messages.common.verified, accent: "from-sun to-peach" },
-  ];
 
-  return (
-    <section className="-mx-4 space-y-0">
-      <span className="sr-only" aria-hidden="true">{smartDiscovery}</span>
-      <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-5 text-white">
-        <h1 className="text-2xl font-black leading-tight">{radarTitle}</h1>
-        <p className="mt-2 text-sm font-bold leading-6 text-white/75">{e.trendDesc}</p>
-      </div>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 py-3">
-        {radarCards.map((card) => (
-          <Link
-            className={`tap-scale min-w-36 rounded-2xl bg-gradient-to-br ${card.accent} px-3 py-3 text-white shadow-sm`}
-            href={card.href}
-            key={card.label}
-          >
-            <p className="text-sm font-black">{card.label}</p>
-            <p className="mt-1 text-xs font-bold text-white/75">{card.metric}</p>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 type ExploreRailCreator = {
   id?: string;
