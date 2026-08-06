@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, SocialPostRow } from "@/lib/supabase/database.types";
 
-export type SponsoredAdStatus = "active" | "paused" | "expired";
+export type SponsoredAdStatus = "active" | "paused" | "expired" | "pending" | "rejected";
 
 export type TeacherSponsoredAdSummary = {
   post_id: string;

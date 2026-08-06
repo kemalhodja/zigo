@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { TeacherAnalyticsCard } from "@/components/teacher-analytics-card";
@@ -138,7 +139,10 @@ export default async function TeacherPage({
 
       {/* Quick Content Studio Actions */}
       <section className="space-y-2">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">İçerik Stüdyosu Eylemleri</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">İçerik Stüdyosu Eylemleri</p>
+          <CreateAdCampaignModal triggerLabel="📢 Reklam / Afiş Oluştur" />
+        </div>
         <div className="grid grid-cols-2 gap-2.5">
           <Link
             className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-4 text-white shadow-sm transition hover:shadow-md"

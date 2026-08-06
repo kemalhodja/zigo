@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdminAdApprovalQueue } from "@/components/admin-ad-approval-queue";
 import { ModerationQueueItem } from "@/components/moderation-queue-item";
 import { SocialPill } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
@@ -159,6 +160,8 @@ export default async function ModerationPage({ searchParams }: ModerationPagePro
           <p className="text-xs font-bold text-slate-500">{mp.slaAdminOnly}</p>
         </section>
       ) : null}
+
+      <AdminAdApprovalQueue />
 
       <section className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto bg-white px-4 pb-3">
         {safetyLayers.map((layer) => (

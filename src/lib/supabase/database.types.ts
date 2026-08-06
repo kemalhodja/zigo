@@ -312,10 +312,12 @@ export type SocialPostRow = {
   premium_prep_url: string | null;
   sponsored_label: string | null;
   sponsored_target_url: string | null;
-  sponsored_status: "active" | "paused" | "expired" | null;
+  sponsored_status: "active" | "paused" | "expired" | "pending" | "rejected" | null;
   sponsored_expires_at: string | null;
   sponsored_disclosure: string | null;
   sponsored_click_count: number;
+  city: string | null;
+  district: string | null;
   created_at: string;
 };
 
@@ -955,6 +957,8 @@ export type Database = {
           sponsored_expires_at?: string | null;
           sponsored_disclosure?: string | null;
           sponsored_click_count?: number;
+          city?: string | null;
+          district?: string | null;
           created_at?: string;
         };
         Update: {
@@ -966,6 +970,8 @@ export type Database = {
           media_type?: SocialMediaType;
           is_reel?: boolean;
           post_type?: ContentPostType;
+          city?: string | null;
+          district?: string | null;
           title?: string | null;
           content?: string | null;
           quiz_id?: string | null;
