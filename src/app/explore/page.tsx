@@ -1,11 +1,7 @@
 import Link from "next/link";
 
-import { FollowButton } from "@/components/follow-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
-import { SocialAvatar } from "@/components/social-primitives";
-import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
-import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
-import { allowDemoContent } from "@/lib/domain/demo-env";
+import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
   getMatchedTeachers,
@@ -21,31 +17,8 @@ const EXPLORE_FORMATS = ["all", "micro", "lessons", "teachers"] as const;
 const creatorAccents = ["from-crystal to-berry", "from-aqua to-mint", "from-sun to-peach", "from-violet-600 to-fuchsia-500"];
 type ExploreFormat = (typeof EXPLORE_FORMATS)[number];
 
-const suggestedCreatorRail = (d: Messages["exploreDemo"]) => [
-  { accent: "from-crystal to-berry", handle: "aylinmath", label: d.mathMicro, href: "/micro" },
-  { accent: "from-aqua to-mint", handle: "mertlab", label: d.scienceLab, href: "/micro" },
-  { accent: "from-sun to-peach", handle: "codeclub", label: d.codingClub, href: "/profile" },
-] as const;
 
-function buildExploreDemoTiles(d: Messages["exploreDemo"]) {
-  const tiles = [
-    { title: d.tileFractions, span: "row-span-2", color: "from-crystal to-fuchsia-500", scene: "math" as const },
-    { title: d.tileScienceReel, span: "", color: "from-emerald-500 to-teal-500", scene: "science" as const },
-    { title: d.tileCoding, span: "", color: "from-sky-500 to-indigo-500", scene: "coding" as const },
-    { title: d.tileParentPicks, span: "col-span-2", color: "from-amber-400 to-orange-500", scene: "profile" as const },
-    { title: d.tileDailyQuiz, span: "row-span-2", color: "from-pink-500 to-rose-500", scene: "quiz" as const },
-    { title: d.tileCreatorTips, span: "", color: "from-slate-700 to-night", scene: "profile" as const },
-    { title: d.tileEnglish, span: "", color: "from-violet-600 to-indigo-500", scene: "english" as const },
-    { title: d.tileSafeSocial, span: "", color: "from-mint to-emerald-400", scene: "profile" as const },
-  ];
-  return tiles.map((tile, index) => ({
-    ...tile,
-    id: `demo-${index}`,
-    href: index % 2 === 0 ? "/micro" : "/profile",
-    mediaUrl: null,
-    mediaType: index % 3 === 1 ? "video" : "image",
-  }));
-}
+
 
 type ExplorePageProps = {
   searchParams: Promise<{ format?: string; q?: string }>;
@@ -54,46 +27,14 @@ type ExplorePageProps = {
 export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const m = await getServerMessages();
   const e = m.explore;
-  const demoTiles = buildExploreDemoTiles(m.exploreDemo);
-  const categories = [
-    { label: e.forYou, query: "" },
-    { label: m.zigo.micro, query: "Kısa ders" },
-    { label: e.teachers, query: "Öğretmen" },
-    { label: e.preschool, query: "Okul Öncesi" },
-    { label: e.primaryGrades, query: "1-4. Sınıf" },
-    { label: e.middleGrades, query: "5-8. Sınıf" },
-    { label: e.highGrades, query: "9-12. Sınıf" },
-    { label: e.mathBranch, query: "Matematik" },
-    { label: e.scienceBranch, query: "Fen" },
-    { label: e.turkishBranch, query: "Türkçe" },
-    { label: e.englishBranch, query: "İngilizce" },
-    { label: e.codingBranch, query: "Kodlama" },
-    { label: e.lgsCoachingBranch, query: "LGS Koçluk" },
-    { label: e.yksCoachingBranch, query: "YKS Koçluk" },
-    { label: e.guidanceTeacherBranch, query: "Rehber Öğretmen" },
-    { label: e.bursulukBranch, query: "Bursluluk" },
-    { label: e.studySkillsBranch, query: "Çalışma Teknikleri" },
-    { label: e.socialBranch, query: "Sosyal" },
-    { label: e.artBranch, query: "Sanat" },
-    { label: e.parentCategory, query: "Veli" },
-  ];
-  const formatFilters = [
-    { label: e.allFormats, value: "all" as const },
-    { label: m.zigo.micro, value: "micro" as const },
-    { label: e.postsFilter, value: "lessons" as const },
-    { label: e.teachers, value: "teachers" as const },
-  ];
+
+
+  const activeFormat: ExploreFormat = "all" as const;
   const params = await searchParams;
   const query = params.q ?? "";
-  const activeFormat = getExploreFormat(params.format);
-  const { creators, posts, suggestedRail } = await getExploreResults(query, activeFormat);
+  const { posts } = await getExploreResults(query, activeFormat);
   const filteredPosts = filterExploreTiles(posts, activeFormat);
-  const hasResults = filteredPosts.length > 0;
-  const hasQuery = query.trim().length > 0;
-  const isPreview = !hasSupabaseEnv() && allowDemoContent();
-  const previewTiles = filterExploreTiles(demoTiles, activeFormat);
-  const tilesToRender = hasResults ? filteredPosts : hasQuery || activeFormat === "teachers" ? [] : isPreview ? previewTiles : [];
-  const showSuggestedCreators = !hasQuery && creators.length === 0 && activeFormat !== "teachers";
+  const tilesToRender = filteredPosts;
 
   let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
   let userCity: string | null = null;
@@ -108,14 +49,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     }
   }
 
-  const baseCategories = userCity
-    ? [{ label: `📍 ${userCity}`, query: userCity }, ...categories]
-    : categories;
 
-  const roleCategories =
-    viewerRole === "parent"
-      ? baseCategories
-      : baseCategories.filter((category) => category.query !== "Veli");
 
   return (
     <div className="space-y-3 pb-3">
@@ -132,147 +66,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             placeholder={viewerRole === "teacher" ? e.teacherSearchPlaceholder : e.searchPlaceholder}
           />
         </form>
-        <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto">
-          {roleCategories.map((category) => (
-            <Link
-              className={`rounded-full border px-3 py-1.5 text-xs font-black ${
-                query.toLowerCase() === category.query.toLowerCase() || (!hasQuery && category.query === "")
-                  ? "zigo-tab-active-pill"
-                  : "zigo-tab-inactive-pill"
-              }`}
-              href={category.query === "" ? "/explore" : `/explore?q=${encodeURIComponent(category.query)}`}
-              key={category.label}
-            >
-              {category.label}
-            </Link>
-          ))}
-        </div>
-        <div className="no-scrollbar mt-2 flex gap-1.5 overflow-x-auto">
-          {formatFilters.map((filter) => (
-            <Link
-              className={`rounded-full border px-3 py-1.5 text-[0.68rem] font-black ${
-                activeFormat === filter.value ? "zigo-tab-active-pill" : "zigo-tab-inactive-pill"
-              }`}
-              href={getExploreHref({ format: filter.value, query })}
-              key={filter.value}
-            >
-              {filter.label}
-            </Link>
-          ))}
-        </div>
+
       </section>
 
-      {hasQuery ? <p className="zigo-body px-0 font-black text-night">{e.matchedResults}: “{query}”</p> : null}
-
-      <ExploreTrendRadar messages={m} query={query} />
-
-      {showSuggestedCreators && (suggestedRail.length > 0 || allowDemoContent()) ? (
-        <section className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto border-y border-slate-100 bg-white px-4 py-3">
-          {(suggestedRail.length > 0
-            ? suggestedRail
-            : allowDemoContent()
-              ? suggestedCreatorRail(m.exploreDemo).map((creator) => ({ ...creator, id: undefined, isFollowing: false }))
-              : []
-          ).map((creator, index) => (
-            <div className="tap-scale min-w-24 text-center text-night" key={creator.id ?? creator.handle}>
-              <Link href={creator.href}>
-                <SocialAvatar
-                  accent={creator.accent ?? creatorAccents[index % creatorAccents.length]}
-                  className="mx-auto size-14 border border-white/25"
-                  label={creator.handle}
-                />
-                <p className="zigo-fit-text mt-1.5 text-xs font-bold">@{creator.handle}</p>
-                <p className="zigo-fit-text mt-0.5 text-[0.65rem] font-semibold text-slate-500">{creator.label}</p>
-              </Link>
-              {creator.id ? (
-                <div className="mt-2 flex justify-center">
-                  <FollowButton followingId={creator.id} initialFollowing={creator.isFollowing} variant="compact" />
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </section>
-      ) : null}
-
-      <ExploreTopicBridges messages={m} viewerRole={viewerRole} />
-
-      {creators.length > 0 || activeFormat === "teachers" ? (
-        <section className="-mx-4 bg-white">
-          <h2 className="border-b border-slate-100 px-4 py-2.5 text-sm font-black text-night">
-            {e.creators} <span className="sr-only">{m.profile.verifiedTeachers}</span>
-          </h2>
-          <div className="divide-y divide-slate-100">
-            {creators.length === 0 && activeFormat === "teachers" ? (
-              isPreview ? (
-                suggestedCreatorRail(m.exploreDemo).map((creator) => (
-                  <article className="flex items-center gap-3 px-4 py-3" key={creator.handle}>
-                    <Link className="flex min-w-0 flex-1 items-center gap-3" href={creator.href}>
-                      <SocialAvatar className="size-11" label={creator.handle} />
-                      <div className="min-w-0">
-                        <p className="zigo-fit-text text-sm font-black text-night">@{creator.handle}</p>
-                        <p className="mt-0.5 text-xs font-bold text-slate-500">{creator.label}</p>
-                      </div>
-                    </Link>
-                    <div className="w-28">
-                      <FollowButton />
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <p className="px-4 py-6 text-sm font-bold leading-6 text-slate-500">
-                  {e.noTeachers}{" "}
-                  <Link className="font-black text-crystal" href="/onboarding">
-                    {e.pickAreas}
-                  </Link>
-                </p>
-              )
-            ) : creators.map((creator) => (
-              <article
-                className="flex items-center gap-3 px-4 py-3"
-                key={creator.id}
-              >
-                <Link className="flex min-w-0 flex-1 items-center gap-3" href={`/profile/${creator.id}`}>
-                  <SocialAvatar className="size-11" label={creator.full_name} />
-                  <div className="min-w-0">
-                    <p className="zigo-fit-text text-sm font-black text-night">{creator.full_name}</p>
-                    <div className="mt-1">
-                      <TeacherTrustBadges
-                        branches={
-                          "area_name" in creator && typeof creator.area_name === "string"
-                            ? [creator.area_name]
-                            : []
-                        }
-                        moreLabel={m.teacherBadges.moreAreas}
-                        verified={Boolean(creator.is_verified)}
-                        verifiedLabel={m.teacherBadges.verifiedTeacher}
-                      />
-                    </div>
-                  </div>
-                </Link>
-                <div className="w-28">
-                  <FollowButton
-                    followingId={creator.id}
-                    initialFollowing={"is_following" in creator ? Boolean(creator.is_following) : false}
-                  />
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="-mx-4 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2.5">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{e.masonry}</p>
-          <h2 className="mt-1 text-lg font-black text-night">
-            {hasQuery ? e.matchedResults : activeFormat === "all" ? e.title : `${activeFormat} discovery`}
-          </h2>
-        </div>
-        <span className="rounded-lg bg-gradient-to-r from-crystal to-berry px-3 py-2 text-xs font-black text-white">
-          {tilesToRender.length} {m.common.posts}
-        </span>
-      </section>
-
+      {/* Post grid */}
       <section className="-mx-4 grid auto-rows-[8.35rem] grid-cols-3 gap-px bg-white">
         {tilesToRender.length === 0 ? (
           <div className="col-span-3 px-6 py-14 text-center">
@@ -282,33 +79,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 <path d="M20 20l-4-4" />
               </svg>
             </span>
-            <h2 className="mt-5 text-xl font-black text-night">
-              {hasQuery ? e.noResults : e.noPosts}
-            </h2>
-            <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-500">
-              {hasQuery
-                ? `"${query}" için sonuç bulunamadı. Farklı bir konu deneyin.`
-                : e.trendDesc}
-            </p>
-            {hasQuery ? (
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {["Matematik", "Fen", "Türkçe", "İngilizce", "LGS"].map((topic) => (
-                  <Link
-                    className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-night transition hover:bg-crystal hover:text-white"
-                    href={`/explore?q=${encodeURIComponent(topic)}`}
-                    key={topic}
-                  >
-                    {topic}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-            <Link
-              className="tap-scale zigo-cta mt-6 inline-flex rounded-xl px-5 py-3 text-sm font-black text-white"
-              href={hasQuery || activeFormat !== "all" ? "/explore" : "/onboarding"}
-            >
-              {hasQuery || activeFormat !== "all" ? m.common.clearFilters : e.chooseInterests}
-            </Link>
+            <h2 className="mt-5 text-xl font-black text-night">{e.noPosts}</h2>
+            <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-500">{e.trendDesc}</p>
           </div>
         ) : (
           tilesToRender.map((tile, index) => (
@@ -323,7 +95,6 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 gradient={tile.color}
                 mediaType={tile.mediaType}
                 mediaUrl={tile.mediaUrl}
-                scene={"scene" in tile ? tile.scene : undefined}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="sr-only">
@@ -357,7 +128,7 @@ function ExploreTrendRadar({
   query: string;
 }) {
   const e = messages.explore;
-  const smartDiscovery = e.smartDiscovery; // smartDiscovery
+  const smartDiscovery = e.smartDiscovery;
   const radarTitle = query.trim() ? `${e.trendRadar}: ${query.trim()}` : e.trendRadar;
   const radarCards = [
     { href: "/explore?q=Kesir&format=micro", label: e.fractions, metric: e.hotMicro, accent: "from-crystal to-berry" },
@@ -388,66 +159,6 @@ function ExploreTrendRadar({
   );
 }
 
-function ExploreTopicBridges({
-  messages,
-  viewerRole,
-}: {
-  messages: Messages;
-  viewerRole: "teacher" | "parent" | "student" | "guest";
-}) {
-  const e = messages.explore;
-  const jumpLoop = e.jumpLoop;
-  const topicBridges =
-    viewerRole === "teacher"
-      ? [
-          { href: "/create", label: messages.header.create, meta: e.qaMeta },
-          { href: "/questions", label: e.answerQuestions, meta: e.qaMeta },
-          { href: "/teacher", label: messages.dashboard.teacher.studio, meta: e.hubMeta },
-          { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
-        ]
-      : viewerRole === "parent"
-        ? [
-            { href: "/family", label: messages.profilesPage.familySetup, meta: e.qaMeta },
-            { href: "/questions", label: e.askTeacher, meta: e.qaMeta },
-            { href: "/parent", label: messages.dashboard.parent.mode, meta: e.hubMeta },
-            { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
-          ]
-        : viewerRole === "student"
-          ? [
-              { href: "/learn", label: e.learningHub, meta: e.hubMeta },
-              { href: "/duels", label: "Düello", meta: e.stemMeta },
-              { href: "/micro", label: messages.nav.micro, meta: e.stemMeta },
-              { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
-            ]
-          : [
-              { href: "/auth", label: messages.common.signIn, meta: e.qaMeta },
-              { href: "/collections", label: e.savedPosts, meta: e.savedMeta },
-            ];
-
-  return (
-    <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
-      <span className="sr-only" aria-hidden="true">{jumpLoop}</span>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-black text-night">{e.topicBridges}</h2>
-        <Link className="text-xs font-black text-crystal" href="/onboarding">
-          {e.pickAreas}
-        </Link>
-      </div>
-      <div className="no-scrollbar flex gap-2 overflow-x-auto">
-        {topicBridges.map((topic) => (
-          <Link
-            className="tap-scale min-w-36 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50 to-pink-50 px-3 py-3"
-            href={topic.href}
-            key={topic.label}
-          >
-            <p className="zigo-fit-text text-sm font-black text-night">{topic.label}</p>
-            <p className="zigo-fit-text mt-1 text-xs font-bold text-crystal">{topic.meta}</p>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 type ExploreRailCreator = {
   id?: string;
@@ -468,15 +179,13 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
   const empty: ExploreResults = { creators: [], posts: [], suggestedRail: [] };
   if (!hasSupabaseEnv()) return empty;
 
-  return withSupabaseFallback(async () => {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
   const trimmedQuery = query.trim();
   const [creatorRows, posts, suggested] = await Promise.all([
     trimmedQuery
       ? searchCreators(supabase, trimmedQuery).then((rows) =>
-          rows.map((creator) => ({ ...creator, is_following: false })),
-        )
+          rows.map((creator) => ({ ...creator, is_following: false })))
       : format === "teachers"
         ? getMatchedTeachers(supabase, profile?.id, 20).then((rows) =>
             rows.map((teacher) => ({
@@ -485,8 +194,7 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
               role: "teacher" as const,
               is_verified: true,
               is_following: teacher.is_following,
-            })),
-          )
+            })))
         : Promise.resolve([]),
     searchSocialPosts(supabase, query, profile?.id),
     getSuggestedCreators(supabase, profile?.id, 4),
@@ -504,7 +212,6 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
       isFollowing: creator.is_following,
     })),
   };
-  }, empty);
 }
 
 function toExploreTile(post: SocialFeedPost, index: number) {
