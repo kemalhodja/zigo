@@ -277,9 +277,12 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
             disabled={isSaving}
             maxLength={500}
             rows={4}
-            placeholder={pe.bioPlaceholder}
+            placeholder={pe.bioPlaceholder || "Biyografin, uzmanlık alanların veya sosyal medya linklerin (örn: https://youtube.com/@kanalin)"}
             className="w-full resize-none rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
           />
+          <p className="text-[0.7rem] font-semibold text-slate-500">
+            💡 İpucu: Biyografine Instagram, YouTube veya web sitenin bağlantılarını (`https://...`) ekleyebilirsin. Profilinde tıklanabilir sayfa butonları olarak görünecektir.
+          </p>
         </div>
 
         <div className="space-y-2 rounded-lg bg-slate-50 px-4 py-3">

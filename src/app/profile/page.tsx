@@ -4,6 +4,7 @@ import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { ProfileSocialLinks } from "@/components/profile-social-links";
 import { ProfileSocialStats as ProfileSocialStatsSection } from "@/components/profile-social-stats";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
@@ -128,6 +129,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <br />
             {profile.bio}
           </p>
+          <ProfileSocialLinks bio={profile.bio} />
           
           {profile.role === "student" && (
             <div className="mt-4 rounded-xl bg-gradient-to-r from-fuchsia-50 to-pink-50 p-4 border border-fuchsia-100">

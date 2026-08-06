@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FollowButton } from "@/components/follow-button";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { ProfileSocialLinks } from "@/components/profile-social-links";
 import { ProfileSocialStats } from "@/components/profile-social-stats";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
@@ -150,6 +151,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
               @{handle}
               {profile.bio ? <><br />{profile.bio}</> : null}
             </p>
+            <ProfileSocialLinks bio={profile.bio} />
             {profile.role === "teacher" ? (
               <div className="mt-3">
                 <TeacherTrustBadges

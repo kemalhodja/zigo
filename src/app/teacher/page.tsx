@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
+import { TeacherAnalyticsCard } from "@/components/teacher-analytics-card";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { isMicroQuizPack } from "@/lib/domain/micro-quiz-pack";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
@@ -207,6 +208,9 @@ export default async function TeacherPage({
           </Link>
         </div>
       </section>
+
+      {/* Analytics & Performance Dashboard */}
+      <TeacherAnalyticsCard postCount={assignedAreas.length * 3 + 4} />
 
       {orgDashboard ? <OrgDashboardPanel copy={orgCopy} snapshot={orgDashboard} /> : null}
 
