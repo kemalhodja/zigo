@@ -161,10 +161,18 @@ function PlanGroupCard({
       <h3 className="text-lg font-black text-white">{group.title}</h3>
       <p className="mt-1 text-sm font-semibold text-white/70">{group.subtitle}</p>
 
-      {playStoreOnly && platformMessage && !hidePrices ? (
-        <p className="mt-3 rounded-lg border border-amber-300/30 bg-amber-400/10 px-3 py-2 text-xs font-bold leading-5 text-amber-100">
-          {platformMessage}
-        </p>
+      {playStoreOnly && !hidePrices ? (
+        <div className="mt-3 space-y-1.5 rounded-lg border border-emerald-400/30 bg-emerald-950/30 p-3 text-xs font-bold text-emerald-100">
+          <p className="flex items-center gap-1.5 text-amber-300">
+            <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+              <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+            </svg>
+            <span>Google Play Resmi Fatura & İptal Koşulları</span>
+          </p>
+          <p className="text-[0.72rem] font-medium leading-relaxed text-white/80">
+            Aboneliğiniz Google Play hesabınız üzerinden güvenle faturalandırılır. İlk 30 gün tam ücretsiz deneme hakkına sahipsiniz. Süre sonunda yenileme Google Play hesabınızdan tahsil edilir. İptal işlemini dilediğiniz zaman <strong>Google Play &gt; Ödemeler ve Abonelikler</strong> menüsünden tek tıkla yapabilirsiniz.
+          </p>
+        </div>
       ) : null}
 
       <ul className="mt-3 space-y-2 text-sm font-semibold leading-6 text-white/85">
