@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { AutoMarkNotificationsRead } from "@/components/auto-mark-notifications-read";
 import { MarkNotificationsReadButton } from "@/components/mark-notifications-read-button";
+import { NotificationItemLink } from "@/components/notification-item-link";
 import { PushNotificationPanel } from "@/components/push-notification-panel";
 import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
@@ -90,6 +92,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
 
   return (
     <div className="space-y-0 pb-3">
+      <AutoMarkNotificationsRead unreadCount={unreadCount} />
       <section className="-mx-4 flex items-center justify-between border-b border-pink-100 bg-white px-4 pb-3">
         <div>
           <h1 className="text-2xl font-black text-night">{n.title}</h1>
@@ -169,7 +172,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
           </div>
         ) : (
           filteredNotifications.map((notification) => (
-            <Link
+            <NotificationItemLink
               className={`tap-scale flex items-center gap-3 px-4 py-3.5 ${notification.isRead ? "bg-white" : "bg-gradient-to-r from-pink-50 via-violet-50 to-cyan-50"}`}
               href={notification.href}
               key={notification.id}
@@ -190,7 +193,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
               <span className="rounded-lg bg-white px-3 py-2 text-xs font-black text-crystal">
                 {notification.action}
               </span>
-            </Link>
+            </NotificationItemLink>
           ))
         )}
       </section>

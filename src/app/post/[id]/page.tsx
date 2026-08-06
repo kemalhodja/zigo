@@ -15,6 +15,7 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getPostComments, getSocialFeed, getSocialPostById, type SocialFeedPost } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import type { Messages } from "@/lib/i18n/types";
+import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type PostDetailPageProps = {
@@ -29,8 +30,12 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   }
 
   const supabase = await createClient();
+  const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
   const profile = await getCurrentProfile(supabase);
-  const post = await getSocialPostById(supabase, id, profile?.id);
+  let post = await getSocialPostById(supabase, id, profile?.id);
+  if (!post && dbClient !== supabase) {
+    post = await getSocialPostById(dbClient, id, profile?.id);
+  }
 
   if (!post) notFound();
 

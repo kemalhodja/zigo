@@ -34,6 +34,7 @@ export function MarkNotificationsReadButton({ initialUnreadCount = 0 }: { initia
           : n.alreadyRead,
       );
       setUnreadCount(0);
+      window.dispatchEvent(new CustomEvent("zigo:unread-count-updated", { detail: { count: 0 } }));
       router.refresh();
     } catch {
       setMessage(a.connectionFailed);

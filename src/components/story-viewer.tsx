@@ -33,6 +33,7 @@ export function StoryViewer({ stories }: StoryViewerProps) {
   const sv = m.sparkViewer;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isViewerListOpen, setIsViewerListOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const touchStartXRef = useRef<number | null>(null);
@@ -236,22 +237,91 @@ export function StoryViewer({ stories }: StoryViewerProps) {
 
         <div className="relative space-y-4">
           <div>
-            <div className="mb-3 flex flex-wrap gap-2">
-              <span className="sr-only">
-                Match-Feed
-              </span>
-              <span className="sr-only">
-                Safe replies
-              </span>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <span className="rounded-lg bg-white/16 px-3 py-1.5 text-[0.68rem] font-black text-white backdrop-blur">
                 Basılı tut: duraklat
               </span>
+              <button
+                aria-label="Story izleyenleri gör"
+                className="tap-scale flex items-center gap-1.5 rounded-lg bg-black/30 px-3 py-1.5 text-[0.68rem] font-black text-white backdrop-blur"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsViewerListOpen(true);
+                  setIsPaused(true);
+                }}
+                type="button"
+              >
+                <svg aria-hidden="true" className="size-3.5 fill-white/80" viewBox="0 0 24 24">
+                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                </svg>
+                <span>👁️ 18 İzleyen</span>
+              </button>
             </div>
             <h2 className="max-w-[18rem] text-xl font-black leading-tight">{story.caption}</h2>
           </div>
           <StoryReplyForm storyId={story.id} />
         </div>
       </section>
+
+      {/* Story Viewers Bottom Sheet Modal */}
+      {isViewerListOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm"
+          onClick={() => {
+            setIsViewerListOpen(false);
+            setIsPaused(false);
+          }}
+        >
+          <div
+            className="safe-bottom mx-auto flex max-h-[60dvh] w-full max-w-md flex-col rounded-t-2xl bg-white p-4 text-night"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-200" />
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-black text-night">Hikaye İzleyenleri (18)</h3>
+                <p className="text-xs font-semibold text-slate-500">Bu gönderiyi görüntüleyen öğrenci ve öğretmenler</p>
+              </div>
+              <button
+                className="tap-scale rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600"
+                onClick={() => {
+                  setIsViewerListOpen(false);
+                  setIsPaused(false);
+                }}
+                type="button"
+              >
+                Kapat
+              </button>
+            </div>
+            <div className="divide-y divide-slate-100 overflow-y-auto">
+              {[
+                { name: "Selin Yılmaz", role: "Öğretmen", verified: true, time: "2dk önce" },
+                { name: "Burak Kaya", role: "Öğrenci", verified: false, time: "5dk önce" },
+                { name: "Matematik Kulübü", role: "Yayınevi", verified: true, time: "12dk önce" },
+                { name: "Ayşe Demir", role: "Öğrenci", verified: false, time: "18dk önce" },
+                { name: "Canan Hoca", role: "Öğretmen", verified: true, time: "25dk önce" },
+                { name: "Emre Şahin", role: "Öğrenci", verified: false, time: "40dk önce" },
+              ].map((viewer, idx) => (
+                <div className="flex items-center justify-between py-2.5" key={idx}>
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-tr from-crystal to-violet-500 text-xs font-black text-white">
+                      {viewer.name.slice(0, 2).toUpperCase()}
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-black text-night">{viewer.name}</p>
+                        {viewer.verified ? <VerifiedBadge className="size-3.5" /> : null}
+                      </div>
+                      <p className="text-xs font-semibold text-slate-400">{viewer.role}</p>
+                    </div>
+                  </div>
+                  <span className="text-[0.68rem] font-bold text-slate-400">{viewer.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

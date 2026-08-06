@@ -18,6 +18,7 @@ import {
   isFollowing,
 } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
+import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type PublicProfilePageProps = {
@@ -37,22 +38,24 @@ export default async function PublicProfilePage({ params, searchParams }: Public
   }
 
   const supabase = await createClient();
+  const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+
   const [viewer, profile] = await Promise.all([
     getCurrentProfile(supabase),
-    getPublicProfile(supabase, id),
+    getPublicProfile(dbClient, id),
   ]);
 
   if (!profile) notFound();
 
   const tb = m.teacherBadges;
   const branches =
-    profile.role === "teacher" ? await getUserInterestAreaNames(supabase, profile.id) : [];
+    profile.role === "teacher" ? await getUserInterestAreaNames(dbClient, profile.id) : [];
 
   const [stats, posts, following] = await Promise.all([
-    getProfileSocialStats(supabase, profile.id),
+    getProfileSocialStats(dbClient, profile.id),
     activeTab === "reels"
-      ? getUserSocialReels(supabase, profile.id)
-      : getUserSocialPosts(supabase, profile.id),
+      ? getUserSocialReels(dbClient, profile.id)
+      : getUserSocialPosts(dbClient, profile.id),
     viewer ? isFollowing(supabase, viewer.id, profile.id) : Promise.resolve(false),
   ]);
   const isOwnProfile = viewer?.id === profile.id;

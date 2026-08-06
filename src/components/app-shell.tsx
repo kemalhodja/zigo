@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { BottomNav } from "@/components/bottom-nav";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
@@ -37,11 +37,41 @@ export function AppShell({
   isPlatformAdmin = false,
   roleAccentLabel,
   teacherInboxCount = 0,
-  unreadCount,
+  unreadCount: initialUnreadCount,
   viewerRole,
 }: AppShellProps) {
   const pathname = usePathname();
   const m = useMessages();
+  const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+
+  useEffect(() => {
+    setUnreadCount(initialUnreadCount);
+  }, [initialUnreadCount]);
+
+  useEffect(() => {
+    if (pathname === "/notifications") {
+      setUnreadCount(0);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleUnreadUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<{ count?: number }>;
+      if (typeof customEvent.detail?.count === "number") {
+        setUnreadCount(customEvent.detail.count);
+      } else {
+        setUnreadCount(0);
+      }
+    };
+
+    window.addEventListener("zigo:unread-count-updated", handleUnreadUpdate);
+    window.addEventListener("zigo:notifications-read", handleUnreadUpdate);
+
+    return () => {
+      window.removeEventListener("zigo:unread-count-updated", handleUnreadUpdate);
+      window.removeEventListener("zigo:notifications-read", handleUnreadUpdate);
+    };
+  }, []);
   const isStories = pathname.startsWith("/sparks");
   const isReels = pathname.startsWith("/micro");
   const isImmersive = isStories || isReels;

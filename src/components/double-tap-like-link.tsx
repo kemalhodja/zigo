@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { MouseEvent, ReactNode } from "react";
 import { useRef, useState } from "react";
 
+import { triggerHaptic } from "@/lib/client/haptics";
+
 type DoubleTapLikeLinkProps = {
   children: ReactNode;
   href: string;
@@ -35,6 +37,7 @@ export function DoubleTapLikeLink({
 
   async function likeWithBurst() {
     clearClickTimer();
+    triggerHaptic("double");
     setShowBurst(false);
     window.setTimeout(() => setShowBurst(true), 0);
     window.setTimeout(() => setShowBurst(false), 650);

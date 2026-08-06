@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { triggerHaptic } from "@/lib/client/haptics";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type PostOptionsButtonProps = {
@@ -69,6 +70,13 @@ export function PostOptionsButton({
     } catch {
       complete("Sabitleme kaydedilemedi.");
     }
+  }
+
+  function copyPostLink() {
+    const url = postId ? `${window.location.origin}/post/${postId}` : window.location.href;
+    void navigator.clipboard.writeText(url);
+    triggerHaptic("light");
+    complete("Bağlantı kopyalandı 📋");
   }
 
   function complete(action: string) {
@@ -254,6 +262,13 @@ export function PostOptionsButton({
               type="button"
             >
               {isSaving ? a.working : isSaved ? a.unsave : a.save}
+            </button>
+            <button
+              className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-night"
+              onClick={copyPostLink}
+              type="button"
+            >
+              🔗 Bağlantıyı Kopyala
             </button>
             <button
               className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-night"
