@@ -8,8 +8,10 @@ import { BottomNav } from "@/components/bottom-nav";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
 import { LegalFooter } from "@/components/legal-footer";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleNextActionBar } from "@/components/role-next-action-bar";
+import { ScrollToTopOnLogoTap } from "@/components/scroll-to-top-on-logo-tap";
 import {
   getHeaderPrimaryAction,
   isParentSupervisionRole,
@@ -136,6 +138,8 @@ export function AppShell({
 
       <FirstLaunchWelcome />
       {pathname.startsWith("/auth") ? null : <RegistrationCampaignAnnouncement />}
+      <PullToRefresh />
+      <ScrollToTopOnLogoTap />
     </div>
   );
 }
@@ -251,14 +255,8 @@ function Header({
   return (
     <header className="safe-top zigo-topbar sticky top-0 z-10 px-4 py-2">
       <div className="flex items-center justify-between gap-3">
-        <Link href="/" className="tap-scale flex min-w-0 items-center gap-2">
-          <span className="zigo-wordmark">Zigo</span>
-          {viewerRole !== "guest" ? (
-            <span className="role-accent-chip inline-flex rounded-full px-2 py-0.5">
-              {roleAccentLabel}
-            </span>
-          ) : null}
-        </Link>
+        <LogoLink roleAccentLabel={roleAccentLabel} viewerRole={viewerRole} />
+
         <div className="flex shrink-0 items-center gap-2">
           <Link
             aria-label={primaryAction.isAdmin ? "Yönetici Paneli" : primaryAction.isCreate ? h.create : h.askQuestion}
@@ -298,6 +296,28 @@ function Header({
         </div>
       </div>
     </header>
+  );
+}
+
+function LogoLink({ roleAccentLabel, viewerRole }: { roleAccentLabel: string; viewerRole: ViewerRole }) {
+  const pathname = usePathname();
+
+  function handleLogoClick(e: React.MouseEvent) {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent("zigo:logo-tap"));
+    }
+  }
+
+  return (
+    <Link href="/" className="tap-scale flex min-w-0 items-center gap-2" onClick={handleLogoClick}>
+      <span className="zigo-wordmark">Zigo</span>
+      {viewerRole !== "guest" ? (
+        <span className="role-accent-chip inline-flex rounded-full px-2 py-0.5">
+          {roleAccentLabel}
+        </span>
+      ) : null}
+    </Link>
   );
 }
 

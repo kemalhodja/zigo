@@ -61,18 +61,36 @@ export function LikeAndShareBar({
   onSubmitComment,
   labels,
 }: LikeAndShareBarProps) {
+  const [bounceKey, setBounceKey] = React.useState(0);
+
+  function handleLikeClick() {
+    setBounceKey((k) => k + 1);
+    onToggleLike();
+  }
+
   return (
     <div className={variant === "compact" ? "space-y-1.5" : "space-y-3"}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3.5">
           <button
             aria-label={isLiked ? labels.unlike : labels.like}
-            className={`tap-scale flex size-9 items-center justify-center transition ${isLiked ? "text-rose-500" : "text-night"}`}
+            className={`tap-scale relative flex size-9 items-center justify-center transition ${isLiked ? "text-rose-500" : "text-night"}`}
             disabled={pendingAction === "likes"}
-            onClick={onToggleLike}
+            onClick={handleLikeClick}
             type="button"
           >
-            <ActionIcon name="like" filled={isLiked} />
+            {/* Burst ring animasyonu beğeni anında */}
+            {isLiked && bounceKey > 0 ? (
+              <span
+                key={`burst-${bounceKey}`}
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-full border-2 border-rose-400"
+                style={{ animation: "heart-burst-ring 500ms ease-out forwards" }}
+              />
+            ) : null}
+            <span key={`icon-${bounceKey}`} className={bounceKey > 0 ? "like-bounce" : ""}>
+              <ActionIcon name="like" filled={isLiked} />
+            </span>
           </button>
           <button
             aria-label={labels.understood}
