@@ -6,6 +6,7 @@ import Script from "next/script";
 
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
+import { ToastProvider } from "@/components/ui/toast-system";
 import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
@@ -78,20 +79,21 @@ export default async function RootLayout({
     <html lang={getHtmlLang(locale)}>
       <body className={`${jakarta.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
         <LocaleProvider initialLocale={locale}>
-          <AuthSessionKeepAlive />
-          <AppShell
-          canCreateSocialPost={shellState.canCreateSocialPost}
-          isPreviewMode={!hasSupabaseEnv()}
-          isPlatformAdmin={shellState.isPlatformAdmin}
-          roleAccentLabel={getRoleAccentLabel(shellState.viewerRole, messages, {
-            isPlatformAdmin: shellState.isPlatformAdmin,
-          })}
-          teacherInboxCount={shellState.teacherInboxCount}
-          unreadCount={shellState.unreadCount}
-          viewerRole={shellState.viewerRole}
-        >
-          {children}
-        </AppShell>
+          <ToastProvider>
+            <AppShell
+              canCreateSocialPost={shellState.canCreateSocialPost}
+              isPreviewMode={!hasSupabaseEnv()}
+              isPlatformAdmin={shellState.isPlatformAdmin}
+              roleAccentLabel={getRoleAccentLabel(shellState.viewerRole, messages, {
+                isPlatformAdmin: shellState.isPlatformAdmin,
+              })}
+              teacherInboxCount={shellState.teacherInboxCount}
+              unreadCount={shellState.unreadCount}
+              viewerRole={shellState.viewerRole}
+            >
+              {children}
+            </AppShell>
+          </ToastProvider>
         </LocaleProvider>
         {process.env.NODE_ENV === "production" ? (
           <Script id="zigo-service-worker" strategy="afterInteractive">
