@@ -5,7 +5,7 @@
 - **30-Day Full Trial**: Kullanıcılar kayıt olduktan sonra ilk 30 gün boyunca tam özellikli ücretsiz deneme (Trial) hakkına sahiptir.
 - **Dynamic Pricing Engine**:
   - Kayıttan sonraki **ilk 30 gün içinde** abone olan kullanıcılara **%50 indirimli** dinamik fiyat uygulanır.
-  - **30 günden sonra** abone olan kullanıcılara ise **%15 standart indirimli** fiyat uygulanır.
+  - **30 günden sonra** abone olan kullanıcılara ise indirim uygulanmaz (**%0 / Standart Tam Liste Fiyatı** uygulanır).
   - Fiyatlandırma motoru (`subscription-campaign.ts` / `subscription-plans.ts`) her zaman bu dinamik hesaba göre çalışmalıdır.
 
 ## 2. Roles & Authorization (RBAC)

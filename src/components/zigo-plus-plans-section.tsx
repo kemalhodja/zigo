@@ -88,13 +88,13 @@ export function ZigoPlusPlansSection({
               🎁 30 Gün Ücretsiz Deneme {isWithinTrial ? `· Kalan: ${trialDaysRemaining} Gün` : "· Süre Doldu"}
             </p>
             <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-wider text-night">
-              {isWithinTrial ? "%50 İNDİRİM FIRSATI" : "%15 STANDART İNDİRİM"}
+              {isWithinTrial ? "%50 İNDİRİM FIRSATI" : "STANDART LİSTE FİYATI"}
             </span>
           </div>
           <p className="mt-2 text-sm font-bold leading-snug text-white">
             {isWithinTrial
               ? `Ücretsiz 30 günlük tam deneme sürenizin bitmesine ${trialDaysRemaining} gün kaldı! Şimdi kaydolun ve tüm planlarda %50 indirim avantajını yakalayın.`
-              : "30 günlük ücretsiz deneme süreniz doldu. Tüm planlarımızda %15 avantajlı fiyatla devam edebilirsiniz."}
+              : "30 günlük ücretsiz deneme süreniz doldu. Planlara tam liste fiyatıyla devam edebilirsiniz."}
           </p>
         </div>
       ) : null}

@@ -2,7 +2,7 @@
 
 export const SUBSCRIPTION_TRIAL_DAYS = 30;
 export const EARLY_BIRD_DISCOUNT_PERCENT = 50; // Kayıttan sonraki ilk 30 gün içinde %50 indirim
-export const STANDARD_DISCOUNT_PERCENT = 15;   // 30 günden sonra %15 standart indirim
+export const STANDARD_DISCOUNT_PERCENT = 0;    // 30 günden sonra indirim yok (%0 / Tam Liste Fiyatı)
 
 export const SUBSCRIPTION_CAMPAIGN = {
   id: "zigo-trial-pricing",
@@ -11,7 +11,7 @@ export const SUBSCRIPTION_CAMPAIGN = {
   discountPercent: EARLY_BIRD_DISCOUNT_PERCENT,
   badgeLabel: "30 Gün Ücretsiz Deneme",
   headline: "30 Gün Tam Özellikli Ücretsiz Deneme",
-  description: "1 Eylül 2026 tarihine kadar kayıt olan tüm kullanıcılar ilk 30 gün ücretsiz deneme hakkına sahiptir. İlk 30 gün içinde abone olursanız %50, sonrasında %15 indirim uygulanır.",
+  description: "İlk 30 gün ücretsiz deneme hakkına sahipsiniz. Kayıttan sonraki ilk 30 gün içinde abone olursanız %50 indirim uygulanır, 30 günden sonra standart liste fiyatı geçerlidir.",
   stripeCouponId: "zigo-50off",
   stripePromotionCode: "ZIGO50",
   stripeCouponEnvKey: "STRIPE_COUPON_50OFF",
@@ -25,8 +25,8 @@ export function isSubscriptionCampaignActive(now = new Date()) {
 
 /**
  * Dinamik Fiyatlandırma Motoru:
- * - Kayıt tarihi 30 gün içindeyse (veya isWithinTrialWindow = true): %50 İndirim
- * - 30 gün geçtikten sonra: %15 Standart İndirim
+ * - Kayıt tarihi 30 gün içindeyse: %50 İndirim
+ * - 30 gün geçtikten sonra: %0 İndirim (Tam Liste Fiyatı)
  */
 export function calculateDynamicPrice(
   listPriceTry: number,
