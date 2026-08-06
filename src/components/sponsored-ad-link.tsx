@@ -32,11 +32,18 @@ export function SponsoredAdLink({
     setMessage("");
 
     try {
+      // 1. Log click count
+      void fetch("/api/ads/click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+
+      // 2. Fetch target URL
       const response = await fetch(`/api/social/posts/${postId}/sponsored`);
       const payload = (await response.json().catch(() => null)) as {
         data?: { url?: string };
         error?: string;
-        code?: string;
       } | null;
 
       if (!response.ok || !payload?.data?.url) {
