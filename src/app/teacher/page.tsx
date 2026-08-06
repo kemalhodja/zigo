@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
+import { StudioTabsLayout } from "@/components/studio-tabs-layout";
 import { TeacherAnalyticsCard } from "@/components/teacher-analytics-card";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { isMicroQuizPack } from "@/lib/domain/micro-quiz-pack";
@@ -144,97 +145,115 @@ export default async function TeacherPage({
         </div>
       </section>
 
-      {/* Quick Content Studio Actions */}
-      <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">İçerik Stüdyosu Eylemleri</p>
-          <CreateAdCampaignModal triggerLabel="📢 Reklam / Afiş Oluştur" />
-        </div>
-        <div className="grid grid-cols-2 gap-2.5">
-          <Link
-            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-4 text-white shadow-sm transition hover:shadow-md"
-            href="/create?mode=micro"
-          >
-            <div className="flex items-center justify-between">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
-                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <rect height="16" rx="4" width="18" x="3" y="4" />
-                  <path d="M11 12l4 2.5-4 2.5z" />
-                </svg>
-              </span>
-              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Video</span>
-            </div>
-            <p className="mt-3 text-sm font-black">Mikro Ders Çek</p>
-            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Reel video içeriği yükle</p>
-          </Link>
+      {/* Studio Tabs Container */}
+      <StudioTabsLayout
+        analyticsNode={
+          <div className="space-y-4">
+            <TeacherAnalyticsCard postCount={assignedAreas.length * 3 + 4} />
+            {orgDashboard ? <OrgDashboardPanel copy={orgCopy} snapshot={orgDashboard} /> : null}
+          </div>
+        }
+        contentStudioNode={
+          <div className="space-y-5">
+            {/* Quick Content Studio Actions */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">İçerik Stüdyosu Eylemleri</p>
+                <CreateAdCampaignModal triggerLabel="📢 Reklam / Afiş Oluştur" />
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/create?mode=micro"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <rect height="16" rx="4" width="18" x="3" y="4" />
+                        <path d="M11 12l4 2.5-4 2.5z" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Video</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">Mikro Ders Çek</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Reel video içeriği yükle</p>
+                </Link>
 
-          <Link
-            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-crystal to-berry p-4 text-white shadow-sm transition hover:shadow-md"
-            href="/create?mode=post"
-          >
-            <div className="flex items-center justify-between">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
-                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </span>
-              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Ders</span>
-            </div>
-            <p className="mt-3 text-sm font-black">Ders Gönderisi</p>
-            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Görselli ders notu veya özet</p>
-          </Link>
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-crystal to-berry p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/create?mode=post"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Ders</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">Ders Gönderisi</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Görselli ders notu veya özet</p>
+                </Link>
 
-          <Link
-            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-4 text-white shadow-sm transition hover:shadow-md"
-            href="/create?mode=spark"
-          >
-            <div className="flex items-center justify-between">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
-                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
-              </span>
-              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Spark</span>
-            </div>
-            <p className="mt-3 text-sm font-black">Günlük Spark / Story</p>
-            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Öğrencilerine hızlı duyuru</p>
-          </Link>
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/create?mode=spark"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Spark</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">Günlük Spark / Story</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Öğrencilerine hızlı duyuru</p>
+                </Link>
 
-          <Link
-            className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 p-4 text-white shadow-sm transition hover:shadow-md"
-            href="/profile"
-          >
-            <div className="flex items-center justify-between">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
-                <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </span>
-              <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Izgara</span>
-            </div>
-            <p className="mt-3 text-sm font-black">İçerik Izgaran</p>
-            <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Paylaştığın tüm materyaller</p>
-          </Link>
-        </div>
-      </section>
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/profile"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Izgara</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">İçerik Izgaran</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Paylaştığın tüm materyaller</p>
+                </Link>
+              </div>
+            </section>
 
-      {/* Analytics & Performance Dashboard */}
-      <TeacherAnalyticsCard postCount={assignedAreas.length * 3 + 4} />
-
-      {orgDashboard ? <OrgDashboardPanel copy={orgCopy} snapshot={orgDashboard} /> : null}
-
-      {profile.is_verified && !activation.hasAreas ? (
-        <section className="-mx-4 border-b border-amber-100 bg-amber-50 px-4 py-4">
-          <p className="text-sm font-black text-amber-900">{m.teacherPage.chooseAreas}</p>
-          <p className="mt-1 text-sm font-bold leading-6 text-amber-800">{m.teacherPage.whatNowDesc}</p>
-        </section>
-      ) : null}
-
-      {!isOrganizationRegistrationType(organizationType) ? (
-        <LessonRequestsPanel role="teacher" viewerId={profile.id} />
-      ) : null}
+            {/* Quiz Builder Form */}
+            {profile.is_verified ? (
+              <TeacherQuizForm
+                allowDevActivate={allowDevActivate}
+                areas={assignedAreas}
+                canCreateQuizzes={teacherCreatorPlus || profile.is_verified}
+              />
+            ) : null}
+          </div>
+        }
+        adsNode={
+          <div className="space-y-4">
+            <TeacherSponsoredAdsPanel profile={profile} />
+          </div>
+        }
+        requestsNode={
+          <div className="space-y-4">
+            {!isOrganizationRegistrationType(organizationType) ? (
+              <LessonRequestsPanel role="teacher" viewerId={profile.id} />
+            ) : null}
+          </div>
+        }
+      />
 
       {profile.is_verified ? (
         <>
