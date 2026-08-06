@@ -3,8 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-const PULL_THRESHOLD = 72;
+const PULL_THRESHOLD = 76;
 const MAX_PULL = 110;
+
+function getScrollTop(): number {
+  if (typeof window === "undefined") return 0;
+  const mainEl = document.getElementById("main-content");
+  const mainScroll = mainEl ? mainEl.scrollTop : 0;
+  const docScroll = document.documentElement?.scrollTop || document.body?.scrollTop || 0;
+  const winScroll = window.scrollY || 0;
+
+  return Math.max(mainScroll, docScroll, winScroll);
+}
 
 export function PullToRefresh() {
   const router = useRouter();
@@ -12,66 +22,84 @@ export function PullToRefresh() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const startYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const el = document.getElementById("main-content");
-    if (!el) return;
-
     function onTouchStart(e: TouchEvent) {
-      const scrollTop = el!.scrollTop ?? window.scrollY;
-      if (scrollTop > 2) return;
+      if (isRefreshing) return;
+
+      // Sadece sayfa EN ÜSTTE iken (scrollTop === 0) tetiklenmeli
+      if (getScrollTop() > 0) {
+        startYRef.current = null;
+        isDraggingRef.current = false;
+        return;
+      }
+
       startYRef.current = e.touches[0].clientY;
       isDraggingRef.current = false;
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (startYRef.current === null) return;
-      const dy = e.touches[0].clientY - startYRef.current;
-      if (dy <= 0) {
-        startYRef.current = null;
-        return;
-      }
-      isDraggingRef.current = true;
-      const clamped = Math.min(dy * 0.45, MAX_PULL);
-      setPullY(clamped);
-      if (clamped > 2) e.preventDefault();
-    }
+      if (startYRef.current === null || isRefreshing) return;
 
-    function onTouchEnd() {
-      if (!isDraggingRef.current) {
+      // Hareket esnasında dahi sayfa 0'dan kaydırılmışsa pull-to-refresh'i iptal et
+      if (getScrollTop() > 0) {
         startYRef.current = null;
+        isDraggingRef.current = false;
         setPullY(0);
         return;
       }
 
-      const triggered = pullY >= PULL_THRESHOLD;
+      const dy = e.touches[0].clientY - startYRef.current;
+      if (dy <= 0) {
+        setPullY(0);
+        return;
+      }
+
+      isDraggingRef.current = true;
+      const clamped = Math.min(dy * 0.4, MAX_PULL);
+      setPullY(clamped);
+
+      // Sayfa en üstteyken aşağı sürüklendiğinde yerel kaydırmayı engelle
+      if (clamped > 5 && e.cancelable) {
+        e.preventDefault();
+      }
+    }
+
+    function onTouchEnd() {
+      if (startYRef.current === null || !isDraggingRef.current) {
+        startYRef.current = null;
+        isDraggingRef.current = false;
+        setPullY(0);
+        return;
+      }
+
+      const currentPull = pullY;
       startYRef.current = null;
       isDraggingRef.current = false;
 
-      if (triggered) {
+      if (currentPull >= PULL_THRESHOLD && !isRefreshing) {
         setIsRefreshing(true);
         setPullY(PULL_THRESHOLD * 0.65);
         router.refresh();
         window.setTimeout(() => {
           setIsRefreshing(false);
           setPullY(0);
-        }, 1400);
+        }, 1200);
       } else {
         setPullY(0);
       }
     }
 
-    el.addEventListener("touchstart", onTouchStart, { passive: true });
-    el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
 
     return () => {
-      el.removeEventListener("touchstart", onTouchStart);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [pullY, router]);
+  }, [pullY, isRefreshing, router]);
 
   const progress = Math.min(pullY / PULL_THRESHOLD, 1);
   const isReady = pullY >= PULL_THRESHOLD;
@@ -80,14 +108,13 @@ export function PullToRefresh() {
 
   return (
     <div
-      ref={containerRef}
       aria-live="polite"
-      className="pointer-events-none fixed left-1/2 z-50 flex -translate-x-1/2 items-center justify-center transition-all duration-200"
-      style={{ top: `${Math.max(pullY - 20, 48)}px` }}
+      className="pointer-events-none fixed left-1/2 z-50 flex -translate-x-1/2 items-center justify-center transition-all duration-150"
+      style={{ top: `${Math.max(pullY - 15, 52)}px` }}
     >
       <div
-        className={`flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-lg transition-transform duration-200 ${isRefreshing ? "scale-100" : ""}`}
-        style={{ transform: `scale(${0.5 + progress * 0.5})`, opacity: progress }}
+        className={`flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-xl transition-transform duration-150 ${isRefreshing ? "scale-100" : ""}`}
+        style={{ transform: `scale(${0.4 + progress * 0.6})`, opacity: progress }}
       >
         <svg
           aria-hidden="true"
@@ -107,9 +134,13 @@ export function PullToRefresh() {
         </svg>
       </div>
       {isReady && !isRefreshing ? (
-        <span className="ml-2 text-xs font-black text-crystal">Yenile</span>
+        <span className="ml-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-black text-crystal shadow-sm">
+          Bırakın ve Yenileyin
+        </span>
       ) : isRefreshing ? (
-        <span className="ml-2 text-xs font-black text-slate-500">Yenileniyor…</span>
+        <span className="ml-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-black text-slate-600 shadow-sm">
+          Yenileniyor…
+        </span>
       ) : null}
     </div>
   );
