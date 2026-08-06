@@ -65,14 +65,15 @@ export function TeacherQuizForm({
   const [targetGrade, setTargetGrade] = useState("Hepsi (Tüm Sınıflar)");
   const [pointsReward, setPointsReward] = useState(100);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [questions, setQuestions] = useState<QuizDraftQuestion[]>(() => createEmptyQuiz());
+  const [questions, setQuestions] = useState<QuizDraftQuestion[]>(() => [emptyQuestion(), emptyQuestion(), emptyQuestion()]);
 
+  const targetQuestionCount = questions.length;
   const completedCount = useMemo(
     () => questions.filter((question) => isQuestionComplete(question)).length,
     [questions],
   );
   const activeQuestion = questions[activeIndex] ?? emptyQuestion();
-  const allComplete = completedCount === TEACHER_QUIZ_QUESTION_COUNT && title.trim().length >= 3 && Boolean(areaId);
+  const allComplete = completedCount === targetQuestionCount && title.trim().length >= 3 && Boolean(areaId);
 
   function updateActiveQuestion(patch: Partial<QuizDraftQuestion>) {
     setQuestions((current) =>
@@ -81,6 +82,30 @@ export function TeacherQuizForm({
     if (status !== "saving") {
       setStatus("idle");
       setMessage("");
+    }
+  }
+
+  function addQuestion() {
+    if (questions.length >= 20) return;
+    setQuestions((current) => [...current, emptyQuestion()]);
+    setActiveIndex(questions.length);
+  }
+
+  function removeQuestion(indexToRemove: number) {
+    if (questions.length <= 1) return;
+    setQuestions((current) => current.filter((_, idx) => idx !== indexToRemove));
+    setActiveIndex((current) => Math.max(0, current - 1));
+  }
+
+  function setQuestionPresetCount(count: number) {
+    if (count < 1 || count > 20) return;
+    if (count > questions.length) {
+      const extraNeeded = count - questions.length;
+      const newQuestions = Array.from({ length: extraNeeded }, () => emptyQuestion());
+      setQuestions((current) => [...current, ...newQuestions]);
+    } else if (count < questions.length) {
+      setQuestions((current) => current.slice(0, count));
+      if (activeIndex >= count) setActiveIndex(count - 1);
     }
   }
 
@@ -99,7 +124,7 @@ export function TeacherQuizForm({
 
     if (!allComplete) {
       setStatus("error");
-      setMessage(t.quizNeedAllTen);
+      setMessage(`Quiz hazır değil. Lütfen belirlediğiniz tüm (${targetQuestionCount}) soruları eksiksiz doldurun.`);
       const firstIncomplete = questions.findIndex((question) => !isQuestionComplete(question));
       if (firstIncomplete >= 0) setActiveIndex(firstIncomplete);
       return;
@@ -116,6 +141,7 @@ export function TeacherQuizForm({
           areaId,
           title: title.trim(),
           pointsReward,
+          targetGrade,
           questions: questions.map((question) => ({
             questionText: question.questionText.trim(),
             options: question.options.map((option) => option.trim()),
@@ -126,10 +152,10 @@ export function TeacherQuizForm({
 
       if (response.ok) {
         setStatus("saved");
-        setMessage(t.quizCreatedTen);
+        setMessage(`Tebrikler! ${targetQuestionCount} soruluk quiziniz başarıyla yayınlandı.`);
         setTitle("");
         setPointsReward(100);
-        setQuestions(createEmptyQuiz());
+        setQuestions([emptyQuestion(), emptyQuestion(), emptyQuestion()]);
         setActiveIndex(0);
         return;
       }
@@ -158,37 +184,76 @@ export function TeacherQuizForm({
         title={t.proQuizLockTitle}
       >
         <>
-          <div className="rounded-xl border border-violet-100 bg-violet-50/70 px-3 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-black text-night">
-                {t.quizProgress
-                  .replace("{done}", String(completedCount))
-                  .replace("{total}", String(TEACHER_QUIZ_QUESTION_COUNT))}
-              </p>
-              <p className="text-xs font-bold text-crystal">
-                {t.quizStep
-                  .replace("{current}", String(activeIndex + 1))
-                  .replace("{total}", String(TEACHER_QUIZ_QUESTION_COUNT))}
-              </p>
+          {/* Soru Sayısı Belirleme & İlerleme */}
+          <div className="rounded-xl border border-violet-100 bg-violet-50/70 p-3 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-violet-100 pb-2.5">
+              <div>
+                <span className="text-[0.65rem] font-black uppercase tracking-wider text-violet-700">🎯 Soru Sayısı Belirleyin</span>
+                <p className="text-xs font-black text-night">Bu Quiz Kaç Sorudan Oluşsun?</p>
+              </div>
+              <div className="flex gap-1">
+                {[3, 5, 10, 15, 20].map((cnt) => (
+                  <button
+                    key={cnt}
+                    type="button"
+                    onClick={() => setQuestionPresetCount(cnt)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-black transition ${
+                      questions.length === cnt
+                        ? "bg-violet-600 text-white shadow-xs"
+                        : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                    }`}
+                  >
+                    {cnt} Soru
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="mt-3 grid grid-cols-10 gap-1.5">
+
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-black text-night">
+                İlerleme: {completedCount} / {targetQuestionCount} Soru Tamamlandı
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={addQuestion}
+                  disabled={questions.length >= 20}
+                  className="rounded-lg bg-indigo-600 px-2.5 py-1 text-[0.68rem] font-black text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  ➕ Soru Ekle
+                </button>
+                {questions.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeQuestion(activeIndex)}
+                    className="rounded-lg bg-rose-100 px-2 py-1 text-[0.68rem] font-black text-rose-700 hover:bg-rose-200"
+                  >
+                    🗑️ Bu Soruyu Sil
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 pt-1">
               {questions.map((question, index) => {
                 const complete = isQuestionComplete(question);
                 const isActive = index === activeIndex;
                 return (
                   <button
-                    aria-label={t.quizJumpTo.replace("{n}", String(index + 1))}
-                    className={`h-2.5 rounded-full transition ${
+                    aria-label={`Soru ${index + 1}`}
+                    className={`flex h-7 min-w-7 items-center justify-center rounded-lg px-2 text-xs font-black transition ${
                       isActive
-                        ? "bg-crystal"
+                        ? "bg-violet-600 text-white ring-2 ring-violet-400"
                         : complete
-                          ? "bg-emerald-400"
-                          : "bg-slate-200"
+                          ? "bg-emerald-500 text-white"
+                          : "bg-white text-slate-600 border border-slate-200"
                     }`}
                     key={index}
                     onClick={() => setActiveIndex(index)}
                     type="button"
-                  />
+                  >
+                    {index + 1}
+                  </button>
                 );
               })}
             </div>
@@ -321,8 +386,8 @@ export function TeacherQuizForm({
             </button>
             <button
               className="rounded-lg border border-slate-200 px-4 py-3 text-sm font-black text-slate-600 disabled:opacity-40"
-              disabled={activeIndex >= TEACHER_QUIZ_QUESTION_COUNT - 1}
-              onClick={() => setActiveIndex((index) => Math.min(TEACHER_QUIZ_QUESTION_COUNT - 1, index + 1))}
+              disabled={activeIndex >= targetQuestionCount - 1}
+              onClick={() => setActiveIndex((index) => Math.min(targetQuestionCount - 1, index + 1))}
               type="button"
             >
               {t.quizNext}
@@ -335,7 +400,7 @@ export function TeacherQuizForm({
             onClick={() => void submitQuiz()}
             type="button"
           >
-            {status === "saving" ? t.creating : t.publishTenQuiz}
+            {status === "saving" ? t.creating : `🚀 ${targetQuestionCount} Soruluk Quizini Yayınla`}
           </button>
 
           {status === "saved" ? <p className="text-sm font-bold text-emerald-600">{message}</p> : null}
