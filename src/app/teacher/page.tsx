@@ -52,7 +52,14 @@ export default async function TeacherPage({
     return <TeacherPreview mode="signed-out" />;
   }
 
-  if (profile.role !== "teacher") {
+  const userRoleStr = (profile.role as string) || "";
+  const isCreatorRole =
+    userRoleStr === "teacher" ||
+    userRoleStr === "education_institution" ||
+    userRoleStr === "education_platform" ||
+    userRoleStr === "publisher";
+
+  if (!isCreatorRole) {
     return <TeacherPreview mode="role-preview" viewerRole={profile.role} />;
   }
 
@@ -308,14 +315,27 @@ async function TeacherPreview({
       <div className="space-y-4 pb-3">
         <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500">{t.studio}</p>
-          <h1 className="mt-1 text-2xl font-black leading-tight text-night">{t.verifiedTools}.</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">{note}</p>
-          <Link
-            className="tap-scale mt-4 inline-flex rounded-lg bg-night px-4 py-3 text-sm font-black text-white"
-            href={href}
-          >
-            {mode === "signed-out" ? messages.common.signIn : messages.nav.home}
-          </Link>
+          <h1 className="mt-1 text-2xl font-black leading-tight text-night">Öğretmen & Üretici Stüdyosu</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            {mode === "signed-out"
+              ? "Üretici Stüdyosu araçlarını kullanabilmek için lütfen giriş yapın."
+              : "Şu anki hesabınız Öğrenci veya Veli rolünde. Üretim Stüdyosu araçlarını kullanmak için Öğretmen veya Kurum rolüne geçebilirsiniz."}
+          </p>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            <Link
+              className="tap-scale inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:brightness-105"
+              href={mode === "signed-out" ? "/auth" : "/onboarding/role-setup"}
+            >
+              {mode === "signed-out" ? "Giriş Yap / Kaydol ↗" : "🎓 Öğretmen / Kurum Rolüne Geç ↗"}
+            </Link>
+            <Link
+              className="tap-scale inline-flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-100"
+              href={href}
+            >
+              {mode === "signed-out" ? "Ana Sayfaya Dön" : "Kendi Paneline Dön"}
+            </Link>
+          </div>
         </section>
       </div>
     );
