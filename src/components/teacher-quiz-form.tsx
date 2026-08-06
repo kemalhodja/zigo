@@ -118,7 +118,10 @@ export function TeacherQuizForm({
   async function submitQuiz() {
     if (!canCreateQuizzes) {
       setStatus("error");
-      setMessage(t.quizRequiresPlus);
+      setMessage(`${t.quizRequiresPlus} Abonelik paketlerine yönlendiriliyorsunuz...`);
+      setTimeout(() => {
+        window.location.href = "/profile#zigo-plus-plans";
+      }, 1500);
       return;
     }
 

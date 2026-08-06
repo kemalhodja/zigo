@@ -102,6 +102,13 @@ export function CreateAdCampaignModal({
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        if (res.status === 403 || json.code === "SUBSCRIPTION_REQUIRED" || json.error?.includes("abonelik")) {
+          setError("Sponsorlu reklam yayınlamak için aktif bir Zigo Plus aboneliğiniz olması gerekmektedir. Abonelik sayfasına yönlendiriliyorsunuz...");
+          setTimeout(() => {
+            window.location.href = "/profile#zigo-plus-plans";
+          }, 1500);
+          return;
+        }
         throw new Error(json.error || "Reklam oluşturulamadı");
       }
 
