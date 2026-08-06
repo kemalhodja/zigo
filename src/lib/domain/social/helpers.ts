@@ -67,7 +67,7 @@ export async function hydrateSocialPosts(
   if (posts.length === 0) return [];
 
   let allowedPosts = posts;
-  let viewerLocation: { city?: string | null; district?: string | null } | null = null;
+  let viewerContext: { role?: string | null; city?: string | null; district?: string | null } | null = null;
   if (viewerId) {
     const profile = await supabase
       .from("users")
@@ -77,7 +77,7 @@ export async function hydrateSocialPosts(
       .then((r) => r.data);
 
     if (profile) {
-      viewerLocation = { city: profile.city, district: profile.district };
+      viewerContext = { role: profile.role, city: profile.city, district: profile.district };
       if (posts.some((p) => p.target_audience && p.target_audience !== "all")) {
         allowedPosts = filterPostsForAudience(posts, viewerId, profile);
       }
@@ -119,7 +119,7 @@ export async function hydrateSocialPosts(
       likes_count: likes,
       comments_count: comments,
       saves_count: saves,
-      ranking_score: scoreSocialPost(post, likes, comments, saves, viewerLocation),
+      ranking_score: scoreSocialPost(post, likes, comments, saves, viewerContext),
       is_liked: likedPostIds.has(post.id),
       is_saved: savedPostIds.has(post.id),
     };
@@ -299,29 +299,62 @@ function scoreSocialPost(
   likes: number,
   comments: number,
   saves: number,
-  viewerLocation?: { city?: string | null; district?: string | null } | null,
+  viewerContext?: {
+    role?: string | null;
+    city?: string | null;
+    district?: string | null;
+    userInterestAreas?: number[];
+  } | null,
 ) {
   const ageHours = Math.max(1, (Date.now() - new Date(post.created_at).getTime()) / 36e5);
   const recency = 120 / Math.sqrt(ageHours);
   const formatBoost = post.is_reel || post.media_type === "video" ? 18 : 0;
 
+  let sponsoredBoost = 0;
   let locationBoost = 0;
-  if (viewerLocation) {
+  let audienceBoost = 0;
+  let interestBoost = 0;
+
+  // Active approved sponsored ad scoring
+  if (post.sponsored_status === "active") {
+    sponsoredBoost = 150; // Base boost for active approved ads
+
+    if (viewerContext) {
+      // 1. Audience Matching (Student vs Parent vs All)
+      if (viewerContext.role === "student" && (post.target_audience === "grade" || post.target_audience === "all")) {
+        audienceBoost += 45;
+      } else if (viewerContext.role === "parent" && (post.target_audience === "parent_only" || post.target_audience === "all")) {
+        audienceBoost += 45;
+      }
+
+      // 2. Geo-Location Matching (City & District)
+      const pLoc = post as SocialPostRow & { city?: string | null; district?: string | null };
+      const postCity = pLoc.city ? pLoc.city.trim().toLowerCase() : null;
+      const userCity = viewerContext.city ? viewerContext.city.trim().toLowerCase() : null;
+      const postDistrict = pLoc.district ? pLoc.district.trim().toLowerCase() : null;
+      const userDistrict = viewerContext.district ? viewerContext.district.trim().toLowerCase() : null;
+
+      if (postCity && userCity && postCity === userCity) {
+        locationBoost += 60;
+      }
+      if (postDistrict && userDistrict && postDistrict === userDistrict) {
+        locationBoost += 120;
+      }
+
+      // 3. Subject / Education Area Interest Matching
+      if (post.area_id && viewerContext.userInterestAreas?.includes(post.area_id)) {
+        interestBoost += 85;
+      }
+    }
+  } else if (viewerContext?.city) {
+    // Regular organic post location boost
     const pLoc = post as SocialPostRow & { city?: string | null; district?: string | null };
     const postCity = pLoc.city ? pLoc.city.trim().toLowerCase() : null;
-    const userCity = viewerLocation.city ? viewerLocation.city.trim().toLowerCase() : null;
-    const postDistrict = pLoc.district ? pLoc.district.trim().toLowerCase() : null;
-    const userDistrict = viewerLocation.district ? viewerLocation.district.trim().toLowerCase() : null;
-
-    if (postCity && userCity && postCity === userCity) {
-      locationBoost += 50;
-    }
-    if (postDistrict && userDistrict && postDistrict === userDistrict) {
-      locationBoost += 100;
-    }
+    const userCity = viewerContext.city ? viewerContext.city.trim().toLowerCase() : null;
+    if (postCity && userCity && postCity === userCity) locationBoost += 30;
   }
 
-  return recency + likes * 1.5 + comments * 4 + saves * 6 + formatBoost + locationBoost;
+  return recency + likes * 1.5 + comments * 4 + saves * 6 + formatBoost + sponsoredBoost + locationBoost + audienceBoost + interestBoost;
 }
 
 export async function countUserPosts(supabase: SupabaseClient<Database>, userId: string) {
