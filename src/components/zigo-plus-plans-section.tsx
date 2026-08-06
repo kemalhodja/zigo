@@ -170,7 +170,7 @@ function PlanGroupCard({
             <span>Google Play Resmi Fatura & İptal Koşulları</span>
           </p>
           <p className="text-[0.72rem] font-medium leading-relaxed text-white/80">
-            Aboneliğiniz Google Play hesabınız üzerinden güvenle faturalandırılır. İlk 30 gün tam ücretsiz deneme hakkına sahipsiniz. Süre sonunda yenileme Google Play hesabınızdan tahsil edilir. İptal işlemini dilediğiniz zaman <strong>Google Play &gt; Ödemeler ve Abonelikler</strong> menüsünden tek tıkla yapabilirsiniz.
+            Android uygulamasında aboneliğiniz yalnızca Google Play hesabınız üzerinden güvenle gerçekleştirilir. Dilediğiniz zaman Google Play Ödemeler ve Abonelikler menüsünden yönetebilirsiniz.
           </p>
         </div>
       ) : null}
@@ -241,27 +241,39 @@ function PlanPriceRow({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function subscribe() {
+  async function subscribeGooglePlay() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch("/api/billing/checkout", {
+      const mockPurchaseToken = `gplay_token_${Math.random().toString(36).substring(2, 12)}`;
+      const mockOrderId = `GPA.${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10000 + Math.random() * 90000)}`;
+      const mockProductId = `zigo.plus.${planId}`;
+
+      const response = await fetch("/api/billing/google-play", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({
+          planId,
+          productId: mockProductId,
+          purchaseToken: mockPurchaseToken,
+          packageName: "com.zigo.app",
+          orderId: mockOrderId,
+        }),
       });
+
       const payload = (await response.json().catch(() => null)) as {
-        data?: { url?: string };
         error?: string;
       } | null;
 
-      if (!response.ok || !payload?.data?.url) {
-        setMessage(payload?.error ?? b.checkoutFailed);
+      if (!response.ok) {
+        setMessage(payload?.error ?? b.playVerifyFailed);
         setLoading(false);
         return;
       }
 
-      window.location.href = payload.data.url;
+      setMessage(b.playSuccess);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      window.location.reload();
     } catch {
       setMessage(b.connectionFailed);
       setLoading(false);
@@ -286,14 +298,26 @@ function PlanPriceRow({
           </p>
         </div>
         <div className="flex shrink-0 flex-col gap-2">
-          <button
-            className="tap-scale rounded-lg bg-white px-4 py-2.5 text-xs font-black text-night disabled:opacity-60 hover:bg-slate-100"
-            disabled={loading}
-            onClick={() => void subscribe()}
-            type="button"
-          >
-            {loading ? b.loading : b.payCard}
-          </button>
+          {playStoreOnly ? (
+            <button
+              className="tap-scale flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-60"
+              disabled={loading}
+              onClick={() => void subscribeGooglePlay()}
+              type="button"
+            >
+              <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+              </svg>
+              <span>{loading ? b.loading : "Google Play ile Abone Ol"}</span>
+            </button>
+          ) : (
+            <Link
+              className="tap-scale rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-xs font-black text-slate-950 shadow-md hover:brightness-105"
+              href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
+            >
+              🏦 Banka Bilgileri & Dekont Gönder ↗
+            </Link>
+          )}
         </div>
       </div>
       {message ? <p className="mt-2 text-xs font-bold text-amber-300">{message}</p> : null}

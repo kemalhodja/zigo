@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { ZIGO_PLUS_BENEFITS } from "@/lib/domain/focus-gamification";
@@ -104,14 +105,12 @@ export function ZigoPlusUpsell({
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          className="tap-scale rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-xs font-black text-slate-950 shadow-md hover:brightness-105 disabled:opacity-60"
-          disabled={loading}
-          onClick={() => void startCheckout()}
-          type="button"
+        <Link
+          className="tap-scale inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-xs font-black text-slate-950 shadow-md hover:brightness-105"
+          href="/billing/havale"
         >
-          {loading ? "Ödeme Sayfası Açılıyor..." : campaignActive ? "🔥 Kampanyalı İndirimle Abone Ol" : "💳 Zigo Plus'a Abone Ol"}
-        </button>
+          {campaignActive ? "🔥 Kampanyalı İndirimle Abone Ol (Banka & Dekont) ↗" : "🏦 Banka Bilgileri & Dekont Gönder ↗"}
+        </Link>
       </div>
       {message ? <p className="mt-2 text-sm font-bold text-amber-200">{message}</p> : null}
     </section>
