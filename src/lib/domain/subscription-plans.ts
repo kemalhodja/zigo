@@ -58,8 +58,8 @@ function learnerPlans(
 ): SubscriptionPlanGroup {
   return {
     id: prefix,
-    title: prefix === "student" ? "Öğrenci Zigo Plus" : "Veli Zigo Plus",
-    subtitle: "Abonelik özellikleri ve fiyat",
+    title: "Zigo Plus Aboneliği",
+    subtitle: "Tüm ayrıcalıklar ve avantajlar dahil",
     benefits: LEARNER_BENEFITS,
     cancelPath,
     plans: [
@@ -73,8 +73,8 @@ function learnerPlans(
 function familyPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPlanGroup {
   return {
     id: "family",
-    title: "Aile Paketi",
-    subtitle: "Veli + bağlı öğrenci profilleri için tek abonelik",
+    title: "Aile Aboneliği",
+    subtitle: "Veli ve bağlı tüm öğrenci hesapları dahil",
     benefits: FAMILY_BENEFITS,
     cancelPath: "/parent?billing=cancelled",
     plans: [
@@ -88,8 +88,8 @@ function familyPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPlan
 function teacherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPlanGroup {
   return {
     id: "teacher",
-    title: "Öğretmen Creator Plus",
-    subtitle: "Abonelik özellikleri ve fiyat",
+    title: "Zigo Plus Aboneliği",
+    subtitle: "İçerik Stüdyosu ve tüm öğretmen araçları dahil",
     benefits: TEACHER_CREATOR_PLUS_BENEFITS,
     cancelPath: "/teacher?billing=cancelled",
     plans: [
