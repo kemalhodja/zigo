@@ -1,5 +1,8 @@
 "use client";
 
+import { UserStreakBadge } from "@/components/user-streak-badge";
+import { triggerCelebrationConfetti } from "@/lib/client/confetti";
+
 type AnalyticsMetric = {
   label: string;
   value: string;
@@ -42,19 +45,23 @@ export function TeacherAnalyticsCard({
   ];
 
   return (
-    <section className="-mx-4 space-y-3 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/70 via-white to-pink-50/50 p-5 shadow-sm">
+    <section className="-mx-4 space-y-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/70 via-white to-pink-50/50 p-5 shadow-sm">
+      <UserStreakBadge streakCount={5} xpPoints={340} />
+
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">Performans & Analizler</p>
           <h3 className="mt-0.5 text-lg font-black text-night">Stüdyo Analitiği</h3>
         </div>
-        <span className="flex size-9 items-center justify-center rounded-xl bg-violet-100 text-crystal">
-          <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M18 20V10" />
-            <path d="M12 20V4" />
-            <path d="M6 20v-6" />
-          </svg>
-        </span>
+        <button
+          type="button"
+          onClick={() => triggerCelebrationConfetti()}
+          className="tap-scale flex items-center gap-1 rounded-xl bg-amber-400 px-3 py-1.5 text-xs font-black text-slate-950 shadow-xs hover:bg-amber-300"
+          title="Başarı Kutlamasını Test Et"
+        >
+          <span>🎉</span>
+          <span>Kutlama</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 pt-1">
