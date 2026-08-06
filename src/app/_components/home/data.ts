@@ -149,7 +149,6 @@ import { getDailyMissionProgress } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
   type ActiveStory,
-  getCachedSocialFeed,
   getFollowingFeed,
   getSuggestedCreators,
   isFollowing,
@@ -161,7 +160,7 @@ import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getHomePosts(activeFeed: "for-you" | "following"): Promise<DisplayPost[]> {
+export async function getHomePosts(): Promise<DisplayPost[]> {
   const m = await getServerMessages();
 
   if (!hasSupabaseEnv()) {
@@ -171,10 +170,9 @@ export async function getHomePosts(activeFeed: "for-you" | "following"): Promise
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
-    const socialPosts =
-      activeFeed === "following" && profile
-        ? await getFollowingFeed(supabase, profile.id)
-        : (await getCachedSocialFeed(supabase, profile?.id)).posts;
+    if (!profile) return [];
+
+    const socialPosts = await getFollowingFeed(supabase, profile.id);
 
     if (socialPosts.length === 0) return [];
 

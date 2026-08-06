@@ -101,6 +101,11 @@ export const catalogEn = {
     savedMeta: "Private grid",
     fractions: "Fractions",
     scienceLabs: "Science labs",
+    allLabel: "All",
+    microLabel: "Micro",
+    lessonsLabel: "Lessons",
+    teachersLabel: "Teachers",
+    suggestedCreators: "Suggested Creators",
   },
   education: {
     classAndBranch: "Grade category & branch",

@@ -100,6 +100,11 @@ export const catalogTr = {
     savedMeta: "Özel ızgara",
     fractions: "Kesirler",
     scienceLabs: "Fen laboratuvarı",
+    allLabel: "Hepsi",
+    microLabel: "Micro",
+    lessonsLabel: "Dersler",
+    teachersLabel: "Öğretmenler",
+    suggestedCreators: "Önerilen Yaratıcılar",
   },
   education: {
     classAndBranch: "Sınıf kategorisi & branş",
