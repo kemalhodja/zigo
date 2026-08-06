@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMessages } from "@/lib/i18n/locale-context";
+import { getDistrictsForCity } from "@/lib/domain/turkey-cities-districts";
 
 type CreateAdCampaignModalProps = {
   existingPostId?: string;
@@ -40,10 +41,10 @@ export function CreateAdCampaignModal({
   const [selectedAudiences, setSelectedAudiences] = useState<("student" | "parent")[]>(["student", "parent"]);
   const [targetAll, setTargetAll] = useState(true);
 
-  // Multi-select Cities
+  // Multi-select Cities & Districts
   const [isAllCities, setIsAllCities] = useState(true);
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
-  const [district, setDistrict] = useState("");
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
 
   // Form states
   const [title, setTitle] = useState("");
@@ -111,6 +112,14 @@ export function CreateAdCampaignModal({
       }
     } else {
       setSelectedCities([...selectedCities, city]);
+    }
+  }
+
+  function toggleDistrict(districtName: string) {
+    if (selectedDistricts.includes(districtName)) {
+      setSelectedDistricts(selectedDistricts.filter((d) => d !== districtName));
+    } else {
+      setSelectedDistricts([...selectedDistricts, districtName]);
     }
   }
 
@@ -184,7 +193,7 @@ export function CreateAdCampaignModal({
           audioUrl: audioUrl || undefined,
           targetAudience: audienceStr,
           city: cityStr,
-          district: district.trim() || undefined,
+          district: selectedDistricts.length > 0 ? selectedDistricts.join(", ") : undefined,
         }),
       });
 
@@ -459,15 +468,46 @@ export function CreateAdCampaignModal({
                     ) : null}
                   </div>
 
+                  {/* Dynamic Multi-Select District Section */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300">İlçe / Bölge (İsteğe Bağlı Spesifik İlçe)</label>
-                    <input
-                      type="text"
-                      value={district}
-                      onChange={(e) => setDistrict(e.target.value)}
-                      placeholder="Örn: Kadıköy, Çankaya, Karşıyaka..."
-                      className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    />
+                    <label className="block text-xs font-bold text-slate-300">İlçe Seçimi (Birden Fazla İlçe Seçilebilir)</label>
+                    {isAllCities ? (
+                      <p className="mt-1 text-xs text-slate-500 italic">Tüm Türkiye seçildiğinde ilçe hedeflemesi yapılmaz.</p>
+                    ) : selectedCities.length > 1 ? (
+                      <p className="mt-1 text-xs text-amber-300/90 font-medium bg-amber-950/40 p-2 rounded-lg border border-amber-400/20">
+                        ℹ️ Birden fazla il seçildiği için ilçe seçimi devre dışıdır. Seçilen illerin tüm ilçeleri hedeflenir.
+                      </p>
+                    ) : selectedCities.length === 1 ? (
+                      <div className="mt-1.5">
+                        <p className="text-[0.68rem] text-slate-400 font-semibold mb-1">
+                          {selectedCities[0]} İli İçin Hedeflemek İstediğiniz İlçeleri Seçin:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto rounded-xl bg-slate-800/60 p-2 border border-slate-700">
+                          {getDistrictsForCity(selectedCities[0]).map((dName) => {
+                            const isDSelected = selectedDistricts.includes(dName);
+                            return (
+                              <button
+                                key={dName}
+                                type="button"
+                                onClick={() => toggleDistrict(dName)}
+                                className={`rounded-lg px-2.5 py-1 text-[0.68rem] font-bold transition ${
+                                  isDSelected ? "bg-amber-400 text-slate-950 font-black" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                }`}
+                              >
+                                {isDSelected ? `✓ ${dName}` : dName}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {selectedDistricts.length > 0 ? (
+                          <p className="mt-1 text-[0.68rem] text-amber-300 font-semibold">
+                            Seçilen İlçeler ({selectedDistricts.length}): {selectedDistricts.join(", ")}
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-[0.65rem] text-slate-400">İlçe seçilmezse {selectedCities[0]} ilinin tüm ilçeleri hedeflenir.</p>
+                        )}
+                      </div>
+                    ) : null}
                   </div>
 
                   {error ? <p className="rounded-lg bg-rose-950/80 border border-rose-500/50 p-2.5 text-xs font-bold text-rose-200">{error}</p> : null}
