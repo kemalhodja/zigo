@@ -49,6 +49,8 @@ const emptyStats: LearningProgressStats = {
   pointsFromEvents: 0,
 };
 
+import { PomodoroTimer } from "@/components/pomodoro-timer";
+
 export default async function StudentPage() {
   const data = await getStudentDashboardData();
   const m = await getServerMessages();
@@ -91,6 +93,7 @@ export default async function StudentPage() {
 
       {!data.isSignedOut && !data.showPreview ? (
         <div className="space-y-3">
+          <PomodoroTimer />
           <GradeLevelForm initialGradeLevel={data.gradeLevel} />
           <ClassGroupManager
             isSubscriber={data.isPremium}
