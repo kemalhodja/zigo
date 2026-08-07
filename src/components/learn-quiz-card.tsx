@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { triggerCelebrationConfetti } from "@/lib/client/confetti";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/types";
 import type { PublicQuizRow, QuizQuestionForPlay } from "@/lib/supabase/database.types";
@@ -170,6 +171,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
           scorePercent: payload.data.score_percent ?? 0,
           pointsAwarded: payload.data.points_awarded ?? 0,
         });
+        triggerCelebrationConfetti();
         setMessage(
           l.quizScoreSummary
             .replace("{score}", String(payload.data.score_percent ?? 0))
