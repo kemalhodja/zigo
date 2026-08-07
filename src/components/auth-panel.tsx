@@ -50,6 +50,8 @@ export function AuthPanel() {
   const [inviteCode, setInviteCode] = useState(searchParams.get("invite") ?? "");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState(searchParams.get("error") ?? a.defaultMessage);
+  const [botTrap, setBotTrap] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const recaptcha = useRecaptcha(mode === "sign-up" ? "signup" : "signin");
 
   useEffect(() => {
@@ -59,6 +61,14 @@ export function AuthPanel() {
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submittingRef.current || status === "loading") return;
+
+    // Bot Protection: Honeypot trap check
+    if (botTrap.trim().length > 0) {
+      // Bot detected! Quietly block submit
+      setStatus("error");
+      setMessage("Güvenlik doğrulaması başarısız.");
+      return;
+    }
 
     submittingRef.current = true;
     setStatus("loading");
@@ -86,6 +96,13 @@ export function AuthPanel() {
       const trimmedFullName = fullName.trim();
 
       if (mode === "sign-up") {
+        if (!termsAccepted) {
+          setStatus("error");
+          setMessage("Lütfen Kullanım Koşulları ve Gizlilik Politikasını okuyup kabul edin.");
+          submittingRef.current = false;
+          return;
+        }
+
         if (trimmedFullName.length < 2) {
           setStatus("error");
           setMessage("Ad soyad en az 2 karakter olmalı.");
@@ -287,6 +304,41 @@ export function AuthPanel() {
           </div>
         ) : null}
 
+        {/* Invisible Honeypot Anti-Bot Field */}
+        <div aria-hidden="true" style={{ opacity: 0, position: "absolute", top: -9999, left: -9999, height: 0, width: 0 }}>
+          <label htmlFor="website_url">Do not fill this field</label>
+          <input
+            id="website_url"
+            name="website_url"
+            tabIndex={-1}
+            autoComplete="off"
+            value={botTrap}
+            onChange={(e) => setBotTrap(e.target.value)}
+          />
+        </div>
+
+        {mode === "sign-up" ? (
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+            <input
+              required
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 size-4 rounded border-slate-300 text-crystal focus:ring-crystal"
+            />
+            <span className="text-xs font-semibold leading-relaxed text-slate-700">
+              <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
+                Kullanım Koşullarını
+              </a>{" "}
+              ve{" "}
+              <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
+                Gizlilik Politikasını
+              </a>{" "}
+              okudum, kabul ediyorum. *
+            </span>
+          </label>
+        ) : null}
+
         {mode === "sign-in" ? (
           <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 px-3 py-3">
             <input
@@ -322,6 +374,7 @@ export function AuthPanel() {
           className="tap-scale w-full rounded-lg bg-gradient-to-r from-crystal via-berry to-aqua px-4 py-3.5 text-sm font-black text-white disabled:opacity-60"
           disabled={
             status === "loading" ||
+            (mode === "sign-up" && !termsAccepted) ||
             (mode === "sign-up" && password.length > 0 && !validateRegistrationPassword(password).ok)
           }
           type="submit"

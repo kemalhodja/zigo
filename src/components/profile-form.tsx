@@ -16,18 +16,19 @@ export function ProfileForm({ redirectTo }: { redirectTo?: string } = {}) {
   const onboarding = m.onboarding;
   const router = useRouter();
 
-  // null = no selection yet (user MUST pick before submitting)
   const [accountKind, setAccountKind] = useState<RequiredSignupOptionId | null>(null);
   const [city, setCity] = useState<string>("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string | null>(null);
 
-  const canSubmit = accountKind !== null && Boolean(city.trim()) && status !== "saving";
+  const canSubmit = accountKind !== null && Boolean(city.trim()) && termsAccepted && status !== "saving";
 
   async function submitProfile(formData: FormData) {
     if (!canSubmit) {
       if (!accountKind) setMessage("Lütfen önce bir hesap türü seçin.");
       else if (!city.trim()) setMessage("Lütfen bulunduğunuz şehri (il) seçin.");
+      else if (!termsAccepted) setMessage("Lütfen Kullanım Koşulları ve Gizlilik Politikasını kabul edin.");
       return;
     }
 
@@ -125,6 +126,26 @@ export function ProfileForm({ redirectTo }: { redirectTo?: string } = {}) {
       </div>
 
       <RegistrationAccountPicker value={accountKind} onChange={setAccountKind} />
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <input
+          required
+          type="checkbox"
+          checked={termsAccepted}
+          onChange={(e) => setTermsAccepted(e.target.checked)}
+          className="mt-0.5 size-4 rounded border-slate-300 text-crystal focus:ring-crystal"
+        />
+        <span className="text-xs font-semibold leading-relaxed text-slate-700">
+          <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
+            Kullanım Koşullarını
+          </a>{" "}
+          ve{" "}
+          <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
+            Gizlilik Politikasını
+          </a>{" "}
+          okudum, kabul ediyorum. *
+        </span>
+      </label>
 
       <button
         className={`tap-scale w-full rounded-lg px-4 py-3.5 text-sm font-black text-white transition focus:outline-none focus:ring-2 focus:ring-crystal focus:ring-offset-2 ${
