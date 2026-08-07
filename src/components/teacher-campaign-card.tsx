@@ -45,6 +45,15 @@ export function TeacherCampaignCard({ campaign, sponsoredLabel }: TeacherCampaig
         {campaign.tagline ? (
           <p className="mt-1 line-clamp-2 text-xs font-semibold text-slate-600">{campaign.tagline}</p>
         ) : null}
+        <div className="mt-3">
+          <Link
+            href={`/messages?user=${campaign.teacher_id}`}
+            className="tap-scale flex w-full items-center justify-center gap-1 rounded-xl bg-slate-900 py-2 text-xs font-black text-white hover:bg-slate-800"
+          >
+            <span>💬</span>
+            <span>İletişime Geç (DM)</span>
+          </Link>
+        </div>
       </div>
     </Link>
   );
