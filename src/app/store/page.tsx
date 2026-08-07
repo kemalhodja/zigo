@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PublisherResourceCard } from "@/components/publisher-resource-card";
 import { StoreProductCard } from "@/components/store-product-card";
 import { StoreVisitTracker } from "@/components/store-visit-tracker";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
@@ -128,6 +129,45 @@ export default async function StorePage({ searchParams }: StorePageProps) {
           </div>
         </div>
       ) : null}
+
+      {/* Verified Publisher & Institution Digital Question Banks Section */}
+      <section className="-mx-4 border-b border-pink-100 bg-white px-4 py-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-[0.62rem] font-black uppercase tracking-wider text-violet-700">
+              📚 Yayıncı & Kurumsal Dijital Kaynaklar
+            </span>
+            <h3 className="mt-1 text-base font-black text-night">Doğrulanmış Soru Bankaları & Yaprak Testler</h3>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <PublisherResourceCard
+            resource={{
+              id: "pub-1",
+              title: "2026 YKS Matematik 1000 Soru Bankası (Çözümlü)",
+              publisherName: "Zigo Akademi Yayınları",
+              category: "Soru Bankası",
+              gradeLevel: "YKS / TYT",
+              downloadCount: 4250,
+              rating: 4.9,
+              isVerified: true,
+            }}
+          />
+          <PublisherResourceCard
+            resource={{
+              id: "pub-2",
+              title: "LGS Fen Bilimleri Son 10 Yıl Çıkmış Soru Denemesi",
+              publisherName: "Dijital Kurs Kurumları",
+              category: "Deneme Sınavı",
+              gradeLevel: "LGS 8. Sınıf",
+              downloadCount: 2890,
+              rating: 4.8,
+              isVerified: true,
+            }}
+          />
+        </div>
+      </section>
       <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{s.title}</p>
         <h2 className="mt-1 text-2xl font-black text-night">{s.subtitle}</h2>
