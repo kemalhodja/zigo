@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       title?: string;
       caption?: string;
       targetUrl?: string;
+      buttonText?: string;
       mediaUrl?: string;
       targetAudience?: "all" | "student" | "parent";
       city?: string | null;
@@ -30,6 +31,8 @@ export async function POST(request: Request) {
         : body.targetAudience === "student"
           ? "grade"
           : "all";
+
+    const ctaLabel = body.buttonText || body.title || "Sponsorlu Reklam";
 
     // Method 1: Convert existing post to sponsored ad
     if (body.existingPostId) {
@@ -50,7 +53,7 @@ export async function POST(request: Request) {
       const { error: updateErr } = await (dbClient
         .from("social_posts") as any)
         .update({
-          sponsored_label: "Sponsorlu Reklam",
+          sponsored_label: ctaLabel,
           sponsored_target_url: body.targetUrl || null,
           sponsored_status: "pending",
           target_audience: targetAudience,
@@ -86,7 +89,7 @@ export async function POST(request: Request) {
         media_type: mediaType,
         is_reel: isVideo,
         post_type: "discussion",
-        sponsored_label: body.title || "Sponsorlu Duyuru",
+        sponsored_label: ctaLabel,
         sponsored_target_url: body.targetUrl || null,
         sponsored_status: "pending",
         target_audience: targetAudience,

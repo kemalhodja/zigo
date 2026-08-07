@@ -46,11 +46,22 @@ export function CreateAdCampaignModal({
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
   const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
 
+  // Reset districts if multiple cities are selected or all cities
+  useEffect(() => {
+    if (isAllCities || selectedCities.length !== 1) {
+      setSelectedDistricts([]);
+    }
+  }, [isAllCities, selectedCities]);
+
+  // Channel Selection: "whatsapp" | "dm" | "website"
+  const [ctaChannel, setCtaChannel] = useState<"whatsapp" | "dm" | "website">("whatsapp");
+  const [whatsappPhone, setWhatsappPhone] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [ctaText, setCtaText] = useState("📲 WhatsApp'tan Bilgi Al");
+
   // Form states
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
-  const [targetUrl, setTargetUrl] = useState("");
-  const [buttonText, setButtonText] = useState("📲 WhatsApp'tan Bilgi Al & İletişime Geç");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(existingPostId || null);
@@ -65,6 +76,20 @@ export function CreateAdCampaignModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Fetch profile phone if available
+  useEffect(() => {
+    if (isOpen) {
+      fetch("/api/profile")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.data?.phone) {
+            setWhatsappPhone(data.data.phone);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
 
   // Fetch user posts if method is existing
   useEffect(() => {
@@ -161,10 +186,42 @@ export function CreateAdCampaignModal({
 
   const isVideoMedia = mediaUrl ? /\.(mp4|webm|mov|ogg)$/i.test(mediaUrl) || mediaUrl.includes("video") : false;
 
+  // Resolve Target URL & CTA Label based on channel choice
+  function getResolvedTargetUrl() {
+    if (ctaChannel === "whatsapp") {
+      const cleanPhone = whatsappPhone.replace(/\D/g, "");
+      if (!cleanPhone) return "";
+      const formatted = cleanPhone.startsWith("90") ? cleanPhone : `90${cleanPhone}`;
+      return `https://wa.me/${formatted}?text=${encodeURIComponent(`Merhaba, Zigo'daki "${title || 'Sponsorlu'}" reklamınız hakkında bilgi almak istiyorum.`)}`;
+    }
+    if (ctaChannel === "dm") {
+      return `/messages`;
+    }
+    return websiteUrl.trim();
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    // Validation for WhatsApp Channel
+    if (ctaChannel === "whatsapp") {
+      const cleanPhone = whatsappPhone.replace(/\D/g, "");
+      if (!cleanPhone || cleanPhone.length < 10) {
+        setError("WhatsApp reklamı verebilmek için geçerli bir telefon numarası girilmesi veya profilde kayıtlı olması zorunludur.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    if (ctaChannel === "website" && !websiteUrl.trim()) {
+      setError("Lütfen yönlendirilecek web sitesi bağlantısını girin.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const finalTargetUrl = getResolvedTargetUrl();
 
     // Resolve Target Audience string
     let audienceStr: "all" | "student" | "parent" = "all";
@@ -189,7 +246,8 @@ export function CreateAdCampaignModal({
           existingPostId: method === "existing" ? selectedPostId : undefined,
           title: title.trim(),
           caption: caption.trim(),
-          targetUrl: targetUrl.trim() || undefined,
+          targetUrl: finalTargetUrl || undefined,
+          buttonText: ctaText,
           mediaUrl: mediaUrl || undefined,
           audioUrl: audioUrl || undefined,
           targetAudience: audienceStr,
@@ -275,7 +333,7 @@ export function CreateAdCampaignModal({
                         method === "new" ? "bg-amber-400 text-slate-950 shadow-xs" : "text-slate-400 hover:text-white"
                       }`}
                     >
-                      ✨ Sıfırdan Reklam / Afiş Hazırla
+                      ✨ Sıfırdan Reklam Hazırla
                     </button>
                     <button
                       type="button"
@@ -284,7 +342,7 @@ export function CreateAdCampaignModal({
                         method === "existing" ? "bg-amber-400 text-slate-950 shadow-xs" : "text-slate-400 hover:text-white"
                       }`}
                     >
-                      📌 Varolan Paylaşımı Reklam Yap
+                      📌 Paylaşımı Reklam Yap
                     </button>
                   </div>
 
@@ -296,7 +354,7 @@ export function CreateAdCampaignModal({
                       ) : userPosts.length === 0 ? (
                         <p className="mt-2 text-xs text-amber-200">Henüz bir paylaşımınız bulunmuyor.</p>
                       ) : (
-                        <div className="mt-2 max-h-40 overflow-y-auto space-y-2 rounded-xl bg-slate-800/80 p-2">
+                        <div className="mt-2 max-h-40 overflow-y-auto space-y-2 rounded-xl bg-slate-800/60 p-2 border border-slate-700">
                           {userPosts.map((post) => (
                             <button
                               key={post.id}
@@ -350,31 +408,105 @@ export function CreateAdCampaignModal({
                     />
                   </div>
 
-                  {/* Target URL & Button Text */}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-300">Yönlendirme Linki (WhatsApp / Web)</label>
+                  {/* Channel Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">Reklam Tıklama Yönlendirme Kanalı *</label>
+                    <div className="mt-1.5 grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCtaChannel("whatsapp");
+                          setCtaText("📲 WhatsApp'tan Bilgi Al");
+                        }}
+                        className={`rounded-xl p-2.5 text-xs font-black transition text-center ${
+                          ctaChannel === "whatsapp" ? "bg-emerald-500 text-white shadow-xs" : "bg-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        📲 WhatsApp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCtaChannel("dm");
+                          setCtaText("💬 Zigo DM'den Mesaj Gönder");
+                        }}
+                        className={`rounded-xl p-2.5 text-xs font-black transition text-center ${
+                          ctaChannel === "dm" ? "bg-violet-600 text-white shadow-xs" : "bg-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        💬 Zigo DM (Direkt Mesaj)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCtaChannel("website");
+                          setCtaText("🌐 Web Sitesini İncele");
+                        }}
+                        className={`rounded-xl p-2.5 text-xs font-black transition text-center ${
+                          ctaChannel === "website" ? "bg-amber-400 text-slate-950 shadow-xs" : "bg-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        🌐 Web Sitesi
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Channel Dynamic Inputs */}
+                  {ctaChannel === "whatsapp" ? (
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/30 p-3">
+                      <label className="block text-xs font-bold text-emerald-200">
+                        WhatsApp Numarası * (Zorunlu)
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={whatsappPhone}
+                        onChange={(e) => setWhatsappPhone(e.target.value)}
+                        placeholder="Örn: 0532 123 45 67 veya 5321234567"
+                        className="mt-1.5 w-full rounded-xl bg-slate-900 px-3.5 py-2 text-xs text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      />
+                      <p className="mt-1 text-[0.65rem] text-emerald-200/80">
+                        Reklama tıklayan öğrenci ve veliler doğrudan profilinizdeki WhatsApp numaranıza mesaj atacaktır.
+                      </p>
+                    </div>
+                  ) : ctaChannel === "website" ? (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-3">
+                      <label className="block text-xs font-bold text-amber-200">Web Sitesi Bağlantısı (URL) *</label>
                       <input
                         type="url"
-                        value={targetUrl}
-                        onChange={(e) => setTargetUrl(e.target.value)}
-                        placeholder="https://wa.me/905... veya https://site.com"
-                        className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        required
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        placeholder="https://dijitalkurs.com veya https://form.site.com"
+                        className="mt-1.5 w-full rounded-xl bg-slate-900 px-3.5 py-2 text-xs text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-300">Buton Üzerindeki Yazı (CTA)</label>
-                      <select
-                        value={buttonText}
-                        onChange={(e) => setButtonText(e.target.value)}
-                        className="mt-1 w-full rounded-xl bg-slate-800 px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-                      >
-                        <option value="📲 WhatsApp'tan Bilgi Al & İletişime Geç">📲 WhatsApp'tan Bilgi Al</option>
-                        <option value="🎓 Kursa / Kampa Hemen Başvur">🎓 Kursa / Kampa Hemen Başvur</option>
-                        <option value="🌐 Web Sitesini Ziyaret Et">🌐 Web Sitesini Ziyaret Et</option>
-                        <option value="📞 Detaylı Bilgi İle İletişime Geç">📞 Detaylı Bilgi İle İletişime Geç</option>
-                      </select>
+                  ) : (
+                    <div className="rounded-xl border border-violet-500/30 bg-violet-950/30 p-3">
+                      <p className="text-xs font-bold text-violet-200">💬 Zigo DM Kanalı Aktif</p>
+                      <p className="mt-1 text-[0.68rem] text-violet-200/80">
+                        Reklama tıklayanlar Zigo uygulama içi direkt mesajlaşma kutunuz üzerinden sizinle iletişime geçecektir.
+                      </p>
                     </div>
+                  )}
+
+                  {/* Ready CTA Phrases */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300">Buton Üzerindeki Yazı (Hazır Alternatif Cümleler)</label>
+                    <select
+                      value={ctaText}
+                      onChange={(e) => setCtaText(e.target.value)}
+                      className="mt-1.5 w-full rounded-xl bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-amber-400 border border-slate-700"
+                    >
+                      <option value="ℹ️ Bilgi Al">ℹ️ Bilgi Al</option>
+                      <option value="💰 Fiyat Al">💰 Fiyat Al</option>
+                      <option value="🎓 Kursa / Kampa Hemen Başvur">🎓 Kursa / Kampa Hemen Başvur</option>
+                      <option value="📝 Teklif Al">📝 Teklif Al</option>
+                      <option value="📞 Hemen İletişime Geç">📞 Hemen İletişime Geç</option>
+                      <option value="💬 Zigo DM'den Mesaj Gönder">💬 Zigo DM'den Mesaj Gönder</option>
+                      <option value="📲 WhatsApp'tan Bilgi Al">📲 WhatsApp'tan Bilgi Al</option>
+                      <option value="🌐 Web Sitesini İncele">🌐 Web Sitesini İncele</option>
+                    </select>
                   </div>
 
                   {/* Media Upload & Audio Option */}
@@ -593,12 +725,12 @@ export function CreateAdCampaignModal({
                     {/* Target Link CTA */}
                     <div className="mt-3">
                       <a
-                        href={targetUrl || "#"}
+                        href={getResolvedTargetUrl() || "#"}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-2.5 text-xs font-black text-slate-950 shadow-md"
                       >
-                        {buttonText} ↗
+                        {ctaText} ↗
                       </a>
                     </div>
                   </div>
