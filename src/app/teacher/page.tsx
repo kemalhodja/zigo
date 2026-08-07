@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AdCampaignsManager } from "@/components/ad-campaigns-manager";
 import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
@@ -243,6 +244,7 @@ export default async function TeacherPage({
         }
         adsNode={
           <div className="space-y-4">
+            <AdCampaignsManager />
             <TeacherSponsoredAdsPanel profile={profile} />
           </div>
         }
