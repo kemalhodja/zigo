@@ -326,6 +326,8 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                 : item.sender?.full_name ?? lr.fromParent;
             const isTeacherPending = role === "teacher" && item.status === "pending" && item.receiver_id === viewerId;
 
+            const peerUserId = item.sender_id === viewerId ? item.receiver_id : item.sender_id;
+
             return (
               <article className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4" key={item.id}>
                 <div className="flex items-start justify-between gap-3">
@@ -359,8 +361,24 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                     >
                       {lr.reject}
                     </button>
+                    <a
+                      href={`/messages?user=${peerUserId}`}
+                      className="tap-scale rounded-xl bg-violet-600 px-3 py-2 text-xs font-black text-white hover:bg-violet-700"
+                    >
+                      💬 Canlı DM Gönder
+                    </a>
                   </div>
-                ) : null}
+                ) : (
+                  <div className="mt-3">
+                    <a
+                      href={`/messages?user=${peerUserId}`}
+                      className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-black text-white hover:bg-slate-800"
+                    >
+                      <span>💬</span>
+                      <span>Mesajlaşmayı Aç (DM)</span>
+                    </a>
+                  </div>
+                )}
 
                 {item.status === "accepted" ? (
                   <div className="mt-3 space-y-3">
