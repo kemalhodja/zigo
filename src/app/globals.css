@@ -127,9 +127,27 @@ a,
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
+.safe-left {
+  padding-left: max(0px, env(safe-area-inset-left));
+}
+
+.safe-right {
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
+.safe-x {
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
+
 .safe-screen {
   min-height: 100vh;
   min-height: 100dvh;
+}
+
+.mobile-scroll-container {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tap-scale {
@@ -835,13 +853,13 @@ body.role-theme-teacher {
 }
 
 .role-theme-student .zigo-nav-label {
-  font-size: 0.8125rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
 .role-theme-student .role-nav-icon {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2rem;
+  height: 2rem;
 }
 
 .role-theme-student .role-bottom-nav-student a[aria-current="page"] {
@@ -982,5 +1000,15 @@ body.role-theme-teacher {
 @media (max-width: 420px) {
   .zigo-media {
     min-height: 26rem;
+  }
+}
+
+/* Prevent unwanted browser auto-zoom on mobile input focus */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  .zigo-input {
+    font-size: 16px !important;
   }
 }

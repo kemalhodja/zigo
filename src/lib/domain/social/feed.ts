@@ -106,7 +106,7 @@ export async function getSocialFeed(
     return dbQuery;
   };
 
-  const { data, error } = await buildQuery(areaIds.length > 0);
+  let { data, error } = await buildQuery(areaIds.length > 0);
   if (error) throw error;
 
   // Fallback to general feed if filtered feed returns empty
@@ -150,10 +150,12 @@ export async function searchSocialPosts(
   const trimmed = query.trim();
   if (!trimmed) {
     const page = await getSocialFeed(supabase, viewerId);
-    return page.posts;
+    if (page.posts.length > 0) return page.posts;
+    const globalPage = await getSocialFeed(supabase, undefined);
+    return globalPage.posts;
   }
+
   const areaIds = viewerId ? await getUserSocialFeedAreaIds(supabase, viewerId) : [];
-  if (viewerId && areaIds.length === 0) return [];
 
   let searchQuery = supabase
     .from("social_posts")
@@ -182,11 +184,22 @@ export async function searchSocialPosts(
     .limit(30);
 
   if (areaIds.length > 0) {
-    searchQuery = searchQuery.in("area_id", areaIds);
+    const { data: areaData } = await searchQuery.in("area_id", areaIds);
+    if (areaData && areaData.length > 0) {
+      const canOpenSponsored = Boolean(viewerId);
+      const canOpenPremiumPrep = await resolveViewerCanOpenPremiumPrep(supabase, viewerId);
+      const hydrated = await hydrateSocialPosts(
+        supabase,
+        areaData as RawSocialPost[],
+        viewerId,
+        canOpenPremiumPrep,
+        canOpenSponsored,
+      );
+      return rankSocialPosts(hydrated);
+    }
   }
 
   const { data, error } = await searchQuery;
-
   if (error) throw error;
   const canOpenSponsored = Boolean(viewerId);
   const canOpenPremiumPrep = await resolveViewerCanOpenPremiumPrep(supabase, viewerId);

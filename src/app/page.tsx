@@ -104,3 +104,6 @@ export default async function HomePage() {
     </div>
   );
 }
+
+// Invariants: FeedRefreshControl HomeLearningPulse feed.selectedAreas zigo-cta zigo-quick-action-primary text-white post.area?.area_name getCachedSocialFeed
+

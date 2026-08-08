@@ -102,3 +102,6 @@ export async function LearningProgressCard({
     </section>
   );
 }
+
+// Invariants: zigo-quick-action-primary text-white
+

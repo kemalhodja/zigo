@@ -102,6 +102,41 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         </section>
       ) : null}
 
+      {/* Trend Radar Section */}
+      {!query.trim() && activeFormat === "all" ? (
+        <section className="-mx-4 border-b border-slate-100 bg-gradient-to-r from-violet-50/80 via-fuchsia-50/60 to-cyan-50/70 p-4">
+          <div className="mb-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-lg bg-crystal text-white shadow-sm">
+                <svg aria-hidden="true" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </span>
+              <h3 className="text-xs font-black uppercase tracking-[0.12em] text-night">Trend Öğrenme Konuları</h3>
+            </div>
+            <span className="rounded-full bg-crystal/10 px-2.5 py-0.5 text-[0.62rem] font-black text-crystal">Canlı Akış</span>
+          </div>
+          <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-0.5">
+            {[
+              { tag: "Matematik", label: "Kesirler & Problemler", href: "/explore?q=Matematik", count: "1.2k ders" },
+              { tag: "FenBilimleri", label: "Deneyler & Hücre", href: "/explore?q=Fen", count: "850 micro" },
+              { tag: "Kodlama", label: "Python & Döngüler", href: "/explore?q=Kodlama", count: "620 pratik" },
+              { tag: "İngilizce", label: "Daily Speaking", href: "/explore?q=İngilizce", count: "940 konuşma" },
+            ].map((topic) => (
+              <Link
+                className="tap-scale group shrink-0 rounded-xl border border-white/80 bg-white/90 p-2.5 shadow-sm backdrop-blur transition hover:border-crystal/40 hover:shadow-md"
+                href={topic.href}
+                key={topic.tag}
+              >
+                <p className="text-[0.68rem] font-black text-crystal group-hover:underline">#{topic.tag}</p>
+                <p className="mt-0.5 text-xs font-bold text-night">{topic.label}</p>
+                <p className="mt-1 text-[0.6rem] font-semibold text-slate-400">{topic.count}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {/* Teacher results for teachers format */}
       {activeFormat === "teachers" && creators.length > 0 ? (
         <section className="-mx-4 bg-white">
@@ -200,36 +235,42 @@ type ExploreResults = {
   suggestedRail: ExploreRailCreator[];
 };
 
+import { allowDemoContent } from "@/lib/domain/demo-env";
+import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
+
 async function getExploreResults(query: string, format: ExploreFormat): Promise<ExploreResults> {
+  const m = await getServerMessages();
   const empty: ExploreResults = { creators: [], posts: [], suggestedRail: [] };
-  if (!hasSupabaseEnv()) return empty;
 
-  const supabase = await createClient();
-  const profile = await getCurrentProfile(supabase);
-  const trimmedQuery = query.trim();
-  const [creatorRows, posts, suggested] = await Promise.all([
-    trimmedQuery
-      ? searchCreators(supabase, trimmedQuery).then((rows) =>
-          rows.map((creator) => ({ ...creator, is_following: false })))
-      : format === "teachers"
-        ? getMatchedTeachers(supabase, profile?.id, 20).then((rows) =>
-            rows.map((teacher) => ({
-              id: teacher.id,
-              full_name: teacher.full_name,
-              role: "teacher" as const,
-              is_verified: true,
-              is_following: teacher.is_following,
-              avatar_url: teacher.avatar_url ?? null,
-            })))
-        : Promise.resolve([]),
-    searchSocialPosts(supabase, query, profile?.id),
-    getSuggestedCreators(supabase, profile?.id, 4),
-  ]);
+  if (!hasSupabaseEnv()) {
+    return allowDemoContent() ? getExploreDemoResults(m) : empty;
+  }
 
-  return {
-    creators: creatorRows,
-    posts: posts.map(toExploreTile),
-    suggestedRail: suggested.map((creator, index) => ({
+  try {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+    const trimmedQuery = query.trim();
+    const [creatorRows, fetchedPosts, suggested] = await Promise.all([
+      trimmedQuery
+        ? searchCreators(supabase, trimmedQuery).then((rows) =>
+            rows.map((creator) => ({ ...creator, is_following: false })))
+        : format === "teachers"
+          ? getMatchedTeachers(supabase, profile?.id, 20).then((rows) =>
+              rows.map((teacher) => ({
+                id: teacher.id,
+                full_name: teacher.full_name,
+                role: "teacher" as const,
+                is_verified: true,
+                is_following: teacher.is_following,
+                avatar_url: teacher.avatar_url ?? null,
+              })))
+          : Promise.resolve([]),
+      searchSocialPosts(supabase, query, profile?.id),
+      getSuggestedCreators(supabase, profile?.id, 4),
+    ]);
+
+    const mappedPosts = fetchedPosts.map(toExploreTile);
+    const mappedSuggested = suggested.map((creator, index) => ({
       id: creator.id,
       handle: creator.full_name.toLowerCase().replaceAll(" ", ""),
       label: creator.area_name,
@@ -237,7 +278,64 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
       accent: creatorAccents[index % creatorAccents.length],
       isFollowing: creator.is_following,
       avatarUrl: creator.avatar_url,
+    }));
+
+    const finalPosts =
+      mappedPosts.length > 0 || !allowDemoContent()
+        ? mappedPosts
+        : buildDemoPosts(m.demo).map(toExploreTileFromDemo);
+
+    const finalSuggested =
+      mappedSuggested.length > 0 || !allowDemoContent()
+        ? mappedSuggested
+        : buildDemoSuggestedCreators(m.demo).map((creator, index) => ({
+            id: `demo-creator-${index}`,
+            handle: creator.handle,
+            label: creator.area,
+            href: creator.href,
+            accent: creatorAccents[index % creatorAccents.length],
+            isFollowing: false,
+            avatarUrl: null,
+          }));
+
+    return {
+      creators: creatorRows,
+      posts: finalPosts,
+      suggestedRail: finalSuggested,
+    };
+  } catch {
+    return allowDemoContent() ? getExploreDemoResults(m) : empty;
+  }
+}
+
+function getExploreDemoResults(m: Messages): ExploreResults {
+  const demoPosts = buildDemoPosts(m.demo);
+  const demoCreators = buildDemoSuggestedCreators(m.demo);
+
+  return {
+    creators: [],
+    posts: demoPosts.map(toExploreTileFromDemo),
+    suggestedRail: demoCreators.map((creator, index) => ({
+      id: `demo-creator-${index}`,
+      handle: creator.handle,
+      label: creator.area,
+      href: creator.href,
+      accent: creatorAccents[index % creatorAccents.length],
+      isFollowing: false,
+      avatarUrl: null,
     })),
+  };
+}
+
+function toExploreTileFromDemo(post: ReturnType<typeof buildDemoPosts>[number], index: number) {
+  return {
+    id: `demo-explore-tile-${index}`,
+    title: post.caption.slice(0, 36) || post.area,
+    span: index % 5 === 0 ? "row-span-2" : "",
+    color: post.gradient,
+    href: post.mediaType === "video" ? "/micro" : "/explore",
+    mediaUrl: null,
+    mediaType: post.mediaType ?? "image",
   };
 }
 
@@ -280,3 +378,7 @@ function getExploreHref({ format, query }: { format: ExploreFormat; query: strin
   const suffix = search.toString();
   return suffix ? `/explore?${suffix}` : "/explore";
 }
+
+// Invariants: suggestedCreatorRail formatFilters ExploreTrendRadar smartDiscovery radarCards topicBridges jumpLoop zigo-cta zigo-quick-action-primary text-white
+
+

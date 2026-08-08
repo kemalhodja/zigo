@@ -127,7 +127,7 @@ export function AppShell({
 
   return (
     <div
-      className={`safe-screen zigo-shell-bg mx-auto flex w-full max-w-md flex-col md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${getRoleThemeClass(viewerRole)} ${
+      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full max-w-md flex-col md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${getRoleThemeClass(viewerRole)} ${
         isImmersive ? "relative bg-night" : ""
       }`}
     >
@@ -144,7 +144,7 @@ export function AppShell({
         </a>
       ) : null}
 
-      <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-24 md:pb-6"}`} id="main-content">
+      <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6"}`} id="main-content">
         {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
           <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
         ) : null}

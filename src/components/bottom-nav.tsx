@@ -45,9 +45,9 @@ export function BottomNav({
 
   return (
     <nav
-      className={`safe-bottom fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md grid grid-cols-5 px-1 pt-1 text-center zigo-nav-label ${roleNavClass} ${
+      className={`safe-bottom safe-x fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md grid grid-cols-5 px-1 py-0.5 text-center zigo-nav-label ${roleNavClass} ${
         variant === "overlay"
-          ? "border-t border-white/10 bg-black/25 text-white backdrop-blur"
+          ? "border-t border-white/10 bg-black/35 text-white backdrop-blur-md"
           : "zigo-bottom-bar text-slate-500"
       } md:relative md:inset-auto md:bottom-auto md:z-auto`}
       style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
@@ -61,36 +61,36 @@ export function BottomNav({
             aria-label={item.label}
             aria-current={isActive ? "page" : undefined}
             data-micro-link={isMicroLink ? "true" : undefined}
-            className={`tap-scale relative flex touch-manipulation flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 transition ${
+            className={`tap-scale relative flex touch-manipulation flex-col items-center justify-center gap-0 rounded-lg py-1 transition ${
               isActive
                 ? variant === "overlay"
                   ? "bg-white/25 text-white shadow-sm"
-                  : "bg-violet-50 text-crystal"
+                  : "bg-violet-50/80 text-crystal"
                 : variant === "overlay"
-                  ? "text-white/85 hover:text-white"
+                  ? "text-white/80 hover:text-white"
                   : "text-slate-500 hover:text-crystal"
             }`}
             href={item.href}
             key={item.href}
           >
-            <span className={`role-nav-icon flex size-9 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
+            <span className={`role-nav-icon flex size-7 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
               <NavIcon active={isActive} name={item.icon} variant={variant} />
             </span>
-            <span className={`max-w-full px-0.5 text-center ${isActive ? "font-bold text-night" : "font-semibold"}`}>
+            <span className={`max-w-full px-0.5 text-center text-[0.63rem] leading-tight ${isActive ? "font-bold text-night" : "font-semibold"}`}>
               {item.label}
             </span>
             {item.href === "/notifications" && unreadCount > 0 ? (
-              <span className="zigo-badge-count absolute right-1 top-0 flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-white">
+              <span className="zigo-badge-count absolute right-1 top-0.5 flex min-w-3.5 items-center justify-center rounded-full bg-rose-500 px-0.5 text-[0.6rem] text-white">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             ) : item.href === "/profile" && teacherInboxCount > 0 ? (
-              <span className="zigo-badge-count absolute right-1 top-0 flex min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-white">
+              <span className="zigo-badge-count absolute right-1 top-0.5 flex min-w-3.5 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[0.6rem] text-white">
                 {teacherInboxCount > 9 ? "9+" : teacherInboxCount}
               </span>
             ) : null}
             {isActive ? (
               <span
-                className={`absolute bottom-0.5 h-1 w-5 rounded-full ${
+                className={`absolute bottom-0 h-0.5 w-4 rounded-full ${
                   variant === "overlay" ? "bg-white" : "bg-crystal"
                 }`}
               />
@@ -114,7 +114,7 @@ function NavIcon({
   const activeFill = variant === "overlay" ? "currentColor" : "#7C3AED";
   if (name === "home") {
     return (
-      <svg aria-hidden="true" className="size-6" fill={active ? activeFill : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill={active ? activeFill : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M3 11l9-8 9 8" />
         <path d="M5 10v10h14V10" />
       </svg>
@@ -123,7 +123,7 @@ function NavIcon({
 
   if (name === "search") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <circle cx="11" cy="11" r="7" />
         <path d="M20 20l-4-4" />
       </svg>
@@ -132,7 +132,7 @@ function NavIcon({
 
   if (name === "create") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <rect height="18" rx="5" width="18" x="3" y="3" />
         <path d="M12 8v8" />
         <path d="M8 12h8" />
@@ -142,7 +142,7 @@ function NavIcon({
 
   if (name === "ask") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <path d="M21 12a8.5 8.5 0 0 1-9 8.5 9.6 9.6 0 0 1-4.2-.95L3 20.5l1.3-4A8.5 8.5 0 1 1 21 12z" />
         <path d="M9.5 9.5a2.5 2.5 0 0 1 4.2 1.8c0 1.9-1.7 2.3-1.7 3.7" />
         <path d="M12 18h.01" />
@@ -152,7 +152,7 @@ function NavIcon({
 
   if (name === "learn") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
         <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
       </svg>
@@ -161,7 +161,7 @@ function NavIcon({
 
   if (name === "parent") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -172,7 +172,7 @@ function NavIcon({
 
   if (name === "studio") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <rect height="7" rx="1" width="7" x="3" y="3" />
         <rect height="7" rx="1" width="7" x="14" y="3" />
         <rect height="7" rx="1" width="7" x="14" y="14" />
@@ -183,7 +183,7 @@ function NavIcon({
 
   if (name === "micro") {
     return (
-      <svg aria-hidden="true" className="size-6" fill={active ? activeFill : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill={active ? activeFill : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <rect height="16" rx="4" width="18" x="3" y="4" />
         <path d="M8 4l3 5" />
         <path d="M14 4l3 5" />
@@ -194,7 +194,7 @@ function NavIcon({
 
   if (name === "admin") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
       </svg>
     );
@@ -202,14 +202,14 @@ function NavIcon({
 
   if (name === "moderation") {
     return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
+      <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? "2.6" : "2"} viewBox="0 0 24 24">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     );
   }
 
   return (
-    <span className={`flex size-6 items-center justify-center rounded-full border-2 border-current p-0.5 ${active ? "bg-current" : ""}`}>
+    <span className={`flex size-5 items-center justify-center rounded-full border-2 border-current p-0.5 ${active ? "bg-current" : ""}`}>
       <span className={`size-full rounded-full ${active ? "bg-white" : "bg-current"}`} />
     </span>
   );

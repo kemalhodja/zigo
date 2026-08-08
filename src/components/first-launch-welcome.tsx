@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { SubscribeButton } from "@/components/SubscribeButton";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 const storageKey = "zigo:app-intro-seen";
@@ -66,51 +67,102 @@ export function FirstLaunchWelcome() {
     <div
       aria-labelledby="zigo-app-intro-title"
       aria-modal="true"
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-night/80 p-0 backdrop-blur-sm md:items-center md:p-4"
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-night/80 p-0 backdrop-blur-md md:items-center md:p-4"
       data-testid="first-launch-welcome"
       role="dialog"
     >
-      <div className="safe-bottom flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl md:rounded-[2rem]">
-        <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-6 pb-8 pt-7 text-white">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/70">{t.eyebrow}</p>
-          <h2 className="zigo-display mt-2 text-white" id="zigo-app-intro-title">
+      <div className="safe-bottom flex max-h-[94dvh] w-full max-w-md flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl transition-all duration-300 md:rounded-[2rem]">
+        {/* Dynamic Header Gradient */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-night via-violet-950 to-crystal px-6 pb-8 pt-7 text-white shadow-md">
+          <div className="pointer-events-none absolute -right-12 -top-12 size-40 rounded-full bg-pink-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-10 -left-10 size-32 rounded-full bg-crystal/30 blur-2xl" />
+          
+          <div className="relative flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-amber-300 backdrop-blur-md">
+              <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
+              {t.eyebrow}
+            </span>
+            <span className="text-xs font-bold text-white/60">
+              {step + 1} / {slides.length}
+            </span>
+          </div>
+
+          <h2 className="zigo-display relative mt-3 text-2xl font-black text-white" id="zigo-app-intro-title">
             {slide.title}
           </h2>
+
           {slide.body ? (
-            <p className="mt-3 text-sm font-semibold leading-7 text-white/85">{slide.body}</p>
+            <p className="relative mt-3 text-sm font-medium leading-7 text-white/90">
+              {slide.body}
+            </p>
           ) : null}
         </div>
 
+        {/* Content Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {slide.bullets ? (
-            <ul className="space-y-3">
-              {slide.bullets.map((item, index) => (
-                <li className="flex gap-3 rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 to-pink-50 px-4 py-3" key={item}>
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-night text-xs font-black text-white">
-                    {index + 1}
-                  </span>
-                  <p className="text-sm font-semibold leading-6 text-slate-700">{item}</p>
-                </li>
-              ))}
+            <ul className="space-y-3.5">
+              {slide.bullets.map((item, index) => {
+                const isHighlight = isLast && index === 2;
+                return (
+                  <li
+                    className={`flex gap-3.5 rounded-2xl px-4 py-3.5 transition-all ${
+                      isHighlight
+                        ? "border-2 border-pink-300 bg-gradient-to-br from-violet-50 via-pink-50 to-amber-50 shadow-md ring-2 ring-pink-400/20"
+                        : "border border-slate-100 bg-gradient-to-r from-slate-50 to-purple-50/50 hover:border-violet-200"
+                    }`}
+                    key={item}
+                  >
+                    <span
+                      className={`flex size-9 shrink-0 items-center justify-center rounded-xl text-xs font-black text-white shadow-sm ${
+                        isHighlight
+                          ? "bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 shadow-pink-500/30"
+                          : "bg-night"
+                      }`}
+                    >
+                      {isHighlight ? "🎁" : index + 1}
+                    </span>
+                    <p className={`text-sm leading-6 ${isHighlight ? "font-bold text-slate-900" : "font-semibold text-slate-700"}`}>
+                      {item}
+                    </p>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </div>
 
-        <div className="border-t border-slate-100 px-6 pb-6 pt-4">
+        {/* Action Controls & Footer */}
+        <div className="border-t border-slate-100 bg-slate-50/80 px-6 pb-6 pt-4 backdrop-blur-sm">
+          {/* Slide Dots Indicator */}
           <div className="mb-4 flex items-center justify-center gap-2">
             {slides.map((entry, index) => (
               <span
                 aria-hidden="true"
-                className={`h-2 rounded-full transition-all ${index === step ? "w-6 bg-crystal" : "w-2 bg-slate-200"}`}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === step ? "w-7 bg-crystal shadow-sm" : "w-2 bg-slate-300"
+                }`}
                 key={entry.title}
               />
             ))}
           </div>
 
+          {/* Subscribe Call to Action on Last Slide */}
+          {isLast ? (
+            <div className="mb-3">
+              <SubscribeButton
+                buttonText="🎁 %50 İndirimle Abone Ol & Bize Destek Ol"
+                className="w-full tap-scale rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 px-4 py-3.5 text-center text-sm font-black text-white shadow-lg shadow-pink-500/25 transition-all hover:brightness-110"
+                onSuccess={() => finish()}
+              />
+            </div>
+          ) : null}
+
+          {/* Navigation Buttons */}
           <div className="grid grid-cols-[auto_1fr] gap-2">
             {!isLast ? (
               <button
-                className="tap-scale rounded-xl px-4 py-3 text-sm font-black text-slate-500"
+                className="tap-scale rounded-xl px-4 py-3 text-sm font-black text-slate-500 hover:text-slate-800"
                 onClick={finish}
                 type="button"
               >
@@ -120,11 +172,11 @@ export function FirstLaunchWelcome() {
               <span />
             )}
             <button
-              className="tap-scale zigo-cta rounded-xl px-4 py-3.5 text-sm font-black text-white"
+              className="tap-scale zigo-cta rounded-xl px-4 py-3.5 text-sm font-black text-white shadow-md"
               onClick={goNext}
               type="button"
             >
-              {isLast ? t.start : t.next}
+              {isLast ? "Akışa Başla" : t.next}
             </button>
           </div>
         </div>
@@ -132,3 +184,4 @@ export function FirstLaunchWelcome() {
     </div>
   );
 }
+
