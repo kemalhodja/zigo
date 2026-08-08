@@ -209,7 +209,7 @@ export async function searchCreators(
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, full_name, role, is_verified")
+    .select("id, full_name, role, is_verified, avatar_url")
     .ilike("full_name", `%${trimmed}%`)
     .limit(20);
 

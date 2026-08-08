@@ -91,6 +91,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               >
                 <SocialAvatar
                   className={`size-16 text-lg ring-2 ring-offset-2 ${creator.isFollowing ? "ring-emerald-400" : "ring-crystal"}`}
+                  imageUrl={creator.avatarUrl}
                   label={creator.handle}
                 />
                 <span className="max-w-16 truncate text-[0.62rem] font-black text-night">@{creator.handle}</span>
@@ -112,6 +113,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             >
               <SocialAvatar
                 className={`size-12 text-base ring-2 ${creatorAccents[index % creatorAccents.length]}`}
+                imageUrl={creator.avatar_url}
                 label={creator.full_name}
               />
               <div className="min-w-0 flex-1">
@@ -189,6 +191,7 @@ type ExploreRailCreator = {
   href: string;
   accent?: string;
   isFollowing?: boolean;
+  avatarUrl?: string | null;
 };
 
 type ExploreResults = {
@@ -216,6 +219,7 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
               role: "teacher" as const,
               is_verified: true,
               is_following: teacher.is_following,
+              avatar_url: teacher.avatar_url ?? null,
             })))
         : Promise.resolve([]),
     searchSocialPosts(supabase, query, profile?.id),
@@ -232,6 +236,7 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
       href: `/profile/${creator.id}`,
       accent: creatorAccents[index % creatorAccents.length],
       isFollowing: creator.is_following,
+      avatarUrl: creator.avatar_url,
     })),
   };
 }

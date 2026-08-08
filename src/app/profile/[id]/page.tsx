@@ -100,36 +100,38 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             <div className="-mt-10 shrink-0">
               <SocialAvatar
                 accent="from-crystal via-fuchsia-500 to-rose-400"
-                className="size-20 text-3xl ring-4 ring-white"
+                className="size-20 text-3xl ring-4 ring-white shadow-md"
                 imageUrl={profile.avatar_url}
                 label={profile.full_name}
               />
             </div>
-            <div className="mb-1 flex gap-1.5">
-              {isOwnProfile ? (
-                <Link className="tap-scale rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/profile">
-                  Kendi profilin
-                </Link>
-              ) : (
-                <FollowButton
-                  followingId={profile.id}
-                  initialFollowersCount={stats.followers}
-                  initialFollowing={following}
-                  showCount
-                />
-              )}
-              {!isOwnProfile ? (
-                <Link
-                  className="tap-scale rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-3 py-2 text-xs font-black text-slate-950 shadow-xs hover:brightness-105"
-                  href={`/messages?user=${profile.id}`}
-                >
-                  💬 Mesaj Gönder (DM)
-                </Link>
-              ) : null}
-              <Link className="tap-scale rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/questions">
-                Soru sor
+          </div>
+
+          {/* Action buttons row */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {isOwnProfile ? (
+              <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-slate-100 px-3 text-xs font-black text-night hover:bg-slate-200 transition whitespace-nowrap" href="/profile">
+                Kendi profilin
               </Link>
-            </div>
+            ) : (
+              <FollowButton
+                followingId={profile.id}
+                initialFollowersCount={stats.followers}
+                initialFollowing={following}
+                showCount={false}
+              />
+            )}
+            {!isOwnProfile ? (
+              <Link
+                className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-orange-500 px-2 text-xs font-black text-slate-950 shadow-xs hover:brightness-105 transition whitespace-nowrap"
+                href={`/messages?user=${profile.id}`}
+              >
+                💬 DM Gönder
+              </Link>
+            ) : null}
+            <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-slate-100 px-2 text-xs font-black text-night hover:bg-slate-200 transition whitespace-nowrap" href="/questions">
+              ❓ Soru sor
+            </Link>
           </div>
 
           {/* Stats row */}

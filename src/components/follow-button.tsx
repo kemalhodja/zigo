@@ -72,19 +72,19 @@ export function FollowButton({
   const isOverlay = variant === "overlay";
   const isCompact = variant === "compact";
   const buttonClass = isOverlay
-    ? `tap-scale rounded-lg border px-3 py-1 text-[0.65rem] font-black backdrop-blur transition ${
+    ? `tap-scale rounded-lg border px-3 py-1 text-[0.65rem] font-black backdrop-blur transition whitespace-nowrap ${
         isFollowing ? "border-white bg-white text-night" : "border-white/70 bg-black/10 text-white"
       }`
     : isCompact
-      ? `tap-scale rounded-lg border px-3 py-1.5 text-[0.68rem] font-black transition ${
-          isFollowing ? "border-slate-200 bg-white text-slate-700" : "border-crystal bg-crystal text-white"
+      ? `tap-scale w-full h-9 rounded-xl border px-3 text-xs font-black transition whitespace-nowrap flex items-center justify-center ${
+          isFollowing ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "border-crystal bg-crystal text-white shadow-xs hover:brightness-105"
         }`
-    : `tap-scale w-full rounded-lg px-4 py-2 text-sm font-black transition ${
-        isFollowing ? "border border-slate-200 bg-white text-slate-700" : "bg-crystal text-white"
+    : `tap-scale w-full h-9 rounded-xl px-3 text-xs font-black transition whitespace-nowrap flex items-center justify-center ${
+        isFollowing ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "bg-crystal text-white shadow-xs hover:brightness-105"
       }`;
 
   return (
-    <div className={isOverlay || isCompact ? "min-w-fit space-y-1" : "space-y-2"}>
+    <div className="w-full min-w-0">
       <button
         className={buttonClass}
         aria-pressed={isFollowing}
@@ -96,11 +96,11 @@ export function FollowButton({
         {isSaving ? m.common.saving : isFollowing ? m.forms.following : m.forms.follow}
       </button>
       {showCount && typeof followersCount === "number" ? (
-        <p className={`${isOverlay ? "text-white/75" : "text-slate-500"} text-center text-[0.65rem] font-black`}>
+        <p className={`${isOverlay ? "text-white/75" : "text-slate-500"} mt-1 text-center text-[0.65rem] font-black`}>
           {new Intl.NumberFormat("en-US", { notation: "compact" }).format(followersCount)} {m.common.followers}
         </p>
       ) : null}
-      {message && !isOverlay && !isCompact ? <p className="text-xs font-bold text-slate-500">{message}</p> : null}
+      {message && !isOverlay && !isCompact ? <p className="mt-1 text-xs font-bold text-slate-500">{message}</p> : null}
     </div>
   );
 }

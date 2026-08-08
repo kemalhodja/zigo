@@ -227,7 +227,7 @@ export async function listAreaMatchedTeachers(
 
   const { data: teachers, error: teachersError } = await supabase
     .from("users")
-    .select("id, full_name, role, is_verified")
+    .select("id, full_name, role, is_verified, avatar_url")
     .in("id", teacherIds)
     .eq("role", "teacher")
     .eq("is_verified", true)
@@ -246,6 +246,7 @@ export async function listAreaMatchedTeachers(
     full_name: teacher.full_name,
     area_name: areaByTeacher.get(teacher.id) ?? "Education",
     is_following: followingChecks[index] ?? false,
+    avatar_url: teacher.avatar_url ?? null,
   }));
 }
 

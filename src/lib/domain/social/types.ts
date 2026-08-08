@@ -56,13 +56,14 @@ export type ProfileSocialStats = {
   following: number;
 };
 
-export type CreatorSearchResult = Pick<UserRow, "id" | "full_name" | "role" | "is_verified">;
+export type CreatorSearchResult = Pick<UserRow, "id" | "full_name" | "role" | "is_verified" | "avatar_url">;
 
 export type SuggestedCreator = {
   id: string;
   full_name: string;
   area_name: string;
   is_following: boolean;
+  avatar_url?: string | null;
 };
 
 export type UserContentReport = ContentReportRow & {
