@@ -37,6 +37,7 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file");
+    const kind = String(formData.get("kind") ?? "avatar");
 
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "File is required." }, { status: 400 });
@@ -48,13 +49,16 @@ export async function POST(request: Request) {
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      return NextResponse.json({ error: "Profil fotoğrafı en fazla 10 MB olabilir." }, { status: 400 });
+      return NextResponse.json({ error: "Görsel en fazla 10 MB olabilir." }, { status: 400 });
     }
 
     const extension = EXTENSION_BY_TYPE.get(file.type) ?? "jpg";
-    const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
+    const isCover = kind === "cover";
+    const objectPath = isCover
+      ? `covers/${profile.id}/${randomUUID()}.${extension}`
+      : `${profile.id}/${randomUUID()}.${extension}`;
 
-    let avatarUrl = "";
+    let imageUrl = "";
 
     // 1. Try uploading to 'avatars' storage bucket
     const { error: primaryError } = await supabase.storage.from("avatars").upload(objectPath, file, {
@@ -63,36 +67,42 @@ export async function POST(request: Request) {
     });
 
     if (!primaryError) {
-      avatarUrl = supabase.storage.from("avatars").getPublicUrl(objectPath).data.publicUrl;
+      imageUrl = supabase.storage.from("avatars").getPublicUrl(objectPath).data.publicUrl;
     } else {
       // 2. Fallback to 'social-media' storage bucket if 'avatars' bucket is missing or restricted
-      const fallbackPath = `avatars/${objectPath}`;
+      const fallbackPath = isCover ? `covers/${objectPath}` : `avatars/${objectPath}`;
       const { error: fallbackError } = await supabase.storage.from("social-media").upload(fallbackPath, file, {
         contentType: file.type || "image/jpeg",
         upsert: true,
       });
 
       if (!fallbackError) {
-        avatarUrl = supabase.storage.from("social-media").getPublicUrl(fallbackPath).data.publicUrl;
+        imageUrl = supabase.storage.from("social-media").getPublicUrl(fallbackPath).data.publicUrl;
       } else {
-        // 3. Resilient fallback: convert to base64 Data URL so profile photo NEVER fails to save
+        // 3. Resilient fallback: convert to base64 Data URL so photo NEVER fails to save
         const arrayBuffer = await file.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString("base64");
         const mime = file.type || "image/jpeg";
-        avatarUrl = `data:${mime};base64,${base64}`;
+        imageUrl = `data:${mime};base64,${base64}`;
       }
     }
 
-    if (!avatarUrl) {
-      return NextResponse.json({ error: "Profil fotoğrafı yüklenemedi." }, { status: 400 });
+    if (!imageUrl) {
+      return NextResponse.json({ error: "Görsel yüklenemedi." }, { status: 400 });
     }
 
-    // Automatically update the user profile's avatar_url in the database
-    await supabase.from("users").update({ avatar_url: avatarUrl }).eq("id", profile.id);
+    // Automatically update user profile's avatar_url or cover_url in database
+    if (isCover) {
+      await supabase.from("users").update({ cover_url: imageUrl } as any).eq("id", profile.id);
+    } else {
+      await supabase.from("users").update({ avatar_url: imageUrl }).eq("id", profile.id);
+    }
 
     return NextResponse.json({
       data: {
-        avatarUrl,
+        avatarUrl: isCover ? undefined : imageUrl,
+        coverUrl: isCover ? imageUrl : undefined,
+        imageUrl,
         objectPath,
       },
     });

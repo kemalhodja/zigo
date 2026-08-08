@@ -41,10 +41,18 @@ export const updateUserProfileSchema = z
     fullName: z.string().trim().min(2).max(100).optional(),
     bio: z.string().trim().max(500).optional(),
     avatarUrl: z.string().trim().max(250000).optional().nullable(),
+    coverUrl: z.string().trim().max(250000).optional().nullable(),
   })
-  .refine((value) => value.fullName !== undefined || value.bio !== undefined || value.avatarUrl !== undefined, {
-    message: "Provide fullName, bio or avatarUrl to update.",
-  });
+  .refine(
+    (value) =>
+      value.fullName !== undefined ||
+      value.bio !== undefined ||
+      value.avatarUrl !== undefined ||
+      value.coverUrl !== undefined,
+    {
+      message: "Provide fullName, bio, avatarUrl or coverUrl to update.",
+    },
+  );
 
 export const submitStudentDocumentSchema = z.object({
   documentUrl: z.string().trim().url().max(500),
@@ -197,6 +205,16 @@ export async function updateUserProfile(
   });
 
   if (error) throw error;
+
+  if (parsed.coverUrl !== undefined) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("users").update({ cover_url: parsed.coverUrl } as any).eq("id", user.id);
+    }
+  }
+
   return data;
 }
 

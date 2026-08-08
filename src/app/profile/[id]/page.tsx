@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { FollowButton } from "@/components/follow-button";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
+import { ProfileCover } from "@/components/profile-cover";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { ProfileSocialLinks } from "@/components/profile-social-links";
 import { ProfileSocialStats } from "@/components/profile-social-stats";
@@ -83,16 +84,11 @@ export default async function PublicProfilePage({ params, searchParams }: Public
 
       {/* Cover banner + avatar overlap */}
       <section className="-mx-4 bg-white">
-        {/* Cover gradient banner */}
-        <div className="relative h-28 overflow-hidden bg-gradient-to-br from-crystal via-fuchsia-500 to-rose-400">
-          {/* decorative light effect */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.25),transparent_60%)]" />
-          {profile.is_verified ? (
-            <span className="absolute right-3 top-3 rounded-full bg-white/20 px-2.5 py-1 text-[0.6rem] font-black text-white backdrop-blur">
-              ✓ Doğrulanmış Öğretmen
-            </span>
-          ) : null}
-        </div>
+        <ProfileCover
+          initialCoverUrl={(profile as any).cover_url}
+          isEditable={isOwnProfile}
+          isVerified={profile.is_verified}
+        />
 
         {/* Avatar overlapping cover */}
         <div className="px-4 pb-4">

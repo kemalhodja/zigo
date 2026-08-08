@@ -57,6 +57,7 @@ export async function PATCH(request: Request) {
       fullName: body.fullName,
       bio: body.bio,
       avatarUrl: body.avatarUrl,
+      coverUrl: body.coverUrl,
     });
 
     return NextResponse.json({ data: profile });
