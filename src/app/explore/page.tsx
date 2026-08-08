@@ -28,8 +28,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const e = m.explore;
 
   const params = await searchParams;
-  const rawQuery = params.q ?? "";
-  const query = rawQuery === "teachers" ? "" : rawQuery;
+  const rawQuery = (params.q ?? "").trim();
+  const query = rawQuery.toLowerCase() === "teachers" || rawQuery.toLowerCase() === "teacher" ? "" : rawQuery;
   const activeFormat = getExploreFormat(params.format);
   const { posts, suggestedRail, creators } = await getExploreResults(query, activeFormat);
   const filteredPosts = filterExploreTiles(posts, activeFormat);
@@ -273,7 +273,9 @@ function getExploreFormat(value?: string): ExploreFormat {
 function getExploreHref({ format, query }: { format: ExploreFormat; query: string }) {
   const search = new URLSearchParams();
   const trimmed = query.trim();
-  if (trimmed && trimmed !== "teachers") search.set("q", trimmed);
+  if (trimmed && trimmed.toLowerCase() !== "teachers" && trimmed.toLowerCase() !== "teacher") {
+    search.set("q", trimmed);
+  }
   if (format !== "all") search.set("format", format);
   const suffix = search.toString();
   return suffix ? `/explore?${suffix}` : "/explore";

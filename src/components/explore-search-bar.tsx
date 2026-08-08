@@ -8,21 +8,27 @@ type ExploreSearchBarProps = {
   placeholder?: string;
 };
 
+function sanitizeQuery(val?: string | null): string {
+  if (!val) return "";
+  const trimmed = val.trim();
+  if (trimmed.toLowerCase() === "teachers" || trimmed.toLowerCase() === "teacher") {
+    return "";
+  }
+  return trimmed;
+}
+
 export function ExploreSearchBar({
   initialQuery = "",
   placeholder = "Ders, öğretmen veya konu ara…",
 }: ExploreSearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [query, setQuery] = useState(initialQuery === "teachers" ? "" : initialQuery);
+  const [query, setQuery] = useState(() => sanitizeQuery(initialQuery));
 
   useEffect(() => {
-    if (initialQuery === "teachers") {
-      setQuery("");
-    } else {
-      setQuery(initialQuery);
-    }
-  }, [initialQuery]);
+    const qParam = searchParams.get("q");
+    setQuery(sanitizeQuery(qParam ?? initialQuery));
+  }, [searchParams, initialQuery]);
 
   function handleClear() {
     setQuery("");
@@ -35,9 +41,9 @@ export function ExploreSearchBar({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams(searchParams.toString());
-    const trimmed = query.trim();
-    if (trimmed && trimmed !== "teachers") {
-      params.set("q", trimmed);
+    const clean = sanitizeQuery(query);
+    if (clean) {
+      params.set("q", clean);
     } else {
       params.delete("q");
     }
@@ -63,8 +69,13 @@ export function ExploreSearchBar({
         className="block w-full rounded-lg bg-slate-100 pl-9 pr-9 py-2.5 text-sm font-bold text-night outline-none ring-1 ring-transparent transition focus:bg-white focus:ring-slate-200"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => {
-          if (query === "teachers") setQuery("");
+        onFocus={(e) => {
+          const clean = sanitizeQuery(e.target.value);
+          if (clean !== e.target.value) {
+            setQuery(clean);
+          } else if (clean) {
+            e.target.select();
+          }
         }}
         placeholder={placeholder}
       />
