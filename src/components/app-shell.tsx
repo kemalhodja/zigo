@@ -144,7 +144,7 @@ export function AppShell({
         </a>
       ) : null}
 
-      <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3"}`} id="main-content">
+      <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-24 md:pb-6"}`} id="main-content">
         {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
           <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
         ) : null}
