@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { isTeacherGeneralInterestSelection } from "@/lib/domain/general-interest-areas";
+import { isGeneralInterestArea, isTeacherGeneralInterestSelection } from "@/lib/domain/general-interest-areas";
 import { assertAreaIdsAllowedUnderLaunchFreeze } from "@/lib/domain/launch-scope";
 import { getCurrentProfile, getEducationAreas, setUserInterests } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
@@ -20,8 +20,17 @@ export async function PUT(request: Request) {
     const areas = await getEducationAreas(supabase);
 
     if (profile.role === "teacher") {
-      return NextResponse.json({ error: "Teachers cannot assign their own areas." }, { status: 403 });
+      const selectedAreaObjects = areas.filter((a) => areaIds.includes(a.id));
+      const hasAcademicArea = selectedAreaObjects.some((a) => !isGeneralInterestArea(a));
+      if (hasAcademicArea) {
+        return NextResponse.json(
+          { error: "Teachers cannot assign academic teaching areas directly. Only general interest areas allowed." },
+          { status: 403 },
+        );
+      }
     }
+
+
 
     assertAreaIdsAllowedUnderLaunchFreeze(
       areas,
