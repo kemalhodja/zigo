@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getLearningProgressStats } from "@/lib/domain/learning/progress";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -57,10 +58,33 @@ const ADVICE_CATALOG: Record<string, string[]> = {
   ],
 };
 
+function buildRealUserDataAnalysis(userName: string, stats: { reelWatches: number; quizCompletions: number; duelWins: number; focusSessions: number; pointsFromEvents: number }): string {
+  const { reelWatches, quizCompletions, duelWins, focusSessions, pointsFromEvents } = stats;
+
+  if (quizCompletions > 0 && reelWatches === 0) {
+    return `📊 ${userName ? userName + ", " : ""}Öğrenme Analizin: Toplam ${quizCompletions} quiz tamamladın (${pointsFromEvents} puan). Test pratikliğin harika! Ancak henüz mikro ders izlememişsin; eksik konu analizleri için 'Dersler' sekmesindeki videolara göz atmanı öneririm.`;
+  }
+
+  if (reelWatches > 0 && quizCompletions === 0) {
+    return `💡 ${userName ? userName + ", " : ""}Öğrenme Analizin: Şu ana kadar ${reelWatches} mikro ders izledin! Konu kavramın çok iyi. Ancak izlediğin bilgiyi kalıcı hafızaya almak için hemen 'Öğren' sekmesinden 1 mini quiz çözmelisin.`;
+  }
+
+  if (quizCompletions > 0 && reelWatches > 0) {
+    return `🔥 ${userName ? userName + ", " : ""}Üst Düzey Performans: Harika denge! ${reelWatches} kısa ders izledin ve ${quizCompletions} quiz tamamladın (${pointsFromEvents} puan kazandın). ${focusSessions > 0 ? `${focusSessions} Pomodoro seansı ile odağını koruyorsun.` : "Şimdi 25 dakikalık bir Pomodoro ile hızını artır!"}`;
+  }
+
+  if (duelWins > 0) {
+    return `⚔️ ${userName ? userName + ", " : ""}Düello Analizin: ${duelWins} yarış kazandın! Hızlı düşünme kabiliyetin yüksek. Bu ivmeyle günlük quizlerin tamamını çözmeyi hedefle!`;
+  }
+
+  return `🚀 ${userName ? userName + ", " : ""}Öğrenme Rrotan: Henüz kayıtlı ders ve quiz verin az. İlk adımı atmak için bugün 1 mikro ders izle ve ardından 1 mini quiz çözerek kişisel AI analizini başlat!`;
+}
+
 export async function GET() {
   try {
     let userName = "";
     let streakDays = 0;
+    let realAnalysis = "";
 
     try {
       const supabase = await createClient();
@@ -68,9 +92,19 @@ export async function GET() {
       if (profile) {
         userName = profile.full_name?.split(" ")[0] || "";
         streakDays = (profile as unknown as { streak_days?: number }).streak_days || 0;
+
+        // Fetch real database learning stats (quizzes, reel watches, duels, focus)
+        const stats = await getLearningProgressStats(supabase, profile.id).catch(() => null);
+        if (stats && (stats.reelWatches > 0 || stats.quizCompletions > 0 || stats.duelWins > 0)) {
+          realAnalysis = buildRealUserDataAnalysis(userName, stats);
+        }
       }
     } catch {
       // Guest fallback
+    }
+
+    if (realAnalysis) {
+      return NextResponse.json({ advice: realAnalysis, isPersonalized: true });
     }
 
     const currentHour = new Date().getHours();
@@ -91,7 +125,7 @@ export async function GET() {
       selectedAdvice = `👋 ${userName}, ${selectedAdvice.toLowerCase()}`;
     }
 
-    return NextResponse.json({ advice: selectedAdvice, timeCategory });
+    return NextResponse.json({ advice: selectedAdvice, timeCategory, isPersonalized: false });
   } catch (error) {
     console.error("AI Mentor GET error:", error);
     return NextResponse.json({
@@ -105,10 +139,36 @@ export async function POST(request: Request) {
     const body = (await request.json().catch(() => ({}))) as { topic?: string };
     const topic = body.topic?.trim() || "general";
 
+    let userName = "";
+    let stats: { reelWatches: number; quizCompletions: number; duelWins: number; focusSessions: number; pointsFromEvents: number } | null = null;
+
+    try {
+      const supabase = await createClient();
+      const profile = await getCurrentProfile(supabase);
+      if (profile) {
+        userName = profile.full_name?.split(" ")[0] || "";
+        stats = await getLearningProgressStats(supabase, profile.id).catch(() => null);
+      }
+    } catch {
+      // fallback
+    }
+
+    if (topic === "analytics" || topic === "solutions") {
+      if (stats) {
+        const analysis = buildRealUserDataAnalysis(userName, stats);
+        return NextResponse.json({ advice: analysis, isPersonalized: true });
+      } else {
+        return NextResponse.json({
+          advice: `💡 ${userName ? userName + ", " : ""}Henüz yeterli quiz ve ders verisi bulunamadı. Bugün 1 mikro ders izleyip 1 quiz tamamladığında detaylı AI performans analizin burada belirecek!`,
+          isPersonalized: false,
+        });
+      }
+    }
+
     const pool = ADVICE_CATALOG[topic] || ADVICE_CATALOG.general;
     const advice = pool[Math.floor(Math.random() * pool.length)];
 
-    return NextResponse.json({ advice });
+    return NextResponse.json({ advice, isPersonalized: false });
   } catch (error) {
     console.error("AI Mentor POST error:", error);
     return NextResponse.json({
@@ -116,4 +176,5 @@ export async function POST(request: Request) {
     });
   }
 }
+
 
