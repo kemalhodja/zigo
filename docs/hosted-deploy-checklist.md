@@ -41,7 +41,7 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY` or Stripe secrets to the browser.
 
 ## 3. Supabase database
 
-Run `supabase/zigo-full-migrations.sql` (migrations **001–044**) in the Supabase SQL editor before first deploy.
+Run `supabase/zigo-full-migrations.sql` (migrations **001–089**) in the Supabase SQL editor before first deploy.
 Confirm `account_deletion_requests`, `export_user_data()`, and `parent_update_store_redemption_status()` exist after apply.
 
 ## 4. Supabase Auth redirect URLs

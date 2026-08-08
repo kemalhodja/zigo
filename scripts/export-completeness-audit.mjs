@@ -28,6 +28,15 @@ for (const key of exportKeys) {
   }
 }
 
+// Extended payload keys from post-044 migrations (063 lesson_requests, 069 billing)
+const extendedExportKeys = ["lesson_requests", "subscriptions"];
+for (const key of extendedExportKeys) {
+  const presentInRoute = exportRoute.includes(key) || compliance.includes(key) || types.includes(key);
+  if (!presentInRoute) {
+    failures.push(`export payload missing extended key: ${key} (KVKK scope — add to export_user_data RPC or route handler)`);
+  }
+}
+
 const requiredMigration = [
   "export_user_data",
   "request_account_deletion",

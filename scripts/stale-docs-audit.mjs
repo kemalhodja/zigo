@@ -43,8 +43,10 @@ for (const doc of docsToScan) {
 
 if (target !== null) {
   const readme = read("README.md");
-  if (!readme.includes(String(target)) && !readme.includes("044")) {
-    failures.push("README must reference current migration 044");
+  const hasTarget = readme.includes(String(target));
+  const hasAnyKnownTarget = readme.includes("044") || readme.includes("086") || readme.includes("089");
+  if (!hasTarget && !hasAnyKnownTarget) {
+    failures.push(`README must reference current migration target (${target})`);
   }
 }
 

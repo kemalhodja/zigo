@@ -1,6 +1,6 @@
 # RLS policy inventory
 
-Row Level Security matrix for Zigo core tables (migrations **001–044**).  
+Row Level Security matrix for Zigo core tables (migrations **001–089**).  
 Live negative probes: `npm run test:live:matrix`, `npm run test:e2e`, `npm run test:rls`.
 
 ## Legend
@@ -83,6 +83,16 @@ Live negative probes: `npm run test:live:matrix`, `npm run test:e2e`, `npm run t
 | `social-media` | authenticated read | authenticated upload, owner path |
 
 Production should review public vs signed URL strategy (`docs/video-delivery.md`).
+
+### Storage extensions (087)
+
+| Bucket | Change |
+| --- | --- |
+| `social-media` | Max URL size increased; legacy short URLs preserved |
+
+### Explore / Discover posts (089)
+
+`list_explore_social_posts` — security-definer RPC. Returns public posts for the explore feed. No caller-level RLS bypass; function checks `is_published = true` and `is_approved = true` internally.
 
 ## Service role usage
 

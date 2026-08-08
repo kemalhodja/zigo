@@ -3,7 +3,7 @@ import { isPushConfigured } from "@/lib/domain/push-notifications";
 import { isAdaptiveStreamingEnabled } from "@/lib/domain/video-delivery";
 
 export const APP_VERSION = "1.0.0";
-export const MIGRATION_TARGET = 86;
+export const MIGRATION_TARGET = 89;
 
 export async function GET() {
   try {

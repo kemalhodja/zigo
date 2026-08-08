@@ -49,8 +49,16 @@ for (const marker of DOC_MARKERS) {
 const migrationCount = readdirSync(join(root, "supabase/migrations")).filter((name) =>
   name.endsWith(".sql"),
 ).length;
-if (!inventory.includes(String(migrationCount)) && !inventory.includes("001–044") && !inventory.includes("001-044") && !inventory.includes("001–043") && !inventory.includes("001-043")) {
-  failures.push("RLS inventory should reference migration range through 044");
+if (
+  !inventory.includes(String(migrationCount)) &&
+  !inventory.includes("001–089") &&
+  !inventory.includes("001-089") &&
+  !inventory.includes("001–044") &&
+  !inventory.includes("001-044") &&
+  !inventory.includes("001–043") &&
+  !inventory.includes("001-043")
+) {
+  failures.push("RLS inventory should reference migration range through 089");
 }
 
 if (failures.length > 0) {

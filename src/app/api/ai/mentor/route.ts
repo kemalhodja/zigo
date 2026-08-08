@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getLearningProgressStats } from "@/lib/domain/learning/progress";
+import { getLearningProgressStats } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 

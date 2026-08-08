@@ -71,10 +71,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               href={getExploreHref({ format, query })}
               key={format}
             >
-              {format === "all" ? e.allLabel ?? "Hepsi"
-                : format === "micro" ? e.microLabel ?? "Micro"
-                : format === "lessons" ? e.lessonsLabel ?? "Dersler"
-                : e.teachersLabel ?? "Öğretmenler"}
+              {format === "all" ? e.allLabel
+                : format === "micro" ? e.microLabel
+                : format === "lessons" ? e.lessonsLabel
+                : e.teachersLabel}
             </Link>
           ))}
         </div>
@@ -83,7 +83,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       {/* Suggested creators rail */}
       {suggestedRail.length > 0 && !query.trim() ? (
         <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
-          <p className="mb-2 text-xs font-black uppercase tracking-[0.15em] text-slate-400">{e.suggestedCreators ?? "Önerilen Yaratıcılar"}</p>
+          <p className="mb-2 text-xs font-black uppercase tracking-[0.15em] text-slate-400">{e.suggestedCreators}</p>
           <div className="no-scrollbar flex gap-3 overflow-x-auto">
             {suggestedRail.map((creator) => (
               <Link
@@ -114,9 +114,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </span>
-              <h3 className="text-xs font-black uppercase tracking-[0.12em] text-night">Trend Öğrenme Konuları</h3>
+              <h3 className="text-xs font-black uppercase tracking-[0.12em] text-night">{e.trendTopicsHeading}</h3>
             </div>
-            <span className="rounded-full bg-crystal/10 px-2.5 py-0.5 text-[0.62rem] font-black text-crystal">Canlı Akış</span>
+            <span className="rounded-full bg-crystal/10 px-2.5 py-0.5 text-[0.62rem] font-black text-crystal">{e.liveStream}</span>
           </div>
           <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-0.5">
             {trendTopics.map((topic) => (
@@ -151,8 +151,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-black text-night">{creator.full_name}</p>
                 <p className="text-xs font-bold text-slate-500">
-                  {creator.role === "teacher" ? "Öğretmen" : creator.role}
-                  {creator.is_verified ? " · ✓ Doğrulanmış" : ""}
+                  {creator.role === "teacher" ? e.teachers : creator.role}
+                  {creator.is_verified ? e.teacherVerifiedBadge : ""}
                 </p>
               </div>
               <svg aria-hidden="true" className="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -384,11 +384,14 @@ type TrendTopicItem = {
 };
 
 async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTopicItem[]> {
+  const m = await getServerMessages();
+  const e = m.explore;
+
   const baseTopics = [
-    { tag: "Matematik", label: "Kesirler & Problemler", query: "matematik" },
-    { tag: "FenBilimleri", label: "Deneyler & Hücre", query: "fen" },
-    { tag: "Kodlama", label: "Python & Döngüler", query: "kodlama" },
-    { tag: "İngilizce", label: "Daily Speaking", query: "ingilizce" },
+    { tag: "Matematik", label: e.trendTopicMath, query: "matematik" },
+    { tag: "FenBilimleri", label: e.trendTopicScience, query: "fen" },
+    { tag: "Kodlama", label: e.trendTopicCoding, query: "kodlama" },
+    { tag: "İngilizce", label: e.trendTopicEnglish, query: "ingilizce" },
   ];
 
   if (!hasSupabaseEnv()) {
@@ -396,7 +399,9 @@ async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTo
       tag: t.tag,
       label: t.label,
       href: `/explore?q=${encodeURIComponent(t.tag)}`,
-      count: totalPostsCount > 0 ? `${totalPostsCount} içerik` : "Popüler konu",
+      count: totalPostsCount > 0
+        ? e.trendTopicContent.replace("{count}", String(totalPostsCount))
+        : e.trendTopicPopular,
     }));
   }
 
@@ -412,11 +417,15 @@ async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTo
 
       let countText = "";
       if (matched.length > 0) {
-        countText = videoCount > 0 ? `${matched.length} gönderi (${videoCount} ders)` : `${matched.length} gönderi`;
+        countText = videoCount > 0
+          ? e.trendTopicPostsWithLesson
+              .replace("{count}", String(matched.length))
+              .replace("{lesson}", String(videoCount))
+          : e.trendTopicPosts.replace("{count}", String(matched.length));
       } else if (allPosts.length > 0) {
-        countText = `${allPosts.length} içerik`;
+        countText = e.trendTopicContent.replace("{count}", String(allPosts.length));
       } else {
-        countText = "Aktif ders konu";
+        countText = e.trendTopicActive;
       }
 
       return {
@@ -431,7 +440,7 @@ async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTo
       tag: t.tag,
       label: t.label,
       href: `/explore?q=${encodeURIComponent(t.tag)}`,
-      count: `${totalPostsCount} içerik`,
+      count: e.trendTopicContent.replace("{count}", String(totalPostsCount)),
     }));
   }
 }

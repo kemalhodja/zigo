@@ -47,6 +47,18 @@ test.describe("manual QA — automatable surfaces", () => {
     expect(manifest.name ?? manifest.short_name).toBeTruthy();
     expect(Array.isArray(manifest.icons) ? manifest.icons.length : 0).toBeGreaterThan(0);
   });
+
+  test("explore page search and format tabs work", async ({ page }) => {
+    await demoLogin(page, "student");
+    await page.goto("/explore");
+    await expect(page.locator("input[type='search'], input[placeholder*='ara'], input[placeholder*='Search']").first()).toBeVisible();
+
+    // Verify format tabs links exist
+    const formatLinks = page.locator("a[href*='format=']");
+    const count = await formatLinks.count();
+    // Micro/lessons/teachers tabs should have format= query param
+    expect(count).toBeGreaterThanOrEqual(2);
+  });
 });
 
 test.describe("manual QA — legal footer (authenticated)", () => {

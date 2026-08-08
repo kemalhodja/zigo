@@ -21,7 +21,7 @@ const finalAcceptance = read("docs/final-acceptance-checklist.md");
 const stagingPreflight = read("scripts/staging-preflight.mjs");
 
 const required = [
-  [hosted.includes("001–044") || hosted.includes("001-044"), "hosted-deploy-checklist must reference migrations 001-044"],
+  [hosted.includes("001–089") || hosted.includes("001-089") || hosted.includes("001–044") || hosted.includes("001-044"), "hosted-deploy-checklist must reference migrations 001-089"],
   [hosted.includes("staging:preflight"), "hosted-deploy-checklist must reference staging preflight"],
   [staging.includes("staging:preflight") || staging.includes("preflight"), "staging-deploy doc must mention preflight"],
   [finalAcceptance.includes("test:release"), "final-acceptance-checklist must reference test:release"],

@@ -14,7 +14,6 @@
     "live-test-utils.mjs",
     "ensure-app-server.mjs",
     "enable-supabase-recovery-email.mjs",
-    "lesson-request-safety-audit.mjs",
     "set-bank-env-production.mjs",
     "test-forgot-password-production.mjs",
     "apply-069-migration.mjs",

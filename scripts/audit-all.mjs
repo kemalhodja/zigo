@@ -55,6 +55,8 @@ const audits = [
   "final-launch-check.mjs",
   "stale-docs-audit.mjs",
   "roadmap-consolidation-check.mjs",
+  "lesson-request-safety-audit.mjs",
+  "i18n-audit.mjs",
 ];
 
 const failed = [];

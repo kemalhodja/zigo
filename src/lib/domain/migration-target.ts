@@ -1,5 +1,5 @@
 /** Highest numbered migration prefix currently shipped (gaps 057–062 intentionally absent). */
-export const MIGRATION_TARGET = 86;
+export const MIGRATION_TARGET = 89;
 
 /** Ordered migration files present under supabase/migrations (must stay in sync with disk). */
 export const MIGRATION_FILES = [
@@ -83,6 +83,9 @@ export const MIGRATION_FILES = [
   "084_post_co_author.sql",
   "085_study_rooms.sql",
   "086_ai_mentor.sql",
+  "087_social_media_storage_and_url_size.sql",
+  "088_post_location.sql",
+  "089_explore_discover_posts.sql",
 ] as const;
 
 export const LATEST_MIGRATION_FILE = MIGRATION_FILES[MIGRATION_FILES.length - 1];

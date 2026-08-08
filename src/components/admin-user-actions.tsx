@@ -36,11 +36,11 @@ export function AdminUserActions({ userId, userName, isVerified, accountStatus }
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        setMessage(payload?.error ?? "Doğrulama başarısız.");
+        setMessage(payload?.error ?? a.teacherUpdateFailed);
         return;
       }
 
-      setMessage(isVerified ? "İptal Edildi" : "Onaylandı");
+      setMessage(isVerified ? a.verificationCancelled : a.verificationApproved);
       router.refresh();
     } catch {
       setMessage(c.connectionFailed);
@@ -63,11 +63,11 @@ export function AdminUserActions({ userId, userName, isVerified, accountStatus }
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        setMessage(payload?.error ?? "Durum güncellenemedi.");
+        setMessage(payload?.error ?? a.statusUpdateFailed);
         return;
       }
 
-      setMessage("Durum Güncellendi");
+      setMessage(a.statusUpdated);
       router.refresh();
     } catch {
       setMessage(c.connectionFailed);
@@ -76,7 +76,7 @@ export function AdminUserActions({ userId, userName, isVerified, accountStatus }
     }
   }
 
-  const btnText = isLoading ? a.updating : isVerified ? "İptal Et" : a.verify;
+  const btnText = isLoading ? a.updating : isVerified ? a.revokeVerificationShort : a.verify;
   const ariaLabel = isVerified ? a.revokeVerification : a.verifyTeacher;
 
   return (
@@ -100,10 +100,10 @@ export function AdminUserActions({ userId, userName, isVerified, accountStatus }
           disabled={isLoading}
           className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 focus:border-crystal focus:outline-none focus:ring-1 focus:ring-crystal"
         >
-          <option value="active">🟢 Aktif</option>
-          <option value="limited">🟡 Sınırlandırıldı</option>
-          <option value="suspended">🟠 Askıya Alındı</option>
-          <option value="closed">🔴 Kapatıldı</option>
+          <option value="active">🟢 {a.statusActive}</option>
+          <option value="limited">🟡 {a.statusLimited}</option>
+          <option value="suspended">🟠 {a.statusSuspended}</option>
+          <option value="closed">🔴 {a.statusClosed}</option>
         </select>
 
         <button
@@ -112,7 +112,7 @@ export function AdminUserActions({ userId, userName, isVerified, accountStatus }
           type="button"
           className="w-full rounded-lg border border-crystal/30 bg-violet-50 px-3 py-1.5 text-xs font-black text-crystal transition hover:bg-violet-100 disabled:opacity-60"
         >
-          ✉️ Mesaj At
+          ✉️ {a.sendMessage}
         </button>
       </div>
 
