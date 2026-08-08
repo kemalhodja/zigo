@@ -46,6 +46,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     }
   }
 
+  const trendTopics = await fetchDynamicTrendTopics(tilesToRender.length);
+
   return (
     <div className="space-y-0 pb-3">
       {/* Search bar */}
@@ -117,12 +119,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             <span className="rounded-full bg-crystal/10 px-2.5 py-0.5 text-[0.62rem] font-black text-crystal">Canlı Akış</span>
           </div>
           <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-0.5">
-            {[
-              { tag: "Matematik", label: "Kesirler & Problemler", href: "/explore?q=Matematik", count: "1.2k ders" },
-              { tag: "FenBilimleri", label: "Deneyler & Hücre", href: "/explore?q=Fen", count: "850 micro" },
-              { tag: "Kodlama", label: "Python & Döngüler", href: "/explore?q=Kodlama", count: "620 pratik" },
-              { tag: "İngilizce", label: "Daily Speaking", href: "/explore?q=İngilizce", count: "940 konuşma" },
-            ].map((topic) => (
+            {trendTopics.map((topic) => (
               <Link
                 className="tap-scale group shrink-0 rounded-xl border border-white/80 bg-white/90 p-2.5 shadow-sm backdrop-blur transition hover:border-crystal/40 hover:shadow-md"
                 href={topic.href}
@@ -130,7 +127,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               >
                 <p className="text-[0.68rem] font-black text-crystal group-hover:underline">#{topic.tag}</p>
                 <p className="mt-0.5 text-xs font-bold text-night">{topic.label}</p>
-                <p className="mt-1 text-[0.6rem] font-semibold text-slate-400">{topic.count}</p>
+                <p className="mt-1 text-[0.6rem] font-bold text-slate-600">{topic.count}</p>
               </Link>
             ))}
           </div>
@@ -379,6 +376,67 @@ function getExploreHref({ format, query }: { format: ExploreFormat; query: strin
   return suffix ? `/explore?${suffix}` : "/explore";
 }
 
+type TrendTopicItem = {
+  tag: string;
+  label: string;
+  href: string;
+  count: string;
+};
+
+async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTopicItem[]> {
+  const baseTopics = [
+    { tag: "Matematik", label: "Kesirler & Problemler", query: "matematik" },
+    { tag: "FenBilimleri", label: "Deneyler & Hücre", query: "fen" },
+    { tag: "Kodlama", label: "Python & Döngüler", query: "kodlama" },
+    { tag: "İngilizce", label: "Daily Speaking", query: "ingilizce" },
+  ];
+
+  if (!hasSupabaseEnv()) {
+    return baseTopics.map((t) => ({
+      tag: t.tag,
+      label: t.label,
+      href: `/explore?q=${encodeURIComponent(t.tag)}`,
+      count: totalPostsCount > 0 ? `${totalPostsCount} içerik` : "Popüler konu",
+    }));
+  }
+
+  try {
+    const supabase = await createClient();
+    const { data: posts } = await supabase.from("social_posts").select("id, caption, media_type");
+    const allPosts = posts ?? [];
+
+    return baseTopics.map((t) => {
+      const q = t.query.toLowerCase();
+      const matched = allPosts.filter((p) => (p.caption ?? "").toLowerCase().includes(q));
+      const videoCount = matched.filter((p) => p.media_type === "video").length;
+
+      let countText = "";
+      if (matched.length > 0) {
+        countText = videoCount > 0 ? `${matched.length} gönderi (${videoCount} ders)` : `${matched.length} gönderi`;
+      } else if (allPosts.length > 0) {
+        countText = `${allPosts.length} içerik`;
+      } else {
+        countText = "Aktif ders konu";
+      }
+
+      return {
+        tag: t.tag,
+        label: t.label,
+        href: `/explore?q=${encodeURIComponent(t.tag)}`,
+        count: countText,
+      };
+    });
+  } catch {
+    return baseTopics.map((t) => ({
+      tag: t.tag,
+      label: t.label,
+      href: `/explore?q=${encodeURIComponent(t.tag)}`,
+      count: `${totalPostsCount} içerik`,
+    }));
+  }
+}
+
 // Invariants: suggestedCreatorRail formatFilters ExploreTrendRadar smartDiscovery radarCards topicBridges jumpLoop zigo-cta zigo-quick-action-primary text-white
+
 
 
