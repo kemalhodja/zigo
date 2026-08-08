@@ -317,8 +317,10 @@ export async function getFollowingFeed(
 
   if (followsError) throw followsError;
 
-  const followingIds = follows.map((follow) => follow.following_id);
-  if (followingIds.length === 0) return [];
+  const followingIds = (follows ?? []).map((follow) => follow.following_id);
+  const authorIds = [...new Set([...followingIds, viewerId])];
+
+  if (authorIds.length === 0) return [];
 
   const { data, error } = await supabase
     .from("social_posts")
@@ -333,14 +335,18 @@ export async function getFollowingFeed(
         organization_type,
         avatar_url
       ),
+      co_author:co_author_id (
+        id,
+        full_name
+      ),
       area:area_id (
         area_name
       )
     `,
     )
-    .in("author_id", followingIds)
+    .in("author_id", authorIds)
     .order("created_at", { ascending: false })
-    .limit(30);
+    .limit(50);
 
   if (error) throw error;
   const canOpenSponsored = Boolean(viewerId);

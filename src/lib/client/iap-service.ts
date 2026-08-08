@@ -3,6 +3,7 @@
  */
 
 export const IAP_PRODUCT_IDS = {
+  ZIGO_PLUS: "zigo_plus",
   STUDENT_MONTHLY: "zigo_student_plus_monthly",
   STUDENT_YEARLY: "zigo_student_plus_yearly",
   PARENT_MONTHLY: "zigo_parent_plus_monthly",
@@ -18,6 +19,48 @@ export type MobilePurchasePayload = {
   orderId?: string;
   packageName?: string;
 };
+
+/**
+ * Sends validated Google Play purchase token to Zigo backend
+ */
+export async function verifyGooglePlayPurchase(payload: {
+  planId?: string;
+  productId?: string;
+  purchaseToken: string;
+  orderId?: string;
+  packageName?: string;
+}) {
+  try {
+    const response = await fetch("/api/billing/google-play", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        planId: payload.planId ?? "student-monthly",
+        productId: payload.productId ?? IAP_PRODUCT_IDS.ZIGO_PLUS,
+        purchaseToken: payload.purchaseToken,
+        orderId: payload.orderId ?? null,
+        packageName: payload.packageName ?? "com.zigo.app",
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || "Google Play satın alma doğrulaması başarısız.");
+    }
+
+    return {
+      success: true,
+      data: data.data,
+      message: "Tebrikler! Google Play aboneliğiniz ve 30 günlük denemeniz başarıyla aktifleştirildi.",
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Bağlantı hatası",
+    };
+  }
+}
 
 /**
  * Sends validated In-App Purchase token from React Native / Expo to Zigo backend

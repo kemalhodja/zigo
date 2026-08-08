@@ -19,6 +19,7 @@ export async function createTeacherQuiz(
         questionText: await assertSafeStudentTextAsync(question.questionText),
         options: await Promise.all(question.options.map((option) => assertSafeStudentTextAsync(option))),
         correctOption: question.correctOption,
+        imageUrl: question.imageUrl ?? null,
       })),
     ),
   ]);
@@ -42,13 +43,14 @@ export async function createTeacherQuiz(
 
   if (error) throw error;
 
-  const { error: questionsError } = await supabase.from("quiz_questions").insert(
+  const { error: questionsError } = await (supabase.from("quiz_questions") as any).insert(
     moderatedQuestions.map((question, index) => ({
       quiz_id: data.id,
       question_text: question.questionText,
       options: question.options,
       correct_option: question.correctOption,
       sort_order: index,
+      image_url: question.imageUrl ?? null,
     })),
   );
 

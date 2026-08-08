@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { BottomNav } from "@/components/bottom-nav";
@@ -74,6 +74,42 @@ export function AppShell({
       window.removeEventListener("zigo:notifications-read", handleUnreadUpdate);
     };
   }, []);
+
+  // Capacitor / Mobile hardware back button listener
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let cleanup: (() => void) | undefined;
+    const setupHardwareBack = async () => {
+      try {
+        const isCapacitor = Boolean((window as any).Capacitor);
+        if (!isCapacitor) return;
+
+        const appPkg = "@capacitor/app";
+        const appModule = await import(/* webpackIgnore: true */ appPkg).catch(() => null);
+        if (!appModule?.App) return;
+
+        const handle = await appModule.App.addListener("backButton", () => {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            void appModule.App.exitApp();
+          }
+        });
+        cleanup = () => {
+          void handle.remove();
+        };
+      } catch {
+        // Native back listener unavailable in desktop browser
+      }
+    };
+
+    void setupHardwareBack();
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, []);
+
   const isStories = pathname.startsWith("/sparks");
   const isReels = pathname.startsWith("/micro");
   const isImmersive = isStories || isReels;
@@ -250,12 +286,36 @@ function Header({
 }) {
   const m = useMessages();
   const h = m.header;
+  const pathname = usePathname();
+  const router = useRouter();
   const primaryAction = getHeaderPrimaryAction(viewerRole, canCreateSocialPost, { isPlatformAdmin });
+  const isHomePage = pathname === "/";
 
   return (
     <header className="safe-top zigo-topbar sticky top-0 z-10 px-4 py-2">
       <div className="flex items-center justify-between gap-3">
-        <LogoLink roleAccentLabel={roleAccentLabel} viewerRole={viewerRole} />
+        <div className="flex items-center gap-2">
+          {!isHomePage ? (
+            <button
+              aria-label="Geri Dön"
+              className="tap-scale flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-night hover:bg-slate-200 transition"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push("/");
+                }
+              }}
+              title="Geri"
+              type="button"
+            >
+              <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+          ) : null}
+          <LogoLink roleAccentLabel={roleAccentLabel} viewerRole={viewerRole} />
+        </div>
 
         <div className="flex shrink-0 items-center gap-2">
           <Link

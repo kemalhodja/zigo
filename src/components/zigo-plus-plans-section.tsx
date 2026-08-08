@@ -247,7 +247,7 @@ function PlanPriceRow({
     try {
       const mockPurchaseToken = `gplay_token_${Math.random().toString(36).substring(2, 12)}`;
       const mockOrderId = `GPA.${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10000 + Math.random() * 90000)}`;
-      const mockProductId = `zigo.plus.${planId}`;
+      const mockProductId = "zigo_plus";
 
       const response = await fetch("/api/billing/google-play", {
         method: "POST",

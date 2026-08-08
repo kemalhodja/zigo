@@ -10,6 +10,7 @@ import {
   TEACHER_QUIZ_QUESTION_COUNT,
 } from "@/lib/domain/learning";
 import { useMessages } from "@/lib/i18n/locale-context";
+import { createClient } from "@/lib/supabase/client";
 
 type AreaOption = {
   id: number;
@@ -28,6 +29,7 @@ type QuizDraftQuestion = {
   questionText: string;
   options: string[];
   correctOption: number;
+  imageUrl?: string; // Optional image URL for the question
 };
 
 const OPTION_LABELS = ["A", "B", "C", "D"] as const;
@@ -149,6 +151,7 @@ export function TeacherQuizForm({
             questionText: question.questionText.trim(),
             options: question.options.map((option) => option.trim()),
             correctOption: question.correctOption,
+            imageUrl: question.imageUrl, // optional image URL
           })),
         }),
       });
@@ -349,7 +352,37 @@ export function TeacherQuizForm({
               placeholder={t.questionTextPlaceholder}
               value={activeQuestion.questionText}
             />
-
+            {/* Image upload for the question */}
+            <div className="mt-2">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  // Simple client‑side compression could be added here if needed
+                  const supabase = createClient();
+                  const ext = file.name.split('.').pop();
+                  const path = `question-${Date.now()}-${activeIndex}.${ext}`;
+                  const { error: uploadError } = await supabase.storage
+                    .from("quiz-images")
+                    .upload(path, file, { upsert: true });
+                  if (uploadError) {
+                    console.error('Image upload failed', uploadError);
+                    return;
+                  }
+                  const { data } = supabase.storage.from("quiz-images").getPublicUrl(path);
+                  const url = data?.publicUrl;
+                  if (url) {
+                    updateActiveQuestion({ imageUrl: url });
+                  }
+                }}
+                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
+              />
+              {activeQuestion.imageUrl && (
+                <img src={activeQuestion.imageUrl} alt="Question image" className="mt-2 max-h-48 object-contain" />
+              )}
+            </div>
             <div className="space-y-2">
               <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{t.quizOptionsHeading}</p>
               {activeQuestion.options.map((option, optionIndex) => (

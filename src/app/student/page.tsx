@@ -8,6 +8,7 @@ import { LearningProgressCard } from "@/components/learning-progress-card";
 import { RecentLearningCard } from "@/components/recent-learning-card";
 import { StateCard } from "@/components/state-card";
 import { StudentLeaderboardCard } from "@/components/student-leaderboard-card";
+import { SubscribeButton } from "@/components/SubscribeButton";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
@@ -94,6 +95,7 @@ export default async function StudentPage() {
       {!data.isSignedOut && !data.showPreview ? (
         <div className="space-y-3">
           <PomodoroTimer />
+          <SubscribeButton />
           <GradeLevelForm initialGradeLevel={data.gradeLevel} />
           <ClassGroupManager
             isSubscriber={data.isPremium}

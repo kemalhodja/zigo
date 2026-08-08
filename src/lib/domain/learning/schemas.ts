@@ -10,6 +10,7 @@ export const quizQuestionInputSchema = z.object({
     .array(z.string().trim().min(1).max(255))
     .length(TEACHER_QUIZ_OPTION_COUNT),
   correctOption: z.coerce.number().int().min(0).max(TEACHER_QUIZ_OPTION_COUNT - 1),
+  imageUrl: z.string().url().optional(), // optional image URL
 });
 
 export const createQuizSchema = z

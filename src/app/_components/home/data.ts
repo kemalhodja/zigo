@@ -150,6 +150,7 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
   type ActiveStory,
   getFollowingFeed,
+  getSocialFeed,
   getSuggestedCreators,
   isFollowing,
   type SocialFeedPost,
@@ -172,19 +173,34 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     const profile = await getCurrentProfile(supabase);
     if (!profile) return [];
 
-    const socialPosts = await getFollowingFeed(supabase, profile.id);
+    const [followingPosts, generalPage] = await Promise.all([
+      getFollowingFeed(supabase, profile.id).catch(() => []),
+      getSocialFeed(supabase, profile.id, { limit: 30 }).catch(() => ({ posts: [] })),
+    ]);
 
-    if (socialPosts.length === 0) return [];
+    const generalPosts = generalPage.posts ?? [];
+
+    // Prioritize posts by creators the user follows at the top
+    const existingIds = new Set(followingPosts.map((post) => post.id));
+    const combinedPosts = [...followingPosts];
+
+    for (const post of generalPosts) {
+      if (!existingIds.has(post.id)) {
+        combinedPosts.push(post);
+      }
+    }
+
+    if (combinedPosts.length === 0) return [];
 
     const followingByPost = await Promise.all(
-      socialPosts.map((post) =>
+      combinedPosts.map((post) =>
         profile && post.author?.id && post.author.id !== profile.id
           ? isFollowing(supabase, profile.id, post.author.id)
           : Promise.resolve(false),
       ),
     );
 
-    return socialPosts.map((post, index) =>
+    return combinedPosts.map((post, index) =>
       toDisplayPost(post, index, {
         canFollowCreator: Boolean(profile && post.author?.id && post.author.id !== profile.id),
         isFollowingCreator: followingByPost[index] ?? false,
