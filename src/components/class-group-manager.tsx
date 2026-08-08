@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { SearchableSchoolSelect } from "@/components/searchable-school-select";
 import { GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
+import { TURKEY_CITIES } from "@/lib/domain/turkey-locations";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type ClassGroupManagerProps = {
@@ -225,53 +227,66 @@ export function ClassGroupManager({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="city-input" className="block text-xs font-bold text-slate-600">
+              <label htmlFor="city-select" className="block text-xs font-bold text-slate-600">
                 İl (Şehir)
               </label>
-              <input
-                id="city-input"
-                type="text"
-                placeholder="Örn: İstanbul, Ankara, İzmir..."
+              <select
+                id="city-select"
                 value={city}
                 onChange={(e) => {
-                  setCity(e.target.value);
+                  const newCity = e.target.value;
+                  setCity(newCity);
+                  setDistrict("");
+                  setSchoolName("");
                   setStatus("idle");
                 }}
                 className="mt-1 w-full rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-bold text-night border border-slate-200 outline-none focus:border-crystal focus:bg-white focus:ring-2 focus:ring-crystal/20"
-              />
+              >
+                <option value="">İl Seçin (81 İl)</option>
+                {TURKEY_CITIES.map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <label htmlFor="district-input" className="block text-xs font-bold text-slate-600">
+              <label htmlFor="district-select" className="block text-xs font-bold text-slate-600">
                 İlçe
               </label>
-              <input
-                id="district-input"
-                type="text"
-                placeholder="Örn: Kadıköy, Çankaya..."
+              <select
+                id="district-select"
+                disabled={!city}
                 value={district}
                 onChange={(e) => {
                   setDistrict(e.target.value);
+                  setSchoolName("");
                   setStatus("idle");
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-bold text-night border border-slate-200 outline-none focus:border-crystal focus:bg-white focus:ring-2 focus:ring-crystal/20"
-              />
+                className="mt-1 w-full rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-bold text-night border border-slate-200 outline-none focus:border-crystal focus:bg-white focus:ring-2 focus:ring-crystal/20 disabled:opacity-50"
+              >
+                <option value="">{city ? "İlçe Seçin" : "Önce İl Seçin"}</option>
+                {(TURKEY_CITIES.find((c) => c.name === city)?.districts ?? []).map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div>
-              <label htmlFor="school-input" className="block text-xs font-bold text-slate-600">
-                Okul Adı
+            <div className="sm:col-span-2">
+              <label htmlFor="school-search-input" className="block text-xs font-bold text-slate-600 mb-1">
+                Okul Seçimi (Aramalı - Devlet ve Özel Okullar)
               </label>
-              <input
-                id="school-input"
-                type="text"
-                placeholder="Örn: Atatürk Ortaokulu..."
+              <SearchableSchoolSelect
+                city={city}
+                district={district}
                 value={schoolName}
-                onChange={(e) => {
-                  setSchoolName(e.target.value);
+                onChange={(selectedSchool) => {
+                  setSchoolName(selectedSchool);
                   setStatus("idle");
                 }}
-                className="mt-1 w-full rounded-xl bg-slate-50 px-3.5 py-2.5 text-sm font-bold text-night border border-slate-200 outline-none focus:border-crystal focus:bg-white focus:ring-2 focus:ring-crystal/20"
               />
             </div>
 

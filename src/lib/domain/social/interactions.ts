@@ -122,6 +122,30 @@ export async function createSocialPost(
         .single();
 
       if (error) throw error;
+
+      if (data && (parsed.targetGrade || parsed.areaId)) {
+        try {
+          const { data: targetUsers } = await supabase
+            .from("users")
+            .select("id")
+            .neq("id", input.authorId)
+            .eq("grade_level", parsed.targetGrade ?? "")
+            .limit(100);
+
+          if (targetUsers && targetUsers.length > 0) {
+            const notifs = targetUsers.map((u) => ({
+              user_id: u.id,
+              actor_id: input.authorId,
+              kind: "post",
+              message: `${parsed.targetGrade ? `${parsed.targetGrade} sınıfınız` : "Sınıfınız"} için yeni bir içerik paylaşıldı!`,
+            }));
+            await supabase.from("notifications").insert(notifs as any);
+          }
+        } catch {
+          // Non-fatal notification error fallback
+        }
+      }
+
       return data;
     },
   );

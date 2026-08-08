@@ -74,14 +74,11 @@ export function parseGradeNumber(gradeLevel: string | null | undefined): number 
 }
 
 export function isAutoInterestGradeLevel(gradeLevel: string | null | undefined): boolean {
-  const grade = parseGradeNumber(gradeLevel);
-  return grade !== null && grade >= 1 && grade <= 8;
+  return Boolean(gradeLevel?.trim());
 }
 
-export function requiresBranchSelection(gradeLevel: string | null | undefined): boolean {
-  if (!gradeLevel) return true;
-  if (isAutoInterestGradeLevel(gradeLevel)) return false;
-  return GRADE_LEVEL_OPTIONS.includes(gradeLevel as GradeLevelOption);
+export function requiresBranchSelection(_gradeLevel: string | null | undefined): boolean {
+  return false;
 }
 
 export function interestCategoryForGradeLevel(
@@ -117,25 +114,29 @@ function isOtherClassSpecificArea(areaName: string, selectedGrade: number, bandS
   return false;
 }
 
-/** Areas to auto-select for grades 1-8 (all band subjects except other class-specific rows). */
+/** Areas to auto-select for all grades (1-12 & exam tracks). */
 export function resolveAutoInterestAreaIds<T extends AreaLike>(
   areas: T[],
   gradeLevel: string | null | undefined,
 ): number[] {
+  if (!gradeLevel) return [];
   const grade = parseGradeNumber(gradeLevel);
-  if (grade === null || grade < 1 || grade > 8) return [];
 
-  const category = grade <= 4 ? "primary" : "middle";
-  const bandStart = grade <= 4 ? 1 : 5;
-  const bandEnd = grade <= 4 ? 4 : 8;
+  if (grade !== null && grade >= 1 && grade <= 12) {
+    const category = grade <= 4 ? "primary" : grade <= 8 ? "middle" : "high";
+    const bandStart = grade <= 4 ? 1 : grade <= 8 ? 5 : 9;
+    const bandEnd = grade <= 4 ? 4 : grade <= 8 ? 8 : 12;
 
-  return areas
-    .filter((area) => {
-      if (resolveGradeCategory(area.age_group) !== category) return false;
-      if (isOtherClassSpecificArea(area.area_name, grade, bandStart, bandEnd)) return false;
-      return true;
-    })
-    .map((area) => area.id);
+    return areas
+      .filter((area) => {
+        if (resolveGradeCategory(area.age_group) !== category) return false;
+        if (isOtherClassSpecificArea(area.area_name, grade, bandStart, bandEnd)) return false;
+        return true;
+      })
+      .map((area) => area.id);
+  }
+
+  return areas.map((area) => area.id).slice(0, 15);
 }
 
 /** Areas shown for manual branch selection (9-12 and exam tracks). */

@@ -18,7 +18,7 @@ type GradeLevelFormProps = {
 export function GradeLevelForm({
   initialGradeLevel = "",
   title = "Sınıf seç",
-  description = "Sınıfınızı seçin. 1-8. sınıflarda dersler otomatik atanır; diğer kademelerde branş seçimi yapılır.",
+  description = "Sınıfınızı seçin. Sınıfınıza ait tüm dersler ve müfredat akışı profilinize otomatik tanımlanır.",
 }: GradeLevelFormProps) {
   const router = useRouter();
   const [gradeLevel, setGradeLevel] = useState(initialGradeLevel ?? "");
@@ -60,15 +60,8 @@ export function GradeLevelForm({
 
       setGradeLevel(nextGrade);
       setStatus("saved");
-      if (payload?.autoAssigned) {
-        setMessage(
-          `Sınıf kaydedildi. ${payload.areaIds?.length ?? 0} ders otomatik seçildi.`,
-        );
-      } else if (isAutoInterestGradeLevel(nextGrade)) {
-        setMessage("Sınıf kaydedildi.");
-      } else {
-        setMessage("Sınıf kaydedildi. Şimdi branş seçin.");
-      }
+      setMessage(`Sınıfınız (${nextGrade}) kaydedildi ve müfredat akışı otomatik tanımlandı.`);
+      router.refresh();
       router.refresh();
     } catch {
       setStatus("error");
