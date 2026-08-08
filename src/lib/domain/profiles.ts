@@ -106,7 +106,7 @@ export async function createProfile(
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      await supabase.from("users").update({ city: parsed.city.trim() } as any).eq("id", user.id);
+      await supabase.from("users").update({ city: parsed.city.trim() } as unknown as Partial<Database["public"]["Tables"]["users"]["Update"]>).eq("id", user.id);
     }
   }
 
@@ -211,7 +211,7 @@ export async function updateUserProfile(
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      await supabase.from("users").update({ cover_url: parsed.coverUrl } as any).eq("id", user.id);
+      await supabase.from("users").update({ cover_url: parsed.coverUrl } as unknown as Partial<Database["public"]["Tables"]["users"]["Update"]>).eq("id", user.id);
     }
   }
 

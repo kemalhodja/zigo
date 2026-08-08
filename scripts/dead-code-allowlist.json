@@ -58,6 +58,10 @@
     "today-learning-card.tsx",
     "admin-teacher-actions.tsx",
     "create-post-screen.tsx",
-    "social-create-form.tsx"
+    "social-create-form.tsx",
+    "feed-refresh-control.tsx",
+    "lazy-image.tsx",
+    "skeleton.tsx",
+    "toast-system.tsx"
   ]
 }

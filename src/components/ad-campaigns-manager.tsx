@@ -30,7 +30,8 @@ export function AdCampaignsManager() {
         if (data.data && Array.isArray(data.data)) {
           // Filter sponsored posts
           const sponsored = data.data.filter(
-            (p: any) => p.sponsored_label || p.sponsored_status || p.sponsored_target_url,
+            (p: { sponsored_label?: string | null; sponsored_status?: string | null; sponsored_target_url?: string | null }) =>
+              p.sponsored_label || p.sponsored_status || p.sponsored_target_url,
           );
           setCampaigns(sponsored);
         }

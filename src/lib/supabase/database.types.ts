@@ -41,6 +41,7 @@ export type UserRow = {
   total_points: number;
   bio: string | null;
   avatar_url: string | null;
+  cover_url?: string | null;
   level: number;
   student_document_url: string | null;
   student_document_status: StudentDocumentStatus | null;

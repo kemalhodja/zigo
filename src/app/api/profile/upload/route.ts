@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_TYPES = new Set([
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
 
     // Automatically update user profile's avatar_url or cover_url in database
     if (isCover) {
-      await supabase.from("users").update({ cover_url: imageUrl } as any).eq("id", profile.id);
+      await supabase.from("users").update({ cover_url: imageUrl } as unknown as Partial<Database["public"]["Tables"]["users"]["Update"]>).eq("id", profile.id);
     } else {
       await supabase.from("users").update({ avatar_url: imageUrl }).eq("id", profile.id);
     }

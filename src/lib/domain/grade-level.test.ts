@@ -35,18 +35,18 @@ describe("grade-level", () => {
     expect(GRADE_LEVEL_OPTIONS.some((item) => item.includes("1-4"))).toBe(false);
   });
 
-  it("detects auto-interest grades 1-8", () => {
+  it("detects auto-interest grades for all valid grade levels", () => {
     expect(isAutoInterestGradeLevel("1. Sınıf")).toBe(true);
     expect(isAutoInterestGradeLevel("8. Sınıf")).toBe(true);
-    expect(isAutoInterestGradeLevel("9. Sınıf")).toBe(false);
-    expect(isAutoInterestGradeLevel("YKS")).toBe(false);
+    expect(isAutoInterestGradeLevel("9. Sınıf")).toBe(true);
+    expect(isAutoInterestGradeLevel("YKS")).toBe(true);
     expect(parseGradeNumber("5. Sınıf")).toBe(5);
   });
 
-  it("requires branch selection outside 1-8", () => {
+  it("disables manual branch selection requirement across grade levels", () => {
     expect(requiresBranchSelection("5. Sınıf")).toBe(false);
-    expect(requiresBranchSelection("10. Sınıf")).toBe(true);
-    expect(requiresBranchSelection("AYT")).toBe(true);
+    expect(requiresBranchSelection("10. Sınıf")).toBe(false);
+    expect(requiresBranchSelection("AYT")).toBe(false);
   });
 
   it("auto-selects band subjects and skips other class-specific rows", () => {

@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       }
 
       const { error: updateErr } = await (dbClient
-        .from("social_posts") as any)
+        .from("social_posts") as unknown as { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<{ error: unknown }> } })
         .update({
           sponsored_label: ctaLabel,
           sponsored_target_url: body.targetUrl || null,
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     const mediaType = isVideo ? "video" : body.mediaUrl ? "image" : "none";
 
     const { data: newPost, error: insertErr } = await (dbClient
-      .from("social_posts") as any)
+      .from("social_posts") as unknown as { insert: (data: Record<string, unknown>) => { select: (cols?: string) => { single: () => Promise<{ data: { id: string } | null; error: unknown }> } } })
       .insert({
         author_id: profile.id,
         caption: body.caption || body.title || "Sponsorlu İçerik",

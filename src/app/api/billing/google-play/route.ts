@@ -46,8 +46,10 @@ export async function POST(request: Request) {
           body.productId,
           body.packageName,
         );
-        if (verifiedPurchase && (verifiedPurchase as any).expiryTimeMillis) {
-          verifiedExpiryTime = new Date(Number((verifiedPurchase as any).expiryTimeMillis)).toISOString();
+        type GooglePlayPayload = { expiryTimeMillis?: string | number };
+        const payload = verifiedPurchase as GooglePlayPayload | null;
+        if (payload?.expiryTimeMillis) {
+          verifiedExpiryTime = new Date(Number(payload.expiryTimeMillis)).toISOString();
         }
       } catch (gplayErr) {
         console.warn("Google Play API verification skipped or failed:", gplayErr);
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
 
     // 2. Direct Sync with user_subscriptions table for status='active' & tier='zigo_plus'
     const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
-    const { error: upsertErr } = await (dbClient.from("user_subscriptions") as any).upsert(
+    const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as { upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }> }).upsert(
       {
         user_id: profile.id,
         plan_id: body.planId,
@@ -98,7 +100,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Update profile subscription_tier to 'zigo_plus'
-    await (dbClient.from("users") as any)
+    await (dbClient.from("users") as unknown as { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> } })
       .update({
         subscription_tier: "zigo_plus",
         updated_at: now.toISOString(),

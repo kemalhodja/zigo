@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     const newClickCount = (post.sponsored_click_count || 0) + 1;
 
-    await (dbClient.from("social_posts") as any)
+    await (dbClient.from("social_posts") as unknown as { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> } })
       .update({ sponsored_click_count: newClickCount })
       .eq("id", body.postId);
 

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const newStatus = body.action === "approve" ? "active" : "rejected";
 
     const { error: updateErr } = await (dbClient
-      .from("social_posts") as any)
+      .from("social_posts") as unknown as { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<{ error: unknown }> } })
       .update({
         sponsored_status: newStatus,
         sponsored_disclosure: body.action === "reject" ? body.rejectReason || "Admin tarafından reddedildi" : null,

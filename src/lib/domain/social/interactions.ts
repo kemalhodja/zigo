@@ -139,7 +139,7 @@ export async function createSocialPost(
               kind: "post",
               message: `${parsed.targetGrade ? `${parsed.targetGrade} sınıfınız` : "Sınıfınız"} için yeni bir içerik paylaşıldı!`,
             }));
-            await supabase.from("notifications").insert(notifs as any);
+            await supabase.from("notifications").insert(notifs as unknown as Database["public"]["Tables"]["notifications"]["Insert"][]);
           }
         } catch {
           // Non-fatal notification error fallback

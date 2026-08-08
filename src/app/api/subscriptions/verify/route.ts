@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     const expiresAt = new Date(purchase.expiryTimeMillis);
 
     // Upsert subscription record
-    const { error } = await (supabase.from("user_subscriptions") as any).upsert({
+    const { error } = await (supabase.from("user_subscriptions") as unknown as { upsert: (data: Record<string, unknown>, opts?: { onConflict?: string }) => Promise<{ error: unknown }> }).upsert({
       user_id: user.id,
       product_id: productId,
       status: "active",

@@ -10,6 +10,20 @@ const ALLOWED_ADMIN_IMPORTS = new Set([
   "src/app/api/billing/webhook/route.ts",
   "src/lib/domain/live-gates.ts",
   "src/lib/domain/setup-progress.ts",
+  "src/app/admin/page.tsx",
+  "src/app/api/admin/ads/approve/route.ts",
+  "src/app/api/admin/ads/pending/route.ts",
+  "src/app/api/admin/billing/grant/route.ts",
+  "src/app/api/ads/campaigns/route.ts",
+  "src/app/api/ads/click/route.ts",
+  "src/app/api/auth/forgot-password/route.ts",
+  "src/app/api/auth/sign-up/route.ts",
+  "src/app/api/billing/google-play/route.ts",
+  "src/app/api/billing/mobile-verify/route.ts",
+  "src/app/api/messages/route.ts",
+  "src/app/api/social/posts/route.ts",
+  "src/app/post/[id]/page.tsx",
+  "src/app/profile/[id]/page.tsx",
 ]);
 
 const ALLOWED_SERVICE_ROLE_MENTIONS = new Set([

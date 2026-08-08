@@ -4,7 +4,11 @@ import { getSocialFeed } from "@/lib/domain/social/feed";
 import { createMockSupabase, samplePostRow } from "@/test/mock-supabase";
 
 describe("social feed", () => {
-  const emptyBlocks = { user_blocks: { data: [], error: null } };
+  const emptyBlocks = {
+    user_blocks: { data: [], error: null },
+    users: { data: [], error: null },
+    social_posts: { data: [], error: null },
+  };
 
   it("returns empty feed when viewer has no matched interests", async () => {
     const supabase = createMockSupabase({
@@ -24,13 +28,14 @@ describe("social feed", () => {
       tables: {
         user_interests: { data: [{ area_id: 1 }, { area_id: 2 }], error: null },
         social_posts: { data: [samplePostRow], error: null },
+        users: { data: [samplePostRow.author], error: null },
         post_likes: {
           data: [{ post_id: samplePostRow.id }, { post_id: samplePostRow.id }],
           error: null,
         },
         post_comments: { data: [{ post_id: samplePostRow.id }], error: null },
         saved_posts: { data: [], error: null },
-        ...emptyBlocks,
+        user_blocks: { data: [], error: null },
       },
     });
 
@@ -44,9 +49,8 @@ describe("social feed", () => {
   it("supports postTypes filter without throwing", async () => {
     const supabase = createMockSupabase({
       tables: {
-        user_interests: { data: [{ area_id: 1 }], error: null },
-        social_posts: { data: [], error: null },
         ...emptyBlocks,
+        user_interests: { data: [{ area_id: 1 }], error: null },
       },
     });
 
@@ -73,9 +77,8 @@ describe("social feed", () => {
   it("respects legacy pagination offset in range query", async () => {
     const supabase = createMockSupabase({
       tables: {
-        user_interests: { data: [{ area_id: 1 }], error: null },
-        social_posts: { data: [], error: null },
         ...emptyBlocks,
+        user_interests: { data: [{ area_id: 1 }], error: null },
       },
     });
 

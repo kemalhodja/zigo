@@ -85,7 +85,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
       {/* Cover banner + avatar overlap */}
       <section className="-mx-4 bg-white">
         <ProfileCover
-          initialCoverUrl={(profile as any).cover_url}
+          initialCoverUrl={(profile as unknown as { cover_url?: string | null }).cover_url}
           isEditable={isOwnProfile}
           isVerified={profile.is_verified}
         />

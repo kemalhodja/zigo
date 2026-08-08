@@ -82,7 +82,7 @@ export function AppShell({
     let cleanup: (() => void) | undefined;
     const setupHardwareBack = async () => {
       try {
-        const isCapacitor = Boolean((window as any).Capacitor);
+        const isCapacitor = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
         if (!isCapacitor) return;
 
         const appPkg = "@capacitor/app";
@@ -321,8 +321,8 @@ function Header({
           <Link
             aria-label="Direkt Mesajlar (DM)"
             className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-crystal"
-            href="/messages"
-            title="Direkt Mesajlar (DM)"
+            href="/lesson-requests"
+            title="Ders Talepleri & Mesajlaşma"
           >
             <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

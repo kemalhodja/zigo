@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     // Save subscription in database
     const { error: upsertErr } = await (dbClient
-      .from("user_subscriptions") as any)
+      .from("user_subscriptions") as unknown as { upsert: (data: Record<string, unknown>) => Promise<{ error: unknown }> })
       .upsert({
         user_id: profile.id,
         plan_id: planId,

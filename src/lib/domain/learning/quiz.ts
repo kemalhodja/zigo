@@ -43,7 +43,7 @@ export async function createTeacherQuiz(
 
   if (error) throw error;
 
-  const { error: questionsError } = await (supabase.from("quiz_questions") as any).insert(
+  const { error: questionsError } = await (supabase.from("quiz_questions") as unknown as { insert: (data: Record<string, unknown>[]) => Promise<{ error: unknown }> }).insert(
     moderatedQuestions.map((question, index) => ({
       quiz_id: data.id,
       question_text: question.questionText,

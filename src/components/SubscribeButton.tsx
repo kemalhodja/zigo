@@ -49,7 +49,8 @@ export function SubscribeButton({
       let orderId: string | null = null;
 
       // Detect Native / Mobile Android vs Web Environment
-      const isAndroidWindow = typeof window !== "undefined" && Boolean((window as any).Capacitor || (window as any).Android);
+      const win = typeof window !== "undefined" ? (window as unknown as { Capacitor?: unknown; Android?: unknown }) : null;
+      const isAndroidWindow = Boolean(win?.Capacitor || win?.Android);
       
       if (isAndroidWindow) {
         try {
@@ -66,8 +67,9 @@ export function SubscribeButton({
               await finishTransaction({ purchase, isConsumable: false });
             }
           }
-        } catch (nativeErr: any) {
-          console.warn("Native IAP fallback to API bridge:", nativeErr?.message);
+        } catch (nativeErr) {
+          const msg = nativeErr instanceof Error ? nativeErr.message : "Native IAP Error";
+          console.warn("Native IAP fallback to API bridge:", msg);
         }
       }
 
@@ -103,7 +105,7 @@ export function SubscribeButton({
 
       if (response.ok) {
         toast.success(
-          "30 günlük ücretsiz deneme süreciniz ve ZigoPlus ayrıcalıklarınız başladı.",
+          "30 günlük ücretsiz deneme süreciniz ve ZigoPlus ayrıcalıkları başladı.",
           "🎉 Tebrikler! ZigoPlus Aktif!",
         );
         triggerCelebrationConfetti();
@@ -118,10 +120,11 @@ export function SubscribeButton({
         const errorMsg = result.error || "Satın alma işlemi tamamlanamadı.";
         toast.error(errorMsg, "Abonelik Hatası");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Google Play purchase error:", err);
+      const message = err instanceof Error ? err.message : "Ödeme penceresi açılamadı. Lütfen tekrar deneyin.";
       toast.error(
-        err.message || "Ödeme penceresi açılamadı. Lütfen tekrar deneyin.",
+        message,
         "İşlem Başarısız",
       );
     } finally {
