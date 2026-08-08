@@ -66,7 +66,6 @@ export async function getUserVerificationQueue(supabase: SupabaseClient<Database
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .neq("role", "parent")
     .order("created_at", { ascending: false });
 
   if (error) throw error;

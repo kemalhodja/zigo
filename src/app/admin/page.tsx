@@ -11,6 +11,7 @@ import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-pan
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
 import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
 import { AdminUserActions } from "@/components/admin-user-actions";
+import { AdminUserDirectory } from "@/components/admin-user-directory";
 import { AdminUserSearch } from "@/components/admin-user-search";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -489,8 +490,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       <AdminStripeCampaignPanel />
 
-      <AdminUserSearch />
-
       <section className="-mx-4 bg-white">
         <div className="border-b border-slate-100 px-4 py-3">
           <h3 className="text-lg font-black text-night">{a.densitySectionTitle}</h3>
@@ -636,43 +635,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         )}
       </section>
 
-      <section className="-mx-4 bg-white">
-        <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="text-lg font-black text-night">Onay Bekleyen Kullanıcılar</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">Doğrulama bekleyen yeni hesaplar</p>
-        </div>
-        {pendingUsers.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">Bekleyen onay yok</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">Tüm kullanıcılar onaylanmış.</p>
-          </div>
-        ) : (
-          pendingUsers.map((user) => (
-            <UserRow
-              areas={areas}
-              key={user.id}
-              labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
-              user={user}
-            />
-          ))
-        )}
-      </section>
-
-      {verifiedUsers.length > 0 ? (
-        <section className="-mx-4 bg-white">
-          <div className="border-b border-slate-100 px-4 py-3">
-            <h3 className="text-lg font-black text-night">Doğrulanmış Kullanıcılar</h3>
-          </div>
-          {verifiedUsers.map((user) => (
-            <UserRow
-              areas={areas}
-              key={user.id}
-              labels={{ verified: a.verified, pendingVerification: a.pendingVerification }}
-              user={user}
-            />
-          ))}
-        </section>
-      ) : null}
+      <AdminUserDirectory
+        areas={areas}
+        pendingBankTransferUserIds={bankTransfers.map((b) => b.user_id).filter((id): id is string => Boolean(id))}
+        studentDocumentUserIds={studentDocuments.map((s) => s.id)}
+        users={users}
+      />
 
       <section className="-mx-4 bg-white">
         <h3 className="border-b border-slate-100 px-4 py-3 text-lg font-black text-night">{a.storeOrdersTitle}</h3>
