@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BackButton } from "@/components/back-button";
 import { type ComposerArea,CreateModeComposer } from "@/components/create-mode-composer";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
@@ -36,11 +37,7 @@ export default async function CreatePage({ searchParams }: CreatePageProps) {
   return (
     <div className="space-y-0 pb-3">
       <section className="-mx-4 -mt-4 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
-        <Link className="tap-scale flex size-9 items-center justify-center text-night" href="/">
-          <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </Link>
+        <BackButton className="tap-scale flex size-9 items-center justify-center text-night" fallbackHref="/" />
         <h1 className="text-xl font-black text-night">{m.createStudio.title}</h1>
         <span className="w-9" />
       </section>

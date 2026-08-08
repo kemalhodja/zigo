@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode,useEffect, useState } from "react";
 
 import { BottomNav } from "@/components/bottom-nav";
+import { BackButton } from "@/components/back-button";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
 import { LegalFooter } from "@/components/legal-footer";
@@ -43,6 +44,7 @@ export function AppShell({
   viewerRole,
 }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const m = useMessages();
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
 
@@ -82,25 +84,50 @@ export function AppShell({
     let cleanup: (() => void) | undefined;
     const setupHardwareBack = async () => {
       try {
-        const isCapacitor = Boolean((window as unknown as { Capacitor?: unknown }).Capacitor);
-        if (!isCapacitor) return;
+        const win = window as unknown as {
+          Capacitor?: {
+            Plugins?: {
+              App?: {
+                addListener: (
+                  event: string,
+                  fn: (data: { canGoBack: boolean }) => void
+                ) => Promise<{ remove: () => void }>;
+                exitApp: () => Promise<void>;
+              };
+            };
+          };
+        };
 
-        const appPkg = "@capacitor/app";
-        const appModule = await import(/* webpackIgnore: true */ appPkg).catch(() => null);
-        if (!appModule?.App) return;
+        let appPlugin = win.Capacitor?.Plugins?.App;
 
-        const handle = await appModule.App.addListener("backButton", () => {
-          if (window.history.length > 1) {
+        if (!appPlugin) {
+          const capPkg = "@capacitor/app";
+          const appModule = (await import(/* webpackIgnore: true */ capPkg).catch(() => null)) as { App?: typeof appPlugin } | null;
+          if (appModule?.App) {
+            appPlugin = appModule.App;
+          }
+        }
+
+        if (!appPlugin) return;
+
+        const handle = await appPlugin.addListener("backButton", ({ canGoBack }: { canGoBack: boolean }) => {
+          const currentPath = window.location.pathname;
+          if (currentPath === "/" || currentPath === "/auth") {
+            void appPlugin.exitApp();
+          } else if (canGoBack || window.history.length > 1) {
             window.history.back();
           } else {
-            void appModule.App.exitApp();
+            router.push("/");
           }
         });
+
         cleanup = () => {
-          void handle.remove();
+          if (handle && typeof handle.remove === "function") {
+            void handle.remove();
+          }
         };
       } catch {
-        // Native back listener unavailable in desktop browser
+        // Native back listener fallback
       }
     };
 
@@ -108,7 +135,7 @@ export function AppShell({
     return () => {
       if (cleanup) cleanup();
     };
-  }, []);
+  }, [router, pathname]);
 
   const isStories = pathname.startsWith("/sparks");
   const isReels = pathname.startsWith("/micro");
@@ -295,25 +322,7 @@ function Header({
     <header className="safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          {!isHomePage ? (
-            <button
-              aria-label="Geri Dön"
-              className="tap-scale flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-night hover:bg-slate-200 transition"
-              onClick={() => {
-                if (typeof window !== "undefined" && window.history.length > 1) {
-                  router.back();
-                } else {
-                  router.push("/");
-                }
-              }}
-              title="Geri"
-              type="button"
-            >
-              <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-              </svg>
-            </button>
-          ) : null}
+          {!isHomePage ? <BackButton fallbackHref="/" /> : null}
           <LogoLink roleAccentLabel={roleAccentLabel} viewerRole={viewerRole} />
         </div>
 

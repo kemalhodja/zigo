@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackButton } from "@/components/back-button";
+
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
@@ -52,15 +54,7 @@ export default async function TagPage({ params }: TagPageProps) {
       {/* Header */}
       <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-4">
         <div className="flex items-center gap-3">
-          <Link
-            aria-label="Geri"
-            className="tap-scale flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-night"
-            href="/explore"
-          >
-            <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </Link>
+          <BackButton className="tap-scale flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-night" fallbackHref="/explore" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry text-xl font-black text-white shadow-md shadow-crystal/20">

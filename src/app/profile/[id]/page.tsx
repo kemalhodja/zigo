@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BackButton } from "@/components/back-button";
 import { FollowButton } from "@/components/follow-button";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileCover } from "@/components/profile-cover";
@@ -66,11 +67,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
   return (
     <div className="space-y-0 pb-3">
       <div className="-mx-4 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2.5">
-        <Link className="tap-scale flex size-9 items-center justify-center text-night" href="/">
-          <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </Link>
+        <BackButton className="tap-scale flex size-9 items-center justify-center text-night" fallbackHref="/explore" />
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="truncate text-lg font-black text-night">@{handle}</h1>
           {profile.is_verified ? <VerifiedBadge className="size-4" /> : null}
