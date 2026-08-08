@@ -9,7 +9,7 @@ import { SocialPill, VerifiedBadge } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { getFollowingFeed, getReelFeed, isFollowing, type SocialFeedPost } from "@/lib/domain/social";
+import { getFollowingFeed, getReelFeed, getSocialPostById, isFollowing, type SocialFeedPost } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import type { Messages } from "@/lib/i18n/types";
 import { createClient } from "@/lib/supabase/server";
@@ -162,8 +162,14 @@ function ReelSection({
 
       <div className="relative max-w-[18.7rem] space-y-3 pr-12">
         <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-black">@{reel.creator}</p>
-          {reel.verified ? <VerifiedBadge className="size-4" /> : null}
+          <Link
+            aria-label={`@${reel.creator}`}
+            className="tap-scale flex min-w-0 items-center gap-1.5 hover:underline"
+            href={reel.creatorId ? `/profile/${reel.creatorId}` : "/profile"}
+          >
+            <p className="truncate text-sm font-black">@{reel.creator}</p>
+            {reel.verified ? <VerifiedBadge className="size-4" /> : null}
+          </Link>
           {reel.creatorId && !reel.isOwnCreator ? (
             <FollowButton
               followingId={reel.creatorId}
@@ -315,9 +321,6 @@ function ReelsEmptyState({ activeFeed, messages: m }: { activeFeed: "for-you" | 
 
   return (
     <section className="safe-top flex min-h-dvh flex-col items-center justify-center bg-night px-8 text-center text-white">
-      <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-center gap-1 px-5 pt-[calc(env(safe-area-inset-top)+0.8rem)] text-sm font-black text-white">
-        <ReelFeedTabs activeFeed={activeFeed} messages={m} />
-      </div>
       <span className="flex size-20 items-center justify-center rounded-lg border-2 border-white/90 text-white">
         <svg aria-hidden="true" className="ml-1 size-9" fill="currentColor" viewBox="0 0 24 24">
           <path d="M8 5v14l11-7z" />
@@ -381,15 +384,20 @@ async function getReels(activeFeed: "for-you" | "following", targetReelId?: stri
       ? (await getFollowingFeed(supabase, profile.id)).filter((post) => post.is_reel || post.media_type === "video")
       : await getReelFeed(supabase, profile?.id);
 
-  if (reels.length === 0) return [];
-
   if (targetReelId) {
     const targetIdx = reels.findIndex((r) => r.id === targetReelId);
     if (targetIdx > 0) {
       const [target] = reels.splice(targetIdx, 1);
       if (target) reels = [target, ...reels];
+    } else if (targetIdx === -1) {
+      const targetPost = await getSocialPostById(supabase, targetReelId, profile?.id);
+      if (targetPost) {
+        reels = [targetPost, ...reels];
+      }
     }
   }
+
+  if (reels.length === 0) return [];
 
   const followingByReel = await Promise.all(
     reels.map((reel) =>
