@@ -142,75 +142,57 @@ export async function getSocialFeed(
 }
 
 
-export async function searchSocialPosts(
+export async function getExplorePosts(
   supabase: SupabaseClient<Database>,
-  query: string,
   viewerId?: string,
-) {
+  query = "",
+  limit = 30,
+): Promise<SocialFeedPost[]> {
   const trimmed = query.trim();
-  if (!trimmed) {
-    const page = await getSocialFeed(supabase, viewerId);
-    if (page.posts.length > 0) return page.posts;
-    const globalPage = await getSocialFeed(supabase, undefined);
-    return globalPage.posts;
-  }
+  const safeLimit = Math.min(50, Math.max(1, limit));
 
-  const areaIds = viewerId ? await getUserSocialFeedAreaIds(supabase, viewerId) : [];
+  const { data, error } = await supabase.rpc("list_explore_social_posts", {
+    p_limit: safeLimit,
+    p_query: trimmed || undefined,
+  });
 
-  let searchQuery = supabase
-    .from("social_posts")
-    .select(
-      `
-      *,
-      author:author_id (
-        id,
-        full_name,
-        role,
-        is_verified,
-        organization_type,
-        avatar_url
-      ),
-      co_author:co_author_id (
-        id,
-        full_name
-      ),
-      area:area_id (
-        area_name
-      )
-    `,
-    )
-    .or(`caption.ilike.%${trimmed}%,location_name.ilike.%${trimmed}%,city.ilike.%${trimmed}%,district.ilike.%${trimmed}%`)
-    .order("created_at", { ascending: false })
-    .limit(30);
+  if (error) {
+    const isMissingRpc =
+      error.code === "PGRST202" ||
+      error.code === "42883" ||
+      /list_explore_social_posts/i.test(error.message ?? "");
 
-  if (areaIds.length > 0) {
-    const { data: areaData } = await searchQuery.in("area_id", areaIds);
-    if (areaData && areaData.length > 0) {
-      const canOpenSponsored = Boolean(viewerId);
-      const canOpenPremiumPrep = await resolveViewerCanOpenPremiumPrep(supabase, viewerId);
-      const hydrated = await hydrateSocialPosts(
-        supabase,
-        areaData as RawSocialPost[],
-        viewerId,
-        canOpenPremiumPrep,
-        canOpenSponsored,
-      );
-      return rankSocialPosts(hydrated);
+    if (isMissingRpc) {
+      const page = await getSocialFeed(supabase, viewerId, { limit: safeLimit });
+      if (page.posts.length > 0) return page.posts;
+      const globalPage = await getSocialFeed(supabase, undefined, { limit: safeLimit });
+      return globalPage.posts;
     }
+
+    throw error;
   }
 
-  const { data, error } = await searchQuery;
-  if (error) throw error;
+  const posts = (Array.isArray(data) ? data : []) as RawSocialPost[];
+  if (posts.length === 0) return [];
+
   const canOpenSponsored = Boolean(viewerId);
   const canOpenPremiumPrep = await resolveViewerCanOpenPremiumPrep(supabase, viewerId);
   const hydrated = await hydrateSocialPosts(
     supabase,
-    (data ?? []) as RawSocialPost[],
+    posts,
     viewerId,
     canOpenPremiumPrep,
     canOpenSponsored,
   );
   return rankSocialPosts(hydrated);
+}
+
+export async function searchSocialPosts(
+  supabase: SupabaseClient<Database>,
+  query: string,
+  viewerId?: string,
+) {
+  return getExplorePosts(supabase, viewerId, query);
 }
 
 export async function searchCreators(

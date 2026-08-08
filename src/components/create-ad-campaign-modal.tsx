@@ -295,7 +295,7 @@ export function CreateAdCampaignModal({
 
       {isOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-xs">
-          <div className="relative my-auto w-full max-w-4xl rounded-3xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl">
+          <div className="relative my-auto w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900 p-4 text-white shadow-2xl sm:max-w-lg sm:p-6 md:max-w-2xl lg:max-w-4xl">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
@@ -322,7 +322,7 @@ export function CreateAdCampaignModal({
                 </p>
               </div>
             ) : (
-              <div className="mt-4 grid gap-6 lg:grid-cols-12">
+              <div className="mt-4 grid gap-4 lg:grid-cols-12 lg:gap-6">
                 {/* Form Inputs (Left Column - 7 Cols) */}
                 <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-7">
                   {/* Method Selection */}

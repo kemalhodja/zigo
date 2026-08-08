@@ -25,6 +25,16 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
 input::-ms-reveal,
 input::-ms-clear,
 input::-webkit-contacts-auto-fill-button,
@@ -36,6 +46,8 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0;
+  overflow-x: clip;
+  max-width: 100vw;
   font-size: var(--zigo-text-body);
   line-height: var(--zigo-leading-normal);
   background:
@@ -957,7 +969,39 @@ body.role-theme-teacher {
 
 .zigo-media {
   aspect-ratio: 4 / 5;
-  min-height: 28rem;
+  width: 100%;
+  max-height: min(68dvh, 28rem);
+  min-height: 0;
+}
+
+.zigo-fixed-shell {
+  position: fixed;
+  inset-inline: 0;
+  z-index: 40;
+  margin-inline: auto;
+  width: 100%;
+  max-width: 28rem;
+  padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
+  pointer-events: none;
+}
+
+.zigo-fixed-shell > * {
+  pointer-events: auto;
+}
+
+.zigo-toast-stack {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  margin-inline: auto;
+  display: flex;
+  width: 100%;
+  max-width: 28rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
+  pointer-events: none;
 }
 
 .grid-tile-caption {
@@ -998,8 +1042,27 @@ body.role-theme-teacher {
 }
 
 @media (max-width: 420px) {
+  :root {
+    --zigo-text-display: 1.875rem;
+    --zigo-text-title-lg: 1.3125rem;
+    --zigo-text-title: 1.125rem;
+    --zigo-text-title-sm: 1.0625rem;
+  }
+
   .zigo-media {
-    min-height: 26rem;
+    aspect-ratio: 3 / 4;
+    max-height: min(62dvh, 24rem);
+  }
+
+  .zigo-wordmark {
+    font-size: var(--zigo-text-title);
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --zigo-text-display: 1.625rem;
+    --zigo-text-body: 0.9375rem;
   }
 }
 

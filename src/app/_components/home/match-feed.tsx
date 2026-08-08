@@ -128,7 +128,7 @@ export function FeedPostCard({
             postId={post.postId}
             variant="compact"
           />
-          <p className="text-zigo-body leading-relaxed text-slate-800">
+          <p className="zigo-fit-text text-zigo-body leading-relaxed text-slate-800">
             <span className="font-bold text-night">{post.handle}</span>{" "}
             {post.caption.split(/(https?:\/\/[^\s]+|#[\w\u00C0-\u024F\u1E00-\u1EFF]+|@[\w]+)/g).map((part, i) => {
               if (/^https?:\/\//i.test(part)) {

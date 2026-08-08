@@ -177,7 +177,7 @@ export default async function ModerationPage({ searchParams }: ModerationPagePro
         <Stat accent="text-aqua" label={mp.statPending} value={safetyQueue.length} />
       </section>
 
-      <section className="-mx-4 grid grid-cols-5 gap-2 bg-white px-4 py-3">
+      <section className="-mx-4 no-scrollbar flex gap-2 overflow-x-auto bg-white px-4 py-3">
         <TriageLane active={activeFilter === "all"} href="/moderation" label={mp.filterAll} value={safetyQueue.length} />
         <TriageLane active={activeFilter === "comments"} href="/moderation?queue=comments" label={mp.filterComments} value={safetyQueue.filter((item) => item.kind === "comment").length} />
         <TriageLane active={activeFilter === "stories"} href="/moderation?queue=sparks" label={mp.filterSparks} value={safetyQueue.filter((item) => item.kind.includes("story")).length} />
@@ -499,7 +499,7 @@ function Stat({ accent, label, value }: { accent: string; label: string; value: 
 
 function TriageLane({ active, href, label, value }: { active: boolean; href: string; label: string; value: number }) {
   return (
-    <Link className={`rounded-lg px-3 py-3 text-center ${active ? "bg-gradient-to-r from-crystal to-berry text-white" : "bg-slate-50 text-slate-700"}`} href={href}>
+    <Link className={`min-w-[5.5rem] shrink-0 rounded-lg px-3 py-3 text-center ${active ? "bg-gradient-to-r from-crystal to-berry text-white" : "bg-slate-50 text-slate-700"}`} href={href}>
       <p className="text-lg font-black">{value}</p>
       <p className={`zigo-fit-text mt-1 text-[0.65rem] font-black uppercase tracking-[0.08em] ${active ? "text-white/75" : "text-slate-500"}`}>{label}</p>
     </Link>

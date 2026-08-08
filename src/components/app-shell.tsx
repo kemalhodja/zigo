@@ -127,7 +127,7 @@ export function AppShell({
 
   return (
     <div
-      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full max-w-md flex-col md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${getRoleThemeClass(viewerRole)} ${
+      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 max-w-md flex-col overflow-x-hidden md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${getRoleThemeClass(viewerRole)} ${
         isImmersive ? "relative bg-night" : ""
       }`}
     >
@@ -144,7 +144,7 @@ export function AppShell({
         </a>
       ) : null}
 
-      <main className={`flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6"}`} id="main-content">
+      <main className={`min-w-0 flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6"}`} id="main-content">
         {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
           <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
         ) : null}
@@ -292,9 +292,9 @@ function Header({
   const isHomePage = pathname === "/";
 
   return (
-    <header className="safe-top zigo-topbar sticky top-0 z-10 px-4 py-2">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <header className="safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2">
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {!isHomePage ? (
             <button
               aria-label="Geri Dön"
@@ -381,10 +381,10 @@ function LogoLink({ roleAccentLabel, viewerRole }: { roleAccentLabel: string; vi
   }
 
   return (
-    <Link href="/" className="tap-scale flex min-w-0 items-center gap-2" onClick={handleLogoClick}>
-      <span className="zigo-wordmark">Zigo</span>
+    <Link href="/" className="tap-scale flex min-w-0 items-center gap-1.5 overflow-hidden" onClick={handleLogoClick}>
+      <span className="zigo-wordmark shrink-0">Zigo</span>
       {viewerRole !== "guest" ? (
-        <span className="role-accent-chip inline-flex rounded-full px-2 py-0.5">
+        <span className="role-accent-chip inline-flex max-w-[6.5rem] truncate rounded-full px-2 py-0.5 sm:max-w-[8rem]">
           {roleAccentLabel}
         </span>
       ) : null}

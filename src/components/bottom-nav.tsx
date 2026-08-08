@@ -76,7 +76,7 @@ export function BottomNav({
             <span className={`role-nav-icon flex size-7 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
               <NavIcon active={isActive} name={item.icon} variant={variant} />
             </span>
-            <span className={`max-w-full px-0.5 text-center text-[0.63rem] leading-tight ${isActive ? "font-bold text-night" : "font-semibold"}`}>
+            <span className={`max-w-full truncate px-0.5 text-center text-[0.63rem] leading-tight ${isActive ? "font-bold text-night" : "font-semibold"}`}>
               {item.label}
             </span>
             {item.href === "/notifications" && unreadCount > 0 ? (

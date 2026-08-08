@@ -2573,6 +2573,13 @@ export type Database = {
           rank: number;
         }[];
       };
+      list_explore_social_posts: {
+        Args: {
+          p_limit?: number;
+          p_query?: string | null;
+        };
+        Returns: Json;
+      };
       redeem_invite_code: {
         Args: {
           raw_code: string;

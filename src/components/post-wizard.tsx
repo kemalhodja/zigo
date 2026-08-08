@@ -479,7 +479,10 @@ function CaptionStep({
       )}
 
       {/* ── Publish CTA (sticky) ── */}
-      <div className="fixed bottom-20 left-0 right-0 z-10 px-4 pb-0">
+      <div
+        className="zigo-fixed-shell"
+        style={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <button
           type="button"
           id="wizard-publish"
