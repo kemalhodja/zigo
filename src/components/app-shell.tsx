@@ -182,7 +182,7 @@ export function AppShell({
         <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
       )}
 
-      {isImmersive ? null : <LegalFooter />}
+      {pathname.startsWith("/auth") ? <LegalFooter /> : null}
 
       {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
 
