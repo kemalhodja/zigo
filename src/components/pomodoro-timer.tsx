@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { triggerCelebrationConfetti } from "@/lib/client/confetti";
+
 import { useToast } from "@/components/ui/toast-system";
+import { triggerCelebrationConfetti } from "@/lib/client/confetti";
 
 export function PomodoroTimer() {
   const toast = useToast();

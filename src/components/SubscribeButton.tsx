@@ -3,6 +3,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { useToast } from "@/components/ui/toast-system";
 import { triggerCelebrationConfetti } from "@/lib/client/confetti";
 import { createClient } from "@/lib/supabase/client";

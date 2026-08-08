@@ -12,14 +12,14 @@
  * prevents any interaction until the operation completes or fails.
  */
 
-import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import type { ComposerArea } from "@/components/create-mode-composer";
 import { validateVideoLimits } from "@/lib/client/compress-video";
+import { type UploadPhase,useUploadPipeline } from "@/lib/client/use-upload-pipeline";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { INDIVIDUAL_GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
-import { useUploadPipeline, type UploadPhase } from "@/lib/client/use-upload-pipeline";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

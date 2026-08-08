@@ -1,8 +1,9 @@
 // src/app/api/subscriptions/verify/route.ts
 
-import { createClient } from "@/lib/supabase/server";
-import { verifyGooglePlaySubscription } from "@/lib/server/google-play";
 import { NextResponse } from "next/server";
+
+import { verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/subscriptions/verify

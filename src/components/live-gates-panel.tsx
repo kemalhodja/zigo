@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { resolveLiveGateFixHref } from "@/lib/domain/setup-first-ten";
 import type { LiveGatesReport } from "@/lib/domain/live-gates";
+import { resolveLiveGateFixHref } from "@/lib/domain/setup-first-ten";
 import type { Messages } from "@/lib/i18n/server";
 
 type LiveGatesPanelProps = {

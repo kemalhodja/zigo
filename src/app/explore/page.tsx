@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { ExploreSearchBar } from "@/components/explore-search-bar";
-import { SocialAvatar } from "@/components/social-primitives";
 import { SocialMediaFrame } from "@/components/social-media-frame";
+import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {

@@ -16,9 +16,9 @@
 
 import { useRef, useState } from "react";
 
-import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { compressVideo, validateVideoLimits, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
+import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { createClient } from "@/lib/supabase/client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────

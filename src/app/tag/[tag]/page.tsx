@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { hasSupabaseEnv } from "@/lib/config";
-import { searchSocialPosts } from "@/lib/domain/social";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { searchSocialPosts } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 

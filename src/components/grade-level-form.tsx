@@ -6,7 +6,6 @@ import { useState } from "react";
 import {
   EXAM_GRADE_LEVELS,
   GRADE_LEVEL_OPTIONS,
-  isAutoInterestGradeLevel,
 } from "@/lib/domain/grade-level";
 
 type GradeLevelFormProps = {

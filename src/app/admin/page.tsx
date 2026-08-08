@@ -1,20 +1,19 @@
 import Link from "next/link";
 
-import { AdminLivePulse } from "@/components/admin-live-pulse";
-import { AdminBroadcastButton } from "@/components/admin-broadcast-button";
 import { AdminBankTransferActions } from "@/components/admin-bank-transfer-actions";
 import { AdminBillingGrantActions } from "@/components/admin-billing-grant-actions";
 import { AdminBillingGrantLedger } from "@/components/admin-billing-grant-ledger";
+import { AdminBroadcastButton } from "@/components/admin-broadcast-button";
+import { AdminLivePulse } from "@/components/admin-live-pulse";
 import { AdminRedemptionStatus } from "@/components/admin-redemption-status";
 import { AdminStockForm } from "@/components/admin-stock-form";
 import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
+import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
 import { AdminUserActions } from "@/components/admin-user-actions";
 import { AdminUserSearch } from "@/components/admin-user-search";
-import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv } from "@/lib/config";
-import { getOrganizationOption } from "@/lib/domain/education-organization";
 import {
   getAdminStoreProducts,
   getAdminStoreRedemptions,
@@ -22,26 +21,27 @@ import {
   getUserVerificationQueue,
   isCurrentUserPlatformAdmin,
 } from "@/lib/domain/admin";
-import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
 import { listRecentAdminBillingGrants } from "@/lib/domain/admin-billing-grant";
+import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
+import { getOrganizationOption } from "@/lib/domain/education-organization";
+import { evaluateExpansionReadiness } from "@/lib/domain/expansion-readiness";
 import {
+  type DensityBand,
   EXAM_DENSITY_AGE_GROUPS,
-  PRIORITY_EXAM_AGE_GROUPS,
   formatCoveragePercent,
   getAreaFeedDensityMetrics,
   getVerifiedInactiveTeachers,
   parseDensityAgeGroups,
-  type DensityBand,
+  PRIORITY_EXAM_AGE_GROUPS,
 } from "@/lib/domain/feed-density";
-import { evaluateExpansionReadiness } from "@/lib/domain/expansion-readiness";
 import { LAUNCH_COVERAGE_TARGET, LAUNCH_PRIORITY_TRACKS } from "@/lib/domain/launch-scope";
 import {
-  LEARNING_RETENTION_TARGET,
   formatRetentionPercent,
   getLearningActionRetention,
+  LEARNING_RETENTION_TARGET,
 } from "@/lib/domain/learning-retention";
 import { isAiModerationConfigured } from "@/lib/domain/moderation-ai";
-import { MODERATION_SLA_HOURS, getModerationSlaReport } from "@/lib/domain/moderation-sla";
+import { getModerationSlaReport,MODERATION_SLA_HOURS } from "@/lib/domain/moderation-sla";
 import { getCurrentProfile, getEducationAreas, parseOrganizationType } from "@/lib/domain/profiles";
 import { getRevenueOpsSnapshot } from "@/lib/domain/revenue-ops";
 import { getTeacherActivationFunnel } from "@/lib/domain/verification-activation";

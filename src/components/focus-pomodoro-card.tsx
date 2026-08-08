@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import {
   FOCUS_SESSION_POINTS,
   formatPomodoroCountdown,
   POMODORO_SECONDS,
   pomodoroProgress,
 } from "@/lib/domain/focus-gamification";
-import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type FocusAreaOption = {

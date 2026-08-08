@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { createSocialPostSchema } from "@/lib/domain/social/schemas";
 
 describe("Detailed Post Creation Pipeline & Schema Tests", () => {

@@ -1,5 +1,5 @@
-import type { ViewerRole } from "@/lib/domain/role-theme";
 import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
+import type { ViewerRole } from "@/lib/domain/role-theme";
 
 export type RoleNextActionCopy = {
   title: string;

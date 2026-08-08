@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import { resolveGradeCategory } from "@/lib/domain/education-catalog";
 import {
   filterAreasForInterestSelection,
+  GENERAL_INTEREST_EXPERTISE_AREAS,
   isGeneralInterestArea,
   isTeacherGeneralInterestSelection,
-  GENERAL_INTEREST_EXPERTISE_AREAS,
 } from "@/lib/domain/general-interest-areas";
 
 describe("general interest areas", () => {

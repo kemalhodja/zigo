@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  PRIORITY_EXAM_AGE_GROUPS,
   buildAreaFeedDensityMetrics,
   filterVerifiedInactiveTeachers,
   formatCoveragePercent,
   getAreaFeedDensityMetrics,
   getVerifiedInactiveTeachers,
   parseDensityAgeGroups,
+  PRIORITY_EXAM_AGE_GROUPS,
   resolveDensityBand,
   summarizeAreaFeedDensity,
 } from "@/lib/domain/feed-density";

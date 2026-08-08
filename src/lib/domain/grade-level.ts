@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { resolveGradeCategory, type GradeCategoryKey } from "@/lib/domain/education-catalog";
+import { type GradeCategoryKey,resolveGradeCategory } from "@/lib/domain/education-catalog";
 
 export const GRADE_LEVEL_OPTIONS = [
   "1. Sınıf",

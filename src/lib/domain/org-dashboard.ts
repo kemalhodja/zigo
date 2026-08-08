@@ -1,14 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
-  getOrganizationOption,
-  resolveOrganizationBillingTier,
   type EducationOrganizationBillingTier,
   type EducationOrganizationType,
+  getOrganizationOption,
+  resolveOrganizationBillingTier,
 } from "@/lib/domain/education-organization";
 import { getEducationAreas, getUserInterestAreaIds } from "@/lib/domain/profiles";
-import { isSponsoredExpiryOpen } from "@/lib/domain/sponsor-expiry";
 import { countFollowers, countUserPosts } from "@/lib/domain/social/helpers";
+import { isSponsoredExpiryOpen } from "@/lib/domain/sponsor-expiry";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type OrgDashboardSnapshot = {

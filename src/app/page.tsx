@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AiMentorCard } from "@/components/ai-mentor-card";
 import { TeacherHomeInsights } from "@/components/teacher-home-insights";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { buildDemoPosts } from "@/lib/i18n/demo-feed";
@@ -13,9 +14,8 @@ import {
   getHomeViewerContext,
   getSuggestedCreatorsForHome,
 } from "./_components/home/data";
-import { HomeMissionStrip } from "./_components/home/mission-strip";
-import { AiMentorCard } from "@/components/ai-mentor-card";
 import { CreatorRail, FeedPostCard, FollowingStarter } from "./_components/home/match-feed";
+import { HomeMissionStrip } from "./_components/home/mission-strip";
 import { StoryTray } from "./_components/home/story-tray";
 import { ReelSpotlightRail } from "./_components/home/study-rail";
 

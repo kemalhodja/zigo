@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  REGISTRATION_ACCOUNT_OPTIONS,
-  REGISTRATION_EDUCATION_KIND_IDS,
-  REGISTRATION_PRIMARY_GROUPS,
   accountKindFromPrimaryGroup,
   getRegistrationEducationOptions,
   isOrganizationRegistrationType,
+  REGISTRATION_ACCOUNT_OPTIONS,
+  REGISTRATION_EDUCATION_KIND_IDS,
+  REGISTRATION_PRIMARY_GROUPS,
   resolveAccountKindFromProfile,
   resolveRegistrationAccount,
   resolveRegistrationPrimaryGroup,

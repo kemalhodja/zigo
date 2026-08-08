@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  LAUNCH_BLOCKED_EXAM_TRACKS,
-  LAUNCH_COVERAGE_TARGET,
-  LAUNCH_PRIORITY_TRACKS,
   assertAreaIdsAllowedUnderLaunchFreeze,
   filterAreasForLaunchScopedSelection,
   filterLaunchPriorityAreas,
   findLaunchFreezeRejectedAreaIds,
   isLaunchBlockedExamTrack,
   isLaunchPriorityTrack,
+  LAUNCH_BLOCKED_EXAM_TRACKS,
+  LAUNCH_COVERAGE_TARGET,
+  LAUNCH_PRIORITY_TRACKS,
   shouldEnforceLaunchFreezeForGrade,
 } from "@/lib/domain/launch-scope";
 

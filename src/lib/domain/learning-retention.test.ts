@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  LEARNING_RETENTION_TARGET,
   buildLearningActionRetention,
   formatRetentionPercent,
+  LEARNING_RETENTION_TARGET,
 } from "@/lib/domain/learning-retention";
 
 describe("learning-retention", () => {

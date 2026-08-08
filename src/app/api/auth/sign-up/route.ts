@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -5,7 +6,7 @@ import { RateLimitExceededError } from "@/lib/domain/api-errors";
 import { isEmailConfirmationEnforced, requiresEmailConfirmation } from "@/lib/domain/auth-gates";
 import { getSiteUrl } from "@/lib/domain/deploy-config";
 import { validateInviteCodeFormat } from "@/lib/domain/invite-codes";
-import { resolveRegistrationAccount, REGISTRATION_ACCOUNT_KIND_VALUES } from "@/lib/domain/registration-account";
+import { REGISTRATION_ACCOUNT_KIND_VALUES,resolveRegistrationAccount } from "@/lib/domain/registration-account";
 import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
 import {
   authEmailSchema,
@@ -14,9 +15,8 @@ import {
   verifyAuthRecaptcha,
 } from "@/lib/server/auth-request";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
 
 async function tryRedeemInvite(
   supabase: SupabaseClient<Database>,

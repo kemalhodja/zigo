@@ -1,5 +1,5 @@
-import { isGeneralInterestArea } from "@/lib/domain/general-interest-areas";
 import { PRIORITY_EXAM_AGE_GROUPS, type PriorityExamAgeGroup } from "@/lib/domain/feed-density";
+import { isGeneralInterestArea } from "@/lib/domain/general-interest-areas";
 
 /**
  * Foundation launch freeze: demand and supply ops default to these exam tracks.

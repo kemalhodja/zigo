@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { useMessages } from "@/lib/i18n/locale-context";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
+import { useMessages } from "@/lib/i18n/locale-context";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Status = "idle" | "saving" | "saved" | "error";

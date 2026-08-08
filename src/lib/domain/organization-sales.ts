@@ -1,4 +1,4 @@
-import { getOrganizationOption, type EducationOrganizationType } from "@/lib/domain/education-organization";
+import { type EducationOrganizationType,getOrganizationOption } from "@/lib/domain/education-organization";
 import { shouldHideOrganizationPlanPrices } from "@/lib/domain/registration-account";
 import { findPlanGroup } from "@/lib/domain/subscription-plans";
 import { buildWhatsAppSupportUrl } from "@/lib/domain/support-contact";

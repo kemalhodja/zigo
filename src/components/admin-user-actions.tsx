@@ -4,8 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useMessages } from "@/lib/i18n/locale-context";
-import { AdminMessageDialog } from "./admin-message-dialog";
 import type { AccountStatus } from "@/lib/supabase/database.types";
+
+import { AdminMessageDialog } from "./admin-message-dialog";
 
 type AdminUserActionsProps = {
   userId: string;

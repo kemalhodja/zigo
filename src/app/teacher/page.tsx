@@ -2,21 +2,21 @@ import Link from "next/link";
 
 import { AdCampaignsManager } from "@/components/ad-campaigns-manager";
 import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
+import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { StudioTabsLayout } from "@/components/studio-tabs-layout";
 import { TeacherAnalyticsCard } from "@/components/teacher-analytics-card";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
-import { isMicroQuizPack } from "@/lib/domain/micro-quiz-pack";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
-import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
-import { getOrgDashboardSnapshot } from "@/lib/domain/org-dashboard";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
+import { isMicroQuizPack } from "@/lib/domain/micro-quiz-pack";
+import { getOrgDashboardSnapshot } from "@/lib/domain/org-dashboard";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds, parseOrganizationType } from "@/lib/domain/profiles";
 import { isOrganizationRegistrationType, shouldHideOrganizationPlanPrices } from "@/lib/domain/registration-account";
 import { resolveWrongRoleStudioHref } from "@/lib/domain/role-next-action";
@@ -24,8 +24,8 @@ import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { canTeacherUseCreatorPlusTools } from "@/lib/domain/teacher-creator-plus";
 import {
-  getTeacherActivationState,
   type ActivationStepStatus,
+  getTeacherActivationState,
   type TeacherActivationState,
   type TeacherActivationStepId,
 } from "@/lib/domain/verification-activation";

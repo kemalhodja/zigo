@@ -1,15 +1,15 @@
 import Link from "next/link";
 
-import { FamilyEntitlementCard } from "@/components/family-entitlement-card";
 import { ChildActivityTimeline } from "@/components/child-activity-timeline";
 import { ClassGroupManager } from "@/components/class-group-manager";
+import { FamilyEntitlementCard } from "@/components/family-entitlement-card";
 import { GradeLevelForm } from "@/components/grade-level-form";
+import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
 import { ParentChildrenFocusCard } from "@/components/parent-children-focus-card";
 import { ParentFocusOverviewCard } from "@/components/parent-focus-overview-card";
 import { ParentWeeklyReviewCard } from "@/components/parent-weekly-review-card";
-import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { SocialAvatar, SocialPill } from "@/components/social-primitives";
 import { StateCard } from "@/components/state-card";
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";

@@ -1,12 +1,12 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { useId, useRef, useState } from "react";
 
 import { CommentSheet } from "@/components/social-actions/comment-sheet";
 import { triggerHaptic } from "@/lib/client/haptics";
 import { useMessages } from "@/lib/i18n/locale-context";
-import { useRouter } from "next/navigation";
 
 type LoadedComment = {
   id: string;

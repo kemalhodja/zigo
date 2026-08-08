@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMessages } from "@/lib/i18n/locale-context";
+
 import { getDistrictsForCity } from "@/lib/domain/turkey-cities-districts";
+import { useMessages } from "@/lib/i18n/locale-context";
 
 type CreateAdCampaignModalProps = {
   existingPostId?: string;

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import type { ComposerArea } from "@/components/create-mode-composer";
-import { SocialMediaFrame, type MediaFilterPreset } from "@/components/social-media-frame";
+import { type MediaFilterPreset,SocialMediaFrame } from "@/components/social-media-frame";
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
 import { compressVideo, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";

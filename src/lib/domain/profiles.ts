@@ -5,7 +5,7 @@ import {
   type EducationOrganizationType,
   isEducationOrganizationType,
 } from "@/lib/domain/education-organization";
-import { updateGradeLevelSchema, isAutoInterestGradeLevel, resolveAutoInterestAreaIds } from "@/lib/domain/grade-level";
+import { isAutoInterestGradeLevel, resolveAutoInterestAreaIds,updateGradeLevelSchema } from "@/lib/domain/grade-level";
 import { assertModeratedOptionalText } from "@/lib/domain/moderation";
 import {
   REGISTRATION_ACCOUNT_KIND_VALUES,

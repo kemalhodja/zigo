@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  TEACHER_QUIZ_QUESTION_COUNT,
   createQuizSchema,
+  TEACHER_QUIZ_QUESTION_COUNT,
 } from "@/lib/domain/learning/schemas";
 
 function buildQuestion(suffix: string, correctOption = 0) {

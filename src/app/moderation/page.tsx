@@ -7,12 +7,12 @@ import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import {
-  MODERATION_SLA_HOURS,
   formatSlaAgeHours,
   getModerationSlaReport,
   isSlaBreached,
-  sortModerationQueueBySla,
+  MODERATION_SLA_HOURS,
   type ModerationSlaReport,
+  sortModerationQueueBySla,
 } from "@/lib/domain/moderation-sla";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import type { StudentFocusAnalytics } from "@/lib/domain/focus-analytics";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
+import type { StudentFocusAnalytics } from "@/lib/domain/focus-analytics";
 
 type StudyPlanCardProps = {
   analytics: StudentFocusAnalytics;

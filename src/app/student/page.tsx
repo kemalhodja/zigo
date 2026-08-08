@@ -23,11 +23,11 @@ import {
 } from "@/lib/domain/learning";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { buildStudentGamification, LEAGUE_PATH } from "@/lib/domain/student-gamification";
+import type { AreaLeaderboardEntry } from "@/lib/domain/student-leaderboard";
 import {
   getAreaLeaderboard,
   getPrimaryInterestAreaId,
 } from "@/lib/domain/student-leaderboard-service";
-import type { AreaLeaderboardEntry } from "@/lib/domain/student-leaderboard";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";

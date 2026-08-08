@@ -7,8 +7,8 @@ import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { isGeneralInterestArea } from "@/lib/domain/general-interest-areas";
 import {
   EXAM_GRADE_LEVELS,
-  GRADE_LEVEL_OPTIONS,
   filterAreasForGradeLevel,
+  GRADE_LEVEL_OPTIONS,
   isAutoInterestGradeLevel,
   resolveAutoInterestAreaIds,
 } from "@/lib/domain/grade-level";

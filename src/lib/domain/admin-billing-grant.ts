@@ -1,7 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import type { Database } from "@/lib/supabase/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const adminBillingGrantSchema = z.discriminatedUnion("kind", [
   z.object({

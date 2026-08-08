@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { decideLearningReminder } from "@/lib/domain/learning-reminder";
 import { getDailyMissionProgress } from "@/lib/domain/learning";
+import { decideLearningReminder } from "@/lib/domain/learning-reminder";
 import type { Database } from "@/lib/supabase/database.types";
 
 /** Insert at most one learning reminder system notification per local day. */

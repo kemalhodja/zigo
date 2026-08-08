@@ -106,7 +106,7 @@ export async function getSocialFeed(
     return dbQuery;
   };
 
-  let { data, error } = await buildQuery(areaIds.length > 0);
+  const { data, error } = await buildQuery(areaIds.length > 0);
   if (error) throw error;
 
   // Fallback to general feed if filtered feed returns empty

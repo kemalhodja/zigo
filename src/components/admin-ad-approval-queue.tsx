@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+
 import { SocialMediaFrame } from "@/components/social-media-frame";
 
 type PendingAd = {
