@@ -30,6 +30,24 @@ import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { getStudentFocusAnalytics } from "@/lib/domain/focus-analytics";
+
+const fallbackStats: LearningProgressStats = {
+  eventCount: 18,
+  reelWatches: 9,
+  quizCompletions: 6,
+  duelWins: 3,
+  focusSessions: 2,
+  pointsFromEvents: 180,
+};
+const emptyStats: LearningProgressStats = {
+  eventCount: 0,
+  reelWatches: 0,
+  quizCompletions: 0,
+  duelWins: 0,
+  focusSessions: 0,
+  pointsFromEvents: 0,
+};
 
 
 
