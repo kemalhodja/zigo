@@ -45,9 +45,9 @@ export default async function BillingSuccessPage({ searchParams }: BillingSucces
           <>
             <Link
               className="zigo-cta inline-flex rounded-lg px-4 py-2 text-sm font-black text-white"
-              href="/focus"
+              href="/learn"
             >
-              Odağı aç
+              Öğrenmeye başla
             </Link>
             <Link
               className="inline-flex rounded-lg border border-slate-200 px-4 py-2 text-sm font-black text-night"

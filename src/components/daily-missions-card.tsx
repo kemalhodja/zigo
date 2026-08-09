@@ -15,7 +15,7 @@ export function DailyMissionsCard() {
     () =>
       [
         {
-          id: "watch-reel" as const,
+          id: "watch-micro" as const,
           title: m.missions.watchMicro,
           reward: m.missions.reward10,
           href: "/micro",
@@ -25,18 +25,6 @@ export function DailyMissionsCard() {
           title: m.missions.finishQuiz,
           reward: m.missions.reward10,
           href: "/learn",
-        },
-        {
-          id: "safe-duel" as const,
-          title: m.missions.playDuel,
-          reward: m.missions.reward25,
-          href: "/duels",
-        },
-        {
-          id: "focus-pomodoro" as const,
-          title: m.missions.focusPomodoro,
-          reward: m.missions.reward15,
-          href: "/focus",
         },
         {
           id: "visit-store" as const,
