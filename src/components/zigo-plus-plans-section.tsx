@@ -244,20 +244,60 @@ function PlanPriceRow({
   async function subscribeGooglePlay() {
     setLoading(true);
     setMessage("");
-    try {
-      const mockPurchaseToken = `gplay_token_${Math.random().toString(36).substring(2, 12)}`;
-      const mockOrderId = `GPA.${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10000 + Math.random() * 90000)}`;
-      const mockProductId = "zigo_plus";
+    
+    let purchaseToken: string | null = null;
+    let orderId: string | null = null;
+    const productId = "zigo_plus";
 
+    // Detect Capacitor environment
+    const win = typeof window !== "undefined" ? (window as unknown as { Capacitor?: unknown; Android?: unknown }) : null;
+    const isAndroidWindow = Boolean(win?.Capacitor || win?.Android);
+
+    if (isAndroidWindow) {
+      try {
+        const { NativePurchases, PURCHASE_TYPE } = await import("@capgo/native-purchases");
+        const isSupported = await NativePurchases.isBillingSupported().then((res) => res.isBillingSupported).catch(() => false);
+        
+        if (isSupported) {
+          const transaction = await NativePurchases.purchaseProduct({
+            productIdentifier: productId,
+            planIdentifier: planId,
+            productType: PURCHASE_TYPE.SUBS,
+            quantity: 1,
+          });
+
+          purchaseToken = transaction.purchaseToken || null;
+          orderId = transaction.transactionId || null;
+        }
+      } catch (nativeErr) {
+        console.error("Native Google Play purchase failed:", nativeErr);
+        setMessage("Ödeme ekranı açılamadı. Lütfen Play Store ayarlarınızı kontrol edin.");
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (!purchaseToken) {
+      if (process.env.NODE_ENV === "production") {
+        setMessage("Google Play ödemesi yalnızca Zigo mobil uygulaması üzerinden gerçekleştirilebilir.");
+        setLoading(false);
+        return;
+      }
+      
+      purchaseToken = `gplay_token_${Math.random().toString(36).substring(2, 12)}`;
+      orderId = `GPA.${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10000 + Math.random() * 90000)}`;
+    }
+
+    try {
       const response = await fetch("/api/billing/google-play", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planId,
-          productId: mockProductId,
-          purchaseToken: mockPurchaseToken,
+          productId,
+          purchaseToken,
           packageName: "com.zigo.app",
-          orderId: mockOrderId,
+          orderId,
         }),
       });
 

@@ -55,18 +55,19 @@ export function SubscribeButton({
       
       if (isAndroidWindow) {
         try {
-          const iapPkg = "react-native-iap";
-          const RNIap = await import(/* webpackIgnore: true */ iapPkg).catch(() => null);
-          if (RNIap?.default || RNIap) {
-            const { initConnection, requestSubscription, finishTransaction } = RNIap.default || RNIap;
-            await initConnection();
-            const purchase = await requestSubscription({ sku: productId });
-            purchaseToken = purchase.purchaseToken || purchase.transactionReceipt || null;
-            orderId = purchase.transactionId || null;
+          const { NativePurchases, PURCHASE_TYPE } = await import("@capgo/native-purchases");
+          const isSupported = await NativePurchases.isBillingSupported().then((res) => res.isBillingSupported).catch(() => false);
+          
+          if (isSupported) {
+            const transaction = await NativePurchases.purchaseProduct({
+              productIdentifier: productId,
+              planIdentifier: planId,
+              productType: PURCHASE_TYPE.SUBS,
+              quantity: 1,
+            });
 
-            if (purchaseToken) {
-              await finishTransaction({ purchase, isConsumable: false });
-            }
+            purchaseToken = transaction.purchaseToken || null;
+            orderId = transaction.transactionId || null;
           }
         } catch (nativeErr) {
           const msg = nativeErr instanceof Error ? nativeErr.message : "Native IAP Error";
@@ -76,6 +77,12 @@ export function SubscribeButton({
 
       // If purchaseToken was not acquired through Native SDK (e.g. testing/web interface fallback)
       if (!purchaseToken) {
+        if (process.env.NODE_ENV === "production") {
+          toast.error("Google Play ödemesi yalnızca Zigo mobil uygulaması üzerinden gerçekleştirilebilir.");
+          setLoading(false);
+          return;
+        }
+
         // Mock purchaseToken generation for test/web client flow
         purchaseToken = `gplay_token_zigo_plus_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         orderId = `GPA.${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10000 + Math.random() * 90000)}`;
