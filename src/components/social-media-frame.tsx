@@ -49,6 +49,7 @@ export function SocialMediaFrame({
 }: SocialMediaFrameProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Consolidate single url or array into items array
   const rawUrls = mediaUrls && mediaUrls.length > 0 ? mediaUrls : mediaUrl ? [mediaUrl] : [];
@@ -56,6 +57,35 @@ export function SocialMediaFrame({
   const isCarousel = items.length > 1;
   const hasMedia = items.length > 0;
   const isVideo = Boolean(hasMedia && mediaType === "video");
+
+  React.useEffect(() => {
+    if (!isVideo || !videoRef.current) return;
+
+    const video = videoRef.current;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            if (entry.intersectionRatio >= 0.5) {
+              video.play().catch(() => {});
+            }
+          } else {
+            video.pause();
+          }
+        }
+      },
+      {
+        threshold: [0.1, 0.5, 0.8],
+      }
+    );
+
+    observer.observe(video);
+
+    return () => {
+      observer.unobserve(video);
+    };
+  }, [isVideo]);
 
   const fitClass =
     objectFit === "cover" ? "object-cover" : objectFit === "fill" ? "object-fill" : "object-contain";
@@ -132,6 +162,7 @@ export function SocialMediaFrame({
         isVideo ? (
           <div className="relative w-full h-auto">
             <video
+              ref={videoRef}
               aria-label={alt || "Video preview"}
               className={`w-full h-auto max-h-[75vh] transition-all duration-200 ${fitClass}`}
               controls={controls}
