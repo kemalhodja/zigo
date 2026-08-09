@@ -130,10 +130,10 @@ export function SocialMediaFrame({
         </div>
       ) : hasMedia ? (
         isVideo ? (
-          <div className="relative size-full">
+          <div className="relative w-full h-auto">
             <video
               aria-label={alt || "Video preview"}
-              className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
+              className={`w-full h-auto max-h-[75vh] transition-all duration-200 ${fitClass}`}
               controls={controls}
               loop={!controls}
               muted={!controls}
@@ -156,7 +156,7 @@ export function SocialMediaFrame({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             alt={alt}
-            className={`absolute inset-0 size-full transition-all duration-200 ${fitClass}`}
+            className={`w-full h-auto max-h-[75vh] transition-all duration-200 ${fitClass}`}
             decoding="async"
             fetchPriority={priority ? "high" : "low"}
             loading={priority ? "eager" : "lazy"}

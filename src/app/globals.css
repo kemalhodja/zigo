@@ -969,9 +969,7 @@ body.role-theme-teacher {
 }
 
 .zigo-media {
-  aspect-ratio: 4 / 5;
   width: 100%;
-  max-height: min(68dvh, 28rem);
   min-height: 0;
 }
 
