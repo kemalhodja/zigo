@@ -430,7 +430,7 @@ export const catalogTr = {
     heroTitle: "YKS yolculuğunu paylaşılabilir çalışma görevlerine dönüştür.",
     heroDesc: "Her doğrulanmış 25 dakikalık Pomodoro platform puanı kazandırır ve avatarını büyütür. Tamamlanan oturumları aynı YKS alanındaki sınıf arkadaşlarınla paylaş.",
     focusPremium: "Dikkatsiz odak modu",
-    focusFree: "Görevde kal — Zigo Plus ile reklamlar gizli",
+    focusFree: "Görevde kal — Zigo Plus ile kişisel odaklanma paneli",
     shared: "Çalışma çevrenle paylaşıldı",
     keepScreenOpen: "Zamanlayıcı bitene kadar bu ekranı açık tut. Puanlar sunucu 25 dakikayı doğruladığında açılır.",
     shareFailed: "Çalışma anı paylaşılamadı.",
