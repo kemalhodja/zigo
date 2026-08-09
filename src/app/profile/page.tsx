@@ -230,14 +230,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       <ProfileHighlights />
 
       <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} role={profile.role} />
-      <ProfileInsightCard
-        activeTabLabel={activeTabLabel}
-        followers={profile.stats.followers}
-        following={profile.stats.following}
-        messages={m}
-        posts={profile.stats.posts}
-        visibleTiles={profile.posts.length}
-      />
 
       <ProfileCreatorDiscovery creators={profile.suggestedCreators} isSignedOut={profile.isSignedOut} messages={m} />
 
