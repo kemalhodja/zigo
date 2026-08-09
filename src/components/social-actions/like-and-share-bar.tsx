@@ -62,10 +62,16 @@ export function LikeAndShareBar({
   labels,
 }: LikeAndShareBarProps) {
   const [bounceKey, setBounceKey] = React.useState(0);
+  const [saveBounceKey, setSaveBounceKey] = React.useState(0);
 
   function handleLikeClick() {
     setBounceKey((k) => k + 1);
     onToggleLike();
+  }
+
+  function handleSaveClick() {
+    setSaveBounceKey((k) => k + 1);
+    onToggleSave();
   }
 
   return (
@@ -114,10 +120,12 @@ export function LikeAndShareBar({
           aria-label={isSaved ? labels.unsave : labels.save}
           className="tap-scale flex size-9 items-center justify-center text-night transition"
           disabled={pendingAction === "saves"}
-          onClick={onToggleSave}
+          onClick={handleSaveClick}
           type="button"
         >
-          <ActionIcon name="save" filled={isSaved} />
+          <span key={`save-${saveBounceKey}`} className={saveBounceKey > 0 ? "save-bounce" : ""}>
+            <ActionIcon name="save" filled={isSaved} />
+          </span>
         </button>
       </div>
       <p className="text-[0.92rem] font-black leading-5 text-night">{numberFormatter.format(likes)} {labels.likes}</p>
