@@ -161,6 +161,8 @@ import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
+import { getCachedSocialFeed } from "@/lib/domain/social/cached-feed";
+
 export async function getHomePosts(): Promise<DisplayPost[]> {
   const m = await getServerMessages();
 
@@ -173,9 +175,10 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     const profile = await getCurrentProfile(supabase);
     if (!profile) return [];
 
+    // Limit general feed query to 15 items to load faster, and use caching strategy
     const [followingPosts, generalPage] = await Promise.all([
       getFollowingFeed(supabase, profile.id).catch(() => []),
-      getSocialFeed(supabase, profile.id, { limit: 30 }).catch(() => ({ posts: [] })),
+      getCachedSocialFeed(supabase, profile.id, { limit: 15 }).catch(() => ({ posts: [] })),
     ]);
 
     const generalPosts = generalPage.posts ?? [];
@@ -192,15 +195,18 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
 
     if (combinedPosts.length === 0) return [];
 
+    // Limit display total to 15 for faster visual rendering
+    const slicedPosts = combinedPosts.slice(0, 15);
+
     const followingByPost = await Promise.all(
-      combinedPosts.map((post) =>
+      slicedPosts.map((post) =>
         profile && post.author?.id && post.author.id !== profile.id
           ? isFollowing(supabase, profile.id, post.author.id)
           : Promise.resolve(false),
       ),
     );
 
-    return combinedPosts.map((post, index) =>
+    return slicedPosts.map((post, index) =>
       toDisplayPost(post, index, {
         canFollowCreator: Boolean(profile && post.author?.id && post.author.id !== profile.id),
         isFollowingCreator: followingByPost[index] ?? false,
