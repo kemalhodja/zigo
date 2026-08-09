@@ -99,4 +99,11 @@ test.describe("API contracts", () => {
     const body = (await response.json()) as { code?: string; error?: string };
     expect(body.code === "MODERATION_BLOCKED" || /moderasyon|blocked/i.test(body.error ?? "")).toBeTruthy();
   });
+
+  test("google play webhook handles invalid payload with 400", async ({ request }) => {
+    const response = await request.post("/api/billing/google-play/webhook", {
+      data: { invalid: true },
+    });
+    expect(response.status()).toBe(400);
+  });
 });
