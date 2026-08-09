@@ -137,18 +137,10 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
 
         <DailyMissionsCard />
 
-        <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Link className="tap-scale rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 p-4 text-center text-white" href="/focus">
-            <p className="text-lg font-black">{messages.dock.focus}</p>
-            <p className="mt-1 text-xs font-bold text-white/75">{l.pomodoroShort}</p>
-          </Link>
+        <section className="grid grid-cols-2 gap-2">
           <Link className="tap-scale rounded-lg bg-white p-4 text-center" href="/micro">
             <p className="text-lg font-black text-night">{messages.nav.micro}</p>
             <p className="mt-1 text-xs font-bold text-slate-500">{l.watchClaim}</p>
-          </Link>
-          <Link className="tap-scale rounded-lg bg-gradient-to-br from-crystal to-berry p-4 text-center text-white" href="/duels">
-            <p className="text-lg font-black">{d.student.duels}</p>
-            <p className="mt-1 text-xs font-bold text-white/75">{l.safeRaces}</p>
           </Link>
           <Link className="tap-scale rounded-lg bg-white p-4 text-center" href="/store">
             <p className="text-lg font-black text-night">{d.student.store}</p>
@@ -355,9 +347,6 @@ function LearnQuestHero({
         <Link className="zigo-action-chip zigo-quick-action-secondary tap-scale rounded-xl text-violet-700" href="/learn">
           {messages.dock.learn}
         </Link>
-        <Link className="zigo-action-chip zigo-quick-action-secondary tap-scale rounded-xl border border-cyan-100 bg-cyan-50 !text-cyan-700" href="/duels">
-          {d.duels}
-        </Link>
       </div>
     </section>
   );
@@ -432,7 +421,6 @@ function LearnHubSummary({
   const segments = [
     { href: "/micro", label: nav.micro, value: videoCount, tone: "from-crystal to-berry" },
     { href: "/learn", label: lp.hubQuizzes, value: quizCount, tone: "from-aqua to-mint" },
-    { href: "/duels", label: d.duels, value: "+25", tone: "from-sun to-peach" },
   ];
 
   return (

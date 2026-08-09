@@ -224,14 +224,8 @@ function QuickActionDock({
           <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/student">
             {dock.student.hub}
           </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/focus">
-            {dock.student.focus}
-          </Link>
           <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
             {dock.student.learn}
-          </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/duels">
-            {dock.student.duels}
           </Link>
         </div>
       </section>

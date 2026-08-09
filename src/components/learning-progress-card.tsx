@@ -86,15 +86,6 @@ export async function LearningProgressCard({
         <span className="shrink-0 rounded-xl border border-white/25 bg-white/20 px-3 py-1.5 text-[0.72rem] font-black backdrop-blur-md whitespace-nowrap">
           {p.quizCount.replace("{n}", String(quizCompletions))}
         </span>
-        <span className="shrink-0 rounded-xl border border-white/25 bg-white/20 px-3 py-1.5 text-[0.72rem] font-black backdrop-blur-md whitespace-nowrap">
-          {p.duelCount.replace("{n}", String(duelWins))}
-        </span>
-        <span className="shrink-0 rounded-xl border border-white/25 bg-white/20 px-3 py-1.5 text-[0.72rem] font-black backdrop-blur-md whitespace-nowrap">
-          {p.focusCount.replace("{n}", String(focusSessions))}
-        </span>
-        <Link className="tap-scale shrink-0 rounded-xl border border-white/35 bg-white/25 px-3 py-1.5 text-[0.72rem] font-black text-white backdrop-blur-md transition hover:bg-white/35 whitespace-nowrap" href="/focus">
-          {m.zigo.focusMode}
-        </Link>
         <Link className="tap-scale shrink-0 rounded-xl bg-white px-3.5 py-1.5 text-[0.72rem] font-black text-crystal shadow-sm hover:bg-slate-50 transition whitespace-nowrap" href="/store">
           {m.dashboard.student.store}
         </Link>

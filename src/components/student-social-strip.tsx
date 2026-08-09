@@ -38,9 +38,6 @@ export async function StudentSocialStrip({ points, streakDays = 0 }: StudentSoci
         </div>
       </div>
       <div className="zigo-action-grid mt-3">
-        <Link className="zigo-action-chip tap-scale zigo-pill-btn rounded-xl bg-white text-crystal" href="/focus">
-          {s.focus}
-        </Link>
         <Link className="zigo-action-chip tap-scale zigo-pill-btn rounded-xl bg-white text-crystal" href="/learn">
           {s.quiz}
         </Link>

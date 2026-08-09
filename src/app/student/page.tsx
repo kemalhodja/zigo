@@ -109,10 +109,8 @@ export default async function StudentPage() {
       ) : null}
 
       <section className="grid grid-cols-2 gap-2">
-        <DashboardLink accent="from-indigo-600 to-violet-600" href="/focus" label={z.focusMode} text={z.studyWithMe} />
         <DashboardLink accent="from-crystal to-berry" href="/micro" label={z.micro} text={d.student.watchEarn} />
         <DashboardLink accent="from-aqua to-mint" href="/learn" label={m.dock.learn} text={d.student.quizzes} />
-        <DashboardLink accent="from-violet-600 to-fuchsia-500" href="/duels" label={d.student.duels} text={d.student.topicRaces} />
         <DashboardLink accent="from-sun to-peach" href="/store" label={d.student.store} text={d.student.spendPoints} />
         <DashboardLink accent="from-berry to-peach" href="/avatar" label={d.student.avatar} text={d.student.equipRewards} />
       </section>

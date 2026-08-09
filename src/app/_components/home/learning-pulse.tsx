@@ -54,12 +54,6 @@ export function HomeLearningPulse() {
                 <span className="text-[10px] font-bold text-cyan-200">Pratik</span>
               </span>
             </Link>
-            <Link className="zigo-action-chip tap-scale rounded-xl bg-white/12 text-white shadow-sm shadow-black/10 hover:bg-white/18" href="/duels">
-              <span className="flex flex-col items-center">
-                <span className="text-xs font-black">Düello</span>
-                <span className="text-[10px] font-bold text-amber-200">Yarış</span>
-              </span>
-            </Link>
           </div>
 
           <div className="border-t border-white/10 pt-2">

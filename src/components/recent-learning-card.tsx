@@ -64,17 +64,11 @@ export function RecentLearningCard({ history, showPreview = false }: RecentLearn
         <div className="mt-4 rounded-lg bg-slate-50 px-4 py-4">
           <p className="zigo-body font-semibold text-slate-500">{rl.emptyDesc}</p>
           <div className="zigo-action-grid mt-3">
-            <Link className="zigo-action-chip tap-scale rounded-lg bg-white text-crystal" href="/focus">
-              {rl.focusLink}
-            </Link>
             <Link className="zigo-action-chip tap-scale rounded-lg bg-white text-crystal" href="/micro">
               {n.micro}
             </Link>
             <Link className="zigo-action-chip tap-scale rounded-lg bg-white text-crystal" href="/learn">
               {rl.quizLink}
-            </Link>
-            <Link className="zigo-action-chip tap-scale rounded-lg bg-white text-crystal" href="/duels">
-              {rl.duelsLink}
             </Link>
           </div>
         </div>
