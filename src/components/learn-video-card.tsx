@@ -72,7 +72,21 @@ export function LearnVideoCard({ post, childProfileId }: LearnVideoCardProps) {
 
       {playbackUrl ? (
         <div className="overflow-hidden rounded-xl bg-night">
-          <video className="aspect-video w-full object-cover" controls playsInline preload="metadata" src={playbackUrl} />
+          <video
+            className="aspect-video w-full object-cover cursor-pointer"
+            controls
+            playsInline
+            preload="metadata"
+            src={playbackUrl}
+            onClick={(e) => {
+              const video = e.currentTarget;
+              if (video.paused) {
+                video.play().catch(() => {});
+              } else {
+                video.pause();
+              }
+            }}
+          />
         </div>
       ) : null}
 

@@ -99,7 +99,15 @@ export function SocialMediaFrame({
                   controls={controls}
                   loop={!controls}
                   muted={!controls}
-                  onClick={controls ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const video = e.currentTarget;
+                    if (video.paused) {
+                      video.play().catch(() => {});
+                    } else {
+                      video.pause();
+                    }
+                  }}
                   playsInline
                   preload={controls ? "metadata" : "none"}
                   src={url}
@@ -129,7 +137,15 @@ export function SocialMediaFrame({
               controls={controls}
               loop={!controls}
               muted={!controls}
-              onClick={controls ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
+              onClick={(e) => {
+                e.stopPropagation();
+                const video = e.currentTarget;
+                if (video.paused) {
+                  video.play().catch(() => {});
+                } else {
+                  video.pause();
+                }
+              }}
               playsInline
               preload={controls ? "metadata" : "none"}
               src={items[0]}
