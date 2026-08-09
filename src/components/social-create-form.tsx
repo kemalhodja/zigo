@@ -7,6 +7,7 @@ import type { ComposerArea } from "@/components/create-mode-composer";
 import { type MediaFilterPreset,SocialMediaFrame } from "@/components/social-media-frame";
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
 import { compressVideo, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
+import { compressImage } from "@/lib/client/compress-image";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
@@ -237,6 +238,16 @@ export function SocialCreateForm({
           fileToUpload = selectedFile;
         } finally {
           compressAbortRef.current = null;
+        }
+      }
+      // ── Image compression (client-side, before upload) ─────────────────────
+      if (selectedFile.type.startsWith("image/") && selectedFile.size > 1.5 * 1024 * 1024) {
+        setStep("compressing");
+        setMessage("Görsel sıkıştırılıyor…");
+        try {
+          fileToUpload = await compressImage(selectedFile);
+        } catch {
+          fileToUpload = selectedFile;
         }
       }
       // ───────────────────────────────────────────────────────────────────────
