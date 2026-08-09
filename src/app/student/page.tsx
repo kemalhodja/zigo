@@ -94,7 +94,6 @@ export default async function StudentPage() {
 
       {!data.isSignedOut && !data.showPreview ? (
         <div className="space-y-3">
-          <PomodoroTimer />
           <SubscribeButton />
           <GradeLevelForm initialGradeLevel={data.gradeLevel} />
           <ClassGroupManager
