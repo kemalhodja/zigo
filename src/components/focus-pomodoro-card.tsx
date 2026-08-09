@@ -231,7 +231,7 @@ export function FocusPomodoroCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          caption: shareCaption.trim() || undefined,
+          caption: (shareCaption ?? "").trim() || undefined,
         }),
       });
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;

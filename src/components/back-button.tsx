@@ -13,7 +13,7 @@ type BackButtonProps = {
 export function BackButton({ fallbackHref = "/", className, label }: BackButtonProps) {
   const router = useRouter();
   const m = useMessages();
-  const backLabel = label ?? m.common?.cancel ?? "Geri";
+  const backLabel = label ?? "Geri";
 
   function handleBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {

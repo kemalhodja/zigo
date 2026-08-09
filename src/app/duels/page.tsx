@@ -100,7 +100,7 @@ export default async function DuelsPage() {
                 {m.onboarding.chooseInterests}
               </Link>
             }
-            description={d.signInDesc}
+            description="Sana uygun konu düellolarının açılması için ilgi ve ders alanlarını seç."
             title={d.chooseDuel}
           />
         ) : (

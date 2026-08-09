@@ -106,9 +106,13 @@ export function InterestSelector({
         : { href: "/", label: i.continueFeed };
 
   function renderAreaButtons(areaList: EducationArea[]) {
+    const uniqueAreas = Array.from(
+      new Map(areaList.map((item) => [displayEducationAreaName(item.area_name), item])).values()
+    );
+
     return (
       <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-        {areaList.map((area) => {
+        {uniqueAreas.map((area) => {
           const isSelected = selectedAreaIds.has(area.id);
           const displayName = displayEducationAreaName(area.area_name);
 
