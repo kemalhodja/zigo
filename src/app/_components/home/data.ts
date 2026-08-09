@@ -353,6 +353,7 @@ function toDisplayPost(
     postId: post.id,
     authorId: post.author?.id,
     authorName,
+    avatarUrl: post.author?.avatar_url,
     coAuthorId: post.co_author?.id,
     coAuthorName: post.co_author?.full_name,
     handle: authorName.toLowerCase().replaceAll(" ", ""),
