@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { ClassGroupManager } from "@/components/class-group-manager";
 import { DailyMissionsCard } from "@/components/daily-missions-card";
-import { FocusAnalyticsCard } from "@/components/focus-analytics-card";
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { LearningProgressCard } from "@/components/learning-progress-card";
 import { RecentLearningCard } from "@/components/recent-learning-card";
@@ -13,7 +12,6 @@ import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { allowDemoContent } from "@/lib/domain/demo-env";
-import { getStudentFocusAnalytics } from "@/lib/domain/focus-analytics";
 import {
   getDailyMissionProgress,
   getLearningProgressStats,
@@ -33,24 +31,7 @@ import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
-const fallbackStats: LearningProgressStats = {
-  eventCount: 18,
-  reelWatches: 9,
-  quizCompletions: 6,
-  duelWins: 3,
-  focusSessions: 2,
-  pointsFromEvents: 180,
-};
-const emptyStats: LearningProgressStats = {
-  eventCount: 0,
-  reelWatches: 0,
-  quizCompletions: 0,
-  duelWins: 0,
-  focusSessions: 0,
-  pointsFromEvents: 0,
-};
 
-import { PomodoroTimer } from "@/components/pomodoro-timer";
 
 export default async function StudentPage() {
   const data = await getStudentDashboardData();
