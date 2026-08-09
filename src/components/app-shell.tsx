@@ -171,7 +171,11 @@ export function AppShell({
         </a>
       ) : null}
 
-      <main className={`min-w-0 flex-1 ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6"}`} id="main-content">
+      <main
+        key={pathname}
+        className={`min-w-0 flex-1 page-transition-fade ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6"}`}
+        id="main-content"
+      >
         {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
           <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
         ) : null}
