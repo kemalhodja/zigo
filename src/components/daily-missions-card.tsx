@@ -15,7 +15,7 @@ export function DailyMissionsCard() {
     () =>
       [
         {
-          id: "watch-micro" as const,
+          id: "watch-reel" as const,
           title: m.missions.watchMicro,
           reward: m.missions.reward10,
           href: "/micro",
