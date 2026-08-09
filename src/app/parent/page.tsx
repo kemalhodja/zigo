@@ -99,13 +99,7 @@ export default async function ParentPage() {
         />
       ) : null}
 
-      {mode === "parent" || mode === "preview" ? (
-        <ParentFocusOverviewCard overview={focusOverview} showPreview={mode === "preview" || !childrenUnlocked} />
-      ) : null}
 
-      {mode === "parent" || mode === "preview" ? (
-        <ParentChildrenFocusCard showPreview={mode === "preview" || !childrenUnlocked} stats={childrenFocusStats} />
-      ) : null}
 
       {mode === "parent" ? (
         <div className="space-y-3">
