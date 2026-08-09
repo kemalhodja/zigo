@@ -257,7 +257,7 @@ export const catalogEn = {
     creatingRequest: "Creating reward request...",
     redeemFailed: "Reward could not be redeemed.",
     redeemParent: "Reward redeemed for the selected child.",
-    redeemStudent: "Reward request created.",
+    redeemStudent: "Reward request received and sent for parent approval! It will be prepared once your parent approves.",
     redeemDefault: "Redeem with Zigo points.",
     unlimited: "Unlimited",
     inStock: "{count} in stock",

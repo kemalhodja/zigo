@@ -256,7 +256,7 @@ export const catalogTr = {
     creatingRequest: "Ödül talebi oluşturuluyor…",
     redeemFailed: "Ödül kullanılamadı.",
     redeemParent: "Seçili öğrenci için ödül kullanıldı.",
-    redeemStudent: "Ödül talebi oluşturuldu.",
+    redeemStudent: "Ödül talebiniz alındı ve velinizin onayına gönderildi! Veliniz onayladıktan sonra hazırlanacaktır.",
     redeemDefault: "Zigo puanlarıyla kullan.",
     unlimited: "Sınırsız",
     inStock: "{count} stokta",
