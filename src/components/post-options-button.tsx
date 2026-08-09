@@ -204,6 +204,36 @@ export function PostOptionsButton({
     }
   }
 
+  async function deletePost() {
+    if (isSaving || !postId) return;
+
+    if (!window.confirm("Bu gönderiyi tamamen silmek istediğinizden emin misiniz?")) {
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(`/api/social/posts?postId=${postId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        complete(payload?.error ?? "Gönderi silinemedi.");
+        return;
+      }
+
+      complete("Gönderi silindi.");
+      router.refresh();
+    } catch {
+      complete(a.connectionFailed || "Bağlantı hatası.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="relative">
       <button
@@ -227,7 +257,7 @@ export function PostOptionsButton({
       {isOpen && !isEditing ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/45 px-4 pb-4 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
           <div
-            className="mx-auto w-full max-w-md overflow-hidden rounded-t-2xl bg-white"
+            className="mx-auto w-full max-w-md max-h-[80vh] overflow-y-auto rounded-t-2xl bg-white pb-8"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex justify-center py-3">
@@ -251,6 +281,14 @@ export function PostOptionsButton({
                   type="button"
                 >
                   📌 {isPinned ? "Profilinden Sabitlemeyi Kaldır" : "Profiline Sabitle"}
+                </button>
+                <button
+                  className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-rose-600"
+                  disabled={isSaving}
+                  onClick={() => void deletePost()}
+                  type="button"
+                >
+                  🗑️ Gönderiyi Sil
                 </button>
               </>
             ) : null}

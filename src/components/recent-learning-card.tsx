@@ -49,7 +49,7 @@ export function RecentLearningCard({ history, showPreview = false }: RecentLearn
   }
 
   return (
-    <section className="-mx-4 bg-white px-4 py-4">
+    <section className="-mx-4 bg-white px-4 pt-6 pb-4 border-t border-slate-100">
       <div className="flex items-center justify-between">
         <div>
           <p className="zigo-eyebrow text-slate-500">{rl.title}</p>

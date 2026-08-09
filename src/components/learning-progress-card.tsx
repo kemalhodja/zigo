@@ -37,8 +37,8 @@ export async function LearningProgressCard({
   return (
     <section className="-mx-4 overflow-hidden rounded-2xl bg-gradient-to-br from-crystal via-berry to-aqua p-4 text-white shadow-lg">
       {/* Header row: Wallet title & Points + Level Badge */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="min-w-0">
           <p className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/80">{p.wallet}</p>
           <div className="mt-1 flex items-baseline gap-1.5">
             <h2 className="text-3xl font-black leading-none">{points.toLocaleString()}</h2>
@@ -47,7 +47,7 @@ export async function LearningProgressCard({
         </div>
 
         {/* Level / League badge on right */}
-        <div className="shrink-0 rounded-xl border border-white/25 bg-white/20 px-3 py-1.5 text-right backdrop-blur-md">
+        <div className="rounded-xl border border-white/25 bg-white/20 px-3 py-1.5 backdrop-blur-md self-start sm:self-auto shrink-0">
           <p className="text-xs font-black text-white whitespace-nowrap">
             {p.levelLeague
               .replace("{level}", String(level))

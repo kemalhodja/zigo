@@ -161,6 +161,18 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             </Link>
           ))}
         </section>
+      ) : activeFormat === "teachers" ? (
+        <div className="-mx-4 bg-white px-6 py-14 text-center">
+          <span className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry shadow-lg shadow-crystal/20">
+            <svg aria-hidden="true" className="size-9 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </span>
+          <h2 className="mt-5 text-xl font-black text-night">{e.noTeachers || "Öğretmen Bulunamadı"}</h2>
+          <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-500">
+            Aradığınız kriterlere uygun doğrulanmış öğretmen bulunamadı.
+          </p>
+        </div>
       ) : null}
 
       {/* Post grid */}
@@ -310,7 +322,14 @@ function getExploreDemoResults(m: Messages): ExploreResults {
   const demoCreators = buildDemoSuggestedCreators(m.demo);
 
   return {
-    creators: [],
+    creators: demoCreators.map((c, index) => ({
+      id: `demo-creator-${index}`,
+      full_name: c.name,
+      role: "teacher" as const,
+      is_verified: true,
+      is_following: false,
+      avatar_url: null,
+    })),
     posts: demoPosts.map(toExploreTileFromDemo),
     suggestedRail: demoCreators.map((creator, index) => ({
       id: `demo-creator-${index}`,

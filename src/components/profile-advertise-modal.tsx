@@ -24,9 +24,10 @@ type ProfileAdvertiseModalProps = {
     full_name?: string | null;
   } | null;
   isOwner?: boolean;
+  triggerClassName?: string;
 };
 
-export function ProfileAdvertiseModal({ profile, isOwner }: ProfileAdvertiseModalProps) {
+export function ProfileAdvertiseModal({ profile, isOwner, triggerClassName }: ProfileAdvertiseModalProps) {
   const router = useRouter();
   const b = useMessages().billingUi;
   const [isOpen, setIsOpen] = useState(false);
@@ -126,7 +127,7 @@ export function ProfileAdvertiseModal({ profile, isOwner }: ProfileAdvertiseModa
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-500/40 active:scale-[0.98]"
+        className={triggerClassName || "inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-500/40 active:scale-[0.98]"}
       >
         <span className="text-base">📢</span>
         <span>{hidePrices ? b.sponsorOpenSales : b.sponsorOpenSelf}</span>

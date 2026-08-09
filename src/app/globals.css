@@ -465,6 +465,7 @@ a,
 
 .zigo-stat-chip {
   display: flex;
+  flex-direction: column;
   min-width: 0;
   align-items: center;
   justify-content: center;

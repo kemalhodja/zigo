@@ -330,7 +330,7 @@ function Header({
           <Link
             aria-label="Direkt Mesajlar (DM)"
             className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-crystal"
-            href="/lesson-requests"
+            href="/messages"
             title="Ders Talepleri & Mesajlaşma"
           >
             <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

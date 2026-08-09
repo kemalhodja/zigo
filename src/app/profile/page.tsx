@@ -117,18 +117,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         <div className="mt-4">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-black text-night">{profile.name}</h2>
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[0.62rem] font-black uppercase tracking-[0.08em] text-slate-600">
-              {profile.isSignedOut ? m.roles.guest : profile.isVerified ? m.common.verified : m.common.learner}
-            </span>
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[0.62rem] font-black uppercase tracking-[0.08em] text-slate-600">
-              {m.common.publicProfile}
-            </span>
           </div>
-          <p className="mt-1.5 text-sm leading-5 text-slate-600">
-            @{profile.handle}
-            <br />
-            {profile.bio}
-          </p>
+          {profile.bio ? (
+            <p className="mt-1.5 text-sm leading-5 text-slate-600">
+              {profile.bio}
+            </p>
+          ) : null}
           <ProfileSocialLinks bio={profile.bio} />
           
           {profile.role === "student" && (
@@ -158,6 +152,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 moreLabel={m.teacherBadges.moreAreas}
                 verified={profile.isVerified}
                 verifiedLabel={m.teacherBadges.verifiedTeacher}
+                showVerified={false}
               />
             </div>
           ) : null}
@@ -167,11 +162,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <OrgDashboardPanel copy={orgCopy} embedded snapshot={orgDashboard} />
             </div>
           ) : null}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2 text-xs font-black text-slate-600">
-          <span className="rounded-lg bg-slate-100 px-3 py-1">{m.profileGrid.publicGrid}</span>
-          <span className="rounded-lg bg-slate-100 px-3 py-1">{m.profileGrid.privateSaved}</span>
         </div>
 
         <div className="zigo-action-grid mt-4">
@@ -210,6 +200,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 full_name: profile.name,
               }}
               isOwner={true}
+              triggerClassName="zigo-action-chip tap-scale col-span-2 w-full rounded-lg bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-slate-950 font-black flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/15"
             />
           ) : null}
         </div>
@@ -230,8 +221,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       <ProfileHighlights />
 
       <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} role={profile.role} />
-
-      <ProfileCreatorDiscovery creators={profile.suggestedCreators} isSignedOut={profile.isSignedOut} messages={m} />
 
       <section className="-mx-4 mt-2 grid grid-cols-3 border-y border-slate-100 bg-white">
         <Link
@@ -773,7 +762,7 @@ function toProfileData(
     id: profile.id,
     name: profile.full_name,
     handle: profile.full_name.toLowerCase().replaceAll(" ", ""),
-    bio: profile.bio || (profile.role === "teacher" ? pf.fallbackTeacherBio : pf.fallbackLearnerBio),
+    bio: profile.bio || "",
     role: profile.role as UserProfile["role"] | "guest",
     organization_type: profile.organization_type as string | null,
     isVerified: profile.is_verified,

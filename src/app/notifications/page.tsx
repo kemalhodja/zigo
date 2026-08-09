@@ -117,14 +117,14 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         <div className="grid grid-cols-4 gap-2">
           {activityFilters.map((filter) => (
             <Link
-              className={`rounded-lg px-3 py-2 text-center transition ${
+              className={`rounded-lg px-1 py-2 text-center transition ${
                 activeFilter === filter.category ? "zigo-ring-active" : ""
               } ${filter.className}`}
               href={`/notifications?filter=${filter.category}`}
               key={filter.label}
             >
               <p className="text-sm font-black">{notifications.filter((item) => item.category === filter.category).length}</p>
-              <p className="mt-0.5 zigo-fit-text text-[0.65rem] font-black uppercase tracking-[0.08em]">{filter.label}</p>
+              <p className="mt-0.5 zigo-fit-text text-[0.62rem] font-black uppercase tracking-[0.08em]">{filter.label}</p>
             </Link>
           ))}
         </div>

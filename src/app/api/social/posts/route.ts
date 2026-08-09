@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { extractErrorMessage, respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
-import { createSocialPost, createSocialPostSchema, getSocialFeed, SOCIAL_FEED_CACHE_TAG, socialFeedCacheTag, updateSocialPost, updateSocialPostSchema } from "@/lib/domain/social";
+import { createSocialPost, createSocialPostSchema, deleteSocialPost, getSocialFeed, SOCIAL_FEED_CACHE_TAG, socialFeedCacheTag, updateSocialPost, updateSocialPostSchema } from "@/lib/domain/social";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { assertTeacherCreatorPlus, socialPostRequiresTeacherCreatorPlus } from "@/lib/domain/teacher-creator-plus";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -261,6 +261,42 @@ export async function PATCH(request: Request) {
     return respondWithDomainError(
       error,
       errMessage || "Gönderi düzenlenemedi. Lütfen bilgileri kontrol edip tekrar deneyin.",
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+
+    if (!profile) {
+      return NextResponse.json({ error: "Gönderi silmek için lütfen giriş yapın." }, { status: 401 });
+    }
+
+    if (profile.account_status === "closed" || profile.account_status === "suspended") {
+      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar gönderi silemez." }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const postId = searchParams.get("postId");
+
+    if (!postId) {
+      return NextResponse.json({ error: "Silinecek gönderi ID'si belirtilmedi." }, { status: 400 });
+    }
+
+    await deleteSocialPost(supabase, postId, profile.id);
+
+    revalidateTag(SOCIAL_FEED_CACHE_TAG, "max");
+    revalidateTag(socialFeedCacheTag(profile.id), "max");
+
+    return NextResponse.json({ data: { success: true } }, { status: 200 });
+  } catch (error) {
+    console.error("[SERVER_POST_DELETE_ERROR]", error);
+    const errMessage = extractErrorMessage(error, "");
+    return respondWithDomainError(
+      error,
+      errMessage || "Gönderi silinemedi. Lütfen tekrar deneyin.",
     );
   }
 }

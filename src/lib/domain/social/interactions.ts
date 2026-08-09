@@ -666,3 +666,34 @@ export async function getUserFollowingList(
     })
     .filter((item): item is FollowUserItem => item !== null);
 }
+
+export async function deleteSocialPost(
+  supabase: SupabaseClient<Database>,
+  postId: string,
+  authorId: string,
+) {
+  const { data: existing, error: fetchError } = await supabase
+    .from("social_posts")
+    .select("id, author_id")
+    .eq("id", postId)
+    .single();
+
+  if (fetchError || !existing) {
+    throw new Error("Gönderi bulunamadı.");
+  }
+
+  if (existing.author_id !== authorId) {
+    throw new Error("Bu gönderiyi silme yetkiniz yok.");
+  }
+
+  const { error: deleteError } = await supabase
+    .from("social_posts")
+    .delete()
+    .eq("id", postId);
+
+  if (deleteError) {
+    throw new Error("Gönderi silinemedi.");
+  }
+
+  return { success: true };
+}

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import type { StudentFocusAnalytics } from "@/lib/domain/focus-analytics";
+import { useMessages } from "@/lib/i18n/locale-context";
 
 type StudyPlanCardProps = {
   analytics: StudentFocusAnalytics;
@@ -12,6 +13,7 @@ type StudyPlanCardProps = {
 };
 
 export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProps) {
+  const m = useMessages().studyPlanCard;
   const [weeklyGoal, setWeeklyGoal] = useState(analytics.weeklyGoal);
   const [primaryTopic, setPrimaryTopic] = useState("Weekly focus plan");
   const [areaId, setAreaId] = useState<number | "">(areas[0]?.id ?? "");
@@ -37,14 +39,14 @@ export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProp
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
 
       if (!response.ok) {
-        setMessage(payload?.error ?? "Could not save study plan.");
+        setMessage(payload?.error ?? m.saveFailed);
         setLoading(false);
         return;
       }
 
-      setMessage("Custom study plan saved.");
+      setMessage(m.customSaved);
     } catch {
-      setMessage("Connection failed.");
+      setMessage(m.connectionFailed);
     } finally {
       setLoading(false);
     }
@@ -53,26 +55,28 @@ export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProp
   return (
     <section className="-mx-4 space-y-3 bg-slate-950 px-4 py-4 text-white">
       <div>
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">Study plan</p>
-        <h2 className="mt-1 text-lg font-black">Weekly Pomodoro path</h2>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-300">{m.studyPlan}</p>
+        <h2 className="mt-1 text-lg font-black">{m.weeklyPomodoroPath}</h2>
         <p className="mt-2 text-sm font-bold leading-6 text-white/80">
           {isPremium
-            ? "Set a custom weekly goal and primary topic. Free users keep the default 5 Pomodoros per week."
-            : "Default goal: 5 Pomodoros per week. Upgrade to Zigo Plus for custom study plans and advanced analytics."}
+            ? m.isPremiumDesc
+            : m.isFreeDesc}
         </p>
       </div>
 
       <div className="rounded-xl bg-white/10 p-3">
-        <p className="text-xs font-black uppercase tracking-[0.12em] text-white/70">Current progress</p>
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-white/70">{m.currentProgress}</p>
         <p className="mt-1 text-2xl font-black">
-          {analytics.weeklyCompleted}/{analytics.weeklyGoal} this week
+          {m.progressStatus
+            .replace("{completed}", String(analytics.weeklyCompleted))
+            .replace("{goal}", String(analytics.weeklyGoal))}
         </p>
       </div>
 
       {isPremium ? (
         <div className="space-y-3">
           <label className="block">
-            <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70">Weekly goal</span>
+            <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70">{m.weeklyGoal}</span>
             <input
               className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none"
               max={21}
@@ -83,7 +87,7 @@ export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProp
             />
           </label>
           <label className="block">
-            <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70">Primary topic</span>
+            <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70">{m.primaryTopic}</span>
             <input
               className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none"
               maxLength={120}
@@ -93,7 +97,7 @@ export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProp
           </label>
           {areas.length > 0 ? (
             <label className="block">
-              <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70">Focus area</span>
+              <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70">{m.focusArea}</span>
               <select
                 className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none"
                 onChange={(event) => setAreaId(event.target.value ? Number(event.target.value) : "")}
@@ -113,7 +117,7 @@ export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProp
             onClick={() => void savePlan()}
             type="button"
           >
-            Save study plan
+            {loading ? m.saving : m.saveStudyPlan}
           </button>
         </div>
       ) : null}

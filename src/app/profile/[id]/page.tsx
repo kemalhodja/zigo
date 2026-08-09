@@ -109,7 +109,6 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             ) : (
               <FollowButton
                 followingId={profile.id}
-                initialFollowersCount={stats.followers}
                 initialFollowing={following}
                 showCount={false}
               />
@@ -150,10 +149,11 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 {profile.role}
               </span>
             </div>
-            <p className="mt-1.5 text-sm leading-5 text-slate-600">
-              @{handle}
-              {profile.bio ? <><br />{profile.bio}</> : null}
-            </p>
+            {profile.bio ? (
+              <p className="mt-1.5 text-sm leading-5 text-slate-600">
+                {profile.bio}
+              </p>
+            ) : null}
             <ProfileSocialLinks bio={profile.bio} />
             {profile.role === "teacher" ? (
               <div className="mt-3">
@@ -162,13 +162,14 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                   moreLabel={tb.moreAreas}
                   verified={profile.is_verified}
                   verifiedLabel={tb.verifiedTeacher}
+                  showVerified={false}
                 />
               </div>
             ) : null}
           </div>
 
           {isOwnProfile && profile.role === "teacher" ? (
-            <div className="mt-3 flex">
+            <div className="mt-3 flex w-full">
               <ProfileAdvertiseModal
                 profile={{
                   id: profile.id,
@@ -177,6 +178,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                   full_name: profile.full_name,
                 }}
                 isOwner={true}
+                triggerClassName="zigo-action-chip tap-scale w-full rounded-lg bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-slate-950 font-black flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/15"
               />
             </div>
           ) : null}

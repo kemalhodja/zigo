@@ -60,7 +60,6 @@ export function WhatsAppSupportCard({
       <h2 className="mt-2 text-lg font-black text-night">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
       <p className="mt-2 text-xs font-semibold text-slate-500">{hoursLabel}</p>
-      <p className="mt-1 text-sm font-black text-night">{displayPhone}</p>
       <a
         className="tap-scale mt-4 inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-3 text-sm font-black text-white"
         href={href}
