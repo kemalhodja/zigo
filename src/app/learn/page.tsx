@@ -126,22 +126,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
           </div>
         </section>
 
-        <LearnRewardPath messages={messages} points={profile.total_points} />
-
-
-
         <DailyMissionsCard />
-
-        <section className="grid grid-cols-2 gap-2">
-          <Link className="tap-scale rounded-lg bg-white p-4 text-center" href="/micro">
-            <p className="text-lg font-black text-night">{messages.nav.micro}</p>
-            <p className="mt-1 text-xs font-bold text-slate-500">{l.watchClaim}</p>
-          </Link>
-          <Link className="tap-scale rounded-lg bg-white p-4 text-center" href="/store">
-            <p className="text-lg font-black text-night">{d.student.store}</p>
-            <p className="mt-1 text-xs font-bold text-slate-500">{l.spendRewards}</p>
-          </Link>
-        </section>
 
         <section className="space-y-4">
           <h3 className="text-xl font-black text-night">{l.miniQuizzes}</h3>
