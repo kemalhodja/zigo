@@ -128,12 +128,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
 
         <LearnRewardPath messages={messages} points={profile.total_points} />
 
-        <LearnHubSummary
-          messages={messages}
-          points={profile.total_points}
-          quizCount={quizzes.length}
-          videoCount={videos.length}
-        />
+
 
         <DailyMissionsCard />
 
