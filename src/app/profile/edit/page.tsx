@@ -88,15 +88,31 @@ export default async function ProfileEditPage() {
             </section>
           </>
         ) : (
-          <section className="-mx-4 space-y-2 border-y border-violet-100 bg-violet-50/50 px-4 py-4">
-            <h2 className="text-lg font-black text-night">{pe.teacherAreasTitle}</h2>
-            <p className="text-sm font-semibold text-slate-600">{pe.teacherAreasDesc}</p>
-            <Link
-              className="tap-scale inline-flex rounded-lg bg-night px-4 py-3 text-sm font-black text-white"
-              href="/onboarding/role-setup"
-            >
-              {pe.openRoleSetup}
-            </Link>
+          <section className="-mx-4 space-y-3 border-y border-violet-100 bg-white px-4 py-4">
+            <div>
+              <h2 className="text-lg font-black text-night">{pe.interestsTitle}</h2>
+              <p className="text-sm font-semibold text-slate-500">
+                Keşfet ve akışınızı özelleştirecek genel ilgi ve uzmanlık alanlarınızı seçin. (Resmi akademik branşlarınız admin tarafından onaylanır.)
+              </p>
+            </div>
+            <InterestSelector
+              areas={areas}
+              gradeLevel={profile.grade_level}
+              initialOrganizationType={organizationType}
+              initialSelectedAreaIds={selectedAreaIds}
+              multiple
+              role={profile.role}
+            />
+            <div className="mt-4 rounded-xl bg-violet-50 p-3">
+              <h3 className="text-xs font-black text-crystal uppercase tracking-wider">{pe.teacherAreasTitle}</h3>
+              <p className="mt-1 text-xs font-semibold text-slate-600 leading-5">{pe.teacherAreasDesc}</p>
+              <Link
+                className="tap-scale mt-2 inline-flex rounded-lg bg-night px-3.5 py-2 text-xs font-black text-white"
+                href="/onboarding/role-setup"
+              >
+                {pe.openRoleSetup}
+              </Link>
+            </div>
           </section>
         )}
       </div>
