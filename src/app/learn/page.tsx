@@ -335,14 +335,6 @@ function LearnQuestHero({
           <QuestStat label={lp.questStatMicro} value={videoCount} />
         </div>
       </div>
-      <div className="zigo-action-grid px-4 py-3 text-center font-black">
-        <Link className="zigo-action-chip zigo-quick-action-primary tap-scale rounded-xl text-white" href="/micro">
-          {nav.micro}
-        </Link>
-        <Link className="zigo-action-chip zigo-quick-action-secondary tap-scale rounded-xl text-violet-700" href="/learn">
-          {messages.dock.learn}
-        </Link>
-      </div>
     </section>
   );
 }
