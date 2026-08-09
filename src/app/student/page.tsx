@@ -159,8 +159,6 @@ export default async function StudentPage() {
         />
       ) : null}
 
-      {data.focusAnalytics ? <FocusAnalyticsCard analytics={data.focusAnalytics} messages={m} showPreview={data.showPreview} /> : null}
-
       <DailyMissionsCard />
       <RecentLearningCard history={data.history} showPreview={data.showPreview} />
 
