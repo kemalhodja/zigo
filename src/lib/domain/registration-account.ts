@@ -126,16 +126,10 @@ export const REGISTRATION_PRIMARY_GROUPS = [
     description: "Bireysel içerik üretici hesabı.",
     accent: "from-sun to-peach",
   },
-  {
-    id: "education" as const,
-    label: "Eğitim",
-    description: "Kurs, okul, platform veya yayınevi.",
-    accent: "from-violet-600 to-fuchsia-500",
-  },
 ] as const;
 
 /**
- * The 6 required options shown flat during signup.
+ * The 3 required options shown flat during signup.
  * No default — user must explicitly choose one.
  */
 export const REGISTRATION_REQUIRED_SIGNUP_OPTIONS = [
@@ -159,27 +153,6 @@ export const REGISTRATION_REQUIRED_SIGNUP_OPTIONS = [
     description: "Bireysel öğretmen; doğrulama sonrası içerik ve stüdyo araçları.",
     accent: "from-sun to-peach",
     emoji: "📚",
-  },
-  {
-    id: "platform" as const,
-    label: "Eğitim Platformu",
-    description: "Dijital eğitim platformu ve içerik ağı hesabı.",
-    accent: "from-sky-500 to-cyan-500",
-    emoji: "💻",
-  },
-  {
-    id: "institution" as const,
-    label: "Eğitim Kurumu",
-    description: "Kurs, okul, akademi ve eğitim kurumu hesabı.",
-    accent: "from-violet-600 to-fuchsia-500",
-    emoji: "🏛️",
-  },
-  {
-    id: "publisher" as const,
-    label: "Yayınevi",
-    description: "Eğitim yayınları, kitap ve materyal hesabı.",
-    accent: "from-amber-600 to-orange-500",
-    emoji: "📖",
   },
 ] as const;
 

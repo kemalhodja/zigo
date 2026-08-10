@@ -18,6 +18,7 @@ import { CreatorRail, FeedPostCard, FollowingStarter } from "./_components/home/
 import { HomeMissionStrip } from "./_components/home/mission-strip";
 import { StoryTray } from "./_components/home/story-tray";
 import { ReelSpotlightRail } from "./_components/home/study-rail";
+import { VirtualFeedClient } from "./_components/home/virtual-feed-client";
 
 export default async function HomePage() {
   const m = await getServerMessages();
@@ -80,26 +81,13 @@ export default async function HomePage() {
       {showStudentHomeModules && posts.length > 0 ? <ReelSpotlightRail messages={m} spotlights={reelSpotlights} /> : null}
 
       <section className="space-y-0">
-        {posts.length === 0 ? (
-          <FollowingStarter creators={suggestedCreators} messages={m} />
-        ) : (
-          posts.map((post, index) => (
-            <div key={post.postId ?? post.handle}>
-              <FeedPostCard
-                enterDelayMs={Math.min(index, 4) * 45}
-                feedEnhancements={m.feedEnhancements}
-                feedExtras={m.feedExtras}
-                post={post}
-                priorityMedia={index === 0}
-                teacherBadges={m.teacherBadges}
-                viewerRole={viewer.role}
-              />
-              {index === 3 ? (
-                <CreatorRail creators={suggestedCreators} label={m.feed.suggested} seeAll={m.common.seeAll} />
-              ) : null}
-            </div>
-          ))
-        )}
+        <VirtualFeedClient
+          messages={m}
+          posts={posts}
+          suggestedCreators={suggestedCreators}
+          teacherBadges={m.teacherBadges}
+          viewerRole={viewer.role}
+        />
       </section>
     </div>
   );

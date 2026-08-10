@@ -1,91 +1,71 @@
+// src/lib/client/confetti.ts
+
 /**
- * Light-weight Canvas Confetti Burst Engine for Quiz Celebrations & XP Rewards
+ * Launches a high-performance particle physics confetti burst from the bottom of the screen.
+ * Dependency-free, lightweight, and automatically cleans up after animation completes.
  */
+export function triggerConfetti() {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
 
-export function triggerCelebrationConfetti() {
-  if (typeof window === "undefined") return;
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.inset = "0";
+  container.style.pointerEvents = "none";
+  container.style.zIndex = "9999";
+  document.body.appendChild(container);
 
-  const canvas = document.createElement("canvas");
-  canvas.style.position = "fixed";
-  canvas.style.top = "0";
-  canvas.style.left = "0";
-  canvas.style.width = "100vw";
-  canvas.style.height = "100vh";
-  canvas.style.pointerEvents = "none";
-  canvas.style.zIndex = "99999";
-  document.body.appendChild(canvas);
+  const colors = ["#8B5CF6", "#EC4899", "#3B82F6", "#10B981", "#F59E0B"];
+  const particleCount = 80;
 
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    canvas.remove();
-    return;
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement("div");
+    p.style.position = "absolute";
+    p.style.width = `${Math.random() * 8 + 6}px`;
+    p.style.height = `${Math.random() * 12 + 6}px`;
+    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    p.style.borderRadius = "2px";
+
+    // Launch from center bottom of the viewport
+    p.style.left = "50vw";
+    p.style.top = "100vh";
+
+    container.appendChild(p);
+
+    // Launch angle: 45 to 135 degrees (arc directed upwards)
+    const angle = (Math.random() * 90 + 45) * (Math.PI / 180);
+    // Initial velocity
+    const velocity = Math.random() * 22 + 12;
+    const vx = Math.cos(angle) * velocity;
+    const vy = -Math.sin(angle) * velocity;
+
+    let x = 0;
+    let y = 0;
+    const gravity = 0.55;
+    let currentVx = vx;
+    let currentVy = vy;
+
+    let frame = 0;
+    const maxFrames = 75;
+
+    const updatePhysics = () => {
+      x += currentVx;
+      y += currentVy;
+      currentVy += gravity; // Gravity pull down
+      currentVx *= 0.98; // Air resistance
+
+      p.style.transform = `translate(${x}px, ${y}px) rotate(${frame * 15}deg)`;
+      p.style.opacity = String(Math.max(0, 1 - frame / maxFrames));
+
+      frame++;
+      if (frame < maxFrames) {
+        requestAnimationFrame(updatePhysics);
+      }
+    };
+
+    requestAnimationFrame(updatePhysics);
   }
 
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const particles: Array<{
-    x: number;
-    y: number;
-    size: number;
-    color: string;
-    vx: number;
-    vy: number;
-    alpha: number;
-    rotation: number;
-    vRot: number;
-  }> = [];
-
-  const colors = ["#F59E0B", "#10B981", "#6366F1", "#EC4899", "#8B5CF6", "#3B82F6"];
-
-  for (let i = 0; i < 70; i++) {
-    particles.push({
-      x: canvas.width / 2 + (Math.random() * 200 - 100),
-      y: canvas.height / 2 + (Math.random() * 100 - 50),
-      size: Math.random() * 8 + 4,
-      color: colors[Math.floor(Math.random() * colors.length)]!,
-      vx: (Math.random() - 0.5) * 12,
-      vy: Math.random() * -12 - 4,
-      alpha: 1,
-      rotation: Math.random() * Math.PI * 2,
-      vRot: (Math.random() - 0.5) * 0.2,
-    });
-  }
-
-  let animationFrameId: number;
-
-  function render() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    let activeParticles = 0;
-
-    for (const p of particles) {
-      if (p.alpha <= 0) continue;
-
-      activeParticles++;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.3; // Gravity
-      p.alpha -= 0.015; // Fade
-      p.rotation += p.vRot;
-
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, p.alpha);
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rotation);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-      ctx.restore();
-    }
-
-    if (activeParticles > 0) {
-      animationFrameId = requestAnimationFrame(render);
-    } else {
-      cancelAnimationFrame(animationFrameId);
-      canvas.remove();
-    }
-  }
-
-  render();
+  setTimeout(() => {
+    container.remove();
+  }, 2500);
 }

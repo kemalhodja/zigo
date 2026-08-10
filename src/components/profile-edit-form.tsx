@@ -26,8 +26,10 @@ type ProfileEditFormProps = {
 
 // Map legacy RegistrationAccountKind (includes kurs/okul) to RequiredSignupOptionId
 function toRequiredId(kind: RegistrationAccountKind): RequiredSignupOptionId {
-  // kurs and okul both map to institution for the new picker
-  if (kind === "kurs" || kind === "okul") return "institution";
+  // kurs and okul mapped to institution originally, now just cast to teacher as fallback
+  if (kind === "kurs" || kind === "okul" || kind === "institution" || kind === "platform" || kind === "publisher") {
+    return "teacher" as RequiredSignupOptionId;
+  }
   return kind as RequiredSignupOptionId;
 }
 
@@ -160,18 +162,20 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
     setStatus("idle");
 
     try {
-      const response = await fetch("/api/profile/account-kind", {
-        method: "PATCH",
+      const response = await fetch("/api/billing/role-upgrade", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ accountKind }),
       });
-      const result = (await response.json().catch(() => null)) as {
-        error?: string;
-        message?: string;
-      } | null;
+      const result = await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(result?.error || pe.accountKindError);
+      }
+
+      if (result?.requiresPayment && result?.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
       }
 
       setStatus("success");

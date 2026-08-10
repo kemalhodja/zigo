@@ -12,6 +12,7 @@ import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { allowDemoContent } from "@/lib/domain/demo-env";
+import { getStudentFocusAnalytics } from "@/lib/domain/focus-analytics";
 import {
   getDailyMissionProgress,
   getLearningProgressStats,
@@ -30,7 +31,6 @@ import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
-import { getStudentFocusAnalytics } from "@/lib/domain/focus-analytics";
 
 const fallbackStats: LearningProgressStats = {
   eventCount: 18,

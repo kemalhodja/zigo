@@ -11,7 +11,7 @@ async function run() {
   console.log('Connected to DB');
   
   const files = [
-    "074_auto_verify_teachers.sql"
+    "090_role_change_requests.sql"
   ];
 
   for (const file of files) {
@@ -23,6 +23,10 @@ async function run() {
       console.log(`Error in ${file}:`, e.message);
     }
   }
+
+  // Reload schema cache
+  await client.query(`NOTIFY pgrst, 'reload schema'`);
+  console.log('Schema cache reloaded');
   
   await client.end();
 }

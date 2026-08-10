@@ -5,7 +5,7 @@
 import { useState } from "react";
 
 import { useToast } from "@/components/ui/toast-system";
-import { triggerCelebrationConfetti } from "@/lib/client/confetti";
+import { triggerConfetti } from "@/lib/client/confetti";
 import { createClient } from "@/lib/supabase/client";
 
 interface SubscribeButtonProps {
@@ -116,7 +116,7 @@ export function SubscribeButton({
           "30 günlük ücretsiz deneme süreciniz ve ZigoPlus ayrıcalıkları başladı.",
           "🎉 Tebrikler! ZigoPlus Aktif!",
         );
-        triggerCelebrationConfetti();
+        triggerConfetti();
         if (onSuccess) {
           onSuccess();
         } else {

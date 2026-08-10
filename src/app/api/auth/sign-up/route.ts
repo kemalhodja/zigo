@@ -144,7 +144,7 @@ export async function POST(request: Request) {
 
     const siteUrl = getSiteUrl(requestUrl.origin);
 
-    const { data, error } = await supabase.auth.signUp({
+    let { data, error } = await supabase.auth.signUp({
       email: body.email,
       password: body.password,
       options: {
@@ -152,6 +152,26 @@ export async function POST(request: Request) {
         data: userMetadata,
       },
     });
+
+    if (error && (error.message.toLowerCase().includes("already registered") || error.status === 422 || error.message.toLowerCase().includes("user already exists"))) {
+      const parts = body.email.split("@");
+      if (parts.length === 2 && !parts[0].includes("+")) {
+        const maskedEmail = `${parts[0]}+${account.role}@${parts[1]}`;
+        const maskedAttempt = await supabase.auth.signUp({
+          email: maskedEmail,
+          password: body.password,
+          options: {
+            emailRedirectTo: new URL("/auth/callback?next=/onboarding", siteUrl).toString(),
+            data: userMetadata,
+          },
+        });
+        
+        if (!maskedAttempt.error) {
+          data = maskedAttempt.data;
+          error = null;
+        }
+      }
+    }
 
     if (error) {
       return NextResponse.json(
@@ -161,10 +181,32 @@ export async function POST(request: Request) {
     }
 
     if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
-      return NextResponse.json(
-        { error: "Bu e-posta zaten kayıtlı. Giriş yapmayı dene." },
-        { status: 400 },
-      );
+      // One more try for masking if identities is empty (meaning email taken without error in some Supabase configs)
+      const parts = body.email.split("@");
+      if (parts.length === 2 && !parts[0].includes("+")) {
+        const maskedEmail = `${parts[0]}+${account.role}@${parts[1]}`;
+        const maskedAttempt = await supabase.auth.signUp({
+          email: maskedEmail,
+          password: body.password,
+          options: {
+            emailRedirectTo: new URL("/auth/callback?next=/onboarding", siteUrl).toString(),
+            data: userMetadata,
+          },
+        });
+        if (!maskedAttempt.error && maskedAttempt.data.user && maskedAttempt.data.user.identities && maskedAttempt.data.user.identities.length > 0) {
+          data = maskedAttempt.data;
+        } else {
+          return NextResponse.json(
+            { error: "Bu e-posta zaten kayıtlı. Giriş yapmayı dene veya rolünüzle ilişkili başka e-posta kullanın." },
+            { status: 400 },
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: "Bu e-posta zaten kayıtlı. Giriş yapmayı dene." },
+          { status: 400 },
+        );
+      }
     }
 
     const needsEmailConfirmation = !data.session || Boolean(data.user && requiresEmailConfirmation(data.user));

@@ -7,6 +7,7 @@ import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { StudioTabsLayout } from "@/components/studio-tabs-layout";
 import { TeacherAnalyticsCard } from "@/components/teacher-analytics-card";
+import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/components/teacher-leaderboard-card";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
@@ -65,7 +66,7 @@ export default async function TeacherPage({
     return <TeacherPreview mode="role-preview" viewerRole={profile.role} />;
   }
 
-  const [allAreas, areaIds, subscription, activation] = await Promise.all([
+  const [allAreas, areaIds, subscription, activation, leaderboardResult] = await Promise.all([
     getEducationAreas(supabase),
     getUserInterestAreaIds(supabase, profile.id),
     getUserSubscription(supabase, profile.id),
@@ -74,6 +75,12 @@ export default async function TeacherPage({
       fullName: profile.full_name,
       isVerified: profile.is_verified,
     }),
+    supabase
+      .from("users")
+      .select("id, full_name, avatar_url, total_points")
+      .eq("role", "teacher")
+      .order("total_points", { ascending: false })
+      .limit(10),
   ]);
   const organizationType = parseOrganizationType(profile.organization_type);
   const orgDashboard = organizationType
@@ -112,6 +119,14 @@ export default async function TeacherPage({
     openQuestions: d.teacher.orgOpenQuestions,
     openAdvertise: d.teacher.orgOpenAdvertise,
   };
+  
+  const teacherLeaderboard: TeacherLeaderboardEntry[] = (leaderboardResult.data ?? []).map((t, index) => ({
+    userId: t.id,
+    fullName: t.full_name,
+    avatarUrl: t.avatar_url,
+    totalPoints: t.total_points,
+    rank: index + 1,
+  }));
 
   return (
     <div className="space-y-5 pb-3">
@@ -152,6 +167,7 @@ export default async function TeacherPage({
           <div className="space-y-4">
             <TeacherAnalyticsCard postCount={assignedAreas.length * 3 + 4} />
             {orgDashboard ? <OrgDashboardPanel copy={orgCopy} snapshot={orgDashboard} /> : null}
+            <TeacherLeaderboardCard entries={teacherLeaderboard} viewerId={profile.id} />
           </div>
         }
         contentStudioNode={

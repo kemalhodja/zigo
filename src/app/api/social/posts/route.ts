@@ -161,20 +161,13 @@ export async function POST(request: Request) {
     try {
       post = await createSocialPost(supabase, postPayload);
     } catch (createErr) {
-      const msg = extractErrorMessage(createErr, "");
-      const adminSupabase = createAdminClient();
-      if (adminSupabase && (msg.includes("row-level security") || msg.includes("policy"))) {
-        console.warn("[SERVER_POST_RLS_FALLBACK] Retrying post insertion using admin client for verified teacher:", profile.id);
-        post = await createSocialPost(adminSupabase, postPayload);
-      } else {
-        throw createErr;
-      }
+      throw createErr;
     }
 
     console.log("[SERVER_POST_CREATED_SUCCESS]", { postId: (post as { id?: string })?.id });
 
-    revalidateTag(SOCIAL_FEED_CACHE_TAG, "max");
-    revalidateTag(socialFeedCacheTag(profile.id), "max");
+    revalidateTag(SOCIAL_FEED_CACHE_TAG);
+    revalidateTag(socialFeedCacheTag(profile.id));
 
     return NextResponse.json({ data: post, meta: { action: "create-post", areaId } }, { status: 201 });
   } catch (error) {
@@ -236,18 +229,11 @@ export async function PATCH(request: Request) {
     try {
       post = await updateSocialPost(supabase, updatePayload);
     } catch (updateErr) {
-      const msg = extractErrorMessage(updateErr, "");
-      const adminSupabase = createAdminClient();
-      if (adminSupabase && (msg.includes("row-level security") || msg.includes("policy"))) {
-        console.warn("[SERVER_POST_UPDATE_RLS_FALLBACK] Retrying post update using admin client:", profile.id);
-        post = await updateSocialPost(adminSupabase, updatePayload);
-      } else {
-        throw updateErr;
-      }
+      throw updateErr;
     }
 
-    revalidateTag(SOCIAL_FEED_CACHE_TAG, "max");
-    revalidateTag(socialFeedCacheTag(profile.id), "max");
+    revalidateTag(SOCIAL_FEED_CACHE_TAG);
+    revalidateTag(socialFeedCacheTag(profile.id));
 
     return NextResponse.json({ data: post, meta: { action: "update-post", postId: body.postId } }, { status: 200 });
   } catch (error) {
@@ -287,8 +273,8 @@ export async function DELETE(request: Request) {
 
     await deleteSocialPost(supabase, postId, profile.id);
 
-    revalidateTag(SOCIAL_FEED_CACHE_TAG, "max");
-    revalidateTag(socialFeedCacheTag(profile.id), "max");
+    revalidateTag(SOCIAL_FEED_CACHE_TAG);
+    revalidateTag(socialFeedCacheTag(profile.id));
 
     return NextResponse.json({ data: { success: true } }, { status: 200 });
   } catch (error) {

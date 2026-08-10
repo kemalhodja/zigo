@@ -155,13 +155,12 @@ import {
   isFollowing,
   type SocialFeedPost,
 } from "@/lib/domain/social";
+import { getCachedSocialFeed } from "@/lib/domain/social/cached-feed";
 import { getMatchedStudyMoments } from "@/lib/domain/study-moments";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
-
-import { getCachedSocialFeed } from "@/lib/domain/social/cached-feed";
 
 export async function getHomePosts(): Promise<DisplayPost[]> {
   const m = await getServerMessages();

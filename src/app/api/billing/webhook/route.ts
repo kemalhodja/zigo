@@ -64,7 +64,9 @@ export async function POST(request: Request) {
     if (event.type === "checkout.session.completed" && object?.client_reference_id) {
       const kind = object.metadata?.kind;
 
-      if (kind === "sponsor_boost") {
+      if (object.metadata?.roleChangeRequestId) {
+        await (admin.from("role_change_requests") as any).update({ fee_paid: true, status: 'paid' }).eq("id", object.metadata?.roleChangeRequestId);
+      } else if (kind === "sponsor_boost") {
         const packageDays = parseSponsorPackageDays(object.metadata?.package_days);
         if (!packageDays) {
           throw new Error("Sponsor checkout missing package_days.");

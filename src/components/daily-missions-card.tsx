@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { readStoreVisitedToday } from "@/components/store-visit-tracker";
+import { triggerConfetti } from "@/lib/client/confetti";
 import type { DailyMissionId } from "@/lib/domain/learning";
 import { useMessages } from "@/lib/i18n/locale-context";
 
@@ -11,7 +12,7 @@ const storageKey = "zigo:daily-missions";
 
 export function DailyMissionsCard() {
   const m = useMessages();
-  const missions = useMemo(
+  const fallbackMissions = useMemo(
     () =>
       [
         {
@@ -35,9 +36,23 @@ export function DailyMissionsCard() {
       ] satisfies Array<{ id: DailyMissionId; title: string; reward: string; href: string }>,
     [m.missions],
   );
+  
+  const [missions, setMissions] = useState<Array<{ id: DailyMissionId; title: string; reward: string; href: string }>>(fallbackMissions);
   const [completedMissionIds, setCompletedMissionIds] = useState<DailyMissionId[]>([]);
   const [streakDays, setStreakDays] = useState(0);
   const [message, setMessage] = useState("");
+  const prevCompletedCountRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (completedMissionIds.length > 0) {
+      if (prevCompletedCountRef.current !== null && completedMissionIds.length > prevCompletedCountRef.current) {
+        triggerConfetti();
+      }
+      prevCompletedCountRef.current = completedMissionIds.length;
+    } else {
+      prevCompletedCountRef.current = 0;
+    }
+  }, [completedMissionIds]);
 
   useEffect(() => {
     void loadMissionProgress();
@@ -56,6 +71,7 @@ export function DailyMissionsCard() {
         data?: {
           completedIds: DailyMissionId[];
           streakDays: number;
+          dynamicMissions?: Array<{ id: DailyMissionId; title: string; reward: string; href: string }>;
         };
         error?: string;
       } | null;
@@ -68,6 +84,9 @@ export function DailyMissionsCard() {
 
       setCompletedMissionIds(mergeWithStoreVisit(payload.data.completedIds));
       setStreakDays(Math.max(0, payload.data.streakDays));
+      if (payload.data.dynamicMissions && payload.data.dynamicMissions.length > 0) {
+        setMissions(payload.data.dynamicMissions);
+      }
     } catch {
       setCompletedMissionIds(mergeWithStoreVisit(readLocalCompletedMissions()));
     }
@@ -108,9 +127,25 @@ export function DailyMissionsCard() {
                   {isCompleted ? m.common.done : m.common.open}
                 </span>
               </div>
-              <Link className="mt-2 inline-flex text-xs font-black text-crystal" href={mission.href}>
-                {m.common.go}
-              </Link>
+              <div className="mt-2 flex items-center justify-between">
+                <Link className="inline-flex text-xs font-black text-crystal" href={mission.href}>
+                  {m.common.go}
+                </Link>
+                {isCompleted && (
+                  <button 
+                    onClick={async () => {
+                      fetch("/api/gamification/award", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "mission_complete", points: 50 })
+                      }).then(() => alert("Tebrikler! 50 Zigo Puanı kazandın."));
+                    }}
+                    className="rounded bg-sun px-3 py-1 text-xs font-black text-white hover:bg-peach"
+                  >
+                    Puanı Al
+                  </button>
+                )}
+              </div>
             </article>
           );
         })}

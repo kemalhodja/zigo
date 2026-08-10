@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BackButton } from "@/components/back-button";
-
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";

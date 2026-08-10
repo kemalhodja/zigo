@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode,useEffect, useState } from "react";
 
-import { BottomNav } from "@/components/bottom-nav";
 import { BackButton } from "@/components/back-button";
+import { BottomNav } from "@/components/bottom-nav";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
 import { LegalFooter } from "@/components/legal-footer";
@@ -379,6 +379,7 @@ function Header({
 
 function LogoLink({ roleAccentLabel, viewerRole }: { roleAccentLabel: string; viewerRole: ViewerRole }) {
   const pathname = usePathname();
+  const m = useMessages();
 
   function handleLogoClick(e: React.MouseEvent) {
     if (pathname === "/") {
@@ -387,10 +388,13 @@ function LogoLink({ roleAccentLabel, viewerRole }: { roleAccentLabel: string; vi
     }
   }
 
+  const allowedLabels = [m.roles.student, m.roles.teacher, m.roles.parent];
+  const showRoleAccent = viewerRole !== "guest" && allowedLabels.includes(roleAccentLabel);
+
   return (
     <Link href="/" className="tap-scale flex min-w-0 items-center gap-1.5 overflow-hidden" onClick={handleLogoClick}>
       <span className="zigo-wordmark shrink-0">Zigo</span>
-      {viewerRole !== "guest" ? (
+      {showRoleAccent ? (
         <span className="role-accent-chip inline-flex max-w-[6.5rem] truncate rounded-full px-2 py-0.5 sm:max-w-[8rem]">
           {roleAccentLabel}
         </span>

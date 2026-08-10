@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { useToast } from "@/components/ui/toast-system";
-import { triggerCelebrationConfetti } from "@/lib/client/confetti";
+import { triggerConfetti } from "@/lib/client/confetti";
 
 export function PomodoroTimer() {
   const toast = useToast();
@@ -22,7 +22,7 @@ export function PomodoroTimer() {
       setIsRunning(false);
       if (mode === "work") {
         setCompletedSessions((prev) => prev + 1);
-        triggerCelebrationConfetti();
+        triggerConfetti();
         toast.success("🎉 Harika! 25 Dakikalık Odaklanma Seansı Tamamlandı. +50 XP Kazandınız!", "Tebrikler!");
         setMode("break");
         setTimeLeft(5 * 60); // 5 min break

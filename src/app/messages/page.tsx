@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef,useState } from "react";
+
 import { VerifiedBadge } from "@/components/verified-badge";
 
 type Message = {

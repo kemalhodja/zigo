@@ -57,4 +57,18 @@ function withOptionalBundleAnalyzer(config: NextConfig): NextConfig {
   }
 }
 
-export default withOptionalBundleAnalyzer(nextConfig);
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(
+  withOptionalBundleAnalyzer(nextConfig),
+  {
+    silent: true,
+    org: "zigo-education",
+    project: "zigo-web",
+    widenClientFileUpload: true,
+    transpileClientSDK: true,
+    tunnelRoute: "/monitoring",
+    hideSourceMaps: true,
+    disableLogger: true,
+  }
+);

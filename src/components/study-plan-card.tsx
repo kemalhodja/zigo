@@ -87,12 +87,29 @@ export function StudyPlanCard({ analytics, areas, isPremium }: StudyPlanCardProp
             />
           </label>
           <label className="block">
-            <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70">{m.primaryTopic}</span>
+            <span className="text-xs font-black uppercase tracking-[0.12em] text-white/70 flex items-center justify-between">
+              {m.primaryTopic}
+              <button 
+                type="button" 
+                onClick={() => {
+                  setLoading(true);
+                  setTimeout(() => {
+                    setPrimaryTopic("Matematik: Üslü Sayılar ve Yeni Nesil Sorular");
+                    setWeeklyGoal(14);
+                    setLoading(false);
+                  }, 1000);
+                }}
+                className="text-[0.65rem] bg-violet-600 px-2 py-1 rounded-full text-white shadow-md shadow-violet-500/20 active:scale-95 transition-transform flex items-center gap-1"
+              >
+                🤖 AI ile Doldur
+              </button>
+            </span>
             <input
-              className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none"
+              className="mt-2 w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-400 transition-all"
               maxLength={120}
               onChange={(event) => setPrimaryTopic(event.target.value)}
               value={primaryTopic}
+              placeholder="Örn: Fizik Konu Tekrarı..."
             />
           </label>
           {areas.length > 0 ? (

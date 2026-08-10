@@ -1,7 +1,7 @@
 "use client";
 
 import { UserStreakBadge } from "@/components/user-streak-badge";
-import { triggerCelebrationConfetti } from "@/lib/client/confetti";
+import { triggerConfetti } from "@/lib/client/confetti";
 
 type AnalyticsMetric = {
   label: string;
@@ -55,7 +55,7 @@ export function TeacherAnalyticsCard({
         </div>
         <button
           type="button"
-          onClick={() => triggerCelebrationConfetti()}
+          onClick={() => triggerConfetti()}
           className="tap-scale flex items-center gap-1 rounded-xl bg-amber-400 px-3 py-1.5 text-xs font-black text-slate-950 shadow-xs hover:bg-amber-300"
           title="Başarı Kutlamasını Test Et"
         >

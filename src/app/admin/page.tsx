@@ -1,11 +1,13 @@
 import Link from "next/link";
 
+import { AdminAnalyticsDashboard } from "@/components/admin-analytics-dashboard";
 import { AdminBankTransferActions } from "@/components/admin-bank-transfer-actions";
 import { AdminBillingGrantActions } from "@/components/admin-billing-grant-actions";
 import { AdminBillingGrantLedger } from "@/components/admin-billing-grant-ledger";
 import { AdminBroadcastButton } from "@/components/admin-broadcast-button";
 import { AdminLivePulse } from "@/components/admin-live-pulse";
 import { AdminRedemptionStatus } from "@/components/admin-redemption-status";
+import { AdminRoleRequests } from "@/components/admin-role-requests";
 import { AdminStockForm } from "@/components/admin-stock-form";
 import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
@@ -248,6 +250,36 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <span className="inline-block rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
             {a.launchFreezeLabel}
           </span>
+        </div>
+      </section>
+
+      <section className="-mx-4 bg-slate-50 px-4 py-6">
+        <AdminAnalyticsDashboard
+          activationData={[
+            { step: "Kayıt Bekleyen", count: activationFunnel.pendingVerification },
+            { step: "Branşsız Onaylı", count: activationFunnel.verifiedMissingAreas },
+            { step: "Gönderisiz Onaylı", count: activationFunnel.verifiedNoPosts },
+            { step: "Tam Aktif", count: activationFunnel.activated },
+          ]}
+          retentionData={[
+            { name: "Aktif Premium", value: revenueOps.activePremiumCount },
+            { name: "Bireysel Premium", value: revenueOps.individualPremiumCount },
+            { name: "Kurumsal Premium", value: revenueOps.orgPremiumCount },
+          ]}
+          revenueData={[
+            { month: "Aktif Reklam", amount: revenueOps.activeSponsorCampaigns },
+            { month: "Bekleyen Havale", amount: revenueOps.pendingBankTransfers },
+          ]}
+        />
+      </section>
+
+      <section className="-mx-4 bg-white px-4 py-6">
+        <h3 className="text-sm font-black text-night">Rol Değişikliği İstekleri</h3>
+        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+          Kullanıcıların rol yükseltme (Örn: Öğrenci -&gt; Öğretmen) ve onay bekleyen talepleri.
+        </p>
+        <div className="mt-4">
+          <AdminRoleRequests />
         </div>
       </section>
 

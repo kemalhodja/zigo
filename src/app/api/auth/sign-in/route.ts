@@ -39,10 +39,27 @@ export async function POST(request: Request) {
     const rememberMe = body.rememberMe ?? true;
     const supabase = await createAuthActionClient(rememberMe);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    let { data, error } = await supabase.auth.signInWithPassword({
       email: body.email,
       password: body.password,
     });
+
+    // If login fails with invalid credentials, try the "+student" masked email.
+    if (error && error.message.toLowerCase().includes("invalid login credentials")) {
+      const parts = body.email.split("@");
+      if (parts.length === 2 && !parts[0].includes("+student")) {
+        const maskedEmail = `${parts[0]}+student@${parts[1]}`;
+        const maskedAttempt = await supabase.auth.signInWithPassword({
+          email: maskedEmail,
+          password: body.password,
+        });
+        
+        if (!maskedAttempt.error) {
+          data = maskedAttempt.data;
+          error = null;
+        }
+      }
+    }
 
     if (error) {
       return NextResponse.json(

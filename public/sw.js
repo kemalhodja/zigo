@@ -56,3 +56,28 @@ self.addEventListener("fetch", (event) => {
     }),
   );
 });
+
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || "Zigo Bildirim";
+  const options = {
+    body: data.body || "Yeni bir bildiriminiz var.",
+    icon: "/icon-192.png",
+    badge: "/icon.svg",
+    data: { url: data.url || "/" }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clientList) => {
+      const targetUrl = event.notification.data.url;
+      for (const client of clientList) {
+        if (client.url === targetUrl && "focus" in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    })
+  );
+});

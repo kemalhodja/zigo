@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { triggerCelebrationConfetti } from "@/lib/client/confetti";
+import { triggerConfetti } from "@/lib/client/confetti";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/types";
 import type { PublicQuizRow, QuizQuestionForPlay } from "@/lib/supabase/database.types";
@@ -171,7 +171,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
           scorePercent: payload.data.score_percent ?? 0,
           pointsAwarded: payload.data.points_awarded ?? 0,
         });
-        triggerCelebrationConfetti();
+        triggerConfetti();
         setMessage(
           l.quizScoreSummary
             .replace("{score}", String(payload.data.score_percent ?? 0))
@@ -318,6 +318,39 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
               ? l.nextQuestion
               : l.submitAnswer}
       </button>
+
+      {result ? (
+        <div className="flex flex-col gap-2 mt-1">
+          <button
+            className="w-full tap-scale rounded-lg bg-night px-4 py-3 text-sm font-black text-white shadow-md shadow-night/20 transition-transform active:scale-95 flex items-center justify-center gap-2"
+            onClick={() => {
+              const url = `${window.location.origin}/micro?q=${encodeURIComponent(quiz.title || "Quiz")}`;
+              const text = `Zigo'da bu quizi çözdüm, sen de yapabilir misin? 🎯\n\n${quiz.title}`;
+              if (navigator.share) {
+                navigator.share({ title: 'Zigo Quiz Düellosu', text, url }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(`${text}\n${url}`);
+                alert("Meydan okuma bağlantısı kopyalandı!");
+              }
+            }}
+            type="button"
+          >
+            Arkadaşıma Meydan Oku ⚔️
+          </button>
+          
+          {result.scorePercent < 50 && (
+            <button
+              className="w-full tap-scale rounded-lg bg-violet-600 px-4 py-3 text-sm font-black text-white shadow-md shadow-violet-600/20 transition-transform active:scale-95 flex items-center justify-center gap-2"
+              onClick={() => {
+                router.push("/ai-mentor");
+              }}
+              type="button"
+            >
+              🤖 Anlamadım, AI Mentor'a Sor
+            </button>
+          )}
+        </div>
+      ) : null}
 
       <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600">{message}</p>
     </article>

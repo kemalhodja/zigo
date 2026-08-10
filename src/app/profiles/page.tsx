@@ -5,8 +5,7 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getRoleDashboardHref } from "@/lib/domain/role-navigation";
 import { createClient } from "@/lib/supabase/server";
 
-/** Legacy Netflix-style mode switcher — single-role accounts go straight to their hub. */
-export default async function ProfilesRedirectPage() {
+export default async function ProfilesPage() {
   if (!hasSupabaseEnv()) {
     redirect("/auth");
   }
@@ -18,5 +17,5 @@ export default async function ProfilesRedirectPage() {
     redirect("/auth?next=/");
   }
 
-  redirect(getRoleDashboardHref(profile.role));
+  return redirect(getRoleDashboardHref(profile.role));
 }
