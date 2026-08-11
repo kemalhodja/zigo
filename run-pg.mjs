@@ -11,7 +11,7 @@ async function run() {
   console.log('Connected to DB');
   
   const files = [
-    "090_role_change_requests.sql"
+    "092_fix_social_post_matches_current_user.sql"
   ];
 
   for (const file of files) {
