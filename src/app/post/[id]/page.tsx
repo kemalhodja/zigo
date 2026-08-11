@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { toDisplayPost } from "@/app/_components/home/data";
-import { VirtualFeedClient } from "@/app/_components/home/virtual-feed-client";
+import { FeedPostCard } from "@/app/_components/home/match-feed";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { getSocialFeed, getSocialPostById, isFollowing } from "@/lib/domain/social";
+import { searchSocialPosts, getSocialPostById, isFollowing } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -20,13 +20,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   if (!hasSupabaseEnv()) {
     return (
       <div className="space-y-0 pb-3">
-        <VirtualFeedClient
-          messages={m}
-          posts={[]}
-          suggestedCreators={[]}
-          teacherBadges={m.teacherBadges}
-          viewerRole="guest"
-        />
+        <div className="text-center p-4">No content</div>
       </div>
     );
   }
@@ -42,8 +36,10 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   if (!post) notFound();
 
-  const suggestedPostsPage = await getSocialFeed(supabase, profile?.id);
-  const suggestedPosts = suggestedPostsPage.posts.filter((item) => item.id !== post.id).slice(0, 14);
+  // Fetch explore-like posts instead of home feed so the feed actually continues
+  // even if the user isn't following anyone.
+  const explorePosts = await searchSocialPosts(supabase, "", profile?.id);
+  const suggestedPosts = explorePosts.filter((item) => item.id !== post.id).slice(0, 20);
 
   const combinedPosts = [post, ...suggestedPosts];
 
@@ -66,13 +62,17 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   return (
     <div className="space-y-0 pb-3">
-      <VirtualFeedClient
-        messages={m}
-        posts={displayPosts}
-        suggestedCreators={[]}
-        teacherBadges={m.teacherBadges}
-        viewerRole={profile?.role}
-      />
+      {displayPosts.map((p, index) => (
+        <FeedPostCard
+          key={p.postId ?? index}
+          post={p}
+          teacherBadges={m.teacherBadges}
+          feedExtras={m.feedExtras}
+          feedEnhancements={m.feedEnhancements}
+          viewerRole={profile?.role}
+          priorityMedia={index === 0}
+        />
+      ))}
     </div>
   );
 }

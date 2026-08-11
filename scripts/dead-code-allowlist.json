@@ -41,7 +41,8 @@
     "hetzner-zigo-nginx.mjs",
     "seed-custom-users.mjs",
     "supabase-auth-cutover-check.mjs",
-    "vercel-detach-zigo.mjs"
+    "vercel-detach-zigo.mjs",
+    "diag-smoke.mjs"
   ],
   "components": [
     "social-primitives.tsx",
