@@ -306,7 +306,7 @@ export function BankTransferCheckoutPanel({
     setMessage("");
     try {
       const formData = new FormData();
-      formData.set("requestId", request.id);
+      formData.set("requestId", String((request as { id?: string }).id));
       formData.set("file", selectedFile);
 
       const response = await fetch("/api/billing/bank-transfer/receipt", {
@@ -345,6 +345,8 @@ export function BankTransferCheckoutPanel({
     );
   }
 
+  const requestLoc = request as { id?: string; status?: string; reference_code?: string; receipt_storage_path?: string } | null;
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -358,7 +360,7 @@ export function BankTransferCheckoutPanel({
         </div>
       </div>
 
-      {!request ? (
+      {!requestLoc ? (
         <button
           className="tap-scale w-full rounded-xl bg-night px-4 py-3 text-sm font-black text-white disabled:opacity-60"
           disabled={loading}
@@ -380,7 +382,7 @@ export function BankTransferCheckoutPanel({
                     account={account}
                     amountTry={amountTry}
                     labels={h}
-                    referenceCode={request.reference_code}
+                    referenceCode={requestLoc.reference_code}
                     showReference={index === 0}
                   />
                 </div>
@@ -392,7 +394,7 @@ export function BankTransferCheckoutPanel({
             <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
               {h.amountReference
                 .replace("{amount}", formatTryPrice(amountTry))
-                .replace("{code}", request.reference_code)}
+                .replace("{code}", requestLoc.reference_code ?? "")}
             </div>
           ) : null}
 
@@ -402,7 +404,7 @@ export function BankTransferCheckoutPanel({
             <p className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-bold text-slate-700">{statusLabel}</p>
           ) : null}
 
-          {request.status === "pending" ? (
+          {requestLoc.status === "pending" ? (
             <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-sm font-black text-night">{h.receiptTitle}</p>
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{h.receiptHint}</p>
@@ -418,9 +420,9 @@ export function BankTransferCheckoutPanel({
                 onClick={() => void uploadReceipt()}
                 type="button"
               >
-                {uploading ? h.receiptUploading : request.receipt_storage_path ? h.receiptUpdate : h.receiptUpload}
+                {uploading ? h.receiptUploading : requestLoc.receipt_storage_path ? h.receiptUpdate : h.receiptUpload}
               </button>
-              {request.receipt_storage_path ? (
+              {requestLoc.receipt_storage_path ? (
                 <p className="mt-2 text-xs font-bold text-emerald-700">{h.receiptUploaded}</p>
               ) : null}
             </div>

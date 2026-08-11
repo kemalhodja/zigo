@@ -61,9 +61,10 @@ export function InterestSelector({
 
   const selectedCount = selectedAreaIds.size;
   const selectedList = useMemo(() => [...selectedAreaIds], [selectedAreaIds]);
+  const selectionRole = role === "student" || role === "parent" ? role : "teacher";
   const visibleAreas = useMemo(
-    () => filterAreasForInterestSelection(areas, role),
-    [areas, role],
+    () => filterAreasForInterestSelection(areas, selectionRole),
+    [areas, selectionRole],
   );
   const isTeacherNiche = role === "teacher";
   const isLearner = role === "student" || role === "parent";

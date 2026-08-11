@@ -113,7 +113,7 @@ export async function listRecentAdminBillingGrants(
       id: row.id,
       adminId: row.admin_id,
       userId: row.user_id,
-      kind: row.kind,
+      kind: row.kind as "sponsor" | "plus",
       durationDays: row.duration_days,
       note: row.note,
       periodEndsAt: row.period_ends_at,

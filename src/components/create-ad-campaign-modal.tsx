@@ -196,7 +196,7 @@ export function CreateAdCampaignModal({
       return `https://wa.me/${formatted}?text=${encodeURIComponent(`Merhaba, Zigo'daki "${title || 'Sponsorlu'}" reklamınız hakkında bilgi almak istiyorum.`)}`;
     }
     if (ctaChannel === "dm") {
-      return `/messages`;
+      return `/teacher/lessons`;
     }
     return websiteUrl.trim();
   }

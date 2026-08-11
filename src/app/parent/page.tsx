@@ -373,6 +373,7 @@ async function getParentData(): Promise<{
     children.map(async (child) => [child.id, await getChildActivity(supabase, child.id, 8)] as const),
   );
 
+  const profileLoc = profile as unknown as { city?: string | null; district?: string | null };
   return {
     children: children.map((child) => ({
       id: child.id,
@@ -388,8 +389,8 @@ async function getParentData(): Promise<{
     allowDevActivate: canUseDevBillingBypass(),
     childActivityById: Object.fromEntries(activityEntries),
     gradeLevel: profile.grade_level,
-    city: profile.city,
-    district: profile.district,
+    city: profileLoc.city ?? null,
+    district: profileLoc.district ?? null,
     schoolName: profile.school_name,
     classroom: profile.classroom,
     planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type)),

@@ -28,6 +28,18 @@ export function DailyMissionsCard() {
           href: "/learn",
         },
         {
+          id: "safe-duel" as const,
+          title: "Düelloya Katıl",
+          reward: "+25 Zigo",
+          href: "/duels",
+        },
+        {
+          id: "focus-pomodoro" as const,
+          title: "Odaklanma Seansı Tamamla",
+          reward: "+15 Zigo",
+          href: "/focus",
+        },
+        {
           id: "visit-store" as const,
           title: m.missions.openStore,
           reward: m.missions.spendPoints,

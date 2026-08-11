@@ -2,6 +2,8 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+const safeRevalidateTag = revalidateTag as unknown as (tag: string) => void;
+
 import { extractErrorMessage, respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { createSocialPost, createSocialPostSchema, deleteSocialPost, getSocialFeed, SOCIAL_FEED_CACHE_TAG, socialFeedCacheTag, updateSocialPost, updateSocialPostSchema } from "@/lib/domain/social";
@@ -133,6 +135,7 @@ export async function POST(request: Request) {
       }
     }
 
+    const profileLoc = profile as unknown as { city?: string | null; district?: string | null };
     const postPayload = {
       authorId: profile.id,
       caption: body.caption,
@@ -151,10 +154,9 @@ export async function POST(request: Request) {
       sponsoredLabel: body.sponsoredLabel,
       sponsoredTargetUrl: body.sponsoredTargetUrl,
       externalUrl: body.externalUrl,
-      coAuthorId: body.coAuthorId,
-      locationName: body.locationName ?? (profile.city ? `${profile.district ? `${profile.district}, ` : ""}${profile.city}` : null),
-      city: body.city ?? profile.city ?? null,
-      district: body.district ?? profile.district ?? null,
+      locationName: body.locationName ?? (profileLoc.city ? `${profileLoc.district ? `${profileLoc.district}, ` : ""}${profileLoc.city}` : null),
+      city: body.city ?? profileLoc.city ?? null,
+      district: body.district ?? profileLoc.district ?? null,
     };
 
     let post;
@@ -166,8 +168,8 @@ export async function POST(request: Request) {
 
     console.log("[SERVER_POST_CREATED_SUCCESS]", { postId: (post as { id?: string })?.id });
 
-    revalidateTag(SOCIAL_FEED_CACHE_TAG);
-    revalidateTag(socialFeedCacheTag(profile.id));
+    safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
+    safeRevalidateTag(socialFeedCacheTag(profile.id));
 
     return NextResponse.json({ data: post, meta: { action: "create-post", areaId } }, { status: 201 });
   } catch (error) {
@@ -232,8 +234,8 @@ export async function PATCH(request: Request) {
       throw updateErr;
     }
 
-    revalidateTag(SOCIAL_FEED_CACHE_TAG);
-    revalidateTag(socialFeedCacheTag(profile.id));
+    safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
+    safeRevalidateTag(socialFeedCacheTag(profile.id));
 
     return NextResponse.json({ data: post, meta: { action: "update-post", postId: body.postId } }, { status: 200 });
   } catch (error) {
@@ -273,8 +275,8 @@ export async function DELETE(request: Request) {
 
     await deleteSocialPost(supabase, postId, profile.id);
 
-    revalidateTag(SOCIAL_FEED_CACHE_TAG);
-    revalidateTag(socialFeedCacheTag(profile.id));
+    safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
+    safeRevalidateTag(socialFeedCacheTag(profile.id));
 
     return NextResponse.json({ data: { success: true } }, { status: 200 });
   } catch (error) {

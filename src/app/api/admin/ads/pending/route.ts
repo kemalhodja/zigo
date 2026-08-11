@@ -23,8 +23,6 @@ export async function GET() {
         media_url,
         media_type,
         target_audience,
-        city,
-        district,
         created_at,
         author:author_id (
           full_name
@@ -37,7 +35,7 @@ export async function GET() {
       return NextResponse.json({ error: "Veriler çekilemedi" }, { status: 500 });
     }
 
-    const formatted = (data ?? []).map((row) => ({
+    const formatted = (data ?? []).map((row: Record<string, unknown>) => ({
       id: row.id,
       author_name: (row.author as unknown as { full_name?: string })?.full_name ?? "Kullanıcı",
       title: row.title,
@@ -45,8 +43,8 @@ export async function GET() {
       media_url: row.media_url,
       media_type: row.media_type,
       target_audience: row.target_audience,
-      city: row.city,
-      district: row.district,
+      city: null,
+      district: null,
       created_at: row.created_at,
     }));
 

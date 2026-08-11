@@ -8,13 +8,18 @@ export async function getAreaLeaderboard(
   areaId: number,
   limit = 10,
 ) {
-  const { data, error } = await supabase.rpc("get_area_leaderboard", {
+  const rpcCaller = supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: Error | null }>;
+
+  const { data, error } = await rpcCaller("get_area_leaderboard", {
     target_area_id: areaId,
     limit_count: Math.min(50, Math.max(1, limit)),
   });
 
   if (error) throw error;
-  return normalizeLeaderboardRows((data ?? []) as Array<{
+  return normalizeLeaderboardRows((data ?? []) as unknown as Array<{
     user_id: string;
     full_name: string;
     total_points: number;

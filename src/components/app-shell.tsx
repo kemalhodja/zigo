@@ -326,10 +326,10 @@ function Header({
 
         <div className="flex shrink-0 items-center gap-2">
           <Link
-            aria-label="Direkt Mesajlar (DM)"
+            aria-label="Ders Talepleri"
             className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-crystal"
-            href="/messages"
-            title="Ders Talepleri & Mesajlaşma"
+            href="/teacher/lessons"
+            title="Ders Talepleri"
           >
             <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />

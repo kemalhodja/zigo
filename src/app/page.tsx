@@ -1,7 +1,8 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
-import { AiMentorCard } from "@/components/ai-mentor-card";
-import { TeacherHomeInsights } from "@/components/teacher-home-insights";
+const AiMentorCard = dynamic(() => import("@/components/ai-mentor-card").then(mod => mod.AiMentorCard));
+const TeacherHomeInsights = dynamic(() => import("@/components/teacher-home-insights").then(mod => mod.TeacherHomeInsights));
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { buildDemoPosts } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";

@@ -64,7 +64,7 @@ export async function getSocialFeed(
       .select(
         `
         *,
-        author:author_id (
+        author:users!author_id (
           id,
           full_name,
           role,
@@ -72,14 +72,14 @@ export async function getSocialFeed(
           organization_type,
           avatar_url
         ),
-        co_author:co_author_id (
+        co_author:users!co_author_id (
           id,
           full_name
         ),
         area:area_id (
           area_name
         )
-      `,
+      `
       )
       .order("created_at", { ascending: false })
       .order("id", { ascending: false });
@@ -117,7 +117,7 @@ export async function getSocialFeed(
     }
   }
 
-  const posts = (data ?? []) as RawSocialPost[];
+  const posts = (data ?? []) as unknown as RawSocialPost[];
   if (posts.length === 0) return { posts: [], nextCursor: null };
 
   const profile = viewerId ? await getCurrentProfile(supabase) : null;
@@ -262,7 +262,7 @@ export async function getSocialPostById(
     .select(
       `
       *,
-      author:author_id (
+      author:users!author_id (
         id,
         full_name,
         role,
@@ -285,7 +285,7 @@ export async function getSocialPostById(
   const premiumAccess = await resolvePremiumPrepAccess(supabase, viewerId, profile?.role ?? null);
   const [post] = await hydrateSocialPosts(
     supabase,
-    [data as RawSocialPost],
+    [data as unknown as RawSocialPost],
     viewerId,
     premiumAccess.canOpen,
     Boolean(viewerId),
@@ -322,7 +322,7 @@ export async function getFollowingFeed(
     .select(
       `
       *,
-      author:author_id (
+      author:users!author_id (
         id,
         full_name,
         role,
@@ -330,7 +330,7 @@ export async function getFollowingFeed(
         organization_type,
         avatar_url
       ),
-      co_author:co_author_id (
+      co_author:users!co_author_id (
         id,
         full_name
       ),
@@ -348,7 +348,7 @@ export async function getFollowingFeed(
   const canOpenPremiumPrep = await resolveViewerCanOpenPremiumPrep(supabase, viewerId);
   const hydrated = await hydrateSocialPosts(
     supabase,
-    (data ?? []) as RawSocialPost[],
+    (data ?? []) as unknown as RawSocialPost[],
     viewerId,
     canOpenPremiumPrep,
     canOpenSponsored,

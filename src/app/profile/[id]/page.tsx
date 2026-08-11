@@ -110,15 +110,16 @@ export default async function PublicProfilePage({ params, searchParams }: Public
               <FollowButton
                 followingId={profile.id}
                 initialFollowing={following}
+                initialFollowersCount={stats.followers}
                 showCount={false}
               />
             )}
             {!isOwnProfile ? (
               <Link
                 className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-orange-500 px-2 text-xs font-black text-slate-950 shadow-xs hover:brightness-105 transition whitespace-nowrap"
-                href={`/messages?user=${profile.id}`}
+                href={`/teacher/lessons?user=${profile.id}`}
               >
-                💬 DM Gönder
+                💬 Ders Talebi
               </Link>
             ) : null}
             <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-slate-100 px-2 text-xs font-black text-night hover:bg-slate-200 transition whitespace-nowrap" href="/questions">

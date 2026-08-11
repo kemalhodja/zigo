@@ -1,11 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { adminUpdateSubscriptionTier, adminUpdateSubscriptionTierSchema } from "@/lib/domain/admin";
 import {
-  adminBillingGrantSchema,
-  buildAdminBillingGrantInsert,
-  resolveAdminGrantDurationDays,
-  resolveAdminGrantPeriodEnd,
-  summarizeAdminBillingGrant,
+    adminBillingGrantSchema,
+    buildAdminBillingGrantInsert,
+    resolveAdminGrantDurationDays,
+    resolveAdminGrantPeriodEnd,
+    summarizeAdminBillingGrant,
 } from "@/lib/domain/admin-billing-grant";
 
 describe("admin-billing-grant", () => {
@@ -85,5 +86,46 @@ describe("admin-billing-grant", () => {
         userName: "Aylin",
       }),
     ).toBe("Sponsor 7d → Aylin");
+  });
+
+  it("accepts admin subscription tier updates for free and zigo_plus", () => {
+    expect(adminUpdateSubscriptionTierSchema.parse({ userId, tier: "free" })).toEqual({ userId, tier: "free" });
+    expect(adminUpdateSubscriptionTierSchema.parse({ userId, tier: "zigo_plus" })).toEqual({ userId, tier: "zigo_plus" });
+    expect(() => adminUpdateSubscriptionTierSchema.parse({ userId, tier: "invalid" })).toThrow();
+  });
+
+  it("requires platform admin rights before mutating subscription tiers", async () => {
+    const forbiddenSupabase = {
+      rpc: vi.fn().mockResolvedValue({ data: false, error: null }),
+    } as unknown as Parameters<typeof adminUpdateSubscriptionTier>[0];
+
+    await expect(
+      adminUpdateSubscriptionTier(forbiddenSupabase, { userId, tier: "zigo_plus" }),
+    ).rejects.toThrow("Platform admin access is required.");
+  });
+
+  it("applies tier updates when the caller is a platform admin", async () => {
+    const allowedSupabase = {
+      rpc: vi.fn((method: string) => {
+        if (method === "current_user_is_platform_admin") {
+          return Promise.resolve({ data: true, error: null });
+        }
+
+        if (method === "set_user_subscription_tier") {
+          return Promise.resolve({ data: { ok: true }, error: null });
+        }
+
+        return Promise.resolve({ data: null, error: null });
+      }),
+    } as unknown as Parameters<typeof adminUpdateSubscriptionTier>[0];
+
+    await expect(
+      adminUpdateSubscriptionTier(allowedSupabase, { userId, tier: "free" }),
+    ).resolves.toBeUndefined();
+    expect(allowedSupabase.rpc).toHaveBeenCalledWith("current_user_is_platform_admin");
+    expect(allowedSupabase.rpc).toHaveBeenCalledWith("set_user_subscription_tier", {
+      p_user_id: userId,
+      p_tier: "free",
+    });
   });
 });

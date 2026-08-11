@@ -69,17 +69,19 @@ export async function hydrateSocialPosts(
   let allowedPosts = posts;
   let viewerContext: { role?: string | null; city?: string | null; district?: string | null } | null = null;
   if (viewerId) {
-    const profile = await supabase
+    const rawProfile = await supabase
       .from("users")
       .select("id, role, grade_level, city, district")
       .eq("id", viewerId)
       .maybeSingle()
-      .then((r) => r.data);
+      .then((r) => r.data as unknown);
+
+    const profile = rawProfile as { id: string; role: string; grade_level?: string | null; city?: string | null; district?: string | null } | null;
 
     if (profile) {
       viewerContext = { role: profile.role, city: profile.city, district: profile.district };
       if (posts.some((p) => p.target_audience && p.target_audience !== "all")) {
-        allowedPosts = filterPostsForAudience(posts, viewerId, profile);
+        allowedPosts = filterPostsForAudience(posts, viewerId, profile as never);
       }
     }
   }

@@ -20,7 +20,7 @@ export function VirtualFeedClient({
   suggestedCreators: DisplaySuggestedCreator[];
   messages: Messages;
   teacherBadges: { verifiedTeacher: string; moreAreas: string };
-  viewerRole: UserRole | "guest" | null;
+  viewerRole?: UserRole | "guest" | null;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
 

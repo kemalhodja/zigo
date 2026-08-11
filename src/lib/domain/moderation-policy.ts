@@ -97,7 +97,7 @@ export async function recordModerationStrike(
     p_reason: input.reason,
     p_content_kind: input.contentKind,
     p_content_preview: input.contentPreview.slice(0, 200),
-    p_matched_term: input.matchedTerm ?? null,
+    p_matched_term: input.matchedTerm ?? undefined,
   });
 
   if (error) throw error;

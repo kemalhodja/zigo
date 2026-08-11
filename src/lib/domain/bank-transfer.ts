@@ -126,8 +126,8 @@ export async function reviewBankTransferRequest(
   const { data, error } = await supabase.rpc("review_bank_transfer_request", {
     p_request_id: parsed.requestId,
     p_status: parsed.status as BankTransferRequestStatus,
-    p_admin_note: parsed.adminNote ?? null,
-    p_period_end: periodEnd,
+    p_admin_note: parsed.adminNote ?? undefined,
+    p_period_end: periodEnd ?? undefined,
   });
 
   if (error) throw error;

@@ -158,6 +158,18 @@ export function SocialPostActions({
       return;
     }
 
+    const previousLiked = isLiked;
+    const previousLikesCount = likes;
+    const previousSaved = isSaved;
+
+    // Optimistic Update
+    if (endpoint === "likes") {
+      setIsLiked(!isLiked);
+      setLikes((current) => Math.max(0, current + (isLiked ? -1 : 1)));
+    } else {
+      setIsSaved(!isSaved);
+    }
+
     setPendingAction(endpoint);
 
     try {
@@ -168,6 +180,14 @@ export function SocialPostActions({
       });
 
       if (!response.ok) {
+        // Revert Optimistic Update
+        if (endpoint === "likes") {
+          setIsLiked(previousLiked);
+          setLikes(previousLikesCount);
+        } else {
+          setIsSaved(previousSaved);
+        }
+
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
         setMessage(response.status === 401 ? a.signInToContinue : payload?.error ?? a.actionFailed);
         return;
@@ -176,7 +196,9 @@ export function SocialPostActions({
       if (endpoint === "likes") {
         const payload = (await response.json()) as { data: { is_liked: boolean; likes_count?: number } };
         setIsLiked(payload.data.is_liked);
-        setLikes((current) => payload.data.likes_count ?? Math.max(0, current + (payload.data.is_liked ? 1 : -1)));
+        if (payload.data.likes_count !== undefined) {
+          setLikes(payload.data.likes_count);
+        }
       } else {
         const payload = (await response.json()) as { data: { is_saved: boolean; saves_count?: number } };
         setIsSaved(payload.data.is_saved);
@@ -186,6 +208,13 @@ export function SocialPostActions({
       if (endpoint === "likes") setMessage("");
       router.refresh();
     } catch {
+      // Revert Optimistic Update on network error
+      if (endpoint === "likes") {
+        setIsLiked(previousLiked);
+        setLikes(previousLikesCount);
+      } else {
+        setIsSaved(previousSaved);
+      }
       setMessage(a.connectionFailedTryAgain);
     } finally {
       setPendingAction(null);

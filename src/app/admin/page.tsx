@@ -611,16 +611,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noBankTransfersDesc}</p>
           </div>
         ) : (
-          bankTransfers.map((transfer) => (
-            <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={transfer.id}>
-              <div>
-                <p className="font-black text-night">{transfer.user?.full_name ?? c.unknownUser}</p>
-                <p className="text-xs font-bold text-slate-500">{transfer.user?.email}</p>
-                <p className="mt-1 text-xs font-black text-crystal">{transfer.reference_code}</p>
+          bankTransfers.map((transfer) => {
+            const transferUser = transfer.user as { full_name?: string; email?: string } | null;
+            return (
+              <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={transfer.id}>
+                <div>
+                  <p className="font-black text-night">{transferUser?.full_name ?? c.unknownUser}</p>
+                  <p className="text-xs font-bold text-slate-500">{transferUser?.email}</p>
+                  <p className="mt-1 text-xs font-black text-crystal">{transfer.reference_code}</p>
+                </div>
+                <AdminBankTransferActions request={transfer as unknown as Parameters<typeof AdminBankTransferActions>[0]["request"]} />
               </div>
-              <AdminBankTransferActions request={transfer} />
-            </div>
-          ))
+            );
+          })
         )}
       </section>
 

@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       p_plan_id: body.planId,
       p_product_id: body.productId,
       p_purchase_token: body.purchaseToken,
-      p_order_id: body.orderId ?? null,
+      p_order_id: body.orderId ?? undefined,
       p_package_name: body.packageName,
       p_expiry_time: finalExpiryTime,
     });

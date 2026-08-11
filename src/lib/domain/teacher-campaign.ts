@@ -1,34 +1,42 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import {
-  DEFAULT_SPONSORED_TARGETING,
-  normalizeSponsoredTargeting,
-  sponsoredTargetingSchema,
-} from "@/lib/domain/teacher-campaign-targeting";
-import type {
-  Database,
-  SponsoredTeacherCampaignSummary,
-  TeacherCampaignRow,
-  TeacherCampaignView,
-} from "@/lib/supabase/database.types";
+import type { TeacherCampaignRow, TeacherCampaignView, SponsoredTeacherCampaignSummary, Database } from "@/lib/supabase/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-export const TEACHER_CAMPAIGN_SPONSOR_PACKAGES = [7, 30] as const;
-export type TeacherCampaignSponsorPackageDays = (typeof TEACHER_CAMPAIGN_SPONSOR_PACKAGES)[number];
+export const DEFAULT_SPONSORED_TARGETING = {
+  minGrade: null,
+  maxGrade: null,
+  educationAreaIds: [] as number[],
+};
+
+export const sponsoredTargetingSchema = z.object({
+  minGrade: z.number().int().min(1).max(12).nullable().optional(),
+  maxGrade: z.number().int().min(1).max(12).nullable().optional(),
+  educationAreaIds: z.array(z.number().int()).default([]),
+});
+
+export type SponsoredTargeting = z.infer<typeof sponsoredTargetingSchema>;
+
+export function normalizeSponsoredTargeting(input?: Partial<SponsoredTargeting> | null): SponsoredTargeting {
+  return {
+    minGrade: typeof input?.minGrade === "number" ? input.minGrade : null,
+    maxGrade: typeof input?.maxGrade === "number" ? input.maxGrade : null,
+    educationAreaIds: Array.isArray(input?.educationAreaIds)
+      ? Array.from(new Set(input.educationAreaIds.filter((id) => Number.isInteger(id) && id > 0)))
+      : [],
+  };
+}
 
 export const teacherCampaignSchema = z.object({
   headline: z.string().trim().min(3).max(120),
-  tagline: z.string().trim().max(255).optional().nullable(),
-  pitch: z.string().trim().max(2000).optional().nullable(),
-  ctaLabel: z.string().trim().min(2).max(80).default("Profilime git"),
-  ctaUrl: z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+  tagline: z.string().trim().max(160).nullable().optional(),
+  pitch: z.string().trim().max(2000).nullable().optional(),
+  ctaLabel: z.string().trim().min(2).max(40).default("İletişime Geç"),
+  ctaUrl: z.string().trim().url().max(2048).nullable().optional(),
+  coverImageUrl: z.union([
+    z.string().trim().length(0),
     z.string().trim().url().max(2048).nullable().optional(),
-  ),
-  coverImageUrl: z.preprocess(
-    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
-    z.string().trim().url().max(2048).nullable().optional(),
-  ),
+  ]),
   isPublished: z.boolean().default(false),
   isSponsored: z.boolean().default(false),
   sponsoredPackageDays: z.union([z.literal(7), z.literal(30)]).default(30),
@@ -43,8 +51,10 @@ export function isTeacherCampaignSponsoredActive(
   if (!campaign.is_published || !campaign.is_sponsored) return false;
   if (campaign.sponsored_status !== "active") return false;
   if (!campaign.sponsored_expires_at) return true;
-  return new Date(campaign.sponsored_expires_at).getTime() > Date.now();
+  return new Date(String(campaign.sponsored_expires_at)).getTime() > Date.now();
 }
+
+type RpcFn = (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }>;
 
 export async function upsertTeacherCampaign(
   supabase: SupabaseClient<Database>,
@@ -54,7 +64,8 @@ export async function upsertTeacherCampaign(
   const sponsoredTargeting = parsed.isSponsored
     ? normalizeSponsoredTargeting(parsed.sponsoredTargeting ?? DEFAULT_SPONSORED_TARGETING)
     : null;
-  const { data, error } = await supabase.rpc("upsert_teacher_campaign", {
+  const rpc = supabase.rpc as unknown as RpcFn;
+  const { data, error } = await rpc("upsert_teacher_campaign", {
     next_headline: parsed.headline,
     next_tagline: parsed.tagline ?? null,
     next_pitch: parsed.pitch ?? null,
@@ -75,7 +86,8 @@ export async function getTeacherCampaign(
   supabase: SupabaseClient<Database>,
   teacherId: string,
 ) {
-  const { data, error } = await supabase.rpc("get_teacher_campaign", {
+  const rpc = supabase.rpc as unknown as RpcFn;
+  const { data, error } = await rpc("get_teacher_campaign", {
     target_teacher_id: teacherId,
   });
 
@@ -89,7 +101,8 @@ export async function listSponsoredTeacherCampaigns(
   limit = 12,
   placement: "explore" | "profile_rail" | "feed_highlight" = "explore",
 ) {
-  const { data, error } = await supabase.rpc("list_sponsored_teacher_campaigns", {
+  const rpc = supabase.rpc as unknown as RpcFn;
+  const { data, error } = await rpc("list_sponsored_teacher_campaigns", {
     limit_count: limit,
     placement_key: placement,
   });
@@ -98,7 +111,7 @@ export async function listSponsoredTeacherCampaigns(
     return (data ?? []) as SponsoredTeacherCampaignSummary[];
   }
 
-  const legacy = await supabase.rpc("list_sponsored_teacher_campaigns", {
+  const legacy = await rpc("list_sponsored_teacher_campaigns", {
     limit_count: limit,
   });
 
@@ -110,7 +123,8 @@ export async function recordTeacherCampaignView(
   supabase: SupabaseClient<Database>,
   teacherId: string,
 ) {
-  const { error } = await supabase.rpc("record_teacher_campaign_view", {
+  const rpc = supabase.rpc as unknown as RpcFn;
+  const { error } = await rpc("record_teacher_campaign_view", {
     target_teacher_id: teacherId,
   });
   if (error) throw error;
@@ -120,7 +134,8 @@ export async function recordTeacherCampaignClick(
   supabase: SupabaseClient<Database>,
   teacherId: string,
 ) {
-  const { data, error } = await supabase.rpc("record_teacher_campaign_click", {
+  const rpc = supabase.rpc as unknown as RpcFn;
+  const { data, error } = await rpc("record_teacher_campaign_click", {
     target_teacher_id: teacherId,
   });
 
@@ -138,7 +153,8 @@ export async function isTeacherCampaignVisibleForViewer(
   teacherId: string,
   placement: "explore" | "profile_rail" | "feed_highlight" = "profile_rail",
 ) {
-  const { data, error } = await supabase.rpc("teacher_campaign_visible_for_viewer", {
+  const rpc = supabase.rpc as unknown as RpcFn;
+  const { data, error } = await rpc("teacher_campaign_visible_for_viewer", {
     target_teacher_id: teacherId,
     placement_key: placement,
   });

@@ -15,7 +15,7 @@ export async function requestAccountDeletion(
   const parsed = deleteAccountRequestSchema.parse(input);
   const safeReason = assertModeratedOptionalText(parsed.reason ?? null);
   const { data, error } = await supabase.rpc("request_account_deletion", {
-    p_reason: safeReason,
+    p_reason: safeReason ?? undefined,
   });
   if (error) throw error;
   return data;

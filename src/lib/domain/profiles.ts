@@ -95,7 +95,7 @@ export async function createProfile(
 
   const { data, error } = await supabase.rpc("create_profile", {
     full_name: parsed.fullName,
-    profile_role: account.role,
+    profile_role: (account.role === "student" || account.role === "parent" ? account.role : "teacher") as "student" | "parent" | "teacher",
   });
 
   if (error) throw error;
@@ -199,8 +199,8 @@ export async function updateUserProfile(
   const safeBio = parsed.bio !== undefined ? assertModeratedOptionalText(parsed.bio) : undefined;
 
   const { data, error } = await supabase.rpc("update_user_profile", {
-    ...(safeBio !== undefined ? { next_bio: safeBio } : {}),
-    ...(parsed.avatarUrl !== undefined ? { next_avatar_url: parsed.avatarUrl } : {}),
+    ...(safeBio !== undefined ? { next_bio: safeBio ?? undefined } : {}),
+    ...(parsed.avatarUrl !== undefined ? { next_avatar_url: parsed.avatarUrl ?? undefined } : {}),
     ...(parsed.fullName !== undefined ? { next_full_name: parsed.fullName } : {}),
   });
 
@@ -230,8 +230,8 @@ export async function updateOwnAccountKind(
   const account = resolveRegistrationAccount(parsed.accountKind);
 
   const { data, error } = await supabase.rpc("update_own_account_kind", {
-    next_role: account.role,
-    next_organization_type: account.organizationType,
+    next_role: (account.role === "student" || account.role === "parent" ? account.role : "teacher") as "student" | "parent" | "teacher",
+    next_organization_type: account.organizationType ?? undefined,
   });
 
   if (error) throw error;

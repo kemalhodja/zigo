@@ -68,12 +68,19 @@ export async function getClassGroupInfo(
       .maybeSingle();
 
     if (user) {
+      const u = user as unknown as {
+        city: string | null;
+        district: string | null;
+        school_name: string | null;
+        grade_level: string | null;
+        classroom: string | null;
+      };
       location = {
-        city: user.city,
-        district: user.district,
-        schoolName: user.school_name,
-        gradeLevel: user.grade_level,
-        classroom: user.classroom,
+        city: u.city,
+        district: u.district,
+        schoolName: u.school_name,
+        gradeLevel: u.grade_level,
+        classroom: u.classroom,
       };
     }
   }
@@ -150,7 +157,7 @@ export async function joinClassGroup(
     p_school_name: parsed.schoolName,
     p_grade_level: parsed.gradeLevel,
     p_classroom: parsed.classroom,
-    p_child_profile_id: parsed.childProfileId ?? null,
+    p_child_profile_id: parsed.childProfileId ?? undefined,
   });
 
   if (error) {
@@ -168,7 +175,7 @@ export async function leaveClassGroup(
 
   const { data, error } = await supabase.rpc("leave_class_group", {
     p_group_id: parsed.groupId,
-    p_child_profile_id: parsed.childProfileId ?? null,
+    p_child_profile_id: parsed.childProfileId ?? undefined,
   });
 
   if (error) {

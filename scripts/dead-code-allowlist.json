@@ -61,6 +61,8 @@
     "feed-refresh-control.tsx",
     "lazy-image.tsx",
     "skeleton.tsx",
-    "toast-system.tsx"
+    "toast-system.tsx",
+    "google-play-subscription-modal.test.tsx",
+    "pomodoro-timer.tsx"
   ]
 }

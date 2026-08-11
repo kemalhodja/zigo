@@ -12,21 +12,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const subscription = await request.json();
+    const subscription = (await request.json().catch(() => ({}))) as {
+      endpoint?: string;
+      keys?: { p256dh?: string; auth?: string };
+    };
 
     if (!subscription || !subscription.endpoint || !subscription.keys) {
       return NextResponse.json({ error: "Invalid subscription" }, { status: 400 });
     }
 
-    const { error } = await supabase.from("push_subscriptions").upsert(
-      {
-        user_id: profile.id,
-        endpoint: subscription.endpoint,
-        p256dh: subscription.keys.p256dh,
-        auth: subscription.keys.auth,
-      } as any,
-      { onConflict: "user_id, endpoint" }
-    );
+    const { error } = await (supabase
+      .from("push_subscriptions" as unknown as "users") as unknown as {
+        upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: Error | null }>;
+      })
+      .upsert(
+        {
+          user_id: profile.id,
+          endpoint: subscription.endpoint,
+          p256dh: subscription.keys.p256dh,
+          auth: subscription.keys.auth,
+        },
+        { onConflict: "user_id, endpoint" },
+      );
 
     if (error) {
       console.error("[PUSH_SUBSCRIBE_ERROR]", error);

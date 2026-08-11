@@ -124,7 +124,7 @@ export default async function FamilyPage() {
                   {f.feedPosts}
                 </div>
                 <div className="rounded-lg bg-slate-50 p-3">
-                  <p className="text-lg font-black text-night">{child.avatar_assets.pet ? "1" : "0"}</p>
+                  <p className="text-lg font-black text-night">{(child.avatar_assets as Record<string, unknown> | null)?.pet ? "1" : "0"}</p>
                   {f.pets}
                 </div>
               </div>

@@ -82,8 +82,9 @@ export default function RoleUpgradePage() {
         toast.success("Rol başarıyla güncellendi!");
         router.push("/profile");
       }
-    } catch (err: any) {
-      toast.error(err.message || "İşlem tamamlanamadı");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "İşlem tamamlanamadı";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

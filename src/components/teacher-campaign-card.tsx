@@ -12,8 +12,11 @@ type TeacherCampaignCardProps = {
 };
 
 export function TeacherCampaignCard({ campaign, sponsoredLabel }: TeacherCampaignCardProps) {
-  const handle = campaign.teacher_name.toLowerCase().replaceAll(" ", "");
-  const ctrLabel = formatSponsoredCtr(campaign.click_count, campaign.view_count);
+  const teacherName = String(campaign.teacher_name || campaign.full_name || "Öğretmen");
+  const handle = teacherName.toLowerCase().replaceAll(" ", "");
+  const ctrLabel = formatSponsoredCtr((campaign.click_count as number) ?? 0, (campaign.view_count as number) ?? 0);
+  const headline = campaign.headline ? String(campaign.headline) : null;
+  const tagline = campaign.tagline ? String(campaign.tagline) : null;
 
   return (
     <Link
@@ -22,7 +25,7 @@ export function TeacherCampaignCard({ campaign, sponsoredLabel }: TeacherCampaig
     >
       {campaign.cover_image_url ? (
         <div className="relative h-24 w-full">
-          <Image alt="" className="object-cover" fill src={campaign.cover_image_url} unoptimized />
+          <Image alt="" className="object-cover" fill src={String(campaign.cover_image_url)} unoptimized />
         </div>
       ) : (
         <div className="h-24 bg-gradient-to-br from-violet-100 to-pink-50" />
@@ -33,25 +36,25 @@ export function TeacherCampaignCard({ campaign, sponsoredLabel }: TeacherCampaig
             {sponsoredLabel}
           </span>
           <span className="text-[0.65rem] font-bold text-slate-500">
-            {campaign.view_count} · {campaign.click_count} · {ctrLabel}
+            {(campaign.view_count as number) ?? 0} · {(campaign.click_count as number) ?? 0} · {ctrLabel}
           </span>
         </div>
         <div className="mt-3 flex items-center gap-2">
-          <h3 className="truncate text-sm font-black text-night">{campaign.teacher_name}</h3>
+          <h3 className="truncate text-sm font-black text-night">{teacherName}</h3>
           {campaign.teacher_verified ? <VerifiedBadge className="size-3.5" /> : null}
         </div>
         <p className="mt-1 truncate text-xs font-semibold text-slate-500">@{handle}</p>
-        <p className="mt-3 line-clamp-2 text-sm font-black leading-5 text-night">{campaign.headline}</p>
-        {campaign.tagline ? (
-          <p className="mt-1 line-clamp-2 text-xs font-semibold text-slate-600">{campaign.tagline}</p>
+        {headline ? <p className="mt-3 line-clamp-2 text-sm font-black leading-5 text-night">{headline}</p> : null}
+        {tagline ? (
+          <p className="mt-1 line-clamp-2 text-xs font-semibold text-slate-600">{tagline}</p>
         ) : null}
         <div className="mt-3">
           <Link
-            href={`/messages?user=${campaign.teacher_id}`}
+            href={`/teacher/lessons?user=${campaign.teacher_id}`}
             className="tap-scale flex w-full items-center justify-center gap-1 rounded-xl bg-slate-900 py-2 text-xs font-black text-white hover:bg-slate-800"
           >
             <span>💬</span>
-            <span>İletişime Geç (DM)</span>
+            <span>İletişime Geç</span>
           </Link>
         </div>
       </div>

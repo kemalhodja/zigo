@@ -34,7 +34,13 @@ export async function activateSponsorBoost(
     sponsoredPackageDays: input.packageDays,
   });
 
-  const { error: campaignUpdateError } = await supabase
+  const { error: campaignUpdateError } = await (supabase as unknown as {
+    from: (table: string) => {
+      update: (data: Record<string, unknown>) => {
+        eq: (col: string, val: string) => Promise<{ error: Error | null }>;
+      };
+    };
+  })
     .from("teacher_campaigns")
     .update({
       is_sponsored: true,
