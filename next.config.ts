@@ -66,9 +66,9 @@ export default withSentryConfig(
     org: "zigo-education",
     project: "zigo-web",
     widenClientFileUpload: true,
-    transpileClientSDK: true,
     tunnelRoute: "/monitoring",
-    hideSourceMaps: true,
-    disableLogger: true,
+    sourcemaps: {
+      disable: true,
+    }
   }
 );

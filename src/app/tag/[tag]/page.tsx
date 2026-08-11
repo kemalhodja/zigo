@@ -28,7 +28,7 @@ export default async function TagPage({ params }: TagPageProps) {
 
   if (!decodedTag || decodedTag.length < 1) notFound();
 
-  const m = await getServerMessages();
+  const _m = await getServerMessages();
 
   let posts: Awaited<ReturnType<typeof searchSocialPosts>> = [];
 

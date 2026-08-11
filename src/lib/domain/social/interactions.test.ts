@@ -91,7 +91,7 @@ describe("createComment moderation status", () => {
 
     const originalFrom = supabase.from.bind(supabase);
     supabase.from = vi.fn((table: string) => {
-      const builder = originalFrom(table) as unknown as Record<string, unknown>;
+      const builder = originalFrom(table as never) as unknown as Record<string, unknown>;
       if (table === "post_comments") {
         builder.insert = vi.fn((payload: unknown) => {
           insertPayload(payload);
@@ -142,7 +142,7 @@ describe("createComment moderation status", () => {
 
     const originalFrom = supabase.from.bind(supabase);
     supabase.from = vi.fn((table: string) => {
-      const builder = originalFrom(table) as unknown as Record<string, unknown>;
+      const builder = originalFrom(table as never) as unknown as Record<string, unknown>;
       if (table === "post_comments") {
         builder.insert = vi.fn((payload: unknown) => {
           insertPayload(payload);
@@ -190,7 +190,7 @@ describe("createComment moderation status", () => {
 
     const originalFrom = supabase.from.bind(supabase);
     supabase.from = vi.fn((table: string) => {
-      const builder = originalFrom(table) as unknown as Record<string, unknown>;
+      const builder = originalFrom(table as never) as unknown as Record<string, unknown>;
       if (table === "post_comments") {
         builder.insert = vi.fn((payload: unknown) => {
           insertPayload(payload);

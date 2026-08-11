@@ -132,7 +132,7 @@ export function SocialCreateForm({
 
     if (file.size > maxFileSizeBytes) {
       setStatus("error");
-      setMessage(`Dosya 100 MB\'dan büyük olamaz. (${sc.mediaSizeError})`);
+      setMessage(`Dosya 100 MB'dan büyük olamaz. (${sc.mediaSizeError})`);
       setPreview(null);
       setSelectedFile(null);
       return;

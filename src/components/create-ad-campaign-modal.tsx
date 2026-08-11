@@ -34,7 +34,7 @@ export function CreateAdCampaignModal({
   onSuccess,
   triggerLabel,
 }: CreateAdCampaignModalProps) {
-  const m = useMessages();
+  const _m = useMessages();
   const [isOpen, setIsOpen] = useState(false);
   const [method, setMethod] = useState<"existing" | "new">(existingPostId ? "existing" : "new");
 
@@ -196,7 +196,7 @@ export function CreateAdCampaignModal({
       return `https://wa.me/${formatted}?text=${encodeURIComponent(`Merhaba, Zigo'daki "${title || 'Sponsorlu'}" reklamınız hakkında bilgi almak istiyorum.`)}`;
     }
     if (ctaChannel === "dm") {
-      return `/messages`;
+      return `/teacher/lessons`;
     }
     return websiteUrl.trim();
   }

@@ -33,7 +33,7 @@ export function FocusPomodoroCard({
   areas,
   isPremium = false,
   initialTopic,
-  userId = null,
+  userId = null,  // eslint-disable-line @typescript-eslint/no-unused-vars
 }: FocusPomodoroCardProps) {
   const m = useMessages();
   const fc = m.focusCard;
@@ -514,7 +514,7 @@ function useAmbientAudio() {
         try {
           nodeRef.current?.disconnect();
           audioCtxRef.current?.close();
-        } catch {}
+        } catch { /* cleanup errors are non-fatal */ }
         audioCtxRef.current = null;
         nodeRef.current = null;
         gainNodeRef.current = null;

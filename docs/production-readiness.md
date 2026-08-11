@@ -27,7 +27,7 @@ Copy `.env.staging.example` → Vercel env. Never commit secrets.
 
 1. `npm run migrations:bundle` → `supabase/zigo-full-migrations.sql`
 2. Apply on cloud (**001–077**)
-3. Confirm health: `migrationTarget: 66` on `/api/setup/health`
+3. Confirm health: `migrationTarget: 91` on `/api/setup/health`
 
 ## Deploy pipeline
 

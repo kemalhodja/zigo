@@ -46,7 +46,7 @@ export function InterestSelector({
   initialOrganizationType = null,
   gradeLevel = null,
   role,
-  multiple = false,
+  multiple = false,  // eslint-disable-line @typescript-eslint/no-unused-vars
 }: InterestSelectorProps) {
   const m = useMessages();
   const f = m.forms;
@@ -61,11 +61,12 @@ export function InterestSelector({
 
   const selectedCount = selectedAreaIds.size;
   const selectedList = useMemo(() => [...selectedAreaIds], [selectedAreaIds]);
+  const selectionRole = role === "student" || role === "parent" ? role : "teacher";
   const visibleAreas = useMemo(
-    () => filterAreasForInterestSelection(areas, role),
-    [areas, role],
+    () => filterAreasForInterestSelection(areas, selectionRole),
+    [areas, selectionRole],
   );
-  const isTeacherNiche = role === "teacher";
+  const _isTeacherNiche = role === "teacher";
   const isLearner = role === "student" || role === "parent";
   const autoGrade = isLearner && isAutoInterestGradeLevel(gradeLevel);
   const needsBranchPick = isLearner && requiresBranchSelection(gradeLevel);

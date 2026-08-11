@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { AdminAnalyticsDashboard } from "@/components/admin-analytics-dashboard";
 import { AdminBankTransferActions } from "@/components/admin-bank-transfer-actions";
-import { AdminBillingGrantActions } from "@/components/admin-billing-grant-actions";
 import { AdminBillingGrantLedger } from "@/components/admin-billing-grant-ledger";
 import { AdminBroadcastButton } from "@/components/admin-broadcast-button";
 import { AdminLivePulse } from "@/components/admin-live-pulse";
@@ -11,10 +10,7 @@ import { AdminRoleRequests } from "@/components/admin-role-requests";
 import { AdminStockForm } from "@/components/admin-stock-form";
 import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
-import { AdminTeacherAreaForm } from "@/components/admin-teacher-area-form";
-import { AdminUserActions } from "@/components/admin-user-actions";
 import { AdminUserDirectory } from "@/components/admin-user-directory";
-import { AdminUserSearch } from "@/components/admin-user-search";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv } from "@/lib/config";
 import {
@@ -26,7 +22,6 @@ import {
 } from "@/lib/domain/admin";
 import { listRecentAdminBillingGrants } from "@/lib/domain/admin-billing-grant";
 import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
-import { getOrganizationOption } from "@/lib/domain/education-organization";
 import { evaluateExpansionReadiness } from "@/lib/domain/expansion-readiness";
 import {
   type DensityBand,
@@ -45,7 +40,7 @@ import {
 } from "@/lib/domain/learning-retention";
 import { isAiModerationConfigured } from "@/lib/domain/moderation-ai";
 import { getModerationSlaReport,MODERATION_SLA_HOURS } from "@/lib/domain/moderation-sla";
-import { getCurrentProfile, getEducationAreas, parseOrganizationType } from "@/lib/domain/profiles";
+import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
 import { getRevenueOpsSnapshot } from "@/lib/domain/revenue-ops";
 import { getTeacherActivationFunnel } from "@/lib/domain/verification-activation";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -60,46 +55,6 @@ function densityBandClass(band: DensityBand) {
   if (band === "healthy") return "bg-emerald-50 text-emerald-700";
   if (band === "thin") return "bg-amber-50 text-amber-700";
   return "bg-rose-50 text-rose-700";
-}
-
-function UserRow({
-  user,
-  areas,
-  labels,
-}: {
-  user: Awaited<ReturnType<typeof getUserVerificationQueue>>[number];
-  areas: Awaited<ReturnType<typeof getEducationAreas>>;
-  labels: {
-    verified: string;
-    pendingVerification: string;
-  };
-}) {
-  const organizationLabel = getOrganizationOption(parseOrganizationType(user.organization_type))?.label;
-
-  return (
-    <div className="grid gap-3 border-b border-slate-100 px-4 py-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-black text-night">{user.full_name}</p>
-          <p className="text-xs font-bold text-slate-500">
-            {user.email} • <span className="uppercase text-crystal">{user.role}</span>
-            {organizationLabel ? ` (${organizationLabel})` : ""}
-          </p>
-          <p className="mt-1 text-xs font-black text-crystal">
-            {user.is_verified ? labels.verified : labels.pendingVerification}
-          </p>
-        </div>
-        <AdminUserActions 
-          isVerified={user.is_verified} 
-          userId={user.id} 
-          userName={user.full_name} 
-          accountStatus={user.account_status} 
-        />
-      </div>
-      <AdminBillingGrantActions role={user.role} userId={user.id} userName={user.full_name} />
-      {user.role === "teacher" ? <AdminTeacherAreaForm areas={areas} teacherId={user.id} /> : null}
-    </div>
-  );
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -181,7 +136,6 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     ]);
 
   const pendingUsers = users.filter((u) => !u.is_verified);
-  const verifiedUsers = users.filter((u) => u.is_verified);
   const bandLabels: Record<DensityBand, string> = {
     empty: a.densityBandEmpty,
     thin: a.densityBandThin,
@@ -611,16 +565,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noBankTransfersDesc}</p>
           </div>
         ) : (
-          bankTransfers.map((transfer) => (
-            <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={transfer.id}>
-              <div>
-                <p className="font-black text-night">{transfer.user?.full_name ?? c.unknownUser}</p>
-                <p className="text-xs font-bold text-slate-500">{transfer.user?.email}</p>
-                <p className="mt-1 text-xs font-black text-crystal">{transfer.reference_code}</p>
+          bankTransfers.map((transfer) => {
+            const transferUser = transfer.user as { full_name?: string; email?: string } | null;
+            return (
+              <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={transfer.id}>
+                <div>
+                  <p className="font-black text-night">{transferUser?.full_name ?? c.unknownUser}</p>
+                  <p className="text-xs font-bold text-slate-500">{transferUser?.email}</p>
+                  <p className="mt-1 text-xs font-black text-crystal">{transfer.reference_code}</p>
+                </div>
+                <AdminBankTransferActions request={transfer as unknown as Parameters<typeof AdminBankTransferActions>[0]["request"]} />
               </div>
-              <AdminBankTransferActions request={transfer} />
-            </div>
-          ))
+            );
+          })
         )}
       </section>
 

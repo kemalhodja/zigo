@@ -3,7 +3,7 @@
  * Sets A @ → 62.238.61.234
  */
 import { chromium } from "playwright";
-import { existsSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const IP = "62.238.61.234";

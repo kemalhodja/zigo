@@ -18,8 +18,8 @@ type LearningProgressCardProps = {
 };
 
 export async function LearningProgressCard({
-  duelWins = 0,
-  focusSessions = 0,
+  duelWins = 0,  // eslint-disable-line @typescript-eslint/no-unused-vars
+  focusSessions = 0,  // eslint-disable-line @typescript-eslint/no-unused-vars
   eventCount,
   gems,
   isPreview = false,

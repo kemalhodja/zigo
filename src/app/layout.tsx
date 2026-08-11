@@ -86,6 +86,7 @@ export default async function RootLayout({
         <LocaleProvider initialLocale={locale}>
           <ToastProvider>
             <OfflineIndicator />
+            <AuthSessionKeepAlive />
             <AppShell
               canCreateSocialPost={shellState.canCreateSocialPost}
               isPreviewMode={!hasSupabaseEnv()}

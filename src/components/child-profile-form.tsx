@@ -12,7 +12,6 @@ export function ChildProfileForm() {
   const m = useMessages();
   const ed = m.education;
   const c = m.common;
-  const f = ed.childAgeGroups;
   const router = useRouter();
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");

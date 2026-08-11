@@ -2,8 +2,6 @@
 
 import { useRouter } from "next/navigation";
 
-import { useMessages } from "@/lib/i18n/locale-context";
-
 type BackButtonProps = {
   fallbackHref?: string;
   className?: string;
@@ -12,7 +10,6 @@ type BackButtonProps = {
 
 export function BackButton({ fallbackHref = "/", className, label }: BackButtonProps) {
   const router = useRouter();
-  const m = useMessages();
   const backLabel = label ?? "Geri";
 
   function handleBack() {

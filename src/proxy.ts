@@ -15,7 +15,7 @@ import {
   withAuthPersistence,
   ZIGO_REMEMBER_ME_COOKIE,
 } from "@/lib/supabase/auth-cookies";
-import type { Database } from "@/lib/supabase/database.types";
+import type { Database, UserRole } from "@/lib/supabase/database.types";
 
 const protectedPagePrefixes = [
   "/",
@@ -169,7 +169,7 @@ export async function proxy(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    const role = (userRow as any)?.role;
+    const role = userRow?.role as UserRole | undefined;
 
     const isCreatorRole =
       role === "teacher" ||

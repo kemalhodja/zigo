@@ -31,7 +31,6 @@ describe("registration-account", () => {
       "student",
       "parent",
       "teacher",
-      "education",
     ]);
     expect([...REGISTRATION_EDUCATION_KIND_IDS]).toEqual(["kurs", "okul", "platform", "publisher"]);
     expect(getRegistrationEducationOptions().map((option) => option.id)).toEqual([

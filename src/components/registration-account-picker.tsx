@@ -2,8 +2,7 @@
 
 import {
   REGISTRATION_REQUIRED_SIGNUP_OPTIONS,
-  type RegistrationAccountKind,
-  type RequiredSignupOptionId,
+  type RequiredSignupOptionId
 } from "@/lib/domain/registration-account";
 
 type RegistrationAccountPickerProps = {

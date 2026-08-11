@@ -46,6 +46,7 @@ export async function getUserSafetyQueue(
     "id" | "content" | "moderation_status" | "created_at"
   >[]).map((comment) => ({
     ...comment,
+    moderation_status: comment.moderation_status ?? "flagged",
     kind: "comment" as const,
   }));
   const replies = ((repliesResult.data ?? []) as Pick<
@@ -112,7 +113,7 @@ export async function getCreatorSafetyQueue(
     id: comment.id,
     kind: "comment" as const,
     content: comment.content,
-    moderation_status: comment.moderation_status,
+    moderation_status: comment.moderation_status ?? "flagged",
     created_at: comment.created_at,
     sourceTitle: postTitleById.get(comment.post_id) ?? "Post",
   }));
@@ -244,5 +245,5 @@ export async function getModerationAdminAlerts(
     .limit(limit);
 
   if (error) throw error;
-  return (data ?? []) as ModerationAdminAlert[];
+  return (data ?? []) as unknown as ModerationAdminAlert[];
 }

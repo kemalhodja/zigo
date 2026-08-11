@@ -64,7 +64,15 @@ export async function getRevenueOpsSnapshot(
 
   const [subsResult, sponsorsResult, bankResult] = await Promise.all([
     supabase.from("user_subscriptions").select("user_id, tier, current_period_end").eq("tier", "zigo_plus"),
-    supabase
+    (supabase as unknown as {
+      from: (table: string) => {
+        select: (cols: string) => {
+          eq: (col: string, val: unknown) => {
+            eq: (col: string, val: unknown) => Promise<{ data: Array<{ id: string; sponsored_status: string; sponsored_expires_at: string | null }> | null; error: Error | null }>;
+          };
+        };
+      };
+    })
       .from("teacher_campaigns")
       .select("id, sponsored_status, sponsored_expires_at")
       .eq("is_sponsored", true)

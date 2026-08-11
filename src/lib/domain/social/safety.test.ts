@@ -93,7 +93,7 @@ describe("safety queue mapping", () => {
 
     const originalFrom = supabase.from.bind(supabase);
     supabase.from = ((table: string) => {
-      const builder = originalFrom(table) as unknown as Record<string, unknown>;
+      const builder = originalFrom(table as never) as unknown as Record<string, unknown>;
       if (table === "post_comments") {
         builder.update = () => ({
           eq: () => ({
@@ -142,7 +142,7 @@ describe("safety queue mapping", () => {
 
     const originalFrom = supabase.from.bind(supabase);
     supabase.from = ((table: string) => {
-      const builder = originalFrom(table) as unknown as Record<string, unknown>;
+      const builder = originalFrom(table as never) as unknown as Record<string, unknown>;
       if (table === "content_reports") {
         builder.select = () => ({
           eq: () => ({

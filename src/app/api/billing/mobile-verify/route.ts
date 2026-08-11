@@ -39,9 +39,10 @@ export async function POST(request: Request) {
         try {
           const verified = await verifyAppleSubscription(body.purchaseToken);
           expiresAt = verified.expiryTime;
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Bilinmeyen hata";
           return NextResponse.json(
-            { error: `App Store doğrulama hatası: ${err?.message || "Bilinmeyen hata"}` },
+            { error: `App Store doğrulama hatası: ${message}` },
             { status: 400 },
           );
         }
@@ -62,9 +63,10 @@ export async function POST(request: Request) {
           if (payload?.expiryTimeMillis) {
             expiresAt = new Date(Number(payload.expiryTimeMillis)).toISOString();
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Bilinmeyen hata";
           return NextResponse.json(
-            { error: `Google Play doğrulama hatası: ${err?.message || "Bilinmeyen hata"}` },
+            { error: `Google Play doğrulama hatası: ${message}` },
             { status: 400 },
           );
         }

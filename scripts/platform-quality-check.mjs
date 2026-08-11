@@ -22,7 +22,7 @@ const polishRoadmap = read("docs/social-polish-roadmap.md");
 const required = [
   [packageJson.includes('"audit:platform"'), "audit:platform script wired"],
   [platformDoc.includes("test:acceptance"), "platform-quality doc references acceptance gate"],
-  [platformDoc.includes("migrationTarget: 66") || platformDoc.includes("migrationTarget: 55") || platformDoc.includes("migrationTarget: 49"), "platform-quality doc references health migration target"],
+  [platformDoc.includes("migrationTarget: 91") || platformDoc.includes("migrationTarget: 66") || platformDoc.includes("migrationTarget: 55") || platformDoc.includes("migrationTarget: 49"), "platform-quality doc references health migration target"],
   [polishRoadmap.includes("safe-instagram-feel-checklist"), "social-polish roadmap links safe feel checklist"],
   [existsSync(join(root, "scripts/social-shell-audit.mjs")), "social-shell-audit.mjs exists"],
   [existsSync(join(root, "scripts/release-scorecard-audit.mjs")), "release-scorecard-audit.mjs exists"],

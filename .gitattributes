@@ -1,0 +1,16 @@
+# Normalize line endings across platforms; avoids spurious "modified" diffs
+# caused by CRLF/LF mismatches between Windows and Unix checkouts.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.svg text eol=lf
+*.apk binary
+*.aab binary
+*.tar.gz binary
+*.zip binary
+*.node binary

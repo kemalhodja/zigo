@@ -42,7 +42,7 @@ function emptyQuestion(): QuizDraftQuestion {
   };
 }
 
-function createEmptyQuiz(): QuizDraftQuestion[] {
+function _createEmptyQuiz(): QuizDraftQuestion[] {
   return Array.from({ length: TEACHER_QUIZ_QUESTION_COUNT }, () => emptyQuestion());
 }
 

@@ -4,7 +4,7 @@
  *
  * Does NOT rewrite hizmetpazari.com.tr server blocks — only adds include + zigo conf.
  */
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NodeSSH } from "node-ssh";
 

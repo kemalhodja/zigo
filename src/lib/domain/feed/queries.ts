@@ -34,7 +34,7 @@ export async function getPersonalizedFeed(
       post_type,
       quiz_id,
       created_at,
-      author:author_id (
+      author:users!author_id (
         full_name,
         is_verified
       )

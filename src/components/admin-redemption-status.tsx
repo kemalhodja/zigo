@@ -20,12 +20,14 @@ const options: StoreRedemptionStatus[] = [
 
 export function AdminRedemptionStatus({ redemptionId, status }: AdminRedemptionStatusProps) {
   const { ops: { admin: a, common: c } } = useMessages();
-  const optionLabels = useMemo(
+  const optionLabels: Record<StoreRedemptionStatus, string> = useMemo(
     () => ({
+      pending: a.redemptionPendingParent || "Beklemede",
       approved: a.redemptionApproved,
       cancelled: a.redemptionCancelled,
       fulfilled: a.redemptionFulfilled,
       pending_parent_approval: a.redemptionPendingParent,
+      rejected: a.redemptionCancelled || "Reddedildi",
     }),
     [a],
   );

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
     const users = await searchUsers(auth.supabase, query);
     return NextResponse.json({ data: users });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: "Failed to search users" }, { status: 500 });
   }
 }

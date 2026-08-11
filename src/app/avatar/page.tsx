@@ -90,7 +90,8 @@ export default async function AvatarPage() {
         </div>
       </section>
 
-      <AvatarStore equippedAssets={profile.avatar_assets} totalPoints={profile.total_points} />
+      {/* equippedAssets={profile.avatar_assets} totalPoints={profile.total_points} */}
+      <AvatarStore equippedAssets={(profile.avatar_assets ?? {}) as Record<string, unknown>} totalPoints={profile.total_points} />
     </div>
   );
   }, previewFallback);

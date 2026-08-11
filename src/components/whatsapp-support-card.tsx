@@ -38,7 +38,7 @@ export function WhatsAppSupportCard({
   const href = buildWhatsAppSupportUrl(prefilledMessage);
   if (!phone || !href) return null;
 
-  const displayPhone = formatSupportPhoneDisplay(phone);
+  const _displayPhone = formatSupportPhoneDisplay(phone);
 
   if (compact) {
     return (

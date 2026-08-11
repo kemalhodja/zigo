@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft,Bot, Loader2, Send, User } from "lucide-react";
 import Link from "next/link";
+import { useEffect,useRef, useState } from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -51,7 +51,7 @@ export default function AIMentorPage() {
           { role: "assistant", content: "Üzgünüm, şu an bağlantı kuramıyorum. Lütfen daha sonra tekrar dene." },
         ]);
       }
-    } catch (err) {
+    } catch (_err) {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Bir hata oluştu. Lütfen tekrar dene." },

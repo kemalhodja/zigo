@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 

@@ -28,7 +28,7 @@ export function AdminUserDirectory({
   pendingBankTransferUserIds = [],
 }: AdminUserDirectoryProps) {
   const {
-    ops: { admin: a, common: c },
+    ops: { admin: a },
   } = useMessages();
 
   const [roleFilter, setRoleFilter] = useState<string>("all");

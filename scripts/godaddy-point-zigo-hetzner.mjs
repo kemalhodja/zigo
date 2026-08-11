@@ -4,7 +4,7 @@
  *
  * Also attempts Let's Encrypt once public DNS answers with Hetzner IP.
  */
-import { readFileSync, existsSync, appendFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NodeSSH } from "node-ssh";
 

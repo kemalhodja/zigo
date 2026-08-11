@@ -61,11 +61,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     ? await getProfileBillingSection(await createClient())
     : null;
   const activeTabLabel = activeTab === "reels" ? m.zigo.micro : activeTab === "saved" ? p.saved : m.common.posts;
-  const stats = [
-    { label: m.common.posts, value: profile.stats.posts.toLocaleString() },
-    { label: m.common.followers, value: profile.stats.followers.toLocaleString() },
-    { label: m.common.following, value: profile.stats.following.toLocaleString() },
-  ];
   const orgCopy = {
     eyebrow: m.dashboard.teacher.orgEyebrow,
     titleInstitution: m.dashboard.teacher.orgTitleInstitution,
@@ -444,7 +439,7 @@ function ProfileGridModeStrip({
   );
 }
 
-function ProfileCreatorDiscovery({
+function _ProfileCreatorDiscovery({
   creators,
   isSignedOut,
   messages,
@@ -540,7 +535,7 @@ function ProfileActionBar({
   );
 }
 
-function ProfileInsightCard({
+function _ProfileInsightCard({
   activeTabLabel,
   followers,
   following,
@@ -711,7 +706,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
     getProfileSuggestedCreators(supabase, profile.id),
     profile.role === "teacher" ? getUserInterestAreaNames(supabase, profile.id) : Promise.resolve([]),
   ]);
-  return { ...toProfileData(profile, stats, posts, branches, pf), suggestedCreators: suggested };
+  return { ...toProfileData(profile, stats, posts, branches), suggestedCreators: suggested };
   }, previewFallback);
 }
 
@@ -756,7 +751,6 @@ function toProfileData(
   stats: ProfileSocialStats,
   posts: Pick<SocialPostRow, "id" | "caption" | "media_url" | "media_type">[],
   branches: string[],
-  pf: Messages["profile"],
 ) {
   return {
     id: profile.id,

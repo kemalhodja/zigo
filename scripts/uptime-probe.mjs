@@ -21,7 +21,10 @@ function loadEnvFile(name) {
 
 function expectedMigrationTarget() {
   const health = readFileSync(join(root, "src/app/api/setup/health/route.ts"), "utf8");
-  const match = health.match(/MIGRATION_TARGET\s*=\s*(\d+)/);
+  const healthMatch = health.match(/MIGRATION_TARGET\s*=\s*(\d+)/);
+  if (healthMatch) return Number(healthMatch[1]);
+  const source = readFileSync(join(root, "src/lib/domain/migration-target.ts"), "utf8");
+  const match = source.match(/MIGRATION_TARGET\s*=\s*(\d+)/);
   return match ? Number(match[1]) : null;
 }
 

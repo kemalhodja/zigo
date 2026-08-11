@@ -14,7 +14,6 @@ import {
   getHomeViewerContext,
   getSuggestedCreatorsForHome,
 } from "./_components/home/data";
-import { CreatorRail, FeedPostCard, FollowingStarter } from "./_components/home/match-feed";
 import { HomeMissionStrip } from "./_components/home/mission-strip";
 import { StoryTray } from "./_components/home/story-tray";
 import { ReelSpotlightRail } from "./_components/home/study-rail";

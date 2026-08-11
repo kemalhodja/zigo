@@ -482,8 +482,8 @@ function AdminViolationAlertCard({
         {alert.reason.replaceAll("_", " ")}
       </p>
       <h3 className="mt-1 text-base font-black text-night">{userName}</h3>
-      <p className="mt-1 text-sm font-bold leading-6 text-slate-600">{alert.details}</p>
-      <p className="mt-1 text-xs font-bold text-slate-500">{mp.alertStatus.replace("{status}", alert.status)}</p>
+      <p className="mt-1 text-sm font-bold leading-6 text-slate-600">{(alert as unknown as { details?: string }).details ?? alert.reason}</p>
+      <p className="mt-1 text-xs font-bold text-slate-500">{mp.alertStatus.replace("{status}", (alert as unknown as { status?: string }).status ?? "pending")}</p>
     </div>
   );
 }

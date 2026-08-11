@@ -232,7 +232,7 @@ check("Setup guidance includes every migration through 055", () => {
       setup.includes("SetupMigrationBundle")) &&
     migrationTarget.includes("055_demo_social_interactions_reset.sql") &&
     migrationTarget.includes("082_invite_codes.sql") &&
-    (migrationTarget.includes("MIGRATION_TARGET = 89") || migrationTarget.includes("MIGRATION_TARGET = 86") || migrationTarget.includes("MIGRATION_TARGET = 82"))
+    (migrationTarget.includes("MIGRATION_TARGET = 91") || migrationTarget.includes("MIGRATION_TARGET = 89") || migrationTarget.includes("MIGRATION_TARGET = 86") || migrationTarget.includes("MIGRATION_TARGET = 82"))
   );
 });
 
@@ -1321,8 +1321,9 @@ check("Production readiness audits and monitoring are wired", () => {
     packageJson.includes('"audit:production"') &&
     packageJson.includes('"audit:all"') &&
     packageJson.includes('"uptime:probe"') &&
-    (prodDoc.includes("migrationTarget: 66") || prodDoc.includes("migrationTarget: 55")) &&
-    (healthRoute.includes("MIGRATION_TARGET = 89") ||
+    (prodDoc.includes("migrationTarget: 91") || prodDoc.includes("migrationTarget: 66") || prodDoc.includes("migrationTarget: 55")) &&
+    (healthRoute.includes("MIGRATION_TARGET = 91") ||
+      healthRoute.includes("MIGRATION_TARGET = 89") ||
       healthRoute.includes("MIGRATION_TARGET = 86") ||
       healthRoute.includes("MIGRATION_TARGET = 78") ||
       healthRoute.includes('from "@/lib/domain/migration-target"') ||

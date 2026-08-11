@@ -124,6 +124,14 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
               {d.student.store}
             </Link>
           </div>
+          <div className="zigo-action-grid mt-3 grid grid-cols-2 gap-2">
+            <Link className="zigo-quick-action-primary tap-scale rounded-xl px-3 py-3 text-center text-xs font-black text-white" href="/duels">
+              🏆 {d.student.duels ?? "Düello"}
+            </Link>
+            <Link className="zigo-quick-action-primary tap-scale rounded-xl px-3 py-3 text-center text-xs font-black text-white" href="/micro">
+              🎬 {d.student.watchEarn ?? "Micro"}
+            </Link>
+          </div>
         </section>
 
         <DailyMissionsCard />
@@ -301,8 +309,6 @@ function LearnQuestHero({
   videoCount: number;
 }) {
   const lp = messages.learnPage;
-  const nav = messages.nav;
-  const d = messages.dashboard.student;
 
   return (
     <section className="-mx-4 overflow-hidden border-b border-violet-100 bg-white">
@@ -389,10 +395,11 @@ function LearnHubSummary({
 }) {
   const lp = messages.learnPage;
   const nav = messages.nav;
-  const d = messages.dashboard.student;
   const segments = [
     { href: "/micro", label: nav.micro, value: videoCount, tone: "from-crystal to-berry" },
     { href: "/learn", label: lp.hubQuizzes, value: quizCount, tone: "from-aqua to-mint" },
+    { href: "/duels", label: "Düellolar", value: 1, tone: "from-violet-500 to-purple-600" },
+    { href: "/focus", label: "Odaklanma", value: 1, tone: "from-amber-400 to-orange-500" },
   ];
 
   return (

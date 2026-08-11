@@ -112,6 +112,7 @@ export default async function StudentPage() {
         <DashboardLink accent="from-aqua to-mint" href="/learn" label={m.dock.learn} text={d.student.quizzes} />
         <DashboardLink accent="from-sun to-peach" href="/store" label={d.student.store} text={d.student.spendPoints} />
         <DashboardLink accent="from-berry to-peach" href="/avatar" label={d.student.avatar} text={d.student.equipRewards} />
+        <DashboardLink accent="from-violet-500 to-berry" href="/duels" label="Düello" text="Yarış & puan kazan" />
       </section>
 
       {data.isSignedOut ? (
@@ -370,6 +371,7 @@ async function getStudentDashboardData(): Promise<{
     }
   }
 
+  const profileLoc = profile as unknown as { city?: string | null; district?: string | null };
   return {
     history,
     stats,
@@ -382,8 +384,8 @@ async function getStudentDashboardData(): Promise<{
     isPremium: subscription.isPremium,
     allowDevActivate: canUseDevBillingBypass(),
     gradeLevel: profile.grade_level,
-    city: profile.city,
-    district: profile.district,
+    city: profileLoc.city ?? null,
+    district: profileLoc.district ?? null,
     schoolName: profile.school_name,
     planGroups: resolveProfilePlanGroups("student", false, parseOrganizationType(profile.organization_type)),
     leaderboard,

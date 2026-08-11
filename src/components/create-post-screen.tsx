@@ -12,7 +12,7 @@ export interface CreatePostScreenProps {
 export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScreenProps) {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [caption, setCaption] = useState<string>("");
-  const [areaId, setAreaId] = useState<number>(defaultAreaId);
+  const [areaId, _setAreaId] = useState<number>(defaultAreaId);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);

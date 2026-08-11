@@ -96,7 +96,7 @@ export default async function TeacherPage({
   );
   const m = await getServerMessages();
   const d = m.dashboard;
-  const h = m.header;
+  const _h = m.header;
   const tb = m.teacherBadges;
   const branchNames = assignedAreas.map((area) => displayEducationAreaName(area.area_name));
   const orgCopy = {

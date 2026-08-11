@@ -7,8 +7,6 @@ import { GradeLevelForm } from "@/components/grade-level-form";
 import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
-import { ParentChildrenFocusCard } from "@/components/parent-children-focus-card";
-import { ParentFocusOverviewCard } from "@/components/parent-focus-overview-card";
 import { ParentWeeklyReviewCard } from "@/components/parent-weekly-review-card";
 import { SocialAvatar, SocialPill } from "@/components/social-primitives";
 import { StateCard } from "@/components/state-card";
@@ -35,7 +33,7 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { children, mode, pendingApprovals, focusOverview, childrenFocusStats, isPremium, allowDevActivate, childActivityById, gradeLevel, classroom, city, district, schoolName, planGroups, profileId } =
+  const { children, mode, pendingApprovals, isPremium, allowDevActivate, childActivityById, gradeLevel, classroom, city, district, schoolName, planGroups, profileId } =
     await getParentData();
   const d = messages.dashboard;
   const pp = messages.parentPage;
@@ -373,6 +371,7 @@ async function getParentData(): Promise<{
     children.map(async (child) => [child.id, await getChildActivity(supabase, child.id, 8)] as const),
   );
 
+  const profileLoc = profile as unknown as { city?: string | null; district?: string | null };
   return {
     children: children.map((child) => ({
       id: child.id,
@@ -388,8 +387,8 @@ async function getParentData(): Promise<{
     allowDevActivate: canUseDevBillingBypass(),
     childActivityById: Object.fromEntries(activityEntries),
     gradeLevel: profile.grade_level,
-    city: profile.city,
-    district: profile.district,
+    city: profileLoc.city ?? null,
+    district: profileLoc.district ?? null,
     schoolName: profile.school_name,
     classroom: profile.classroom,
     planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type)),

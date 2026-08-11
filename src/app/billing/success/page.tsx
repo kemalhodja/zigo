@@ -10,13 +10,19 @@ type BillingSuccessPageProps = {
 export default async function BillingSuccessPage({ searchParams }: BillingSuccessPageProps) {
   const params = await searchParams;
   const isSponsor = params.kind === "sponsor";
+  const isGooglePlay = params.kind === "google_play";
 
   return (
-    <LegalLayout title={isSponsor ? "Sponsorluk ödemesi alındı" : "Zigo Plus etkinleştirildi"}>
+    <LegalLayout title={isSponsor ? "Sponsorluk ödemesi alındı" : isGooglePlay ? "Google Play aboneliği aktif" : "Zigo Plus etkinleştirildi"}>
       {isSponsor ? (
         <p>
           Teşekkürler — sponsorlu profil ödemeniz tamamlandı. Webhook senkronize olduktan sonra
           kampanyanız aktif görünür.
+        </p>
+      ) : isGooglePlay ? (
+        <p>
+          Teşekkürler — Google Play aboneliğiniz başarıyla tamamlandı. Abonelik hesabınız otomatik
+          olarak aktifleşecek ve premium özellikler açılacaktır.
         </p>
       ) : (
         <p>

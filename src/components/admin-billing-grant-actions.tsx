@@ -19,6 +19,35 @@ export function AdminBillingGrantActions({ userId, userName, role }: AdminBillin
   const [loading, setLoading] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [note, setNote] = useState("");
+  const [tier, setTier] = useState<"free" | "zigo_plus">("zigo_plus");
+
+  async function updateTier(nextTier: "free" | "zigo_plus") {
+    if (loading) return;
+    setLoading(`tier-${nextTier}`);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/admin/users/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, tier: nextTier }),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        setMessage(payload?.error ?? "Abonelik güncellenemedi.");
+        setLoading(null);
+        return;
+      }
+
+      setMessage(nextTier === "zigo_plus" ? "Zigo Plus aktif edildi." : "Ücretsiz abonelik uygulandı.");
+      router.refresh();
+    } catch {
+      setMessage(c.connectionFailed);
+    } finally {
+      setLoading(null);
+    }
+  }
 
   async function grant(body: Record<string, unknown>, loadingKey: string) {
     if (loading) return;
@@ -66,6 +95,25 @@ export function AdminBillingGrantActions({ userId, userName, role }: AdminBillin
           value={note}
         />
       </label>
+      <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-white/70 px-2 py-1.5">
+        <span className="text-[0.65rem] font-black uppercase tracking-[0.12em] text-amber-800">Tier</span>
+        <select
+          className="w-full rounded-md border border-amber-200 bg-white px-2 py-1 text-[0.65rem] font-bold text-night"
+          onChange={(event) => setTier(event.target.value as "free" | "zigo_plus")}
+          value={tier}
+        >
+          <option value="zigo_plus">Zigo Plus</option>
+          <option value="free">Free</option>
+        </select>
+        <button
+          className="rounded-md bg-slate-900 px-2 py-1.5 text-[0.65rem] font-black text-white disabled:opacity-60"
+          disabled={Boolean(loading)}
+          onClick={() => void updateTier(tier)}
+          type="button"
+        >
+          {loading === `tier-${tier}` ? "..." : "Uygula"}
+        </button>
+      </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         <button
           className="rounded-lg bg-amber-500 px-2.5 py-1.5 text-[0.65rem] font-black text-night disabled:opacity-60"

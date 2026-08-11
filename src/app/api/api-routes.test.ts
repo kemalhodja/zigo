@@ -65,7 +65,23 @@ import { createClient } from "@/lib/supabase/server";
 describe("API route handlers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(createClient).mockResolvedValue({} as never);
+    const mockSupabase = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          or: vi.fn(() => ({
+            order: vi.fn(() => ({
+              limit: vi.fn(async () => ({ data: [] })),
+            })),
+          })),
+          eq: vi.fn(() => ({
+            order: vi.fn(() => ({
+              limit: vi.fn(async () => ({ data: [] })),
+            })),
+          })),
+        })),
+      })),
+    };
+    vi.mocked(createClient).mockResolvedValue(mockSupabase as never);
   });
 
   it("POST /api/gamification/award returns 410", async () => {

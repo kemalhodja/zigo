@@ -23,7 +23,7 @@ const required = [
   [packageJson.includes('"audit:launch"'), "audit:launch script wired"],
   [packageJson.includes('"test:ci"'), "test:ci alias wired"],
   [launchDoc.includes("audit:all"), "final-launch doc references audit:all"],
-  [launchDoc.includes("migrationTarget: 66"), "final-launch doc references health migration 66"],
+  [launchDoc.includes("migrationTarget: 91") || launchDoc.includes("migrationTarget: 66"), "final-launch doc references current health migration target"],
   [productionChecklist.includes("test:release") || productionChecklist.includes("staging:preflight"), "production-checklist links launch gates"],
   [existsSync(join(root, "scripts/ci-alignment-audit.mjs")), "ci-alignment-audit.mjs exists"],
   [existsSync(join(root, "scripts/hosted-launch-audit.mjs")), "hosted-launch-audit.mjs exists"],

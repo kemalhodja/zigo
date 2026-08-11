@@ -25,7 +25,7 @@ export function AvatarStore({ equippedAssets, totalPoints }: AvatarStoreProps) {
 
   const initialEquipped = useMemo(() => {
     const values = [equippedAssets.hat, equippedAssets.suit, equippedAssets.pet].filter(Boolean);
-    return values[0] ?? null;
+    return (values[0] as string | undefined) ?? null;
   }, [equippedAssets.hat, equippedAssets.pet, equippedAssets.suit]);
 
   const [message, setMessage] = useState(s.earnHint);

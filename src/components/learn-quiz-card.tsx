@@ -62,7 +62,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
         }));
 
         if (rows.length > 0) {
-          setQuestions(rows);
+          setQuestions(rows as unknown as QuizPlayQuestion[]);
           return;
         }
 
@@ -76,7 +76,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
           setQuestions([
             {
               id: quiz.id,
-              question_text: quiz.question_text,
+              question_text: String((quiz as { question_text?: string }).question_text || quiz.title || ""),
               options: legacyOptions.map(String),
               sort_order: 0,
             },
@@ -93,7 +93,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
           setQuestions([
             {
               id: quiz.id,
-              question_text: quiz.question_text,
+              question_text: String((quiz as { question_text?: string }).question_text || quiz.title || ""),
               options: legacyOptions.map(String),
               sort_order: 0,
             },

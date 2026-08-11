@@ -17,7 +17,10 @@ function read(relativePath) {
 
 function expectedMigrationTarget() {
   const health = read("src/app/api/setup/health/route.ts");
-  const match = health.match(/MIGRATION_TARGET\s*=\s*(\d+)/);
+  const healthMatch = health.match(/MIGRATION_TARGET\s*=\s*(\d+)/);
+  if (healthMatch) return Number(healthMatch[1]);
+  const source = read("src/lib/domain/migration-target.ts");
+  const match = source.match(/MIGRATION_TARGET\s*=\s*(\d+)/);
   return match ? Number(match[1]) : null;
 }
 

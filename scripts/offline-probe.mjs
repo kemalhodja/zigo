@@ -23,7 +23,7 @@ function check(name, ok, message = "") {
 function main() {
   const checks = [
     check("Migration 055 demo social reset", existsSync(join(root, "supabase/migrations/055_demo_social_interactions_reset.sql"))),
-    check("Health targets migration target", fileHas("src/lib/domain/migration-target.ts", "MIGRATION_TARGET = 82")),
+    check("Health targets migration target", fileHas("src/lib/domain/migration-target.ts", "MIGRATION_TARGET = 91")),
     check("Answers API requires verified teacher", fileHas("src/app/api/answers/route.ts", "is_verified")),
     check("Canonical social posts API", fileHas("src/app/api/social/posts/route.ts", "createSocialPost")),
     check("Legacy posts route removed", !existsSync(join(root, "src/app/api/posts/route.ts"))),

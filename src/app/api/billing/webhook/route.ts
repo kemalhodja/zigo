@@ -65,7 +65,17 @@ export async function POST(request: Request) {
       const kind = object.metadata?.kind;
 
       if (object.metadata?.roleChangeRequestId) {
-        await (admin.from("role_change_requests") as any).update({ fee_paid: true, status: 'paid' }).eq("id", object.metadata?.roleChangeRequestId);
+        const adminTable = admin as unknown as {
+          from: (table: string) => {
+            update: (data: Record<string, unknown>) => {
+              eq: (col: string, val: string) => Promise<unknown>;
+            };
+          };
+        };
+        await adminTable
+          .from("role_change_requests")
+          .update({ fee_paid: true, status: "paid" })
+          .eq("id", object.metadata?.roleChangeRequestId);
       } else if (kind === "sponsor_boost") {
         const packageDays = parseSponsorPackageDays(object.metadata?.package_days);
         if (!packageDays) {

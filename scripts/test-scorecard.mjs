@@ -93,7 +93,10 @@ async function runtimeChecks(baseUrl) {
       run: async () => {
         const r = await fetch(`${baseUrl}/api/setup/health`);
         const b = await r.json().catch(() => ({}));
-        return r.ok && b?.data?.migrationTarget === 77;
+        const source = readFileSync(join(root, "src/lib/domain/migration-target.ts"), "utf8");
+        const match = source.match(/MIGRATION_TARGET\s*=\s*(\d+)/);
+        const expected = match ? Number(match[1]) : null;
+        return r.ok && expected !== null && b?.data?.migrationTarget === expected;
       },
     },
     {

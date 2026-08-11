@@ -149,13 +149,13 @@ import { getDailyMissionProgress } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import {
   type ActiveStory,
+  getActiveStories,
+  getCachedSocialFeed,
   getFollowingFeed,
-  getSocialFeed,
   getSuggestedCreators,
   isFollowing,
   type SocialFeedPost,
 } from "@/lib/domain/social";
-import { getCachedSocialFeed } from "@/lib/domain/social/cached-feed";
 import { getMatchedStudyMoments } from "@/lib/domain/study-moments";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
@@ -512,4 +512,3 @@ export async function getSuggestedCreatorsForHome(): Promise<DisplaySuggestedCre
   }
 }
 
-import { getActiveStories } from "@/lib/domain/social";

@@ -35,8 +35,8 @@ export async function verifyGooglePlaySubscription(
       });
       return response.data;
     }
-  } catch (err: any) {
-    console.warn("Google Play API verification via googleapis SDK failed:", err?.message);
+  } catch (err: unknown) {
+    console.warn("Google Play API verification via googleapis SDK failed:", (err as Error)?.message);
   }
 
   // Fallback response structure when SDK is not present or in local testing mode

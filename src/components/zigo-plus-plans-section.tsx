@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
 import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
+import { purchaseGooglePlaySubscription } from "@/lib/client/google-play-billing";
 import type { EducationOrganizationType } from "@/lib/domain/education-organization";
 import { buildOrganizationSalesWhatsAppUrl } from "@/lib/domain/organization-sales";
 import {
-  isSubscriptionCampaignActive,
-  SUBSCRIPTION_CAMPAIGN,
+    isSubscriptionCampaignActive,
+    SUBSCRIPTION_CAMPAIGN,
 } from "@/lib/domain/subscription-campaign";
 import type { SubscriptionPlanGroup } from "@/lib/domain/subscription-plans";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
@@ -31,12 +33,13 @@ export function ZigoPlusPlansSection({
   isPremium = false,
   isTrial = false,
   userCreatedAt = null,
-  allowDevActivate = false,
+  allowDevActivate = false,   
   organizationType = null,
   organizationName = null,
 }: ZigoPlusPlansSectionProps) {
   const b = useMessages().billingUi;
   const [playStoreOnly, setPlayStoreOnly] = useState(false);
+   
   const [platformMessage, setPlatformMessage] = useState("");
   const campaignActive = isSubscriptionCampaignActive();
 
@@ -130,10 +133,10 @@ export function ZigoPlusPlansSection({
 
 function PlanGroupCard({
   group,
-  allowDevActivate,
+  allowDevActivate,   
   hidePrices,
   playStoreOnly,
-  platformMessage,
+  platformMessage,  // eslint-disable-line @typescript-eslint/no-unused-vars
   campaignActive,
   organizationType,
   organizationName,
@@ -225,7 +228,7 @@ function PlanPriceRow({
   intervalLabel,
   priceTry,
   compareAtTry,
-  allowDevActivate,
+  allowDevActivate,  // eslint-disable-line @typescript-eslint/no-unused-vars
   playStoreOnly,
   campaignActive,
 }: {
@@ -240,52 +243,38 @@ function PlanPriceRow({
   const b = useMessages().billingUi;
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+
+  const currentInterval = intervalLabel.toLowerCase().includes("yıllık") || planId.toLowerCase().includes("yearly") ? "yearly" : "monthly";
 
   async function subscribeGooglePlay() {
     setLoading(true);
     setMessage("");
-    
+
     let purchaseToken: string | null = null;
     let orderId: string | null = null;
     const productId = "zigo_plus";
 
-    // Detect Capacitor environment
-    const win = typeof window !== "undefined" ? (window as unknown as { Capacitor?: unknown; Android?: unknown }) : null;
-    const isAndroidWindow = Boolean(win?.Capacitor || win?.Android);
-
-    if (isAndroidWindow) {
-      try {
-        const { NativePurchases, PURCHASE_TYPE } = await import("@capgo/native-purchases");
-        const isSupported = await NativePurchases.isBillingSupported().then((res) => res.isBillingSupported).catch(() => false);
-        
-        if (isSupported) {
-          const transaction = await NativePurchases.purchaseProduct({
-            productIdentifier: productId,
-            planIdentifier: planId,
-            productType: PURCHASE_TYPE.SUBS,
-            quantity: 1,
-          });
-
-          purchaseToken = transaction.purchaseToken || null;
-          orderId = transaction.transactionId || null;
-        }
-      } catch (nativeErr) {
-        console.error("Native Google Play purchase failed:", nativeErr);
-        setMessage("Ödeme ekranı açılamadı. Lütfen Play Store ayarlarınızı kontrol edin.");
-        setLoading(false);
-        return;
-      }
+    try {
+      const nativePurchase = await purchaseGooglePlaySubscription({ productId, planId });
+      purchaseToken = nativePurchase.purchaseToken || null;
+      orderId = nativePurchase.orderId || null;
+    } catch (nativeErr) {
+      const errString =
+        nativeErr instanceof Error
+          ? nativeErr.message
+          : typeof nativeErr === "object"
+            ? JSON.stringify(nativeErr)
+            : String(nativeErr);
+      setMessage(errString || "Google Play ödeme bridge kullanılamıyor.");
+      setLoading(false);
+      return;
     }
 
     if (!purchaseToken) {
-      if (process.env.NODE_ENV === "production") {
-        setMessage("Google Play ödemesi yalnızca Zigo mobil uygulaması üzerinden gerçekleştirilebilir.");
-        setLoading(false);
-        return;
-      }
-      
-      purchaseToken = `gplay_token_${Math.random().toString(36).substring(2, 12)}`;
-      orderId = `GPA.${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10000 + Math.random() * 90000)}`;
+      setMessage("Google Play ödemesinden purchaseToken alınamadı.");
+      setLoading(false);
+      return;
     }
 
     try {
@@ -313,7 +302,7 @@ function PlanPriceRow({
 
       setMessage(b.playSuccess);
       await new Promise((resolve) => setTimeout(resolve, 800));
-      window.location.reload();
+      window.location.href = "/billing/success?kind=google_play";
     } catch {
       setMessage(b.connectionFailed);
       setLoading(false);
@@ -342,7 +331,7 @@ function PlanPriceRow({
             <button
               className="tap-scale flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-60"
               disabled={loading}
-              onClick={() => void subscribeGooglePlay()}
+              onClick={() => setSubscriptionModalOpen(true)}
               type="button"
             >
               <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
@@ -361,6 +350,15 @@ function PlanPriceRow({
         </div>
       </div>
       {message ? <p className="mt-2 text-xs font-bold text-amber-300">{message}</p> : null}
+      <GooglePlaySubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setSubscriptionModalOpen(false)}
+        onConfirm={async () => {
+          setSubscriptionModalOpen(false);
+          await subscribeGooglePlay();
+        }}
+        selectedInterval={currentInterval}
+      />
     </div>
   );
 }

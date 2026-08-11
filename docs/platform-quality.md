@@ -36,7 +36,7 @@ Manual: `docs/safe-instagram-feel-checklist.md`, `docs/visual-regression-checkli
 | Scorecard | `npm run test:scorecard` | **≥90** local, **≥95** with `ZIGO_RUN_LIVE_TESTS=1` |
 | Release | `npm run test:release` | scorecard + coverage + visual probe |
 
-Health runtime probe expects `migrationTarget: 66` on `/api/setup/health`.
+Health runtime probe expects `migrationTarget: 91` on `/api/setup/health`.
 
 ## Pillar map (acceptance)
 

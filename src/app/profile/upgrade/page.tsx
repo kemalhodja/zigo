@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect,useState } from "react";
 import { toast } from "react-hot-toast";
 
-import { AppShell } from "@/components/app-shell";
+// AppShell imported but not yet used in this screen
+// import { AppShell } from "@/components/app-shell";
 import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/lib/supabase/database.types";
 
@@ -82,8 +83,9 @@ export default function RoleUpgradePage() {
         toast.success("Rol başarıyla güncellendi!");
         router.push("/profile");
       }
-    } catch (err: any) {
-      toast.error(err.message || "İşlem tamamlanamadı");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "İşlem tamamlanamadı";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

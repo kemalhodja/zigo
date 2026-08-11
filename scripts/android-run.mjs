@@ -25,16 +25,36 @@ function resolveAdb() {
   return existsSync(adb) ? adb : "adb";
 }
 
+function checkAdbDevices() {
+  const adb = resolveAdb();
+  const res = spawnSync(adb, ["devices"], { encoding: "utf8" });
+  if (res.error) {
+    console.warn("adb command notice:", res.error.message);
+    return;
+  }
+  const lines = (res.stdout || "").split("\n").map((l) => l.trim()).filter(Boolean);
+  console.log("adb devices status:");
+  lines.forEach((l) => console.log("  " + l));
+  const hasUnauthorized = lines.some((l) => l.includes("unauthorized"));
+  if (hasUnauthorized) {
+    console.warn("⚠️ WARNING: Unauthorized device detected. Please approve the USB debugging prompt on your phone.");
+  }
+}
+
 if (!process.env.CAPACITOR_SERVER_URL) {
   process.env.CAPACITOR_SERVER_URL = "http://10.0.2.2:3000";
   console.log(`CAPACITOR_SERVER_URL not set; using emulator default ${process.env.CAPACITOR_SERVER_URL}`);
 }
 
+checkAdbDevices();
+
 console.log("Syncing Capacitor Android project…");
 run("npm", ["run", "android:sync"]);
 
 console.log("Installing debug APK on connected device/emulator…");
-run("cmd", ["/c", "cd android && gradlew.bat installDebug --max-workers=1 --no-build-cache"]);
+const androidRoot = join(root, "android");
+const gradlewBat = join(androidRoot, process.platform === "win32" ? "gradlew.bat" : "gradlew");
+run(process.platform === "win32" ? gradlewBat : "./gradlew", ["installDebug", "--max-workers=1", "--no-build-cache"], { cwd: androidRoot });
 
 const adb = resolveAdb();
 console.log("Launching com.zigo.education…");

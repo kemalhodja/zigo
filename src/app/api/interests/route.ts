@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { isGeneralInterestArea, isTeacherGeneralInterestSelection } from "@/lib/domain/general-interest-areas";
+import { isGeneralInterestArea } from "@/lib/domain/general-interest-areas";
 import { assertAreaIdsAllowedUnderLaunchFreeze } from "@/lib/domain/launch-scope";
 import { getCurrentProfile, getEducationAreas, setUserInterests } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";

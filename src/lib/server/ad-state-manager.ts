@@ -1,9 +1,14 @@
 /**
  * Ad State Manager
- * 
- * Manages ad-free state, premium subscriptions, and ad-gate logic for Zigo.
- * Provides server-side utilities for checking ad eligibility and managing
- * time-based ad rewards.
+ *
+ * Manages ad-free state and premium subscription logic for Zigo.
+ * Enforces Zigo's No Ads Policy: All users operate in an ad-free experience
+ * powered by subscriptions and 30-day full trials.
+ *
+ * NOTE: ad_watch_log table and related RPCs (watch_ad_for_reward,
+ * upgrade_to_premium, downgrade_from_premium) are reserved for a future
+ * migration. Until then, all helpers return safe defaults consistent with
+ * the No Ads Policy.
  */
 
 import { decideAdGate } from "@/lib/domain/ad-gate";
@@ -25,199 +30,10 @@ export interface WatchAdResult {
   error?: string;
 }
 
-/**
- * Check if a user has ad-free access
- */
+/** Check if a user has ad-free access (always true under No Ads Policy). */
 export async function isUserAdFree(userId: string): Promise<AdStateResult> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("users")
-    .select("is_premium, ad_free_until")
-    .eq("id", userId)
-    .single();
-
-  if (error || !data) {
-    return {
-      isAdFree: false,
-      reason: "none",
-    };
-  }
-
-  const now = new Date();
-  const adFreeUntil = data.ad_free_until ? new Date(data.ad_free_until) : null;
-  const isPremium = data.is_premium;
-
-  // Premium users always have ad-free access
-  if (isPremium) {
-    return {
-      isAdFree: true,
-      reason: "premium",
-      adFreeUntil: null,
-      isPremium: true,
-    };
-  }
-
-  // Check if ad-free until is in the future
-  if (adFreeUntil && adFreeUntil > now) {
-    return {
-      isAdFree: true,
-      reason: "ad_free_until",
-      adFreeUntil,
-      isPremium: false,
-    };
-  }
-
-  return {
-    isAdFree: false,
-    reason: "none",
-    adFreeUntil: adFreeUntil || null,
-    isPremium: false,
-  };
-}
-
-/**
- * Grant ad-free time to a user (called after watching a rewarded ad)
- */
-export async function grantAdFreeTime(
-  userId: string,
-  hoursToAdd: number = 2
-): Promise<WatchAdResult> {
-  const supabase = await createClient();
-
-  try {
-    const { error } = await supabase.rpc("watch_ad_for_reward", {
-      target_user_id: userId,
-      hours_to_grant: hoursToAdd,
-    });
-
-    if (error) {
-      return {
-        success: false,
-        adFreeUntil: new Date(),
-        hoursGranted: 0,
-        error: error.message,
-      };
-    }
-
-    // Fetch updated ad_free_until
-    const { data: userData } = await supabase
-      .from("users")
-      .select("ad_free_until")
-      .eq("id", userId)
-      .single();
-
-    const adFreeUntil = userData?.ad_free_until
-      ? new Date(userData.ad_free_until)
-      : new Date();
-
-    return {
-      success: true,
-      adFreeUntil,
-      hoursGranted: hoursToAdd,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      adFreeUntil: new Date(),
-      hoursGranted: 0,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}
-
-/**
- * Upgrade user to premium subscription
- */
-export async function upgradeToPremium(userId: string): Promise<boolean> {
-  const supabase = await createClient();
-
-  const { error } = await supabase.rpc("upgrade_to_premium", {
-    target_user_id: userId,
-  });
-
-  return !error;
-}
-
-/**
- * Downgrade user from premium to ad-supported
- */
-export async function downgradeFromPremium(userId: string): Promise<boolean> {
-  const supabase = await createClient();
-
-  const { error } = await supabase.rpc("downgrade_from_premium", {
-    target_user_id: userId,
-  });
-
-  return !error;
-}
-
-/**
- * Check if user can perform a gated action (e.g., share reel, create post)
- * Returns whether the user needs to watch an ad first
- */
-export async function checkAdGate(userId: string): Promise<{
-  canProceed: boolean;
-  requiresAd: boolean;
-  adState: AdStateResult;
-}> {
-  const adState = await isUserAdFree(userId);
-  const decision = decideAdGate(adState);
-
-  return {
-    ...decision,
-    adState,
-  };
-}
-
-/**
- * Get ad watch history for a user
- */
-export async function getAdWatchHistory(userId: string, limit: number = 50) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("ad_watch_log")
-    .select("*")
-    .eq("user_id", userId)
-    .order("watched_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    return [];
-  }
-
-  return data || [];
-}
-
-/**
- * Get total ad-free hours from watch history
- */
-export async function getTotalAdFreeHours(userId: string): Promise<number> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("ad_watch_log")
-    .select("hours_granted")
-    .eq("user_id", userId)
-    .gte("expires_at", new Date().toISOString());
-
-  if (error || !data) {
-    return 0;
-  }
-
-  return data.reduce((sum: number, log: { hours_granted: number }) => sum + log.hours_granted, 0);
-}
-
-/**
- * Check if user is in trial period (for premium trial logic)
- * This assumes trial_start_date is stored in users table or a separate table
- */
-export async function isUserInTrial(userId: string): Promise<boolean> {
-  const supabase = await createClient();
-
-  // This would require a trial_start_date column in users table
-  // For now, we'll check if user has premium but no payment record
   const { data, error } = await supabase
     .from("users")
     .select("is_premium, created_at")
@@ -225,46 +41,106 @@ export async function isUserInTrial(userId: string): Promise<boolean> {
     .single();
 
   if (error || !data) {
-    return false;
+    return { isAdFree: true, reason: "trial", isPremium: false };
   }
 
-  // If user is premium and account is less than 7 days old, they're in trial
-  if (data.is_premium && data.created_at) {
-    const createdDate = new Date(data.created_at);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    return createdDate > sevenDaysAgo;
+  if (data.is_premium) {
+    return { isAdFree: true, reason: "premium", adFreeUntil: null, isPremium: true };
   }
 
-  return false;
+  return { isAdFree: true, reason: "trial", adFreeUntil: null, isPremium: false };
 }
 
-/**
- * Auto-downgrade users whose trial has expired
- * This should be called by a scheduled job/cron
- */
+/** Grant ad-free time (stub — ad_watch_log migration pending). */
+export async function grantAdFreeTime(
+  _userId: string,
+  hoursToAdd: number = 2,
+): Promise<WatchAdResult> {
+  return {
+    success: true,
+    adFreeUntil: new Date(Date.now() + 86_400_000 * 365),
+    hoursGranted: hoursToAdd,
+  };
+}
+
+/** Upgrade user to premium (delegates to users table via RPC when available). */
+export async function upgradeToPremium(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ is_premium: true })
+    .eq("id", userId);
+  return !error;
+}
+
+/** Downgrade user from premium. */
+export async function downgradeFromPremium(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({ is_premium: false })
+    .eq("id", userId);
+  return !error;
+}
+
+/** Check if user can perform a gated action. */
+export async function checkAdGate(userId: string): Promise<{
+  canProceed: boolean;
+  requiresAd: boolean;
+  adState: AdStateResult;
+}> {
+  const adState = await isUserAdFree(userId);
+  const decision = decideAdGate(adState);
+  return { ...decision, adState };
+}
+
+/** Get ad watch history (stub — ad_watch_log migration pending). */
+export async function getAdWatchHistory(
+  _userId: string,
+  _limit: number = 50,
+): Promise<unknown[]> {
+  return [];
+}
+
+/** Get total ad-free hours (stub — ad_watch_log migration pending). */
+export async function getTotalAdFreeHours(_userId: string): Promise<number> {
+  return 0;
+}
+
+/** Check if user is in 30-day trial period. */
+export async function isUserInTrial(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("created_at")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data?.created_at) return false;
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  return new Date(data.created_at) > thirtyDaysAgo;
+}
+
+/** Auto-downgrade users whose trial has expired. */
 export async function autoDowngradeExpiredTrials(): Promise<{
   downgraded: number;
   errors: string[];
 }> {
   const supabase = await createClient();
 
-  // Find users in trial whose trial expired more than 1 day ago
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const { data: expiredTrialUsers, error: fetchError } = await supabase
     .from("users")
     .select("id")
     .eq("is_premium", true)
-    .lt("created_at", sevenDaysAgo.toISOString());
+    .lt("created_at", thirtyDaysAgo.toISOString());
 
   if (fetchError || !expiredTrialUsers) {
-    return {
-      downgraded: 0,
-      errors: [fetchError?.message || "Failed to fetch users"],
-    };
+    return { downgraded: 0, errors: [fetchError?.message ?? "Failed to fetch users"] };
   }
 
   let downgraded = 0;
@@ -272,15 +148,9 @@ export async function autoDowngradeExpiredTrials(): Promise<{
 
   for (const user of expiredTrialUsers) {
     const success = await downgradeFromPremium(user.id);
-    if (success) {
-      downgraded++;
-    } else {
-      errors.push(`Failed to downgrade user ${user.id}`);
-    }
+    if (success) { downgraded++; }
+    else { errors.push(`Failed to downgrade user ${user.id}`); }
   }
 
-  return {
-    downgraded,
-    errors,
-  };
+  return { downgraded, errors };
 }

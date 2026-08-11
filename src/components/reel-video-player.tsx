@@ -139,7 +139,6 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
 
   return (
     <div className="absolute inset-0 size-full">
-      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <video
         ref={videoRef}
         autoPlay

@@ -5,9 +5,16 @@ import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
+type PushSubscriptionRecord = {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  auth: string;
+  p256dh: string;
+};
+
 export async function POST(request: Request) {
   try {
-    // Configure web-push with VAPID keys if available
     if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
       webpush.setVapidDetails(
         "mailto:destek@zigo.app",
@@ -28,21 +35,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await request.json();
+    const body = (await request.json().catch(() => ({}))) as {
+      userId?: string;
+      title?: string;
+      message?: string;
+      url?: string;
+    };
     const { userId, title, message, url } = body;
 
     if (!userId || !title || !message) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Fetch user's subscriptions
-    // @ts-ignore
-    const { data: subs, error: subsError } = await supabase
-      .from("push_subscriptions")
+    const { data: subsData, error: subsError } = await (supabase
+      .from("push_subscriptions" as unknown as "users") as unknown as {
+        select: (cols: string) => {
+          eq: (col: string, val: string) => Promise<{ data: PushSubscriptionRecord[] | null; error: Error | null }>;
+        };
+      })
       .select("*")
       .eq("user_id", userId);
 
-    if (subsError || !subs || subs.length === 0) {
+    const subs = subsData ?? [];
+
+    if (subsError || subs.length === 0) {
       return NextResponse.json({ success: false, message: "No subscriptions found" });
     }
 
@@ -52,8 +68,7 @@ export async function POST(request: Request) {
       url: url || "/",
     });
 
-    // @ts-ignore
-    const sendPromises = subs.map(async (sub: any) => {
+    const sendPromises = subs.map(async (sub) => {
       try {
         await webpush.sendNotification(
           {
@@ -65,10 +80,15 @@ export async function POST(request: Request) {
           },
           payload
         );
-      } catch (err: any) {
-        if (err.statusCode === 410) {
-          // @ts-ignore
-          await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+      } catch (err: unknown) {
+        const errorStatusCode = (err as { statusCode?: number })?.statusCode;
+        if (errorStatusCode === 410) {
+          await (supabase
+            .from("push_subscriptions" as unknown as "users") as unknown as {
+              delete: () => { eq: (col: string, val: string) => Promise<unknown> };
+            })
+            .delete()
+            .eq("id", sub.id);
         }
       }
     });

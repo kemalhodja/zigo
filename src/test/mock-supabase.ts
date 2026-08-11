@@ -106,6 +106,8 @@ export const samplePostRow = {
   sponsored_expires_at: null,
   sponsored_disclosure: "Sponsorlu",
   sponsored_click_count: 0,
+  co_author_id: null,
+  external_url: null,
   target_audience: "all" as const,
   target_grade: null,
   city: null,

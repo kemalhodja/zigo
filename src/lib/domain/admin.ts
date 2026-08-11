@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import type { Database, StoreRedemptionStatus, StudentDocumentStatus } from "@/lib/supabase/database.types";
+import type { Database } from "@/lib/supabase/database.types";
 
 export const verifyTeacherSchema = z.object({
   teacherId: z.string().uuid(),
@@ -16,6 +16,11 @@ export const verifyUserSchema = z.object({
 export const updateUserStatusSchema = z.object({
   userId: z.string().uuid(),
   status: z.enum(["active", "suspended", "limited", "closed"]),
+});
+
+export const adminUpdateSubscriptionTierSchema = z.object({
+  userId: z.string().uuid(),
+  tier: z.enum(["free", "zigo_plus"]),
 });
 
 export const sendUserMessageSchema = z.object({
@@ -134,7 +139,6 @@ export async function verifyUser(
 ) {
   const parsed = verifyUserSchema.parse(input);
 
-  // @ts-expect-error verify_user is a newly added RPC
   const { data, error } = await supabase.rpc("verify_user", {
     target_user_id: parsed.userId,
     verified: parsed.verified,
@@ -150,10 +154,28 @@ export async function adminUpdateUserStatus(
 ) {
   const parsed = updateUserStatusSchema.parse(input);
 
-  // @ts-expect-error newly added RPC
   const { error } = await supabase.rpc("admin_update_user_status", {
     target_user_id: parsed.userId,
     new_status: parsed.status,
+  });
+
+  if (error) throw error;
+}
+
+export async function adminUpdateSubscriptionTier(
+  supabase: SupabaseClient<Database>,
+  input: z.infer<typeof adminUpdateSubscriptionTierSchema>,
+) {
+  const parsed = adminUpdateSubscriptionTierSchema.parse(input);
+
+  const isAdmin = await isCurrentUserPlatformAdmin(supabase);
+  if (!isAdmin) {
+    throw new Error("Platform admin access is required.");
+  }
+
+  const { error } = await supabase.rpc("set_user_subscription_tier", {
+    p_user_id: parsed.userId,
+    p_tier: parsed.tier,
   });
 
   if (error) throw error;
@@ -165,7 +187,6 @@ export async function adminSendUserMessage(
 ) {
   const parsed = sendUserMessageSchema.parse(input);
 
-  // @ts-expect-error newly added RPC
   const { error } = await supabase.rpc("admin_send_user_message", {
     target_user_id: parsed.userId,
     msg_title: parsed.title,
@@ -204,7 +225,7 @@ export async function setTeacherAreas(
   if (error) throw error;
 }
 
-export async function updateStoreRedemptionStatus(
+export async function update(
   supabase: SupabaseClient<Database>,
   input: z.infer<typeof updateRedemptionStatusSchema>,
 ) {
@@ -212,7 +233,7 @@ export async function updateStoreRedemptionStatus(
 
   const { data, error } = await supabase.rpc("update_store_redemption_status", {
     target_redemption_id: parsed.redemptionId,
-    next_status: parsed.status as StoreRedemptionStatus,
+    next_status: parsed.status as "approved" | "cancelled" | "pending_parent_approval" | "fulfilled",
   });
 
   if (error) throw error;
@@ -255,8 +276,23 @@ export async function reviewStudentDocument(
 
   const { data, error } = await supabase.rpc("review_student_document", {
     target_student_id: parsed.studentId,
-    next_status: parsed.status as StudentDocumentStatus,
+    next_status: parsed.status as "pending" | "approved" | "rejected",
   });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateStoreRedemptionStatus(
+  supabase: SupabaseClient<Database>,
+  input: { redemptionId: string; status: string },
+) {
+  const { data, error } = await supabase
+    .from("store_redemptions")
+    .update({ status: input.status as Database["public"]["Enums"]["store_redemption_status"] })
+    .eq("id", input.redemptionId)
+    .select()
+    .single();
 
   if (error) throw error;
   return data;

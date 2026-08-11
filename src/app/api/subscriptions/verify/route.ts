@@ -19,9 +19,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing receipt or productId" }, { status: 400 });
     }
 
-    // Extract Supabase auth token from Authorization header (Bearer ...)
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.replace(/^Bearer\s+/i, "");
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();

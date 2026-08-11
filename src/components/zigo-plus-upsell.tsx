@@ -24,11 +24,11 @@ export function ZigoPlusUpsell({
   benefits = ZIGO_PLUS_BENEFITS,
   headline = "Premium çalışma araçlarıyla daha verimli odaklan",
 }: ZigoPlusUpsellProps) {
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const campaignActive = isSubscriptionCampaignActive();
 
-  async function startCheckout() {
+  async function _startCheckout() {
     setLoading(true);
     setMessage("");
     try {
@@ -46,7 +46,7 @@ export function ZigoPlusUpsell({
     }
   }
 
-  async function devActivate() {
+  async function _devActivate() {
     setLoading(true);
     setMessage("");
     try {
@@ -74,8 +74,8 @@ export function ZigoPlusUpsell({
     );
   }
 
-  const stripeReady = process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_ENABLED === "true";
-  const devReady = allowDevActivate && (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("127.0.0.1") || process.env.NEXT_PUBLIC_ZIGO_BILLING_DEV_BYPASS === "true");
+  const _stripeReady = process.env.NEXT_PUBLIC_STRIPE_CHECKOUT_ENABLED === "true";
+  const _devReady = allowDevActivate && (process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("127.0.0.1") || process.env.NEXT_PUBLIC_ZIGO_BILLING_DEV_BYPASS === "true");
 
   return (
     <section className={`-mx-4 ${compact ? "px-4 py-3" : "px-4 py-4"} bg-slate-950 text-white`}>

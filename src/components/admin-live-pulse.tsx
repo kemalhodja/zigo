@@ -24,7 +24,7 @@ export function AdminLivePulse({
   initialPendingBankTransfers,
   aiConfigured,
 }: AdminLivePulseProps) {
-  const [metrics, setMetrics] = useState<LiveMetrics>({
+  const [metrics, _setMetrics] = useState<LiveMetrics>({
     activeUsersCount: initialPendingUsers + 12,
     pendingVerifications: initialPendingUsers,
     openModerationReports: initialModerationBreaches,

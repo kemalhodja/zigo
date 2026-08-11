@@ -33,7 +33,7 @@ npm run test:ci
 
 ## Hosted launch sequence
 
-1. Apply migrations **001–077** on Supabase Cloud
+1. Apply migrations **001–091** on Supabase Cloud
 2. Vercel env from `.env.staging.example` (billing bypass **off**)
 3. Auth redirect URLs from `/setup` Hosted deploy card
 4. `npm run staging:preflight` against production/staging URL
@@ -46,7 +46,7 @@ npm run test:ci
 | --- | --- |
 | `test:repo:fast` | Green locally before push |
 | `test:acceptance` | ≥95/100 |
-| `/api/setup/health` | `migrationTarget: 66`, `readyCount === totalCount` |
+| `/api/setup/health` | `migrationTarget: 91`, `readyCount === totalCount` |
 | Role QA | Student, parent, teacher, admin paths on hosted URL |
 | Legal | External review of `/legal/*` (non-automated) |
 

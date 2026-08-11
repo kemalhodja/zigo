@@ -13,6 +13,7 @@ import { SponsoredAdLink } from "@/components/sponsored-ad-link";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { formatFeedTimestamp } from "@/lib/format-time";
 import type { Messages } from "@/lib/i18n/server";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 import type { DisplayPost, DisplaySuggestedCreator } from "./data";
 
@@ -30,7 +31,7 @@ export function FeedPostCard({
   feedExtras: Messages["feedExtras"];
   feedEnhancements: Messages["feedEnhancements"];
   priorityMedia?: boolean;
-  viewerRole?: import("@/lib/supabase/database.types").UserRole | "guest" | null;
+  viewerRole?: UserRole | "guest" | null;
   enterDelayMs?: number;
 }) {
   const postKey = post.postId ?? post.handle;
