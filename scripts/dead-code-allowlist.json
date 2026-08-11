@@ -17,10 +17,6 @@
     "set-bank-env-production.mjs",
     "test-forgot-password-production.mjs",
     "apply-069-migration.mjs",
-    "diag-smoke.mjs",
-    "src/components/admin-user-search.tsx",
-    "src/components/parent-children-focus-card.tsx",
-    "src/components/parent-focus-overview-card.tsx",
     "cutover-cred-check.mjs",
     "deploy-hetzner.mjs",
     "godaddy-dns-playwright.mjs",
@@ -45,7 +41,8 @@
     "hetzner-zigo-nginx.mjs",
     "seed-custom-users.mjs",
     "supabase-auth-cutover-check.mjs",
-    "vercel-detach-zigo.mjs"
+    "vercel-detach-zigo.mjs",
+    "diag-smoke.mjs"
   ],
   "components": [
     "social-primitives.tsx",
@@ -67,9 +64,6 @@
     "skeleton.tsx",
     "toast-system.tsx",
     "google-play-subscription-modal.test.tsx",
-    "pomodoro-timer.tsx",
-    "admin-user-search.tsx",
-    "parent-children-focus-card.tsx",
-    "parent-focus-overview-card.tsx"
+    "pomodoro-timer.tsx"
   ]
 }

@@ -337,7 +337,7 @@ function groupStoriesByCreator(stories: ActiveStory[]) {
   return [...grouped.values()];
 }
 
-function toDisplayPost(
+export function toDisplayPost(
   post: SocialFeedPost,
   index: number,
   followState: {
