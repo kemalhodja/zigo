@@ -47,7 +47,10 @@ export async function POST(request: Request) {
           );
         }
       } else {
-        console.warn("APPLE_IAP_SHARED_SECRET env missing, falling back to mock 30-day activation.");
+        return NextResponse.json(
+          { error: "Sunucu hatası: App Store paylaşılan sır (shared secret) yapılandırılmamış." },
+          { status: 500 },
+        );
       }
     } else if (body.platform === "android") {
       if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
@@ -71,7 +74,10 @@ export async function POST(request: Request) {
           );
         }
       } else {
-        console.warn("GOOGLE_PLAY_SERVICE_ACCOUNT env missing, falling back to mock 30-day activation.");
+        return NextResponse.json(
+          { error: "Sunucu hatası: Google Play servis hesabı yapılandırılmamış." },
+          { status: 500 },
+        );
       }
     }
 

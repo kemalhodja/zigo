@@ -322,38 +322,9 @@ function scoreSocialPost(
   let audienceBoost = 0;
   let interestBoost = 0;
 
-  /*
-  // Active approved sponsored ad scoring
+  // Active approved sponsored ad scoring (Temporarily disabled)
   if (post.sponsored_status === "active") {
     sponsoredBoost = 0; // Temporarily disabled (was 150)
-
-    if (viewerContext) {
-      // 1. Audience Matching (Student vs Parent vs All)
-      if (viewerContext.role === "student" && (post.target_audience === "grade" || post.target_audience === "all")) {
-        audienceBoost += 45;
-      } else if (viewerContext.role === "parent" && (post.target_audience === "parent_only" || post.target_audience === "all")) {
-        audienceBoost += 45;
-      }
-
-      // 2. Geo-Location Matching (City & District)
-      const pLoc = post as SocialPostRow & { city?: string | null; district?: string | null };
-      const postCity = pLoc.city ? pLoc.city.trim().toLowerCase() : null;
-      const userCity = viewerContext.city ? viewerContext.city.trim().toLowerCase() : null;
-      const postDistrict = pLoc.district ? pLoc.district.trim().toLowerCase() : null;
-      const userDistrict = viewerContext.district ? viewerContext.district.trim().toLowerCase() : null;
-
-      if (postCity && userCity && postCity === userCity) {
-        locationBoost += 60;
-      }
-      if (postDistrict && userDistrict && postDistrict === userDistrict) {
-        locationBoost += 120;
-      }
-
-      // 3. Subject / Education Area Interest Matching
-      if (post.area_id && viewerContext.userInterestAreas?.includes(post.area_id)) {
-        interestBoost += 85;
-      }
-    }
   } else if (viewerContext?.city) {
     // Regular organic post location boost
     const pLoc = post as SocialPostRow & { city?: string | null; district?: string | null };

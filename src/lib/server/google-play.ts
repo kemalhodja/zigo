@@ -36,16 +36,10 @@ export async function verifyGooglePlaySubscription(
       return response.data;
     }
   } catch (err: unknown) {
-    console.warn("Google Play API verification via googleapis SDK failed:", (err as Error)?.message);
+    const errorMsg = (err as Error)?.message || "Bilinmeyen hata";
+    throw new Error(`Google Play API doğrulama hatası: ${errorMsg}`);
   }
 
-  // Fallback response structure when SDK is not present or in local testing mode
-  return {
-    kind: "androidpublisher#subscriptionPurchase",
-    startTimeMillis: String(Date.now()),
-    expiryTimeMillis: String(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    autoRenewing: true,
-    paymentState: 1, // 1 = Paid
-  };
+  throw new Error("Google Play SDK yüklenemedi veya doğrulama başarısız.");
 }
 
