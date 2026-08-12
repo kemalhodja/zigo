@@ -11,7 +11,7 @@ import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/componen
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
-import { WeeklyPerformanceCard } from "@/components/weekly-performance-card";
+
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
