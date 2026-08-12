@@ -34,7 +34,7 @@ export function RegistrationAccountPicker({
             <button
               key={option.id}
               type="button"
-              data-testid={`registration-signup-${option.id}`}
+              data-testid={`registration-primary-${option.id}`}
               onClick={() => onChange(option.id)}
               aria-pressed={isActive}
               className={`tap-scale relative rounded-xl px-3 py-3.5 text-left transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-crystal focus:ring-offset-2 ${

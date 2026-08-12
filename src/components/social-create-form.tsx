@@ -18,7 +18,7 @@ import type { Messages } from "@/lib/i18n/server";
 type Status = "idle" | "saving" | "saved" | "error";
 type PublishStep = "idle" | "compressing" | "uploading" | "publishing" | "done";
 const allowedMediaTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"]);
-const maxFileSizeBytes = 100 * 1024 * 1024;
+const maxFileSizeBytes = 15 * 1024 * 1024;
 const draftKey = "zigo:composer-draft";
 
 type SocialCreateFormProps = {
@@ -132,7 +132,7 @@ export function SocialCreateForm({
 
     if (file.size > maxFileSizeBytes) {
       setStatus("error");
-      setMessage(`Dosya 100 MB'dan büyük olamaz. (${sc.mediaSizeError})`);
+      setMessage(`Dosya 15 MB'dan büyük olamaz. (${sc.mediaSizeError})`);
       setPreview(null);
       setSelectedFile(null);
       return;
@@ -154,9 +154,9 @@ export function SocialCreateForm({
       video.preload = "metadata";
       video.onloadedmetadata = () => {
         setIsValidating(false);
-        if (video.duration > 90) {
+        if (video.duration > 45) {
           setStatus("error");
-          setMessage("Video süresi 90 saniyeden uzun olamaz.");
+          setMessage("Video süresi 45 saniyeden uzun olamaz.");
           setSelectedFile(null);
           setPreview(null);
         }
@@ -234,7 +234,7 @@ export function SocialCreateForm({
             setMessage("");
             return;
           }
-          // Non-fatal: fall back to original file (server will reject if > 100 MB).
+          // Non-fatal: fall back to original file (server will reject if > 15 MB).
           fileToUpload = selectedFile;
         } finally {
           compressAbortRef.current = null;

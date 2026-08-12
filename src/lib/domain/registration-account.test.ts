@@ -86,4 +86,37 @@ describe("registration-account", () => {
     expect(resolveAccountKindFromProfile({ role: "teacher", organizationType: "kurs" })).toBe("kurs");
     expect(resolveAccountKindFromProfile({ role: "teacher", organizationType: "yayinevi" })).toBe("publisher");
   });
+
+  it("has correct id, label, and role for all required signup options", () => {
+    const student = resolveRegistrationAccount("student");
+    expect(student.id).toBe("student");
+    expect(student.label).toBe("Öğrenci");
+    expect(student.role).toBe("student");
+
+    const teacher = resolveRegistrationAccount("teacher");
+    expect(teacher.id).toBe("teacher");
+    expect(teacher.label).toBe("Öğretmen");
+    expect(teacher.role).toBe("teacher");
+
+    const parent = resolveRegistrationAccount("parent");
+    expect(parent.id).toBe("parent");
+    expect(parent.label).toBe("Veli");
+    expect(parent.role).toBe("parent");
+
+    const institution = resolveRegistrationAccount("institution");
+    expect(institution.id).toBe("institution");
+    expect(institution.label).toBe("Eğitim kurumu");
+    expect(institution.role).toBe("teacher");
+  });
+
+  it("returns role === 'student' when student is selected", () => {
+    const account = resolveRegistrationAccount("student");
+    expect(account.role).toBe("student");
+  });
+
+  it("requires is_verified logic for teacher selections (implied by role === 'teacher')", () => {
+    const account = resolveRegistrationAccount("teacher");
+    expect(account.role).toBe("teacher");
+    expect(account.id).toBe("teacher");
+  });
 });

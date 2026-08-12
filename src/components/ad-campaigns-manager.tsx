@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
@@ -108,7 +109,7 @@ export function AdCampaignsManager() {
 
                 <div className="flex items-start gap-3">
                   {ad.media_url ? (
-                    <img src={ad.media_url} alt="" className="size-12 rounded-xl object-cover shrink-0 border border-slate-700" />
+                    <Image src={ad.media_url} alt="" width={48} height={48} className="size-12 rounded-xl object-cover shrink-0 border border-slate-700" />
                   ) : (
                     <div className="size-12 flex items-center justify-center rounded-xl bg-slate-800 text-lg shrink-0">
                       📢

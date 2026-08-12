@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { getDistrictsForCity } from "@/lib/domain/turkey-cities-districts";
@@ -370,7 +371,7 @@ export function CreateAdCampaignModal({
                               }`}
                             >
                               {post.media_url ? (
-                                <img src={post.media_url} alt="" className="size-10 rounded-md object-cover" />
+                                <Image src={post.media_url} alt="" width={40} height={40} className="size-10 rounded-md object-cover" />
                               ) : (
                                 <div className="size-10 flex items-center justify-center rounded-md bg-slate-700 text-xs">📝</div>
                               )}
@@ -706,7 +707,7 @@ export function CreateAdCampaignModal({
                         {isVideoMedia ? (
                           <video src={mediaUrl} controls autoPlay muted={false} className="max-h-48 w-full object-cover" />
                         ) : (
-                          <img src={mediaUrl} alt="Reklam Afişi" className="max-h-48 w-full object-cover" />
+                          <Image src={mediaUrl} alt="Reklam Afişi" width={400} height={192} className="h-48 w-full object-cover" />
                         )}
                       </div>
                     ) : (

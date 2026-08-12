@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
@@ -380,7 +381,7 @@ export function TeacherQuizForm({
                 className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
               />
               {activeQuestion.imageUrl && (
-                <img src={activeQuestion.imageUrl} alt="Question image" className="mt-2 max-h-48 object-contain" />
+                <Image src={activeQuestion.imageUrl} alt="Question image" width={400} height={192} className="mt-2 h-48 w-auto object-contain" />
               )}
             </div>
             <div className="space-y-2">

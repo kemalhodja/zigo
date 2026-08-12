@@ -18,18 +18,18 @@
  *    callback for UX feedback.
  */
 
-export const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB hard limit
+export const VIDEO_MAX_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB hard limit
 export const VIDEO_MIN_DURATION_SECONDS = 5;
-export const VIDEO_MAX_DURATION_SECONDS = 90; // 60-90 saniye süre sınırı
+export const VIDEO_MAX_DURATION_SECONDS = 45; // 45 saniye süre sınırı
 
-/** Validate client-side video file size (100 MB max) and duration (60-90s max). */
+/** Validate client-side video file size (15 MB max) and duration (45s max). */
 export async function validateVideoLimits(file: File): Promise<{ valid: boolean; error?: string; duration?: number }> {
   if (!file.type.startsWith("video/")) return { valid: true };
 
   if (file.size > VIDEO_MAX_SIZE_BYTES) {
     return {
       valid: false,
-      error: `Video dosya boyutu 100 MB sınırını aşamaz (${(file.size / (1024 * 1024)).toFixed(1)} MB). Lütfen sıkıştırarak tekrar deneyin.`,
+      error: `Video dosya boyutu 15 MB sınırını aşamaz (${(file.size / (1024 * 1024)).toFixed(1)} MB). Lütfen sıkıştırarak tekrar deneyin.`,
     };
   }
 
@@ -43,7 +43,7 @@ export async function validateVideoLimits(file: File): Promise<{ valid: boolean;
       if (duration > VIDEO_MAX_DURATION_SECONDS) {
         resolve({
           valid: false,
-          error: `Video süresi maksimum ${VIDEO_MAX_DURATION_SECONDS} saniye (1.5 dakika) olabilir. Yüklediğiniz video: ${Math.round(duration)} saniye.`,
+          error: `Video süresi maksimum ${VIDEO_MAX_DURATION_SECONDS} saniye olabilir. Yüklediğiniz video: ${Math.round(duration)} saniye.`,
           duration,
         });
       } else {
@@ -87,7 +87,7 @@ export interface CompressVideoOptions {
   onProgress?: CompressionProgressCallback;
   /**
    * Size threshold above which compression is attempted.
-   * Defaults to VIDEO_MAX_SIZE_BYTES (100 MB).
+   * Defaults to VIDEO_MAX_SIZE_BYTES (15 MB).
    */
   thresholdBytes?: number;
 }

@@ -38,6 +38,22 @@ export async function completeSafeDuelWin(
 ): Promise<LearningAwardResult> {
   const parsed = completeSafeDuelSchema.parse(input);
 
+  // Anti-Cheat (Phase 2): Limit daily duel awards to 5 per user
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const { count, error: countError } = await supabase
+    .from("learning_events")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", input.userId)
+    .eq("action_type", "safe_duel_win")
+    .gte("created_at", startOfDay.toISOString());
+
+  if (countError) throw countError;
+  if (count !== null && count >= 5) {
+    throw new Error("Anti-Cheat: Günlük maksimum düello ödülü sınırına (5) ulaştınız.");
+  }
+
   const { data, error } = await supabase.rpc("award_safe_duel_win_points", {
     p_target_user_id: input.userId,
     p_duel_id: parsed.duelId,

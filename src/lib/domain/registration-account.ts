@@ -141,18 +141,11 @@ export const REGISTRATION_REQUIRED_SIGNUP_OPTIONS = [
     emoji: "🎓",
   },
   {
-    id: "parent" as const,
-    label: "Veli",
-    description: "Öğrenci ilerlemesi, YKS takibi, onaylar ve aile paneli.",
-    accent: "from-aqua to-mint",
-    emoji: "👨‍👩‍👧",
-  },
-  {
     id: "teacher" as const,
     label: "Öğretmen",
     description: "Bireysel öğretmen; doğrulama sonrası içerik ve stüdyo araçları.",
     accent: "from-sun to-peach",
-    emoji: "📚",
+    emoji: "👩‍🏫",
   },
 ] as const;
 
