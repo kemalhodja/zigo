@@ -278,7 +278,7 @@ export async function getSocialPostById(
       )
     `,
     )
-    .eq("id", parsed.postId)
+    .eq("id", parsed.data.postId)
     .maybeSingle();
 
   if (error) throw error;
