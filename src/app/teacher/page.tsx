@@ -461,20 +461,21 @@ function VerificationRequired({
         <PushNotificationPrompt />
       </div>
 
+      </section>
+
       <div className="px-4">
-          <WhatsAppSupportCard
-            buttonLabel={support.button}
-            compact
-            context="teacher"
-            description=""
-            eyebrow=""
-            hoursLabel=""
-            prefilledMessage={support.messageTeacher}
-            privacyNote=""
-            role="teacher"
-            title=""
-          />
-        </div>
+        <WhatsAppSupportCard
+          buttonLabel={support.button}
+          compact
+          context="teacher"
+          description=""
+          eyebrow=""
+          hoursLabel=""
+          prefilledMessage={support.messageTeacher}
+          privacyNote=""
+          role="teacher"
+          title=""
+        />
       </div>
 
       <div className="grid gap-2">

@@ -253,7 +253,8 @@ function PlanPriceRow({
 
     let purchaseToken: string | null = null;
     let orderId: string | null = null;
-    const productId = "zigo_plus";
+    const isDiscounted = campaignActive && priceTry < compareAtTry;
+    const productId = isDiscounted ? "zigo_plus_50off" : "zigo_plus";
 
     try {
       const nativePurchase = await purchaseGooglePlaySubscription({ productId, planId });
