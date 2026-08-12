@@ -56,8 +56,8 @@ function learnerPlans(
     benefits: LEARNER_BENEFITS,
     cancelPath,
     plans: [
-      plan("zigo-plus-student-montly", "monthly", "Aylık", 99, userCreatedAt),
-      plan("zigo-plus-student-yearly", "yearly", "Yıllık", 900, userCreatedAt),
+      plan("zigo-plus-student-montly", "monthly", "Aylık", 49, userCreatedAt),
+      plan("zigo-plus-student-yearly", "yearly", "Yıllık", 450, userCreatedAt),
     ],
   };
 }
@@ -70,8 +70,8 @@ function teacherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPla
     benefits: TEACHER_CREATOR_PLUS_BENEFITS,
     cancelPath: "/teacher?billing=cancelled",
     plans: [
-      plan("zigo-plus-teachers-montly", "monthly", "Aylık", 199, userCreatedAt),
-      plan("zigo-plus-teachers-yearly", "yearly", "Yıllık", 1499, userCreatedAt),
+      plan("zigo-plus-teachers-montly", "monthly", "Aylık", 99, userCreatedAt),
+      plan("zigo-plus-teachers-yearly", "yearly", "Yıllık", 749, userCreatedAt),
     ],
   };
 }
@@ -105,8 +105,8 @@ function institutionPlanGroup(userCreatedAt?: string | Date | null): Subscriptio
     benefits: INSTITUTION_BENEFITS,
     cancelPath: "/profile?billing=cancelled",
     plans: [
-      plan("zigo-plus-educational-institutions-monthly", "monthly", "Aylık", 500, userCreatedAt),
-      plan("zigo-plus-educational-institutions-yearly", "yearly", "Yıllık", 5000, userCreatedAt),
+      plan("zigo-plus-educational-institutions-monthly", "monthly", "Aylık", 250, userCreatedAt),
+      plan("zigo-plus-educational-institutions-yearly", "yearly", "Yıllık", 2500, userCreatedAt),
     ],
   };
 }
@@ -119,8 +119,8 @@ function platformPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPl
     benefits: PLATFORM_BENEFITS,
     cancelPath: "/profile?billing=cancelled",
     plans: [
-      plan("zigo-plus-platform-montly", "monthly", "Aylık", 400, userCreatedAt),
-      plan("zigo-plus-platform-yearly", "yearly", "Yıllık", 4000, userCreatedAt),
+      plan("zigo-plus-platform-montly", "monthly", "Aylık", 200, userCreatedAt),
+      plan("zigo-plus-platform-yearly", "yearly", "Yıllık", 2000, userCreatedAt),
     ],
   };
 }
@@ -134,8 +134,8 @@ function publisherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionP
     cancelPath: "/profile?billing=cancelled",
     // Note: Assuming publisher plan IDs for Play Store based on pattern
     plans: [
-      plan("zigo-plus-publisher-monthly", "monthly", "Aylık", 400, userCreatedAt),
-      plan("zigo-plus-publisher-yearly", "yearly", "Yıllık", 4000, userCreatedAt),
+      plan("zigo-plus-publisher-monthly", "monthly", "Aylık", 200, userCreatedAt),
+      plan("zigo-plus-publisher-yearly", "yearly", "Yıllık", 2000, userCreatedAt),
     ],
   };
 }
