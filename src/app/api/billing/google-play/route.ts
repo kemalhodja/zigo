@@ -8,7 +8,7 @@ import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const googlePlaySchema = z.object({
-  planId: z.string().trim().min(3).max(80).default("student-monthly"),
+  planId: z.string().trim().min(3).max(80).default("zigo-plus-student-montly"),
   productId: z.string().trim().min(3).max(80).default("zigo_plus"),
   purchaseToken: z.string().trim().min(5),
   packageName: z.string().trim().min(3).default("com.zigo.app"),

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 import React, { useRef,useState } from "react";
 
@@ -144,13 +145,12 @@ export function SocialMediaFrame({
                   style={combinedStyle}
                 />
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  alt={alt ? `${alt} (${idx + 1}/${items.length})` : ""}
-                  className={`size-full transition-all duration-200 ${fitClass}`}
-                  decoding="async"
-                  fetchPriority={priority && idx === 0 ? "high" : "low"}
-                  loading={priority && idx === 0 ? "eager" : "lazy"}
+                <Image
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  alt={alt ? `${alt} (${idx + 1}/${items.length})` : "Media"}
+                  className={`transition-all duration-200 ${fitClass}`}
+                  priority={priority && idx === 0}
                   src={url}
                   style={combinedStyle}
                 />
@@ -184,13 +184,12 @@ export function SocialMediaFrame({
             />
           </div>
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            alt={alt}
-            className={`w-full h-auto max-h-[75vh] transition-all duration-200 ${fitClass}`}
-            decoding="async"
-            fetchPriority={priority ? "high" : "low"}
-            loading={priority ? "eager" : "lazy"}
+          <Image
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            alt={alt || "Media"}
+            className={`transition-all duration-200 ${fitClass}`}
+            priority={priority}
             src={items[0]}
             style={combinedStyle}
           />

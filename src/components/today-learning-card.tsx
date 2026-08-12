@@ -18,12 +18,12 @@ export function TodayLearningCard({
 }) {
   return (
     <section className="-mx-4 px-4">
-      <div className="overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-night via-violet-900 to-crystal p-4 text-white shadow-sm">
-        <p className="text-[0.62rem] font-black uppercase tracking-[0.18em] text-white/70">{copy.todayCardTitle}</p>
-        <h2 className="mt-1 text-lg font-black leading-tight">{copy.todayCardSubtitle}</h2>
-        <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="group overflow-hidden rounded-2xl border border-violet-200/50 bg-gradient-to-br from-indigo-900 via-violet-900 to-fuchsia-900 p-5 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:shadow-violet-900/20">
+        <p className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/70">{copy.todayCardTitle}</p>
+        <h2 className="mt-1.5 text-xl font-black leading-tight tracking-tight">{copy.todayCardSubtitle}</h2>
+        <div className="mt-4 grid grid-cols-2 gap-3">
           <Link
-            className="tap-scale rounded-xl bg-white/15 px-3 py-3 text-center backdrop-blur transition hover:bg-white/25 col-span-2"
+            className="tap-scale rounded-xl bg-white/10 px-4 py-3.5 text-center backdrop-blur-sm transition-all hover:bg-white/20 hover:scale-[1.02] col-span-2 border border-white/5"
             href="/learn"
           >
             <p className="text-sm font-black">{copy.todayQuiz}</p>

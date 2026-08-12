@@ -35,7 +35,7 @@ export async function verifyGooglePlayPurchase(payload: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        planId: payload.planId ?? "student-monthly",
+        planId: payload.planId ?? "zigo-plus-student-montly",
         productId: payload.productId ?? IAP_PRODUCT_IDS.ZIGO_PLUS,
         purchaseToken: payload.purchaseToken,
         orderId: payload.orderId ?? null,

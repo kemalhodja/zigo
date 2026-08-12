@@ -56,6 +56,19 @@ export default async function HomePage() {
 
       <StoryTray stories={stories} feedExtras={m.feedExtras} feedEnhancements={m.feedEnhancements} />
 
+      {viewer.role === null ? (
+        <section className="-mx-4 bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-8 text-slate-950">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-night/70">Zigo'ya Hoş Geldiniz</p>
+          <h1 className="mt-2 text-2xl font-black leading-tight">Zigo Plus'ı 30 Gün Ücretsiz Deneyin!</h1>
+          <p className="mt-2 text-sm font-bold text-night/80">
+            Kayıt olduktan sonraki ilk 30 gün içinde %50 İndirim Fırsatını kaçırmayın. Sınırsız deneme çözümleri ve ödüller sizi bekliyor.
+          </p>
+          <Link href="/auth" className="mt-4 inline-flex items-center justify-center rounded-xl bg-night px-6 py-3 text-sm font-black text-white shadow-lg transition hover:scale-105 active:scale-95">
+            Hemen Kayıt Ol 🚀
+          </Link>
+        </section>
+      ) : null}
+
       {showStudentHomeModules ? (
         <>
           <AiMentorCard />

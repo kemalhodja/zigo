@@ -301,7 +301,12 @@ function PlanPriceRow({
       }
 
       setMessage(b.playSuccess);
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      
+      // Dinamik olarak yükleyip confetti patlatıyoruz.
+      const { triggerConfetti } = await import("@/lib/client/confetti");
+      triggerConfetti();
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       window.location.href = "/billing/success?kind=google_play";
     } catch {
       setMessage(b.connectionFailed);

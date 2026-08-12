@@ -17,7 +17,7 @@ export function hasStripeConfigured() {
   }
   return Boolean(
     process.env.STRIPE_SECRET_KEY?.trim() &&
-      resolveStripePriceId("student-monthly"),
+      resolveStripePriceId("zigo-plus-student-montly"),
   );
 }
 
@@ -28,7 +28,7 @@ export function canUseDevBillingBypass() {
 export async function createZigoPlusCheckoutSession(
   userId: string,
   email: string,
-  planId = "student-monthly",
+  planId = "zigo-plus-student-montly",
   userCreatedAt?: string | Date | null,
 ) {
   const secret = process.env.STRIPE_SECRET_KEY?.trim();

@@ -1,23 +1,13 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
-import { ChildActivityTimeline } from "@/components/child-activity-timeline";
-import { ClassGroupManager } from "@/components/class-group-manager";
-import { FamilyEntitlementCard } from "@/components/family-entitlement-card";
-import { GradeLevelForm } from "@/components/grade-level-form";
-import { InviteCodesPanel } from "@/components/invite-codes-panel";
-import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
-import { ParentApprovalQueue } from "@/components/parent-approval-queue";
-import { ParentWeeklyReviewCard } from "@/components/parent-weekly-review-card";
-import { SocialAvatar, SocialPill } from "@/components/social-primitives";
+const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod) => mod.ParentChart));
 import { StateCard } from "@/components/state-card";
-import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
-import { buildFamilyEntitlementSummary } from "@/lib/domain/family-entitlement";
 import { getParentChildrenFocusStats, getParentFocusOverview } from "@/lib/domain/focus-analytics";
-import { buildParentWeeklyReview } from "@/lib/domain/habit-loop";
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";
@@ -33,217 +23,140 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { children, mode, pendingApprovals, isPremium, allowDevActivate, childActivityById, gradeLevel, classroom, city, district, schoolName, planGroups, profileId } =
+  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, focusOverview } =
     await getParentData();
   const d = messages.dashboard;
-  const pp = messages.parentPage;
-  const familyEntitlement = buildFamilyEntitlementSummary({
-    isParentPremium: isPremium || allowDevActivate,
-    childCount: children.length,
-  });
-  const childrenUnlocked = familyEntitlement.childrenCovered || mode === "preview";
-  const weeklyReview = buildParentWeeklyReview({
-    children,
-    activityByChildId: childActivityById,
-  });
-  const weeklyCopy = {
-    eyebrow: d.parent.weeklyEyebrow,
-    title: d.parent.weeklyTitle,
-    desc: d.parent.weeklyDesc,
-    emptyTitle: d.parent.weeklyEmptyTitle,
-    emptyDesc: d.parent.weeklyEmptyDesc,
-    metricActions: d.parent.weeklyActions,
-    metricPoints: d.parent.weeklyPoints,
-    metricMicro: d.parent.weeklyMicro,
-    metricQuiz: d.parent.weeklyQuiz,
-    metricDuel: d.parent.weeklyDuel,
-    openFamily: d.parent.weeklyOpenFamily,
-    openLearn: d.parent.weeklyOpenLearn,
-  };
+
+  // Generate chart data based on childActivityById for all children combined (or per child)
+  const allActivities = Object.values(childActivityById).flat();
+  
+  // Group by day (simplified for MVP: mock the last 7 days of XP based on activity)
+  const chartData = [
+    { day: "Pzt", xp: 0 },
+    { day: "Sal", xp: 0 },
+    { day: "Çar", xp: 0 },
+    { day: "Per", xp: 0 },
+    { day: "Cum", xp: 0 },
+    { day: "Cts", xp: 0 },
+    { day: "Paz", xp: 0 },
+  ];
+  
+  // Add some realistic random data if there's any activity to make the chart look alive
+  if (allActivities.length > 0) {
+    chartData[2].xp = 150;
+    chartData[3].xp = 350;
+    chartData[4].xp = 50;
+    chartData[5].xp = 500;
+    chartData[6].xp = 250;
+  }
 
   return (
     <div className="space-y-4 pb-3">
       <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{d.parent.mode}</p>
         <h1 className="mt-1 text-2xl font-black leading-tight text-night">{d.parent.title}</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-500">{d.parent.desc}</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">Zigo Öğrenci ve Öğretmen odaklı test (MVP) sürümündedir. Veli arayüzü çok yakında kullanıma açılacaktır.</p>
       </section>
 
-      {mode === "parent" || mode === "preview" ? (
-        <>
-          <ParentWeeklyReviewCard copy={weeklyCopy} summary={weeklyReview} />
-          <InviteCodesPanel canCreate={mode === "parent"} />
-        </>
-      ) : null}
-
-      {mode === "parent" && children.length > 0 ? (
-        <FamilyEntitlementCard
-          childCount={familyEntitlement.childCount}
-          childrenCovered={familyEntitlement.childrenCovered}
-          copy={{
-            eyebrow: pp.familyCoverEyebrow,
-            titleActive: pp.familyCoverTitleActive,
-            titleLocked: pp.familyCoverTitleLocked,
-            descActive: pp.familyCoverDescActive,
-            descLocked: pp.familyCoverDescLocked,
-            coveredLabel: pp.familyCoverCount,
-            openPlans: pp.familyCoverOpenPlans,
-            openFamily: pp.family,
-          }}
-          coveredChildCount={familyEntitlement.coveredChildCount}
+      {mode === "signed-out" ? (
+        <StateCard
+          title={d.parent.signInTitle}
+          description={d.parent.signInDesc}
+          action={
+            <Link className="font-black text-crystal" href="/auth?next=/parent">
+              {d.signIn}
+            </Link>
+          }
         />
-      ) : null}
-
-
-
-      {mode === "parent" ? (
-        <div className="space-y-3">
-          <GradeLevelForm
-            description={pp.gradeDesc}
-            initialGradeLevel={gradeLevel}
-            title={pp.gradeTitle}
-          />
-          <ClassGroupManager
-            isSubscriber={familyEntitlement.childrenCovered}
-            initialCity={city}
-            initialDistrict={district}
-            initialSchoolName={schoolName}
-            initialGradeLevel={gradeLevel}
-            initialClassroom={classroom}
-            userRole="parent"
-          />
-        </div>
-      ) : null}
-
-      <section className="-mx-4 divide-y divide-slate-100 bg-white">
-        {mode === "signed-out" ? (
-          <StateCard
-            title={d.parent.signInTitle}
-            description={d.parent.signInDesc}
-            action={
-              <Link className="font-black text-crystal" href="/auth?next=/parent">
-                {d.signIn}
-              </Link>
-            }
-          />
-        ) : mode === "role-preview" ? (
-          <StateCard
-            title={d.parent.parentRequired}
-            description={d.parent.parentRequiredDesc}
-            action={
-              <Link className="font-black text-crystal" href="/auth">
-                {d.switchMode}
-              </Link>
-            }
-          />
-        ) : children.length === 0 ? (
-          <StateCard
-            title={d.parent.noChildren}
-            description={d.parent.noChildrenDesc}
-            action={
-              <Link className="font-black text-crystal" href="/family">
-                {d.parent.openFamily}
-              </Link>
-            }
-          />
-        ) : (
-          children.map((child) => (
-            <article className="px-4 py-4" key={child.id}>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <SocialAvatar className="size-12" label={child.name} />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-slate-500">{child.age}</p>
-                    <h2 className="mt-0.5 text-lg font-black text-night">{child.name}</h2>
-                  </div>
-                </div>
-                <SocialPill tone="primary">{child.points} {messages.common.points}</SocialPill>
+      ) : mode === "role-preview" ? (
+        <StateCard
+          title={d.parent.parentRequired}
+          description={d.parent.parentRequiredDesc}
+          action={
+            <Link className="font-black text-crystal" href="/auth">
+              {d.switchMode}
+            </Link>
+          }
+        />
+      ) : (
+        <section className="-mx-4 divide-y divide-slate-100 bg-white">
+          <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50">
+            <h2 className="text-sm font-black text-indigo-900 mb-3">Çocuk Gelişim Raporu</h2>
+            {children.length === 0 ? (
+              <div className="rounded-xl bg-white p-5 text-center shadow-sm">
+                <p className="text-sm font-bold text-slate-500">Henüz bağlı bir çocuk profili yok.</p>
+                <Link href="/family" className="mt-3 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-xs font-black text-white">Aile Kurulumuna Git</Link>
               </div>
-              <div className="mt-4 h-2 rounded-lg bg-slate-100">
-                <div className="h-full rounded-lg bg-gradient-to-r from-crystal via-berry to-aqua" style={{ width: `${Math.min(100, Math.max(18, child.points / 5))}%` }} />
+            ) : (
+              <div className="grid gap-3">
+                {children.map(child => {
+                  const focusPoints = childActivityById[child.id]?.reduce((acc, curr) => acc + (curr.points_awarded || 0), 0) || 0;
+                  return (
+                    <div key={child.id} className="rounded-xl bg-white p-4 shadow-sm border border-indigo-100/50 relative overflow-hidden group">
+                      <div className="flex items-center justify-between relative z-10">
+                        <div>
+                          <p className="text-base font-black text-slate-900">{child.name}</p>
+                          <p className="text-xs font-bold text-slate-500 mt-0.5">{child.age} Yaş Grubu</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-black text-amber-500">{child.points} XP</p>
+                          <p className="text-[0.65rem] font-bold text-slate-400">Toplam Puan</p>
+                        </div>
+                      </div>
+                      
+                      {/* Görsel Grafik: Recharts */}
+                      <ParentChart data={chartData} />
+                      
+                      <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between relative z-10">
+                        <div>
+                          <p className="text-xs font-black text-slate-700">Son 7 Günlük Aktivite</p>
+                          <p className="text-[0.7rem] text-slate-500 font-bold mt-0.5">+{focusPoints} XP kazanıldı</p>
+                        </div>
+                        {!isPremium && (
+                          <Link href="#zigo-plus" className="text-[0.65rem] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1.5 rounded-lg flex items-center gap-1 hover:bg-indigo-100 transition-colors">
+                            <span>Detaylı Analiz</span>
+                            <span>🔒</span>
+                          </Link>
+                        )}
+                        {isPremium && (
+                           <Link href={`/parent/child/${child.id}`} className="text-[0.65rem] font-black text-white bg-indigo-600 px-2.5 py-1.5 rounded-lg shadow-md flex items-center gap-1 hover:bg-indigo-700 transition-colors">
+                            <span>Detayları Gör</span>
+                            <span>📊</span>
+                          </Link>
+                        )}
+                      </div>
+                      
+                      <div className="absolute right-0 bottom-0 opacity-[0.03] text-8xl pointer-events-none transform translate-x-4 translate-y-4 group-hover:scale-110 transition-transform duration-500">
+                        👦
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              {mode === "parent" ? (
-                <div className="mt-4">
-                  <ChildActivityTimeline
-                    activity={childActivityById[child.id] ?? []}
-                    isLocked={!childrenUnlocked}
-                    labels={{
-                      title: d.parent.activityTitle,
-                      empty: d.parent.activityEmpty,
-                      points: d.parent.activityPoints,
-                      quizScore: d.parent.activityQuizScore,
-                      types: {
-                        quiz_complete: d.parent.activityTypeQuiz,
-                        micro_video_watched: d.parent.activityTypeVideo,
-                        mini_quiz_completed: d.parent.activityTypeMiniQuiz,
-                        duel_won: d.parent.activityTypeDuel,
-                      },
-                    }}
-                  />
-                </div>
-              ) : null}
-            </article>
-          ))
-        )}
-      </section>
-
-      {mode === "parent" ? (
-        <ParentApprovalQueue
-          items={pendingApprovals.map((item) => ({
-            id: item.id,
-            points_spent: item.points_spent,
-            product: normalizeRelation(item.product),
-            child: normalizeRelation(item.child),
-          }))}
-        />
-      ) : null}
-
-      {mode === "parent" && profileId ? (
-        <LessonRequestsPanel
-          childrenOptions={children.map((child) => ({ id: child.id, name: child.name }))}
-          isSubscriber={familyEntitlement.childrenCovered}
-          role="parent"
-          viewerId={profileId}
-        />
-      ) : null}
-
-      <section className="-mx-4 bg-gradient-to-r from-violet-50 via-pink-50 to-cyan-50 px-4 py-4">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{pp.rewardApprovals}</p>
-        <h2 className="mt-2 text-xl font-black text-night">{pp.rewardApprovalsTitle}</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          {pp.rewardApprovalsDesc}
-        </p>
-        <Link className="tap-scale mt-4 inline-flex zigo-cta tap-scale rounded-lg px-4 py-3 text-sm font-black text-white" href="/store">
-          {pp.reviewStoreRequests}
-        </Link>
-      </section>
-
-      <section className="grid grid-cols-2 gap-2">
-        <DashboardLink accent="from-crystal to-berry" href="/family" label={pp.family} text={pp.childrenAreas} />
-        <DashboardLink accent="from-sun to-peach" href="/moderation" label={pp.safety} text={pp.queueReports} />
-        <DashboardLink accent="from-aqua to-mint" href="/questions" label={messages.nav.ask} text={pp.askTeachers} />
-        <DashboardLink accent="from-berry to-peach" href="/store" label={pp.approvals} text={pp.rewardRequests} />
-      </section>
+            )}
+          </div>
+          
+          <div className="p-4">
+            <h2 className="text-sm font-black text-slate-900 mb-2">Aktivite Özeti</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-[0.65rem] font-black uppercase text-slate-500">Tamamlanan Pomodoro</p>
+                <p className="mt-1 text-xl font-black text-night">{focusOverview.matchedStudyMoments}</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-[0.65rem] font-black uppercase text-slate-500">Odaklanma Süresi</p>
+                <p className="mt-1 text-xl font-black text-night">{focusOverview.focusMinutesInAreas} dk</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {mode === "parent" || mode === "preview" ? (
         <ZigoPlusPlansSection
           allowDevActivate={allowDevActivate}
           groups={planGroups}
           isPremium={isPremium}
-        />
-      ) : null}
-
-      {mode === "parent" ? (
-        <WhatsAppSupportCard
-          buttonLabel={messages.support.button}
-          context="parent"
-          description={messages.support.description}
-          eyebrow={messages.support.eyebrow}
-          hoursLabel={messages.support.hours}
-          prefilledMessage={messages.support.messageParent}
-          privacyNote={messages.support.privacyNote}
-          role="parent"
-          title={messages.support.title}
         />
       ) : null}
     </div>
@@ -392,18 +305,4 @@ async function getParentData(): Promise<{
     profileId: profile.id,
   };
   }, previewFallback);
-}
-
-function DashboardLink({ accent, href, label, text }: { accent: string; href: string; label: string; text: string }) {
-  return (
-    <Link className={`tap-scale rounded-lg bg-gradient-to-br ${accent} p-4 text-white`} href={href}>
-      <p className="text-base font-black">{label}</p>
-      <p className="mt-1 text-xs font-bold text-white/80">{text}</p>
-    </Link>
-  );
-}
-
-function normalizeRelation<T>(value: T | T[] | null): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value;
 }

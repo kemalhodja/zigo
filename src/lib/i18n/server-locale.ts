@@ -1,8 +1,9 @@
 import { cookies, headers } from "next/headers";
+import { cache } from "react";
 
 import { type Locale, LOCALE_COOKIE, parseLocale, parseLocaleFromHeaders } from "./locale";
 
-export async function getServerLocale(): Promise<Locale> {
+export const getServerLocale = cache(async (): Promise<Locale> => {
   const cookieStore = await cookies();
   const cookieValue = cookieStore.get(LOCALE_COOKIE)?.value;
 
@@ -14,5 +15,5 @@ export async function getServerLocale(): Promise<Locale> {
   // 2. Auto-detect from request headers (geo-IP or Accept-Language)
   const requestHeaders = await headers();
   return parseLocaleFromHeaders(requestHeaders);
-}
+});
 

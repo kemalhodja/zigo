@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 type SocialAvatarProps = {
@@ -26,10 +27,9 @@ export function SocialAvatar({
 }: SocialAvatarProps) {
   return (
     <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} ${ring ? "p-0.5" : ""} ${className}`}>
-      <span className="flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white text-[0.68rem] font-black text-night">
+      <span className="relative flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white text-[0.68rem] font-black text-night">
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img alt="" className="size-full object-cover" src={imageUrl} />
+          <Image alt={label} className="object-cover" fill sizes="48px" src={imageUrl} />
         ) : (
           getInitials(label)
         )}

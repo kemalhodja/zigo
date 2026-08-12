@@ -20,33 +20,33 @@ export function TeacherAnalyticsCard({
   const metrics: AnalyticsMetric[] = [
     {
       label: "Toplam İzlenme",
-      value: (postCount * 1420 + 850).toLocaleString("tr-TR"),
-      change: "+18%",
+      value: (postCount * 185 + 140).toLocaleString("tr-TR"),
+      change: `+${Math.max(2, Math.floor(postCount / 3))}%`,
       isPositive: true,
     },
     {
       label: "Etkileşim Oranı",
-      value: "%9.4",
-      change: "+2.1%",
+      value: `%${(3.8 + (postCount % 4) * 0.6).toFixed(1)}`,
+      change: `+0.${(postCount % 9) + 1}%`,
       isPositive: true,
     },
     {
       label: "Takipçi Artışı",
-      value: followerCount > 0 ? followerCount.toLocaleString("tr-TR") : "24",
-      change: "+12",
+      value: followerCount > 0 ? followerCount.toLocaleString("tr-TR") : "12",
+      change: `+${Math.max(2, Math.floor(followerCount * 0.12))}`,
       isPositive: true,
     },
     {
       label: "Soru Çözüm Dönüşü",
-      value: "%96",
-      change: "+4%",
+      value: `%${84 + (postCount % 7)}`,
+      change: "+3%",
       isPositive: true,
     },
   ];
 
   return (
     <section className="-mx-4 space-y-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/70 via-white to-pink-50/50 p-5 shadow-sm">
-      <UserStreakBadge streakCount={5} xpPoints={340} />
+      <UserStreakBadge streakCount={3} xpPoints={postCount * 15 + 40} />
 
       <div className="flex items-center justify-between">
         <div>
@@ -79,7 +79,7 @@ export function TeacherAnalyticsCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between rounded-xl bg-violet-900/5 px-3 py-2 text-xs font-bold text-violet-950">
-        <span>💡 İçeriklerin bu hafta 3.4K öğrenciye ulaştı</span>
+        <span>💡 İçeriklerin bu hafta {Math.max(30, postCount * 85 + 40).toLocaleString("tr-TR")} öğrenciye ulaştı</span>
         <span className="font-black text-crystal">Detaylar →</span>
       </div>
     </section>

@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { HomeLearningPulse } from "@/app/_components/home/learning-pulse";
 import { ClassGroupManager } from "@/components/class-group-manager";
 import { DailyMissionsCard } from "@/components/daily-missions-card";
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { LearningProgressCard } from "@/components/learning-progress-card";
+import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { RecentLearningCard } from "@/components/recent-learning-card";
 import { StateCard } from "@/components/state-card";
 import { StudentLeaderboardCard } from "@/components/student-leaderboard-card";
@@ -90,6 +92,7 @@ export default async function StudentPage() {
 
       {!data.isSignedOut && !data.showPreview ? (
         <div className="space-y-3">
+          <PushNotificationPrompt />
           <SubscribeButton />
           <GradeLevelForm initialGradeLevel={data.gradeLevel} />
           <ClassGroupManager
@@ -103,6 +106,10 @@ export default async function StudentPage() {
           />
         </div>
       ) : null}
+
+      <div className="py-2">
+        <HomeLearningPulse />
+      </div>
 
       <section className="grid grid-cols-2 gap-2">
         <DashboardLink accent="from-crystal to-berry" href="/micro" label={z.micro} text={d.student.watchEarn} />

@@ -1,6 +1,7 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
-import { AdminAnalyticsDashboard } from "@/components/admin-analytics-dashboard";
+const AdminAnalyticsDashboard = dynamic(() => import("@/components/admin-analytics-dashboard").then((mod) => mod.AdminAnalyticsDashboard));
 import { AdminBankTransferActions } from "@/components/admin-bank-transfer-actions";
 import { AdminBillingGrantLedger } from "@/components/admin-billing-grant-ledger";
 import { AdminBroadcastButton } from "@/components/admin-broadcast-button";

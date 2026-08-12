@@ -25,7 +25,7 @@ interface SubscribeButtonProps {
  */
 export function SubscribeButton({
   productId = "zigo_plus",
-  planId = "student-monthly",
+  planId = "zigo-plus-student-montly",
   className = "rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-black text-slate-950 shadow-lg hover:brightness-105 disabled:opacity-50 transition-all tap-scale",
   buttonText = "ZigoPlus'a Geç / Abone Ol",
   onSuccess,
@@ -156,7 +156,12 @@ export function SubscribeButton({
           <span>Google Play Bağlanıyor…</span>
         </span>
       ) : (
-        <span>{buttonText}</span>
+        <span className="flex flex-col items-center justify-center gap-0.5">
+          <span>{buttonText}</span>
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-amber-900/80 bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm mt-0.5">
+            İlk 30 Güne Özel %50 İndirim
+          </span>
+        </span>
       )}
     </button>
   );

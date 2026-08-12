@@ -83,6 +83,7 @@ export function PostOptionsButton({
     setMessage(action);
     setIsOpen(false);
     setIsEditing(false);
+    setTimeout(() => setMessage(""), 3000);
   }
 
   async function saveToCollection() {
@@ -250,7 +251,7 @@ export function PostOptionsButton({
         </svg>
       </button>
       {message ? (
-        <p className="absolute right-0 top-8 z-10 w-40 rounded-lg bg-slate-900 px-3 py-2 text-right text-[0.68rem] font-black text-white">
+        <p className="absolute right-0 top-8 z-10 w-40 rounded-lg bg-slate-900 px-3 py-2 text-right text-[0.68rem] font-black text-white shadow-lg animate-in fade-in slide-in-from-top-2 duration-300">
           {message}
         </p>
       ) : null}

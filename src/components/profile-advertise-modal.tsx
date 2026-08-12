@@ -56,12 +56,15 @@ export function ProfileAdvertiseModal({ profile, isOwner, triggerClassName }: Pr
     });
   }, [hidePrices, organizationType, profile?.full_name, selectedOption]);
 
-  if (!profile || profile.role !== "teacher") {
+  if (!profile || (profile.role !== "teacher" && profile.role !== "student")) {
     return null;
   }
 
-  const categoryTitle =
-    category === "platform"
+  const isStudent = profile.role === "student";
+
+  const categoryTitle = isStudent 
+    ? "Öğrenci Liderlik Panosu Öne Çıkarma"
+    : category === "platform"
       ? "Eğitim Platformu Sponsorluk & Reklam"
       : category === "institution"
         ? profile.organization_type === "yayinevi"
@@ -69,8 +72,9 @@ export function ProfileAdvertiseModal({ profile, isOwner, triggerClassName }: Pr
           : "Kurumsal Sponsorluk & Öne Çıkarma"
         : "Öğretmen Sponsorlu Reklam Paketi";
 
-  const categoryBadge =
-    category === "platform"
+  const categoryBadge = isStudent 
+    ? "🏆 Öğrenci (XP İle)"
+    : category === "platform"
       ? "👑 Eğitim Platformu"
       : category === "institution"
         ? profile.organization_type === "yayinevi"
@@ -84,6 +88,27 @@ export function ProfileAdvertiseModal({ profile, isOwner, triggerClassName }: Pr
     setSuccessMsg(null);
 
     try {
+      if (isStudent) {
+        // Öğrenciler için XP ile öne çıkarma API'si
+        const res = await fetch("/api/social/advertise", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(json.error || "XP harcama başarısız oldu.");
+        }
+
+        setSuccessMsg("Tebrikler! Profiliniz Liderlik Panosunda öne çıkarıldı. (-500 XP)");
+        setTimeout(() => {
+          setIsOpen(false);
+          router.refresh();
+        }, 2000);
+        return;
+      }
+
       const res = await fetch("/api/ads/sponsor-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -195,7 +220,11 @@ export function ProfileAdvertiseModal({ profile, isOwner, triggerClassName }: Pr
                       <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
                         {opt.durationLabel}
                       </span>
-                      {hidePrices ? (
+                      {isStudent ? (
+                         <span className="text-xl font-black text-amber-300">
+                           500 XP
+                         </span>
+                      ) : hidePrices ? (
                         <span className="text-xs font-black uppercase tracking-wide text-violet-300">
                           {b.sponsorQuoteBadge}
                         </span>
@@ -290,10 +319,13 @@ export function ProfileAdvertiseModal({ profile, isOwner, triggerClassName }: Pr
                     </>
                   ) : (
                     <span>
-                      {b.sponsorActivate.replace(
-                        "{price}",
-                        selectedOption ? formatSponsorPriceTry(selectedOption.priceTry) : "",
-                      )}
+                      {isStudent 
+                        ? "500 XP Harcayarak Öne Çıkar"
+                        : b.sponsorActivate.replace(
+                            "{price}",
+                            selectedOption ? formatSponsorPriceTry(selectedOption.priceTry) : "",
+                          )
+                      }
                     </span>
                   )}
                 </button>

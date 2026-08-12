@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { cache } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
@@ -10,7 +11,8 @@ import { OfflineIndicator } from "@/components/offline-indicator";
 import { ToastProvider } from "@/components/ui/toast-system";
 import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
-import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
+import { getUserInterestAreaIds } from "@/lib/domain/profiles";
+import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import { getRoleAccentLabel, getRoleThemeClass, getRoleThemeColor, type ViewerRole } from "@/lib/domain/role-theme";
 import { getUnreadNotificationCount } from "@/lib/domain/social";
 import { getTeacherInboxCount } from "@/lib/domain/teacher-inbox";
@@ -118,29 +120,31 @@ export default async function RootLayout({
   );
 }
 
-async function getShellState() {
+const getShellState = cache(async () => {
   if (!hasSupabaseEnv()) {
     return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
   }
 
   try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+    const profile = await getCachedUserProfile();
     if (!profile) {
       return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
     }
 
-    const teacherInboxCount =
-      profile.role === "teacher" ? await getTeacherInboxCount(supabase, profile.id) : 0;
-    const isPlatformAdmin = await isCurrentUserPlatformAdmin(supabase);
-    const canCreateSocialPost =
-      profile.role === "teacher" &&
-      profile.is_verified &&
-      (await getUserInterestAreaIds(supabase, profile.id)).length > 0;
+    const supabase = await createClient();
+    
+    const [teacherInboxCount, isPlatformAdmin, interestAreas, unreadCount] = await Promise.all([
+      profile.role === "teacher" ? getTeacherInboxCount(supabase, profile.id) : Promise.resolve(0),
+      isCurrentUserPlatformAdmin(supabase),
+      profile.role === "teacher" && profile.is_verified ? getUserInterestAreaIds(supabase, profile.id) : Promise.resolve([]),
+      getUnreadNotificationCount(supabase, profile.id),
+    ]);
+
+    const canCreateSocialPost = profile.role === "teacher" && profile.is_verified && interestAreas.length > 0;
 
     return {
       canCreateSocialPost,
-      unreadCount: await getUnreadNotificationCount(supabase, profile.id),
+      unreadCount,
       teacherInboxCount,
       viewerRole: profile.role as ViewerRole,
       isPlatformAdmin,
@@ -148,4 +152,4 @@ async function getShellState() {
   } catch {
     return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
   }
-}
+});

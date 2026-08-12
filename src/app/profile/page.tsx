@@ -186,7 +186,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
             {profile.isSignedOut ? p.feed : p.saved}
           </Link>
-          {profile.role === "teacher" && !profile.isSignedOut ? (
+          {(profile.role === "teacher" || profile.role === "student") && !profile.isSignedOut ? (
             <ProfileAdvertiseModal
               profile={{
                 id: profile.id,
@@ -195,7 +195,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 full_name: profile.name,
               }}
               isOwner={true}
-              triggerClassName="zigo-action-chip tap-scale col-span-2 w-full rounded-lg bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-slate-950 font-black flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/15"
+              triggerClassName="zigo-action-chip tap-scale col-span-2 w-full mt-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-slate-900 font-black flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-transform"
             />
           ) : null}
         </div>

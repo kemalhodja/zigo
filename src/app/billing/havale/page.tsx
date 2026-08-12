@@ -28,7 +28,7 @@ type BillingHavalePageProps = {
 };
 
 export default async function BillingHavalePage({ searchParams }: BillingHavalePageProps) {
-  const { planId = "student-monthly" } = await searchParams;
+  const { planId = "zigo-plus-student-montly" } = await searchParams;
   const messages = await getServerMessages();
   const h = messages.billingUi.havale;
 
@@ -70,7 +70,7 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
 
   let planBundle;
   try {
-    planBundle = resolveBankTransferPlan(planId);
+    planBundle = resolveBankTransferPlan(planId, profile.created_at);
   } catch {
     return (
       <StateCard

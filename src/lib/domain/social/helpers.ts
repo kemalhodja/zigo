@@ -137,13 +137,17 @@ async function batchCountRowsByPostId(
   for (const postId of postIds) counts.set(postId, 0);
   if (postIds.length === 0) return counts;
 
-  const { data, error } = await supabase.from(table).select("post_id").in("post_id", postIds);
-  if (error) throw error;
-
-  for (const row of data ?? []) {
-    if (!row.post_id) continue;
-    counts.set(row.post_id, (counts.get(row.post_id) ?? 0) + 1);
-  }
+  await Promise.all(
+    postIds.map(async (postId) => {
+      const { count, error } = await supabase
+        .from(table)
+        .select("*", { count: "exact", head: true })
+        .eq("post_id", postId);
+      if (!error && count !== null) {
+        counts.set(postId, count);
+      }
+    })
+  );
 
   return counts;
 }
@@ -156,18 +160,18 @@ async function batchCountApprovedCommentsByPostId(
   for (const postId of postIds) counts.set(postId, 0);
   if (postIds.length === 0) return counts;
 
-  const { data, error } = await supabase
-    .from("post_comments")
-    .select("post_id")
-    .in("post_id", postIds)
-    .eq("moderation_status", "approved");
-
-  if (error) throw error;
-
-  for (const row of data ?? []) {
-    if (!row.post_id) continue;
-    counts.set(row.post_id, (counts.get(row.post_id) ?? 0) + 1);
-  }
+  await Promise.all(
+    postIds.map(async (postId) => {
+      const { count, error } = await supabase
+        .from("post_comments")
+        .select("*", { count: "exact", head: true })
+        .eq("post_id", postId)
+        .eq("moderation_status", "approved");
+      if (!error && count !== null) {
+        counts.set(postId, count);
+      }
+    })
+  );
 
   return counts;
 }
@@ -438,11 +442,34 @@ export async function notifyPostAuthor(
   if (error) throw error;
   if (!post || post.author_id === actorId) return;
 
+  const msg = kind === "like" ? "gönderini beğendi" : "gönderine yorum yaptı";
+
   await supabase.from("notifications").insert({
     user_id: post.author_id,
     actor_id: actorId,
     kind,
     post_id: postId,
-    message: kind === "like" ? "liked your post" : "commented on your post",
+    message: msg,
   });
+
+  try {
+    const { data: subs } = await (supabase.from("push_subscriptions" as unknown as "users") as unknown as {
+        select: (columns: string) => { eq: (column: string, value: string) => Promise<{ data: { endpoint: string; p256dh: string; auth: string }[] | null }> }
+      })
+      .select("endpoint, p256dh, auth")
+      .eq("user_id", post.author_id);
+    
+    if (subs && subs.length > 0) {
+      // Dynamic import to avoid client-side bundling issues if helpers.ts is used in client occasionally
+      const { sendWebPush } = await import("@/lib/server/web-push");
+      for (const sub of subs) {
+        await sendWebPush(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          { title: "Zigo", body: `Biri ${msg}`, url: `/post/${postId}` }
+        );
+      }
+    }
+  } catch (err) {
+    console.error("[WEB_PUSH_ERROR]", err);
+  }
 }

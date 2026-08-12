@@ -23,7 +23,21 @@ export function PomodoroTimer() {
       if (mode === "work") {
         setCompletedSessions((prev) => prev + 1);
         triggerConfetti();
-        toast.success("🎉 Harika! 25 Dakikalık Odaklanma Seansı Tamamlandı. +50 XP Kazandınız!", "Tebrikler!");
+
+        // Backend'den gerek puan almak iin API'ye istek gnderiyoruz
+        void fetch("/api/learning/pomodoro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        })
+          .then((res) => res.json())
+          .then((data: { error?: string }) => {
+            if (data.error) {
+              console.error(data.error);
+            }
+          })
+          .catch((err) => console.error(err));
+
+        toast.success("✨ Harika! 25 Dakikalık Odaklanma Seansı Tamamlandı. +50 XP Kazandınız!", "Tebrikler!");
         setMode("break");
         setTimeLeft(5 * 60); // 5 min break
       } else {

@@ -4,6 +4,7 @@ import { AutoMarkNotificationsRead } from "@/components/auto-mark-notifications-
 import { MarkNotificationsReadButton } from "@/components/mark-notifications-read-button";
 import { NotificationItemLink } from "@/components/notification-item-link";
 import { PushNotificationPanel } from "@/components/push-notification-panel";
+import { RealtimeNotificationsListener } from "@/components/realtime-notifications-listener";
 import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
@@ -85,13 +86,14 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
   ];
   const params = await searchParams;
   const activeFilter = getNotificationFilter(params.filter);
-  const { isSignedOut, notifications, profileRole } = await getNotificationItems();
+  const { isSignedOut, notifications, profileRole, profileId } = await getNotificationItems();
   const unreadCount = notifications.filter((notification) => !notification.isRead).length;
   const filteredNotifications = filterNotifications(notifications, activeFilter);
   const categoryCounts = getActivityCategoryCounts(notifications);
 
   return (
     <div className="space-y-0 pb-3">
+      {profileId ? <RealtimeNotificationsListener userId={profileId} /> : null}
       <AutoMarkNotificationsRead unreadCount={unreadCount} />
       <section className="-mx-4 flex items-center justify-between border-b border-pink-100 bg-white px-4 pb-3">
         <div>
@@ -289,7 +291,7 @@ function getNotificationFilter(value?: string): NotificationFilter {
   return "all";
 }
 
-async function getNotificationItems(): Promise<{ isSignedOut: boolean; profileRole: UserRole; notifications: NotificationItem[] }> {
+async function getNotificationItems(): Promise<{ isSignedOut: boolean; profileRole: UserRole; profileId?: string; notifications: NotificationItem[] }> {
   const m = await getServerMessages();
 
   const demoItems = () =>
@@ -336,10 +338,11 @@ async function getNotificationItems(): Promise<{ isSignedOut: boolean; profileRo
       return {
         isSignedOut: false,
         profileRole: profile.role,
+        profileId: profile.id,
         notifications: notifications.map((item) => toNotificationItem(item, m, profile.role)),
       };
     } catch {
-      return { isSignedOut: false, profileRole: profile.role, notifications: [] };
+      return { isSignedOut: false, profileRole: profile.role, profileId: profile.id, notifications: [] };
     }
   } catch {
     if (allowDemoContent()) {

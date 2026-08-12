@@ -1,21 +1,20 @@
 import Link from "next/link";
 
 import { DismissibleFeedPost } from "@/components/dismissible-feed-post";
-import { DoubleTapLikeLink } from "@/components/double-tap-like-link";
 import { FeedEducationBadges } from "@/components/feed-education-badges";
 import { FollowButton } from "@/components/follow-button";
-import { PostOptionsButton } from "@/components/post-options-button";
 import { PremiumPrepLink } from "@/components/premium-prep-link";
-import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialPostActions } from "@/components/social-post-actions";
 import { SocialAvatar } from "@/components/social-primitives";
 import { SponsoredAdLink } from "@/components/sponsored-ad-link";
-import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
+import { useFeedPostState } from "@/hooks/use-feed-post-state";
 import { formatFeedTimestamp } from "@/lib/format-time";
 import type { Messages } from "@/lib/i18n/server";
 import type { UserRole } from "@/lib/supabase/database.types";
 
 import type { DisplayPost, DisplaySuggestedCreator } from "./data";
+import { FeedMediaViewer } from "./feed-media-viewer";
+import { FeedPostHeader } from "./feed-post-header";
 
 export function FeedPostCard({
   post,
@@ -36,89 +35,26 @@ export function FeedPostCard({
 }) {
   const postKey = post.postId ?? post.handle;
   const isMicro = post.badge === "Micro" || post.mediaType === "video";
+  const { containerStyle } = useFeedPostState(enterDelayMs);
 
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
         className="zigo-feed-card zigo-feed-card-enter -mx-4 overflow-hidden"
-        style={enterDelayMs > 0 ? { animationDelay: `${enterDelayMs}ms` } : undefined}
+        style={containerStyle}
       >
-        <DoubleTapLikeLink
-          href={post.postId ? `/post/${post.postId}` : "/micro"}
-          initialLiked={post.isLiked}
-          postId={post.postId}
-        >
-          <SocialMediaFrame
-            alt={post.caption.slice(0, 80)}
-            className="zigo-media"
-            gradient={post.gradient}
-            mediaType={post.mediaType}
-            mediaUrl={post.mediaUrl}
-            priority={priorityMedia}
-            scene={post.scene}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span className="zigo-meta-badge rounded-full bg-black/30 px-2.5 py-1 text-white backdrop-blur-md">
-                {isMicro ? feedEnhancements.oneMinLesson : post.area}
-              </span>
-              {post.mediaType === "video" ? (
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-black/35 text-xs font-black text-white backdrop-blur-md">
-                  <svg aria-hidden="true" className="ml-0.5 size-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </span>
-              ) : null}
-            </div>
-            <div />
-          </SocialMediaFrame>
-        </DoubleTapLikeLink>
+        <FeedMediaViewer 
+          post={post}
+          priorityMedia={priorityMedia}
+          isMicro={isMicro}
+          oneMinLessonLabel={feedEnhancements.oneMinLesson}
+        />
 
-        <div className="flex items-center justify-between px-4 py-2.5">
-          <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
-            <SocialAvatar className="size-9" label={post.authorName} imageUrl={post.avatarUrl} online={post.verified} />
-            <div className="min-w-0">
-              <p className="truncate text-zigo-body font-bold text-night">
-                {post.handle}
-                {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
-              </p>
-              {post.verified ? (
-                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <TeacherTrustBadges
-                    branches={post.area ? [post.area] : []}
-                    moreLabel={teacherBadges.moreAreas}
-                    showVerified
-                    verified={post.verified}
-                    verifiedLabel={teacherBadges.verifiedTeacher}
-                  />
-                  {post.locationName || post.city ? (
-                    <span className="inline-flex items-center gap-0.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.62rem] font-bold text-slate-600">
-                      📍 {post.locationName || post.city}
-                    </span>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate text-zigo-meta font-semibold text-slate-600">{post.area}</p>
-                  {post.locationName || post.city ? (
-                    <span className="inline-flex items-center gap-0.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.62rem] font-bold text-slate-600">
-                      📍 {post.locationName || post.city}
-                    </span>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          </Link>
-          <div className="flex shrink-0 items-center gap-2">
-            {post.canFollowCreator && post.authorId && !post.isOwner ? (
-              <FollowButton
-                followingId={post.authorId}
-                initialFollowing={post.isFollowingCreator}
-                variant="compact"
-              />
-            ) : null}
-            <PostOptionsButton initialAreaId={post.areaId} initialCaption={post.caption} initialLocationName={post.locationName ?? undefined} initialSaved={post.isSaved} isOwner={post.isOwner} postId={post.postId} postKey={postKey} />
-          </div>
-        </div>
+        <FeedPostHeader 
+          post={post}
+          postKey={postKey}
+          teacherBadges={teacherBadges}
+        />
 
         <div className="space-y-2 px-4 pb-3">
           <SocialPostActions

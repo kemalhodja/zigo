@@ -146,7 +146,7 @@ export const demoStories: DisplayStory[] = [
 import { hasSupabaseEnv } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getDailyMissionProgress } from "@/lib/domain/learning";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import {
   type ActiveStory,
   getActiveStories,
@@ -171,7 +171,7 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
 
   try {
     const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+    const profile = await getCachedUserProfile();
     if (!profile) return [];
 
     // Limit general feed query to 15 items to load faster, and use caching strategy
@@ -237,7 +237,7 @@ export async function getHomeStories(viewer: { showStudentStrip: boolean; missio
     try {
       const supabase = await createClient();
       const [profile, activeStories] = await Promise.all([
-        getCurrentProfile(supabase),
+        getCachedUserProfile(),
         getActiveStories(supabase),
       ]);
       const createStoryEntry: DisplayStory[] =
@@ -400,7 +400,7 @@ export async function getHomeStudyMoments() {
 
   try {
     const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+    const profile = await getCachedUserProfile();
     if (!profile || profile.role !== "student") return [];
     return await getMatchedStudyMoments(supabase);
   } catch {
@@ -424,7 +424,7 @@ export async function getHomeViewerContext(): Promise<{
 
   try {
     const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+    const profile = await getCachedUserProfile();
     if (!profile || profile.role !== "student") {
       return {
         showStudentStrip: false,
@@ -458,7 +458,7 @@ export async function getHomeTeacherInsights(): Promise<HomeTeacherInsights> {
 
   try {
     const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+    const profile = await getCachedUserProfile();
     if (!profile || profile.role !== "teacher") return null;
     return await getTeacherFeedInsights(supabase, profile.id);
   } catch {
@@ -493,7 +493,7 @@ export async function getSuggestedCreatorsForHome(): Promise<DisplaySuggestedCre
 
   try {
     const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+    const profile = await getCachedUserProfile();
     const creators = await getSuggestedCreators(supabase, profile?.id);
     if (creators.length === 0) {
       return [];

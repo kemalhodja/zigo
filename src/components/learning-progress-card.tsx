@@ -59,10 +59,10 @@ export async function LearningProgressCard({
 
       {/* Progress Bar */}
       <div className="mt-3.5 space-y-1">
-        <div className="h-2 w-full overflow-hidden rounded-full bg-black/20">
+        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-100 shadow-inner">
           <div
-            className="h-full rounded-full bg-white transition-all duration-500"
-            style={{ width: `${Math.min(100, Math.max(0, levelProgress))}%` }}
+            className="rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-700 ease-out"
+            style={{ width: `${Math.max(2, levelProgress)}%` }}
           />
         </div>
         <div className="flex items-center justify-between text-[0.68rem] font-bold text-white/85">

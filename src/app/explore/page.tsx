@@ -4,7 +4,7 @@ import { ExploreSearchBar } from "@/components/explore-search-bar";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv } from "@/lib/config";
-import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import {
   getMatchedTeachers,
   getSuggestedCreators,
@@ -38,8 +38,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
   if (hasSupabaseEnv()) {
     try {
-      const supabase = await createClient();
-      const profile = await getCurrentProfile(supabase);
+      const profile = await getCachedUserProfile();
       if (profile?.role) viewerRole = profile.role;
     } catch {
       viewerRole = "guest";
@@ -262,7 +261,7 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
 
   try {
     const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+    const profile = await getCachedUserProfile();
     const trimmedQuery = query.trim();
     const [creatorRows, fetchedPosts, suggested] = await Promise.all([
       trimmedQuery

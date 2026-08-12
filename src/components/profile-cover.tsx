@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -92,11 +93,12 @@ export function ProfileCover({
 
       {/* Render uploaded custom cover image */}
       {coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={coverUrl}
           alt="Kapak fotoğrafı"
-          className="h-full w-full object-cover transition-opacity duration-300"
+          fill
+          sizes="100vw"
+          className="object-cover transition-opacity duration-300"
         />
       ) : null}
 
