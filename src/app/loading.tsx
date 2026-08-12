@@ -3,7 +3,7 @@ export default function Loading() {
     <div className="space-y-4 pb-3">
       <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="size-12 animate-pulse rounded-lg bg-slate-200" />
+          <div className="size-12 animate-pulse rounded-lg bg-slate-200 story-ring" />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="h-3 w-28 animate-pulse rounded-lg bg-slate-200" />
             <div className="h-2 w-40 animate-pulse rounded-lg bg-slate-200" />

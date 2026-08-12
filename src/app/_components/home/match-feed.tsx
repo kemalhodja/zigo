@@ -255,10 +255,10 @@ export function FollowingStarter({
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-night text-2xl font-black text-white shadow-lg shadow-slate-900/20">
         +
       </span>
-      <h2 className="zigo-section-title mt-5 text-night">{f.followCreators}</h2>
-      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-600">{f.followCreatorsDesc}</p>
-      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white" href="/explore?q=Teachers">
-        {f.exploreTeachers}
+      <h2 className="zigo-section-title mt-5 text-night">{f.buildFeed || "Akışını Oluştur"}</h2>
+      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-600">{f.buildFeedDesc || "İlgi alanlarını seçerek veya öğretmenleri takip ederek akışını oluştur."}</p>
+      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white" href="/onboarding">
+        İlgi alanını seç
       </Link>
       <div className="no-scrollbar mt-7 flex gap-3 overflow-x-auto pb-1 text-left">
         {creators.map((creator) => (

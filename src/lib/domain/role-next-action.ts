@@ -29,11 +29,11 @@ export function resolveRoleNextAction(
   labels: RoleNextActionLabels,
 ): RoleNextAction {
   if (role === "student") {
-    return { ...labels.student, href: "/learn" };
+    return { ...labels.student, href: "/micro" };
   }
 
   if (role === "parent") {
-    return { ...labels.parent, href: "/parent" };
+    return { ...labels.parent, href: "/family" };
   }
 
   if (role === "teacher") {

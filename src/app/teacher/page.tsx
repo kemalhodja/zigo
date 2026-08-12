@@ -88,6 +88,16 @@ export default async function TeacherPage({
     : null;
   const assignedAreas = allAreas.filter((area) => areaIds.includes(area.id));
   const teacherCreatorPlus = canTeacherUseCreatorPlusTools(subscription, profile.role);
+  
+  let quizCount = 0;
+  if (!teacherCreatorPlus) {
+    const { count } = await supabase
+      .from("quizzes")
+      .select("id", { count: "exact", head: true })
+      .eq("teacher_id", profile.id);
+    quizCount = count || 0;
+  }
+  const canCreateQuizzes = teacherCreatorPlus || quizCount < 3;
   const allowDevActivate = canUseDevBillingBypass();
   const planGroups = resolveProfilePlanGroups(
     "teacher",
@@ -250,11 +260,13 @@ export default async function TeacherPage({
 
             {/* Quiz Builder Form */}
             {profile.is_verified ? (
-              <TeacherQuizForm
-                allowDevActivate={allowDevActivate}
-                areas={assignedAreas}
-                canCreateQuizzes={teacherCreatorPlus || profile.is_verified}
-              />
+              <div className="md:hidden">
+                <TeacherQuizForm
+                  allowDevActivate={allowDevActivate}
+                  areas={assignedAreas}
+                  canCreateQuizzes={canCreateQuizzes}
+                />
+              </div>
             ) : null}
           </div>
         }
@@ -289,7 +301,9 @@ export default async function TeacherPage({
               </Link>
             </section>
           ) : null}
-          <TeacherQuizForm areas={assignedAreas} canCreateQuizzes={teacherCreatorPlus} allowDevActivate={allowDevActivate} />
+          {profile.is_verified ? (
+            <TeacherQuizForm areas={assignedAreas} canCreateQuizzes={canCreateQuizzes} allowDevActivate={allowDevActivate} />
+          ) : null}
           <TeacherSponsoredAdsPanel profile={profile} />
           <InviteCodesPanel canCreate />
         </>

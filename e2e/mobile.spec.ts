@@ -1,38 +1,67 @@
 import { expect, test } from "@playwright/test";
 
-test.use({ viewport: { width: 390, height: 844 } });
+// Simulate small Android device width and iPhone safe-areas
+test.use({ 
+  viewport: { width: 360, height: 800 },
+  hasTouch: true,
+  isMobile: true,
+});
 
-test.describe("mobile viewport", () => {
-  test("home feed fits mobile viewport", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.locator("body")).toBeVisible();
-    const viewport = page.viewportSize();
-    expect(viewport?.width).toBe(390);
-  });
+test.describe("mobile viewport and safe area layout", () => {
+  const pagesToTest = ["/", "/explore", "/student", "/teacher", "/create"];
 
-  test("bottom navigation is visible on home", async ({ page }) => {
+  for (const path of pagesToTest) {
+    test(`page ${path} has no horizontal overflow`, async ({ page }) => {
+      const response = await page.goto(path);
+      // Ignore 404s/redirects for roles if they occur in standard test env
+      if (response && response.status() >= 400 && response.status() !== 401 && response.status() !== 403 && response.status() !== 404) {
+        expect(response.status()).toBeLessThan(400);
+      }
+      
+      await page.waitForLoadState("domcontentloaded");
+      
+      // Wait a bit for dynamic content
+      await page.waitForTimeout(1000);
+
+      const hasOverflow = await page.evaluate(() => {
+        return document.documentElement.scrollWidth > window.innerWidth;
+      });
+
+      expect(hasOverflow).toBe(false);
+    });
+  }
+
+  test("bottom navigation does not overlap with safe-bottom toasts", async ({ page }) => {
     await page.goto("/");
     const nav = page.locator("nav").first();
     if ((await nav.count()) === 0) {
-      test.skip(true, "Nav not rendered — app may be in error/preview state");
+      test.skip(true, "Nav not rendered");
       return;
     }
-    await expect(nav).toBeVisible();
+    
+    const navBox = await nav.boundingBox();
+    // Verify nav is at the bottom of the viewport
+    expect(navBox?.y).toBeGreaterThan(600);
+    
+    // Simulate a toast trigger or check absolute bottom elements
+    const zigoToasts = page.locator(".toast-container, [data-sonner-toaster]");
+    if (await zigoToasts.count() > 0) {
+      const toastBox = await zigoToasts.first().boundingBox();
+      if (toastBox && navBox) {
+        // Ensure Toast is either above the nav, or safely padded
+        const isAboveNav = toastBox.y + toastBox.height <= navBox.y;
+        // Or if it's fixed at the bottom, ensure it doesn't overlap completely
+        expect(isAboveNav || toastBox.y < navBox.y).toBeTruthy();
+      }
+    }
   });
 
-  test("learn hub renders on mobile", async ({ page }) => {
-    const response = await page.goto("/learn");
-    expect(response?.status()).toBeLessThan(500);
-    await expect(page.locator("body")).toBeVisible();
-  });
-
-  test("micro page renders on mobile", async ({ page }) => {
-    await page.goto("/micro");
-    await expect(page.locator("body")).toBeVisible();
-  });
-
-  test("family page renders on mobile", async ({ page }) => {
-    await page.goto("/family");
-    await expect(page.locator("body")).toBeVisible();
+  test("post wizard sticky bar remains within shell boundaries", async ({ page }) => {
+    await page.goto("/create");
+    const stickyBar = page.locator(".sticky.top-0, .sticky.bottom-0").first();
+    if (await stickyBar.count() > 0) {
+      const barBox = await stickyBar.boundingBox();
+      expect(barBox?.width).toBeLessThanOrEqual(360);
+    }
   });
 });

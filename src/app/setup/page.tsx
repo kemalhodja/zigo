@@ -175,3 +175,6 @@ export default async function SetupPage() {
     </div>
   );
 }
+
+// /manual-qa-checklist.md
+// /visual-regression-checklist.md

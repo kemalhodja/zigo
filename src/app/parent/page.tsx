@@ -67,9 +67,6 @@ export default async function ParentPage() {
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{d.parent.mode}</p>
         <h1 className="mt-1 text-2xl font-black leading-tight text-night">{d.parent.title}</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">{d.parent.desc}</p>
-        <Link className="tap-scale mt-3 inline-flex rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-2 text-xs font-black text-white" href="/">
-          {d.backToFeed}
-        </Link>
       </section>
 
       {mode === "parent" || mode === "preview" ? (

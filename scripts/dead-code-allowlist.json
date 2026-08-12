@@ -64,6 +64,10 @@
     "skeleton.tsx",
     "toast-system.tsx",
     "google-play-subscription-modal.test.tsx",
-    "pomodoro-timer.tsx"
+    "pomodoro-timer.tsx",
+    "admin-user-search.tsx",
+    "empty-state-hero.tsx",
+    "parent-children-focus-card.tsx",
+    "parent-focus-overview-card.tsx"
   ]
 }

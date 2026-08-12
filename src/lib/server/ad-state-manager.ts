@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Ad State Manager
  * 
@@ -92,7 +93,7 @@ export async function grantAdFreeTime(
       adFreeUntil: new Date(Date.now() + 86400000 * 365),
       hoursGranted: hoursToAdd,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: true,
       adFreeUntil: new Date(Date.now() + 86400000 * 365),

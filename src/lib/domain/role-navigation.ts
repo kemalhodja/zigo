@@ -204,7 +204,7 @@ export function getHeaderPrimaryAction(
 
 
 export function getRoleDashboardHref(role: UserRole | "guest" | ViewerRole) {
-  if (role === "parent") return "/parent";
+  if (role === "parent") return "/family";
   if (role === "teacher") return "/teacher";
   if (role === "student") return "/student";
   return "/auth";

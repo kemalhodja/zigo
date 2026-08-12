@@ -1,7 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import type { TeacherCampaignRow, TeacherCampaignView, SponsoredTeacherCampaignSummary, Database } from "@/lib/supabase/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database,SponsoredTeacherCampaignSummary, TeacherCampaignRow, TeacherCampaignView } from "@/lib/supabase/database.types";
 
 export const DEFAULT_SPONSORED_TARGETING = {
   minGrade: null,

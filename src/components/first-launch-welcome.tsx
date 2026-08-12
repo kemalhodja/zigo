@@ -11,6 +11,7 @@ type Slide = {
   bullets?: string[];
   body?: string;
   title: string;
+  isContentMap?: boolean;
 };
 
 export function FirstLaunchWelcome() {
@@ -18,6 +19,7 @@ export function FirstLaunchWelcome() {
   const slides = useMemo<Slide[]>(
     () => [
       { title: t.slide1Title, body: t.slide1Body },
+      { title: "Zigo Haritası", isContentMap: true },
       {
         title: t.slide2Title,
         bullets: [t.slide2Feed, t.slide2Roles, t.slide2Teachers],
@@ -100,7 +102,34 @@ export function FirstLaunchWelcome() {
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          {slide.bullets ? (
+          {slide.isContentMap ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs font-bold text-violet-600">Ana Sayfa <span className="font-normal text-slate-500">(Herkes)</span></p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">Takip ettiğin öğretmenlerden kişisel akış</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs font-bold text-violet-600">Keşfet <span className="font-normal text-slate-500">(Herkes)</span></p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">Tüm doğrulanmış öğretmen içeriklerini keşfet</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs font-bold text-violet-600">Dersler (micro) <span className="font-normal text-slate-500">(Öğrenci)</span></p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">1 dk kısa video, kaydırarak izle</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs font-bold text-violet-600">Öğren <span className="font-normal text-slate-500">(Öğrenci)</span></p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">Quiz, plan, odak, düello</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs font-bold text-violet-600">Stüdyo <span className="font-normal text-slate-500">(Öğretmen)</span></p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">Paylaş, soru cevapla, analitik</p>
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-xs font-bold text-violet-600">Çocuğum <span className="font-normal text-slate-500">(Veli)</span></p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">İlerleme, onay, ödül</p>
+              </div>
+            </div>
+          ) : slide.bullets ? (
             <ul className="space-y-3.5">
               {slide.bullets.map((item, index) => {
                 const isHighlight = isLast && index === 2;

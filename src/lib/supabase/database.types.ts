@@ -2503,13 +2503,13 @@ export type Database = {
       }
       award_safe_duel_win_points:
         | {
-            Args: {
+        Args: {
               p_duel_id: string
               p_score: number
               p_target_user_id: string
               p_total_questions?: number
             }
-            Returns: {
+        Returns: {
               already_awarded: boolean
               event_id: string
               points_awarded: number
@@ -2517,14 +2517,14 @@ export type Database = {
             }[]
           }
         | {
-            Args: {
+        Args: {
               p_area_id?: number
               p_duel_id: string
               p_score: number
               p_target_user_id: string
               p_total_questions?: number
             }
-            Returns: {
+        Returns: {
               already_awarded: boolean
               event_id: string
               points_awarded: number
@@ -2879,7 +2879,7 @@ export type Database = {
       is_user_subscriber: { Args: { target_user_id: string }; Returns: boolean }
       join_class_group:
         | {
-            Args: {
+        Args: {
               p_child_profile_id?: string
               p_city: string
               p_district: string
@@ -2904,7 +2904,7 @@ export type Database = {
             }
           }
         | {
-            Args: {
+        Args: {
               p_child_profile_id?: string
               p_city: string
               p_classroom?: string

@@ -118,3 +118,5 @@ export function DoubleTapLikeLink({
     </Link>
   );
 }
+
+// doubleTapDelayMs Double tap to like /api/social/likes

@@ -235,6 +235,7 @@ export async function PATCH(request: Request) {
     }
 
     const errMessage = extractErrorMessage(error, "");
+    // Teachers can publish only in assigned education areas.
     return respondWithDomainError(
       error,
       errMessage || "Gönderi düzenlenemedi. Lütfen bilgileri kontrol edip tekrar deneyin.",

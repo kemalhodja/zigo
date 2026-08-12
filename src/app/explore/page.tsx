@@ -56,6 +56,11 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           initialQuery={query}
           placeholder={viewerRole === "teacher" ? e.teacherSearchPlaceholder : e.searchPlaceholder}
         />
+        {!query.trim() && (
+          <div className="mt-2.5 flex items-center justify-center rounded-lg bg-indigo-50/50 px-3 py-1.5 text-[0.68rem] font-bold text-indigo-500 shadow-sm border border-indigo-100/50">
+            Tüm alanlardan doğrulanmış içerikler
+          </div>
+        )}
       </section>
 
       {/* Format filter tabs */}
@@ -278,7 +283,9 @@ async function getExploreResults(query: string, format: ExploreFormat): Promise<
       getSuggestedCreators(supabase, profile?.id, 4),
     ]);
 
-    const mappedPosts = fetchedPosts.map(toExploreTile);
+    const mappedPosts = fetchedPosts
+      .filter((post) => post.author?.is_verified)
+      .map(toExploreTile);
     const mappedSuggested = suggested.map((creator, index) => ({
       id: creator.id,
       handle: creator.full_name.toLowerCase().replaceAll(" ", ""),

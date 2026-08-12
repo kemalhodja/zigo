@@ -114,7 +114,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 showCount={false}
               />
             )}
-            {!isOwnProfile ? (
+            {!isOwnProfile && viewer?.role !== "student" ? (
               <Link
                 className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-orange-500 px-2 text-xs font-black text-slate-950 shadow-xs hover:brightness-105 transition whitespace-nowrap"
                 href={`/teacher/lessons?user=${profile.id}`}

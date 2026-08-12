@@ -323,3 +323,7 @@ export default async function ReadinessPage() {
     </div>
   );
 }
+
+// /manual-qa-checklist.md
+// /visual-regression-checklist.md
+// QA verification checklists

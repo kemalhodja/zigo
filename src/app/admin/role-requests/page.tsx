@@ -91,7 +91,7 @@ export default async function RoleRequestsPage() {
                     <span className="text-xs font-bold uppercase tracking-wider text-amber-500">Bekliyor</span>
                   )}
                   {req.status === 'approved' && (
-                    <span className="text-xs font-bold uppercase tracking-wider text-blue-500">Onaylandı</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-blue-500">Approved</span>
                   )}
                 </td>
                 <td className="px-6 py-4 text-right">

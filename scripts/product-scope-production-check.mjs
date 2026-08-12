@@ -13,12 +13,13 @@ function read(relativePath) {
 
 const failures = [];
 const packageJson = read("package.json");
+const auditAll = read("scripts/audit-all.mjs");
 const doc = read("docs/product-scope-audit.md");
 
 const required = [
   [packageJson.includes('"audit:product-scope"'), "audit:product-scope wired"],
-  [packageJson.includes("match-feed-invariant-audit"), "match-feed audit in bundle"],
-  [packageJson.includes("store-parent-approval-audit"), "store approval audit in bundle"],
+  [auditAll.includes("match-feed-invariant-audit") || packageJson.includes("match-feed-invariant-audit"), "match-feed audit in bundle"],
+  [auditAll.includes("store-parent-approval-audit") || packageJson.includes("store-parent-approval-audit"), "store approval audit in bundle"],
   [doc.includes("Match-Feed"), "product-scope doc mentions Match-Feed"],
   [existsSync(join(root, "src/lib/domain/feed/queries.test.ts")), "feed/queries.test.ts exists"],
 ];

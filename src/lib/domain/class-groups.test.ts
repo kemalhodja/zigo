@@ -89,7 +89,7 @@ describe("class-groups functions", () => {
       p_school_name: "Zigo Lisesi",
       p_grade_level: "9. Sınıf",
       p_classroom: "A",
-      p_child_profile_id: null,
+      p_child_profile_id: undefined,
     });
     expect(result).toEqual({ id: "group-uuid-1", group_name: "9. Sınıf A Şubesi Grubu" });
   });
@@ -107,7 +107,7 @@ describe("class-groups functions", () => {
 
     expect(supabase.rpc).toHaveBeenCalledWith("leave_class_group", {
       p_group_id: "11111111-1111-4111-8111-111111111111",
-      p_child_profile_id: null,
+      p_child_profile_id: undefined,
     });
     expect(result).toBe(true);
   });

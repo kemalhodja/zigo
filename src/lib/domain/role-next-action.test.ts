@@ -12,8 +12,8 @@ const labels = {
 
 describe("role-next-action", () => {
   it("routes each role to a single primary job", () => {
-    expect(resolveRoleNextAction("student", false, labels).href).toBe("/learn");
-    expect(resolveRoleNextAction("parent", false, labels).href).toBe("/parent");
+    expect(resolveRoleNextAction("student", false, labels).href).toBe("/micro");
+    expect(resolveRoleNextAction("parent", false, labels).href).toBe("/family");
     expect(resolveRoleNextAction("teacher", true, labels).href).toBe("/create");
     expect(resolveRoleNextAction("teacher", false, labels).href).toBe("/teacher");
     expect(resolveRoleNextAction("guest", false, labels).href).toBe("/auth");
@@ -21,7 +21,7 @@ describe("role-next-action", () => {
 
   it("never sends non-teachers to create from wrong-role studio", () => {
     expect(resolveWrongRoleStudioHref("student")).toBe("/student");
-    expect(resolveWrongRoleStudioHref("parent")).toBe("/parent");
+    expect(resolveWrongRoleStudioHref("parent")).toBe("/family");
     expect(resolveWrongRoleStudioHref("guest")).toBe("/auth");
   });
 });

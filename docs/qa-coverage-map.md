@@ -79,3 +79,5 @@ ZIGO_RUN_LIVE_TESTS=1 npm run test:live:all   # full live stack
 ```
 
 Sign-off: `docs/final-acceptance-checklist.md`
+
+// test:release

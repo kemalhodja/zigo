@@ -5,7 +5,6 @@ import { respondWithDomainError } from "@/lib/domain/api-errors";
 import { createTeacherQuiz } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
-import { assertTeacherCreatorPlus } from "@/lib/domain/teacher-creator-plus";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -22,7 +21,21 @@ export async function POST(request: Request) {
     }
 
     const subscription = await getUserSubscription(supabase, profile.id);
-    assertTeacherCreatorPlus(subscription, profile.role, "quiz oluşturma");
+    
+    // Non-premium teachers can create up to 3 quizzes.
+    if (!subscription.isPremium) {
+      const { count } = await supabase
+        .from("quizzes")
+        .select("id", { count: "exact", head: true })
+        .eq("teacher_id", profile.id);
+
+      if (count !== null && count >= 3) {
+        return NextResponse.json(
+          { error: "Ücretsiz planda maksimum 3 quiz oluşturabilirsiniz. Zigo Plus'a geçin." },
+          { status: 403 }
+        );
+      }
+    }
 
     const body = await request.json();
     const quiz = await createTeacherQuiz(supabase, {

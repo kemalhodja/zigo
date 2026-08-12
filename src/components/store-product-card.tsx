@@ -40,7 +40,9 @@ export function StoreProductCard({ product, mode, childrenProfiles = [], isSubsc
   const [message, setMessage] = useState(st.redeemDefault);
 
   const isOutOfStock = product.stock_count !== null && product.stock_count <= 0;
-  const canRedeem = isSubscriber && (mode === "student" || selectedChildId.length > 0);
+  // If product requires parent approval, student cannot redeem it directly. Parent must do it.
+  const isStudentLocked = mode === "student" && product.requires_parent_approval;
+  const canRedeem = isSubscriber && !isStudentLocked && (mode === "student" || selectedChildId.length > 0);
   const isRedeemed = status === "saved";
 
   async function redeem() {
@@ -153,6 +155,8 @@ export function StoreProductCard({ product, mode, childrenProfiles = [], isSubsc
       >
         {!isSubscriber
           ? "👑 Alışveriş İçin Abone Olun"
+          : isStudentLocked
+            ? "🔒 Sadece Veli Alabilir"
           : status === "saving"
             ? st.redeeming
             : isRedeemed

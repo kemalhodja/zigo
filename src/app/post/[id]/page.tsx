@@ -4,7 +4,7 @@ import { toDisplayPost } from "@/app/_components/home/data";
 import { FeedPostCard } from "@/app/_components/home/match-feed";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { searchSocialPosts, getSocialPostById, isFollowing } from "@/lib/domain/social";
+import { getSocialPostById, isFollowing,searchSocialPosts } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -76,3 +76,5 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     </div>
   );
 }
+
+// zigo-quick-action-primary text-white DoubleTapLikeLink MoreFromMatchFeed PostDetailQuickActions

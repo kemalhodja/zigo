@@ -128,6 +128,17 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
     setMessage("");
     setStatus("idle");
 
+    if (initialProfile.role === "student") {
+      const badWords = ["amk", "aq", "siktir", "orospu"];
+      const lowerBio = bio.toLowerCase();
+      if (badWords.some((word) => lowerBio.includes(word))) {
+        setStatus("error");
+        setMessage("Lütfen profil açıklamanızda topluluk kurallarımıza uygun ifadeler kullanın.");
+        setIsSaving(false);
+        return;
+      }
+    }
+
     try {
       const response = await fetch("/api/profile", {
         method: "PATCH",

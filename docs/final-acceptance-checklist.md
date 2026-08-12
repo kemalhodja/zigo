@@ -80,3 +80,10 @@ Coverage map: `docs/qa-coverage-map.md`
 - `npm run android:preflight` passes.
 - Generated Android config does not include `localhost`.
 - Debug APK or release AAB opens the hosted Zigo app.
+
+// Sign-off
+
+// Live Supabase Gate
+// npm run build:safe
+// safe-instagram-feel-checklist.md
+// Sign-off

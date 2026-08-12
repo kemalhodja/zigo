@@ -73,3 +73,9 @@ Use this checklist with a real Supabase project after migrations **001–044** a
 - Generated Android config does not contain `localhost`.
 - `npm run android:preflight` passes before Android Studio.
 - Micro, profile, explore and create surfaces respect mobile safe areas.
+
+// Register one student Student direct messaging is not available network offline
+
+// Register one student
+// Student direct messaging is not available
+// network offline

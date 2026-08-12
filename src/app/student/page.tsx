@@ -86,9 +86,6 @@ export default async function StudentPage() {
         <p className="zigo-eyebrow text-slate-500">{d.student.mode}</p>
         <h1 className="zigo-display mt-1 font-black leading-tight text-night">{d.student.title}</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">{d.student.desc}</p>
-        <Link className="tap-scale mt-3 inline-flex rounded-lg bg-gradient-to-r from-crystal via-berry to-aqua px-4 py-2 text-xs font-black text-white" href="/">
-          {d.backToFeed}
-        </Link>
       </section>
 
       {!data.isSignedOut && !data.showPreview ? (
