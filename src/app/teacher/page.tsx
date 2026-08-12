@@ -461,8 +461,6 @@ function VerificationRequired({
         <PushNotificationPrompt />
       </div>
 
-      </section>
-
       <div className="px-4">
         <WhatsAppSupportCard
           buttonLabel={support.button}
