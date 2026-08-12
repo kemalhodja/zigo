@@ -24,10 +24,51 @@ import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+import type { Metadata, ResolvingMetadata } from "next";
+
 type PublicProfilePageProps = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ tab?: string }>;
 };
+
+export async function generateMetadata(
+  { params }: PublicProfilePageProps,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { id } = await params;
+  
+  if (!hasSupabaseEnv()) {
+    return { title: "Zigo Profil" };
+  }
+
+  const supabase = await createClient();
+  const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+  const profile = await getPublicProfile(dbClient, id);
+
+  if (!profile) {
+    return { title: "Profil Bulunamadı | Zigo" };
+  }
+
+  const name = profile.full_name || "Zigo Öğretmeni";
+  const bio = profile.bio || "Zigo'da bir profil sayfası.";
+  
+  return {
+    title: `${name} | Zigo`,
+    description: bio,
+    openGraph: {
+      title: `${name} | Zigo`,
+      description: bio,
+      images: profile.avatar_url ? [profile.avatar_url] : [],
+      type: "profile",
+    },
+    twitter: {
+      card: "summary",
+      title: `${name} | Zigo`,
+      description: bio,
+      images: profile.avatar_url ? [profile.avatar_url] : [],
+    }
+  };
+}
 
 export default async function PublicProfilePage({ params, searchParams }: PublicProfilePageProps) {
   const { id } = await params;

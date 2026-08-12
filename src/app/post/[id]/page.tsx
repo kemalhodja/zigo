@@ -9,9 +9,52 @@ import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+import type { Metadata, ResolvingMetadata } from "next";
+
 type PostDetailPageProps = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata(
+  { params }: PostDetailPageProps,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { id } = await params;
+  
+  if (!hasSupabaseEnv() || id.startsWith("demo-")) {
+    return { title: "Gönderi | Zigo" };
+  }
+
+  const supabase = await createClient();
+  const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+  
+  const post = await getSocialPostById(dbClient, id);
+
+  if (!post) {
+    return { title: "Gönderi Bulunamadı | Zigo" };
+  }
+
+  const authorName = post.author?.full_name || "Zigo Öğretmeni";
+  const caption = post.caption || `${authorName} tarafından paylaşıldı.`;
+  const mediaUrl = post.media_url ? [post.media_url] : [];
+  
+  return {
+    title: `${authorName} | Zigo`,
+    description: caption,
+    openGraph: {
+      title: `${authorName} | Zigo`,
+      description: caption,
+      images: mediaUrl,
+      type: "article",
+    },
+    twitter: {
+      card: mediaUrl.length > 0 ? "summary_large_image" : "summary",
+      title: `${authorName} | Zigo`,
+      description: caption,
+      images: mediaUrl,
+    }
+  };
+}
 
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { id } = await params;
