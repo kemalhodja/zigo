@@ -3,7 +3,7 @@
 
 CREATE TABLE public.push_subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     endpoint TEXT NOT NULL,
     p256dh TEXT NOT NULL,
     auth TEXT NOT NULL,
@@ -38,7 +38,7 @@ CREATE POLICY "Admins can view all push subscriptions"
     ON public.push_subscriptions FOR SELECT
     USING (
         EXISTS (
-            SELECT 1 FROM public.profiles
+            SELECT 1 FROM public.users
             WHERE id = auth.uid() AND role = 'platform_admin'
         )
     );
