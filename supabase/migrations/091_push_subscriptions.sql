@@ -1,5 +1,12 @@
 -- 091_push_subscriptions.sql
 -- Create a table to store Web Push Subscriptions for users
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at = timezone('utc'::text, now());
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE public.push_subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
