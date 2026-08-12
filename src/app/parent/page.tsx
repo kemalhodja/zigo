@@ -4,6 +4,7 @@ import Link from "next/link";
 const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod) => mod.ParentChart));
 import { StateCard } from "@/components/state-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
+import { LimitSettingsCard } from "@/components/limit-settings-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
@@ -119,11 +120,13 @@ export default async function ParentPage() {
                           </Link>
                         )}
                         {isPremium && (
-                           <Link href={`/parent/child/${child.id}`} className="text-[0.65rem] font-black text-white bg-indigo-600 px-2.5 py-1.5 rounded-lg shadow-md flex items-center gap-1 hover:bg-indigo-700 transition-colors">
-                            <span>Detayları Gör</span>
-                            <span>📊</span>
+                           <Link href={`/parent/child/${child.id}`} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-md transition-colors">
+                            Raporu Gör
                           </Link>
                         )}
+                      </div>
+                      <div className="px-2 pb-2">
+                        <LimitSettingsCard childId={child.id} childName={child.name} />
                       </div>
                       
                       <div className="absolute right-0 bottom-0 opacity-[0.03] text-8xl pointer-events-none transform translate-x-4 translate-y-4 group-hover:scale-110 transition-transform duration-500">
