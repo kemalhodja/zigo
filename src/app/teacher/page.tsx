@@ -11,8 +11,10 @@ import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/componen
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
+import { WeeklyPerformanceCard } from "@/components/weekly-performance-card";
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
+import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
@@ -453,7 +455,13 @@ function VerificationRequired({
         <p className="mt-2 text-sm font-semibold leading-6 text-white/82">
           {t.verificationDesc}
         </p>
-        <div className="mt-4">
+      </div>
+
+      <div className="px-4">
+        <PushNotificationPrompt />
+      </div>
+
+      <div className="px-4">
           <WhatsAppSupportCard
             buttonLabel={support.button}
             compact

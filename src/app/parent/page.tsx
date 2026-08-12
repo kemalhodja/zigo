@@ -5,6 +5,7 @@ const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod)
 import { StateCard } from "@/components/state-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { LimitSettingsCard } from "@/components/limit-settings-card";
+import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
@@ -58,6 +59,10 @@ export default async function ParentPage() {
         <h1 className="mt-1 text-2xl font-black leading-tight text-night">{d.parent.title}</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">Zigo Öğrenci ve Öğretmen odaklı test (MVP) sürümündedir. Veli arayüzü çok yakında kullanıma açılacaktır.</p>
       </section>
+
+      <div className="px-4">
+        <PushNotificationPrompt />
+      </div>
 
       {mode === "signed-out" ? (
         <StateCard
