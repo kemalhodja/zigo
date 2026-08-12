@@ -36,12 +36,7 @@ CREATE POLICY "Users can delete their own push subscriptions"
 
 CREATE POLICY "Admins can view all push subscriptions"
     ON public.push_subscriptions FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.users
-            WHERE id = auth.uid() AND role = 'platform_admin'
-        )
-    );
+    USING (public.current_user_is_platform_admin());
 
 -- Trigger for updated_at
 CREATE TRIGGER handle_push_subscriptions_updated_at
