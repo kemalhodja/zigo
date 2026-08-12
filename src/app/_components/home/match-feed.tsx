@@ -127,11 +127,11 @@ export function FeedPostCard({
               postId={post.postId}
             />
           ) : null}
-          <Link className="block text-sm font-semibold text-slate-600" href={post.postId ? `/post/${post.postId}` : "/micro"}>
-            {post.comments > 0
-              ? feedExtras.viewAllComments.replace("{count}", post.comments.toLocaleString())
-              : feedExtras.addFirstComment}
-          </Link>
+          {post.comments > 0 ? (
+            <Link className="block text-sm font-semibold text-slate-600" href={post.postId ? `/post/${post.postId}` : "/micro"}>
+              {feedExtras.viewAllComments.replace("{count}", post.comments.toLocaleString())}
+            </Link>
+          ) : null}
           <p className="text-zigo-meta font-semibold uppercase tracking-wide text-slate-500">
             {formatFeedTimestamp(post.createdAt)}
           </p>
