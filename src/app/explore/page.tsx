@@ -432,34 +432,42 @@ async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTo
 
   try {
     const supabase = await createClient();
-    const { data: posts } = await supabase.from("social_posts").select("id, caption, media_type");
-    const allPosts = posts ?? [];
 
-    return baseTopics.map((t) => {
-      const q = t.query.toLowerCase();
-      const matched = allPosts.filter((p) => (p.caption ?? "").toLowerCase().includes(q));
-      const videoCount = matched.filter((p) => p.media_type === "video").length;
+    const fetchCounts = async (q: string) => {
+      const [{ count: totalCount }, { count: videoCount }] = await Promise.all([
+        supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`),
+        supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`).eq("media_type", "video")
+      ]);
+      return { total: totalCount ?? 0, video: videoCount ?? 0 };
+    };
 
-      let countText = "";
-      if (matched.length > 0) {
-        countText = videoCount > 0
-          ? e.trendTopicPostsWithLesson
-              .replace("{count}", String(matched.length))
-              .replace("{lesson}", String(videoCount))
-          : e.trendTopicPosts.replace("{count}", String(matched.length));
-      } else if (allPosts.length > 0) {
-        countText = e.trendTopicContent.replace("{count}", String(allPosts.length));
-      } else {
-        countText = e.trendTopicActive;
-      }
+    const topicsData = await Promise.all(
+      baseTopics.map(async (t) => {
+        const counts = await fetchCounts(t.query.toLowerCase());
+        let countText = "";
+        
+        if (counts.total > 0) {
+          countText = counts.video > 0
+            ? e.trendTopicPostsWithLesson
+                .replace("{count}", String(counts.total))
+                .replace("{lesson}", String(counts.video))
+            : e.trendTopicPosts.replace("{count}", String(counts.total));
+        } else if (totalPostsCount > 0) {
+          countText = e.trendTopicContent.replace("{count}", String(totalPostsCount));
+        } else {
+          countText = e.trendTopicPopular;
+        }
 
-      return {
-        tag: t.tag,
-        label: t.label,
-        href: `/explore?q=${encodeURIComponent(t.tag)}`,
-        count: countText,
-      };
-    });
+        return {
+          tag: t.tag,
+          label: t.label,
+          href: `/explore?q=${encodeURIComponent(t.tag)}`,
+          count: countText,
+        };
+      })
+    );
+
+    return topicsData;
   } catch {
     return baseTopics.map((t) => ({
       tag: t.tag,
