@@ -322,9 +322,10 @@ function scoreSocialPost(
   let audienceBoost = 0;
   let interestBoost = 0;
 
+  /*
   // Active approved sponsored ad scoring
   if (post.sponsored_status === "active") {
-    sponsoredBoost = 150; // Base boost for active approved ads
+    sponsoredBoost = 0; // Temporarily disabled (was 150)
 
     if (viewerContext) {
       // 1. Audience Matching (Student vs Parent vs All)
