@@ -257,7 +257,9 @@ export async function getSocialPostById(
   postId: string,
   viewerId?: string,
 ) {
-  const parsed = socialPostActionSchema.parse({ postId });
+  const parsed = socialPostActionSchema.safeParse({ postId });
+  if (!parsed.success) return null;
+  
   const { data, error } = await supabase
     .from("social_posts")
     .select(

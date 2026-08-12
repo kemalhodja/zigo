@@ -28,6 +28,18 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const supabase = await createClient();
   const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
   const profile = await getCurrentProfile(supabase);
+
+  // If it's a demo post, we shouldn't fetch from DB. Just return a mock or let it 404 cleanly without crashing.
+  if (id.startsWith("demo-")) {
+    return (
+      <div className="space-y-0 pb-3">
+        <div className="text-center p-8 bg-slate-50 text-slate-500 rounded-lg m-4">
+          Bu bir demo gönderisidir ve detay sayfası bulunmamaktadır.
+        </div>
+      </div>
+    );
+  }
+
   let post = await getSocialPostById(supabase, id, profile?.id);
   
   if (!post && dbClient !== supabase) {
