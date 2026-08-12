@@ -5,12 +5,12 @@ security definer
 set search_path = public
 as $$
 declare
-  v_role public.user_role;
+  v_role text;
   v_post_count int;
 begin
-  select role into v_role from public.users where id = new.author_id;
+  select role::text into v_role from public.users where id = new.author_id;
 
-  if v_role in ('student', 'teacher', 'parent') then
+  if v_role in ('student', 'teacher', 'parent', 'STUDENT', 'TEACHER', 'PARENT') then
     select count(*) into v_post_count
     from public.social_posts
     where author_id = new.author_id
