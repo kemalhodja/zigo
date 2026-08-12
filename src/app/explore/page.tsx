@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 
 import { ExploreSearchBar } from "@/components/explore-search-bar";
@@ -433,17 +434,21 @@ async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTo
   try {
     const supabase = await createClient();
 
-    const fetchCounts = async (q: string) => {
-      const [{ count: totalCount }, { count: videoCount }] = await Promise.all([
-        supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`),
-        supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`).eq("media_type", "video")
-      ]);
-      return { total: totalCount ?? 0, video: videoCount ?? 0 };
-    };
+    const fetchCountsCached = unstable_cache(
+      async (q: string) => {
+        const [{ count: totalCount }, { count: videoCount }] = await Promise.all([
+          supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`),
+          supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`).eq("media_type", "video")
+        ]);
+        return { total: totalCount ?? 0, video: videoCount ?? 0 };
+      },
+      ["explore-trend-counts"],
+      { revalidate: 60 }
+    );
 
     const topicsData = await Promise.all(
       baseTopics.map(async (t) => {
-        const counts = await fetchCounts(t.query.toLowerCase());
+        const counts = await fetchCountsCached(t.query.toLowerCase());
         let countText = "";
         
         if (counts.total > 0) {

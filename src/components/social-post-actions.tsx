@@ -3,16 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
+import dynamic from "next/dynamic";
 import {
   type CollectionFolderId,
   rememberPostCollection,
-  SaveCollectionSheet,
 } from "@/components/save-collection-sheet";
 import { useLocale, useMessages } from "@/lib/i18n/locale-context";
 
 import { ActionIcon } from "./social-actions/action-icons";
-import { CommentSheet } from "./social-actions/comment-sheet";
 import { LikeAndShareBar } from "./social-actions/like-and-share-bar";
+
+const CommentSheet = dynamic(() => import("./social-actions/comment-sheet").then(mod => mod.CommentSheet));
+const SaveCollectionSheet = dynamic(() => import("@/components/save-collection-sheet").then(mod => mod.SaveCollectionSheet));
 
 export { ActionIcon };
 
