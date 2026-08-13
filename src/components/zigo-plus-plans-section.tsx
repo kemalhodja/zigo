@@ -262,10 +262,13 @@ function PlanPriceRow({
 
     let purchaseToken: string | null = null;
     let orderId: string | null = null;
-    const productId = isPromoApplied ? "zigo_plus_50off" : "zigo_plus";
+    
+    // As per Option A: Use the same base product "zigo_plus" but attach the offerToken.
+    const productId = "zigo_plus";
+    const offerToken = isPromoApplied ? "zigo_50_offer" : undefined;
 
     try {
-      const nativePurchase = await purchaseGooglePlaySubscription({ productId, planId });
+      const nativePurchase = await purchaseGooglePlaySubscription({ productId, planId, offerToken });
       purchaseToken = nativePurchase.purchaseToken || null;
       orderId = nativePurchase.orderId || null;
     } catch (nativeErr) {

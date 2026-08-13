@@ -14,6 +14,7 @@ const googlePlaySchema = z.object({
   packageName: z.string().trim().min(3).default("com.zigo.app"),
   orderId: z.string().trim().optional().nullable(),
   expiryTime: z.string().trim().optional().nullable(),
+  offerToken: z.string().trim().optional().nullable(),
 });
 
 export async function POST(request: Request) {
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
 
     // Verify with official Google Play Developer API if credentials are present in env
     if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
+      if (body.offerToken) {
+        console.log(`[Google Play] Validating purchase with offerToken: ${body.offerToken}`);
+      }
       try {
         const verifiedPurchase = await verifyGooglePlaySubscription(
           body.purchaseToken,
