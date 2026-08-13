@@ -134,7 +134,7 @@ function publisherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionP
     cancelPath: "/profile?billing=cancelled",
     // Note: Assuming publisher plan IDs for Play Store based on pattern
     plans: [
-      plan("zigo-plus-publisher-montly", "monthly", "Aylık", 4998, userCreatedAt),
+      plan("zigo-plus-publisher-monthly", "monthly", "Aylık", 4998, userCreatedAt),
       plan("zigo-plus-publisher-yearly", "yearly", "Yıllık", 44998, userCreatedAt),
     ],
   };
