@@ -9,9 +9,9 @@ export const SUBSCRIPTION_CAMPAIGN = {
   earlyBirdDiscountPercent: EARLY_BIRD_DISCOUNT_PERCENT,
   standardDiscountPercent: STANDARD_DISCOUNT_PERCENT,
   discountPercent: EARLY_BIRD_DISCOUNT_PERCENT,
-  badgeLabel: "30 Gün Ücretsiz Deneme",
-  headline: "30 Gün Tam Özellikli Ücretsiz Deneme",
-  description: "İlk 30 gün ücretsiz deneme hakkına sahipsiniz. Kayıttan sonraki ilk 30 gün içinde abone olursanız %50 indirim uygulanır, 30 günden sonra standart liste fiyatı geçerlidir.",
+  badgeLabel: "30 Gün Özel Fırsat",
+  headline: "İlk 30 Güne Özel %50 İndirim",
+  description: "Kayıttan sonraki ilk 30 gün içinde ZIGO50 promosyon kodunu kullanarak %50 indirim kazanabilirsiniz.",
   stripeCouponId: "zigo-50off",
   stripePromotionCode: "ZIGO50",
   stripeCouponEnvKey: "STRIPE_COUPON_50OFF",
@@ -25,8 +25,8 @@ export function isSubscriptionCampaignActive(now = new Date()) {
 
 /**
  * Dinamik Fiyatlandırma Motoru:
- * - Kayıt tarihi 30 gün içindeyse: %50 İndirim
- * - 30 gün geçtikten sonra: %0 İndirim (Tam Liste Fiyatı)
+ * - Otomatik indirim uygulanmaz (Her zaman Liste Fiyatı geçerlidir)
+ * - Yalnızca 30 gün kuralı hesaplanıp dışarıya aktarılır (Modal'da promosyon kodu kontrolü için)
  */
 export function calculateDynamicPrice(
   listPriceTry: number,
@@ -42,9 +42,7 @@ export function calculateDynamicPrice(
     isWithinTrialWindow = diffDays <= SUBSCRIPTION_TRIAL_DAYS;
   }
 
-  const discountPercent = isWithinTrialWindow
-    ? EARLY_BIRD_DISCOUNT_PERCENT
-    : STANDARD_DISCOUNT_PERCENT;
+  const discountPercent = STANDARD_DISCOUNT_PERCENT; // Artık otomatik indirim YÖK
 
   const multiplier = (100 - discountPercent) / 100;
   const discountedPrice = Math.max(1, Math.round(listPriceTry * multiplier));
@@ -56,6 +54,29 @@ export function calculateDynamicPrice(
     isWithinTrialWindow,
     trialDays: SUBSCRIPTION_TRIAL_DAYS,
     campaignActive: true as const,
+  };
+}
+
+export function applyPromoCode(listPriceTry: number, code: string, isWithinTrialWindow: boolean) {
+  if (code.trim().toUpperCase() === "ZIGO50" && isWithinTrialWindow) {
+    const discountedPrice = Math.max(1, Math.round(listPriceTry * 0.5));
+    return {
+      success: true,
+      priceTry: discountedPrice,
+      message: "Promosyon kodu uygulandı! %50 indirim kazandınız.",
+    };
+  }
+  if (code.trim().toUpperCase() === "ZIGO50" && !isWithinTrialWindow) {
+    return {
+      success: false,
+      priceTry: listPriceTry,
+      message: "Bu kod yalnızca kayıttan sonraki ilk 30 gün içinde geçerlidir.",
+    };
+  }
+  return {
+    success: false,
+    priceTry: listPriceTry,
+    message: "Geçersiz promosyon kodu.",
   };
 }
 

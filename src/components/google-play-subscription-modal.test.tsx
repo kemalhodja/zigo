@@ -7,6 +7,7 @@ describe("GooglePlaySubscriptionModal", () => {
   it("renders the Google Play subscription panel with payment choices", () => {
     const html = renderToStaticMarkup(
       <GooglePlaySubscriptionModal
+        basePriceTry={98}
         isOpen
         onClose={() => undefined}
         onConfirm={() => undefined}
@@ -14,11 +15,11 @@ describe("GooglePlaySubscriptionModal", () => {
       />,
     );
 
-    expect(html).toContain("Google Play");
-    expect(html).toContain("Aylık");
-    expect(html).toContain("Yıllık");
-    expect(html).toContain("Kod kullan");
-    expect(html).toContain("Kart ekle");
-    expect(html).toContain("Telefonunuzdan ödeyin");
+    expect(html).toContain("Abonelik Özeti");
+    expect(html).toContain("Zigo Plus (Aylık)");
+    expect(html).toContain("98");
+    expect(html).toContain("Promosyon Kodu");
+    expect(html).toContain("Başlangıç Tarihi:");
+    expect(html).toContain("Bitiş Tarihi:");
   });
 });

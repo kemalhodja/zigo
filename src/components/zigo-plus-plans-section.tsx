@@ -121,10 +121,11 @@ export function ZigoPlusPlansSection({
           group={group}
           hidePrices={hidePrices}
           key={group.id}
-          organizationName={organizationName}
-          organizationType={organizationType}
+          organizationName={organizationName ?? null}
+          organizationType={organizationType ?? null}
+          platformMessage={b.salesSelfServeClosed}
           playStoreOnly={playStoreOnly}
-          platformMessage={platformMessage}
+          userCreatedAt={userCreatedAt ? new Date(userCreatedAt).toISOString() : undefined}
         />
       ))}
     </section>
@@ -140,6 +141,7 @@ function PlanGroupCard({
   campaignActive,
   organizationType,
   organizationName,
+  userCreatedAt,
 }: {
   group: SubscriptionPlanGroup;
   allowDevActivate: boolean;
@@ -149,6 +151,7 @@ function PlanGroupCard({
   campaignActive: boolean;
   organizationType: EducationOrganizationType | null;
   organizationName: string | null;
+  userCreatedAt?: string;
 }) {
   const b = useMessages().billingUi;
   const salesUrl = hidePrices
@@ -215,6 +218,7 @@ function PlanGroupCard({
               planId={item.id}
               playStoreOnly={playStoreOnly}
               priceTry={item.priceTry}
+              userCreatedAt={userCreatedAt}
             />
           ))}
         </div>
@@ -231,6 +235,7 @@ function PlanPriceRow({
   allowDevActivate,  // eslint-disable-line @typescript-eslint/no-unused-vars
   playStoreOnly,
   campaignActive,
+  userCreatedAt,
 }: {
   planId: string;
   intervalLabel: string;
@@ -239,6 +244,7 @@ function PlanPriceRow({
   allowDevActivate: boolean;
   playStoreOnly: boolean;
   campaignActive: boolean;
+  userCreatedAt?: string;
 }) {
   const b = useMessages().billingUi;
   const [loading, setLoading] = useState(false);
@@ -246,6 +252,9 @@ function PlanPriceRow({
   const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
   const currentInterval = intervalLabel.toLowerCase().includes("yıllık") || planId.toLowerCase().includes("yearly") ? "yearly" : "monthly";
+  const isWithinTrialWindow = userCreatedAt
+    ? Math.ceil(Math.abs(new Date().getTime() - new Date(userCreatedAt).getTime()) / (1000 * 60 * 60 * 24)) <= 30
+    : false;
 
   async function subscribeGooglePlay() {
     setLoading(true);
@@ -328,7 +337,6 @@ function PlanPriceRow({
             ) : null}
           </div>
           <p className="mt-1 flex flex-wrap items-baseline gap-2">
-            <span className="text-xs font-bold text-white/50 line-through">{formatTryPrice(compareAtTry)}</span>
             <span className="text-lg font-black text-amber-300">{formatTryPrice(priceTry)}</span>
           </p>
         </div>
@@ -357,7 +365,9 @@ function PlanPriceRow({
       </div>
       {message ? <p className="mt-2 text-xs font-bold text-amber-300">{message}</p> : null}
       <GooglePlaySubscriptionModal
+        basePriceTry={priceTry}
         isOpen={isSubscriptionModalOpen}
+        isWithinTrialWindow={isWithinTrialWindow}
         onClose={() => setSubscriptionModalOpen(false)}
         onConfirm={async () => {
           setSubscriptionModalOpen(false);
