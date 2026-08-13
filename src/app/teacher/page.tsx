@@ -2,11 +2,11 @@ import Link from "next/link";
 
 import { AdCampaignsManager } from "@/components/ad-campaigns-manager";
 import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
+import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { StudioTabsLayout } from "@/components/studio-tabs-layout";
-import { TeacherAnalyticsCard } from "@/components/teacher-analytics-card";
 import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/components/teacher-leaderboard-card";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
@@ -176,8 +176,8 @@ export default async function TeacherPage({
       {/* Studio Tabs Container */}
       <StudioTabsLayout
         analyticsNode={
-          <div className="space-y-4">
-            <TeacherAnalyticsCard postCount={assignedAreas.length * 3 + 4} />
+          <div className="space-y-6">
+            <AnalyticsDashboard postCount={assignedAreas.length * 3 + 4} />
             {orgDashboard ? <OrgDashboardPanel copy={orgCopy} snapshot={orgDashboard} /> : null}
             <TeacherLeaderboardCard entries={teacherLeaderboard} viewerId={profile.id} />
           </div>
