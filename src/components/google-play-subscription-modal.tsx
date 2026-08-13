@@ -8,7 +8,7 @@ import { applyPromoCode } from "@/lib/domain/subscription-campaign";
 type GooglePlaySubscriptionModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm?: () => void;
+  onConfirm?: (isPromoApplied: boolean) => void;
   selectedInterval?: "monthly" | "yearly";
   basePriceTry: number;
   isWithinTrialWindow?: boolean;
@@ -138,7 +138,7 @@ export function GooglePlaySubscriptionModal({
 
           <button
             className="w-full rounded-xl bg-[#1f4e9a] py-4 text-lg font-bold text-white shadow-md transition hover:bg-[#173f80]"
-            onClick={onConfirm}
+            onClick={() => onConfirm?.(isPromoApplied)}
             type="button"
           >
             {formatTryPrice(currentPrice)} ile Abone Ol

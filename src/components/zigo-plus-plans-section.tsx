@@ -254,16 +254,15 @@ function PlanPriceRow({
   const currentInterval = intervalLabel.toLowerCase().includes("yıllık") || planId.toLowerCase().includes("yearly") ? "yearly" : "monthly";
   const isWithinTrialWindow = userCreatedAt
     ? Math.ceil(Math.abs(new Date().getTime() - new Date(userCreatedAt).getTime()) / (1000 * 60 * 60 * 24)) <= 30
-    : false;
+    : true;
 
-  async function subscribeGooglePlay() {
+  async function subscribeGooglePlay(isPromoApplied: boolean = false) {
     setLoading(true);
     setMessage("");
 
     let purchaseToken: string | null = null;
     let orderId: string | null = null;
-    const isDiscounted = campaignActive && priceTry < compareAtTry;
-    const productId = isDiscounted ? "zigo_plus_50off" : "zigo_plus";
+    const productId = isPromoApplied ? "zigo_plus_50off" : "zigo_plus";
 
     try {
       const nativePurchase = await purchaseGooglePlaySubscription({ productId, planId });
@@ -369,9 +368,9 @@ function PlanPriceRow({
         isOpen={isSubscriptionModalOpen}
         isWithinTrialWindow={isWithinTrialWindow}
         onClose={() => setSubscriptionModalOpen(false)}
-        onConfirm={async () => {
+        onConfirm={async (isPromoApplied) => {
           setSubscriptionModalOpen(false);
-          await subscribeGooglePlay();
+          await subscribeGooglePlay(isPromoApplied);
         }}
         selectedInterval={currentInterval}
       />
