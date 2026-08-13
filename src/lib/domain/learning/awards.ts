@@ -59,7 +59,7 @@ export async function completeSafeDuelWin(
     p_duel_id: parsed.duelId,
     p_score: parsed.score,
     p_total_questions: parsed.totalQuestions,
-    p_area_id: parsed.areaId ?? undefined,
+    p_area_id: parsed.areaId ?? null,
   });
 
   if (error) throw error;

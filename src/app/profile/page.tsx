@@ -503,7 +503,7 @@ function ProfileActionBar({
       : role === "student"
         ? [
             { href: isSignedOut ? "/auth" : "/student", label: messages.dashboard.student.mode, tone: "from-crystal to-berry" },
-            { href: isSignedOut ? "/auth" : "/focus", label: messages.zigo.focusMode, tone: "from-aqua to-mint" },
+
             { href: isSignedOut ? "/auth" : "/learn", label: messages.dock.learn, tone: "from-sun to-peach" },
           ]
         : role === "parent"

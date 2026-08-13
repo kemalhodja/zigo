@@ -10,7 +10,7 @@ import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
-import { getParentChildrenFocusStats, getParentFocusOverview } from "@/lib/domain/focus-analytics";
+
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";
@@ -26,7 +26,7 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, focusOverview, userCreatedAt } =
+  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, userCreatedAt } =
     await getParentData();
   const d = messages.dashboard;
 
@@ -152,19 +152,7 @@ export default async function ParentPage() {
             )}
           </div>
           
-          <div className="p-4">
-            <h2 className="text-sm font-black text-slate-900 mb-2">Aktivite Özeti</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <p className="text-[0.65rem] font-black uppercase text-slate-500">Tamamlanan Pomodoro</p>
-                <p className="mt-1 text-xl font-black text-night">{focusOverview.matchedStudyMoments}</p>
-              </div>
-              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <p className="text-[0.65rem] font-black uppercase text-slate-500">Odaklanma Süresi</p>
-                <p className="mt-1 text-xl font-black text-night">{focusOverview.focusMinutesInAreas} dk</p>
-              </div>
-            </div>
-          </div>
+
         </section>
       )}
 
@@ -184,8 +172,6 @@ async function getParentData(): Promise<{
   children: typeof previewChildren;
   mode: "parent" | "preview" | "role-preview" | "signed-out";
   pendingApprovals: Awaited<ReturnType<typeof getPendingParentRedemptions>>;
-  focusOverview: Awaited<ReturnType<typeof getParentFocusOverview>>;
-  childrenFocusStats: Awaited<ReturnType<typeof getParentChildrenFocusStats>>;
   isPremium: boolean;
   allowDevActivate: boolean;
   childActivityById: Record<string, Awaited<ReturnType<typeof getChildActivity>>>;
@@ -212,8 +198,6 @@ async function getParentData(): Promise<{
       children: previewChildren,
       mode: "preview",
       pendingApprovals: [],
-      focusOverview: previewOverview,
-      childrenFocusStats: [],
       isPremium: false,
       allowDevActivate: canUseDevBillingBypass(),
       childActivityById: {},
@@ -232,8 +216,6 @@ async function getParentData(): Promise<{
     children: previewChildren,
     mode: "preview" as const,
     pendingApprovals: [] as Awaited<ReturnType<typeof getPendingParentRedemptions>>,
-    focusOverview: previewOverview,
-    childrenFocusStats: [] as Awaited<ReturnType<typeof getParentChildrenFocusStats>>,
     isPremium: false,
     allowDevActivate: canUseDevBillingBypass(),
     childActivityById: {} as Record<string, Awaited<ReturnType<typeof getChildActivity>>>,
@@ -255,8 +237,6 @@ async function getParentData(): Promise<{
       children: [],
       mode: "signed-out",
       pendingApprovals: [],
-      focusOverview: previewOverview,
-      childrenFocusStats: [],
       isPremium: false,
       allowDevActivate: false,
       childActivityById: {},
@@ -275,8 +255,6 @@ async function getParentData(): Promise<{
       children: [],
       mode: "role-preview",
       pendingApprovals: [],
-      focusOverview: previewOverview,
-      childrenFocusStats: [],
       isPremium: false,
       allowDevActivate: false,
       childActivityById: {},
@@ -290,11 +268,9 @@ async function getParentData(): Promise<{
     };
   }
 
-  const [children, pendingApprovals, focusOverview, childrenFocusStats, subscription] = await Promise.all([
+  const [children, pendingApprovals, subscription] = await Promise.all([
     getChildProfiles(supabase),
     getPendingParentRedemptions(supabase),
-    getParentFocusOverview(supabase),
-    getParentChildrenFocusStats(supabase),
     getUserSubscription(supabase, profile.id),
   ]);
 
@@ -312,8 +288,6 @@ async function getParentData(): Promise<{
     })),
     mode: "parent",
     pendingApprovals,
-    focusOverview,
-    childrenFocusStats,
     isPremium: subscription.isPremium,
     allowDevActivate: canUseDevBillingBypass(),
     childActivityById: Object.fromEntries(activityEntries),

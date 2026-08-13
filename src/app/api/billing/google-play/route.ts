@@ -41,9 +41,6 @@ export async function POST(request: Request) {
 
     // Verify with official Google Play Developer API if credentials are present in env
     if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
-      if (body.offerToken) {
-        console.log(`[Google Play] Validating purchase with offerToken: ${body.offerToken}`);
-      }
       try {
         const verifiedPurchase = await verifyGooglePlaySubscription(
           body.purchaseToken,

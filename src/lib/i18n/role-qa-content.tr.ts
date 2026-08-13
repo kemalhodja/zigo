@@ -17,7 +17,7 @@ export const roleQaContentTr: Record<RoleQaRole, RoleQaSection[]> = {
       items: [
         { id: "student-micro", text: "Kısa ders izle; puan yalnızca 60 saniyelik eşikten sonra alınabilsin.", href: "/micro" },
         { id: "student-quiz", text: "Mini quiz tamamla; doğru/inceleme açıklamalarını gör.", href: "/learn" },
-        { id: "student-duels", text: "DM olmadan güvenli konu düelloları oyna.", href: "/duels" },
+
         { id: "student-progress", text: "Seri, lig ve seviye ilerlemesini /student'ta gör.", href: "/student" },
         { id: "student-no-dm", text: "Öğrenci doğrudan mesajlaşmasının hiçbir yerde olmadığını doğrula." },
       ],

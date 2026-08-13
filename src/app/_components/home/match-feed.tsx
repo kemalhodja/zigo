@@ -6,7 +6,7 @@ import { useState } from "react";
 import { DismissibleFeedPost } from "@/components/dismissible-feed-post";
 import { FeedEducationBadges } from "@/components/feed-education-badges";
 import { FollowButton } from "@/components/follow-button";
-import { PremiumPrepLink } from "@/components/premium-prep-link";
+
 import { SocialPostActions } from "@/components/social-post-actions";
 import { SocialAvatar } from "@/components/social-primitives";
 import { SponsoredAdLink } from "@/components/sponsored-ad-link";

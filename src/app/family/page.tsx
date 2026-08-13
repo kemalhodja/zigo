@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { ChildAreaSelector } from "@/components/child-area-selector";
-import { ChildFocusPanel } from "@/components/child-focus-panel";
+
 import { ChildGradeLevelForm } from "@/components/child-grade-level-form";
 import { ChildProfileForm } from "@/components/child-profile-form";
 import { ChildQuizActivityPanel } from "@/components/child-quiz-activity-panel";
@@ -153,7 +153,7 @@ export default async function FamilyPage() {
                   completed: f.quizActivityCompleted,
                 }}
               />
-              <ChildFocusPanel childName={child.display_name} childProfileId={child.id} />
+
               <ChildRewardPanel childProfileId={child.id} />
             </article>
           ))}

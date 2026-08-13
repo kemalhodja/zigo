@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { ZigoPlusUpsell } from "@/components/zigo-plus-upsell";
+
 import { TEACHER_CREATOR_PLUS_BENEFITS } from "@/lib/domain/teacher-creator-plus";
 
 type TeacherCreatorPlusLockProps = {
@@ -39,13 +39,7 @@ export function TeacherCreatorPlusLock({
           <li key={benefit}>✦ {benefit}</li>
         ))}
       </ul>
-      <ZigoPlusUpsell
-        allowDevActivate={allowDevActivate}
-        benefits={[...TEACHER_CREATOR_PLUS_BENEFITS]}
-        compact
-        headline="Öğretmen Creator Plus"
-        isPremium={false}
-      />
+
     </div>
   );
 }

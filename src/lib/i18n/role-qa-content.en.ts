@@ -17,7 +17,7 @@ export const roleQaContentEn: Record<RoleQaRole, RoleQaSection[]> = {
       items: [
         { id: "student-micro", text: "Watch a Micro lesson and claim points only after the 60-second gate.", href: "/micro" },
         { id: "student-quiz", text: "Complete a mini quiz and see correct/review explanations.", href: "/learn" },
-        { id: "student-duels", text: "Play safe topic duels with no direct messaging.", href: "/duels" },
+
         { id: "student-progress", text: "See streak, league and level progress on /student.", href: "/student" },
         { id: "student-no-dm", text: "Confirm student direct messaging is not available anywhere." },
       ],

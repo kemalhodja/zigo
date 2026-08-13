@@ -73,13 +73,3 @@ export function canAccessCustomStudyPlans(subscription: UserSubscription) {
   return subscription.isPremium;
 }
 
-export function isAdFreeExperience(subscription: UserSubscription) {
-  return subscription.isPremium;
-}
-
-export function canAccessPremiumPrepLinks(
-  subscription: UserSubscription,
-  role: "student" | "parent" | "teacher" | null | undefined,
-) {
-  return subscription.isPremium && (role === "student" || role === "parent");
-}

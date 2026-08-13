@@ -55,13 +55,6 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
 
-    console.log("[SERVER_POST_REQUEST_RECEIVED]", {
-      hasProfile: Boolean(profile),
-      profileId: profile?.id,
-      role: profile?.role,
-      isVerified: profile?.is_verified,
-    });
-
     if (!profile) {
       console.warn("[SERVER_POST_REJECTED] Unauthorized: No profile found.");
       return NextResponse.json({ error: "Gönderi paylaşmak için lütfen giriş yapın." }, { status: 401 });
@@ -93,7 +86,6 @@ export async function POST(request: Request) {
     }
 
     const rawBody = await request.json();
-    console.log("[SERVER_POST_RAW_BODY]", rawBody);
     const body = createSocialPostSchema.parse(rawBody);
     const areaId = body.areaId;
 
@@ -159,8 +151,6 @@ export async function POST(request: Request) {
     };
 
     const post = await createSocialPost(supabase, postPayload);
-
-    console.log("[SERVER_POST_CREATED_SUCCESS]", { postId: (post as { id?: string })?.id });
 
     safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
     safeRevalidateTag(socialFeedCacheTag(profile.id));

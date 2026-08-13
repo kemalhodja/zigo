@@ -156,7 +156,7 @@ import {
   isFollowing,
   type SocialFeedPost,
 } from "@/lib/domain/social";
-import { getMatchedStudyMoments } from "@/lib/domain/study-moments";
+
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -393,19 +393,6 @@ export function toDisplayPost(
     city: (post as unknown as { city?: string | null }).city ?? null,
     district: (post as unknown as { district?: string | null }).district ?? null,
   };
-}
-
-export async function getHomeStudyMoments() {
-  if (!hasSupabaseEnv()) return [];
-
-  try {
-    const supabase = await createClient();
-    const profile = await getCachedUserProfile();
-    if (!profile || profile.role !== "student") return [];
-    return await getMatchedStudyMoments(supabase);
-  } catch {
-    return [];
-  }
 }
 
 export async function getHomeViewerContext(): Promise<{

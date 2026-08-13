@@ -8,6 +8,7 @@ import { cache } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
 import { OfflineIndicator } from "@/components/offline-indicator";
+import { OneSignalProvider } from "@/components/providers/onesignal-provider";
 import { ToastProvider } from "@/components/ui/toast-system";
 import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
@@ -89,6 +90,7 @@ export default async function RootLayout({
           <ToastProvider>
             <OfflineIndicator />
             <AuthSessionKeepAlive />
+            <OneSignalProvider userId={shellState.userId} userRole={shellState.viewerRole} />
             <AppShell
               canCreateSocialPost={shellState.canCreateSocialPost}
               isPreviewMode={!hasSupabaseEnv()}
@@ -122,13 +124,13 @@ export default async function RootLayout({
 
 const getShellState = cache(async () => {
   if (!hasSupabaseEnv()) {
-    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
+    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false, userId: undefined as string | undefined };
   }
 
   try {
     const profile = await getCachedUserProfile();
     if (!profile) {
-      return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
+      return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false, userId: undefined as string | undefined };
     }
 
     const supabase = await createClient();
@@ -148,8 +150,9 @@ const getShellState = cache(async () => {
       teacherInboxCount,
       viewerRole: profile.role as ViewerRole,
       isPlatformAdmin,
+      userId: profile.id,
     };
   } catch {
-    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false };
+    return { canCreateSocialPost: false, unreadCount: 0, teacherInboxCount: 0, viewerRole: "guest" as ViewerRole, isPlatformAdmin: false, userId: undefined as string | undefined };
   }
 });

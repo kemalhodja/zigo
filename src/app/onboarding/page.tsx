@@ -245,7 +245,7 @@ function getNextActions({
 
   return [
     { href: "/micro", label: m.nav.micro, primary: true },
-    { href: "/duels", label: ob.actionDuels },
+
     { href: "/avatar", label: ob.actionAvatar },
   ];
 }

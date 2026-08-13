@@ -106,15 +106,6 @@ export function useUploadPipeline() {
   }
 
   async function run(input: PublishInput): Promise<void> {
-    console.log("[POST_PIPELINE_START]", {
-      caption: input.caption,
-      areaId: input.areaId,
-      hasFile: Boolean(input.file),
-      fileName: input.file?.name,
-      fileSizeMB: input.file ? (input.file.size / (1024 * 1024)).toFixed(2) : 0,
-      fileType: input.file?.type,
-    });
-
     if (runningRef.current) {
       console.warn("[POST_PIPELINE] Pipeline is already running.");
       return;
@@ -181,7 +172,6 @@ export function useUploadPipeline() {
           }
         } catch (err) {
           if (err instanceof DOMException && err.name === "AbortError") {
-            console.log("[POST_PIPELINE] Video compression cancelled by user.");
             runningRef.current = false;
             setPhase("idle");
             setProgress(0);
@@ -195,16 +185,9 @@ export function useUploadPipeline() {
         }
       }
 
-      // ── Upload media to storage ────────────────────────────────────────
       setPhase("uploading");
       setProgress(55);
       setMessage("Medya yükleniyor…");
-
-      console.log("[POST_PIPELINE_UPLOAD_START] Attempting direct Supabase storage upload...", {
-        name: fileToUpload.name,
-        size: fileToUpload.size,
-        type: fileToUpload.type,
-      });
 
       let directSuccess = false;
       try {
@@ -224,7 +207,6 @@ export function useUploadPipeline() {
               mediaType = fileToUpload.type.startsWith("video/") ? "video" : "image";
               uploadedObjectPath = objectPath;
               directSuccess = true;
-              console.log("[POST_PIPELINE_DIRECT_UPLOAD_SUCCESS]", { mediaUrl, mediaType, objectPath });
             }
           } else {
             console.warn("[POST_PIPELINE_DIRECT_UPLOAD_FALLBACK] Direct upload warning, trying signed upload URL fallback:", directErr.message);
@@ -243,7 +225,6 @@ export function useUploadPipeline() {
                   mediaType = signedBody.data.mediaType;
                   uploadedObjectPath = signedBody.data.objectPath;
                   directSuccess = true;
-                  console.log("[POST_PIPELINE_SIGNED_UPLOAD_SUCCESS]", { mediaUrl, mediaType, uploadedObjectPath });
                 }
               }
             }
@@ -283,7 +264,6 @@ export function useUploadPipeline() {
         const uploadBody = (await uploadRes.json()) as {
           data: { mediaUrl: string; mediaType: "image" | "video"; objectPath: string };
         };
-        console.log("[POST_PIPELINE_UPLOAD_SUCCESS]", uploadBody.data);
         mediaUrl = uploadBody.data.mediaUrl;
         mediaType = uploadBody.data.mediaType;
         uploadedObjectPath = uploadBody.data.objectPath;
@@ -312,8 +292,6 @@ export function useUploadPipeline() {
         ? { sponsoredLabel: input.sponsoredLabel, sponsoredTargetUrl: input.sponsoredTargetUrl }
         : {}),
     };
-
-    console.log("[POST_PIPELINE_PUBLISH_START] Sending post payload to /api/social/posts:", payload);
 
     let publishRes: Response;
     try {
@@ -347,7 +325,6 @@ export function useUploadPipeline() {
       data?: { id?: string };
     } | null;
 
-    console.log("[POST_PIPELINE_PUBLISH_SUCCESS] Published Post ID:", body?.data?.id);
     bumpDailyCount();
     setProgress(100);
     setPhase("done");

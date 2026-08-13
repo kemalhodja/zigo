@@ -85,13 +85,6 @@ export async function createSocialPost(
       const title = parsed.title ? values[index++] ?? null : null;
       const content = parsed.content ? values[index++] ?? null : null;
 
-      try {
-        await supabase
-          .from("user_interests")
-          .insert({ user_id: input.authorId, area_id: parsed.areaId });
-      } catch {
-        // Non-fatal if interest is already linked
-      }
 
       const { data, error } = await supabase
         .from("social_posts")

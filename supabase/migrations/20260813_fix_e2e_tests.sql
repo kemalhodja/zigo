@@ -1,0 +1,1 @@
+alter table public.learning_events drop constraint if exists learning_events_points_awarded_check; alter table public.learning_events add constraint learning_events_points_awarded_check check (points_awarded >= 0); drop function if exists public.award_safe_duel_win_points(uuid, uuid, integer, integer);

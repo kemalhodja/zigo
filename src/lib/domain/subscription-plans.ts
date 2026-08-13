@@ -2,7 +2,6 @@ import {
   type EducationOrganizationType,
   resolveOrganizationBillingTier,
 } from "@/lib/domain/education-organization";
-import { ZIGO_PLUS_BENEFITS } from "@/lib/domain/focus-gamification";
 import { resolveSubscriptionPlanPricing } from "@/lib/domain/subscription-campaign";
 import { TEACHER_CREATOR_PLUS_BENEFITS } from "@/lib/domain/teacher-creator-plus";
 import type { UserRole } from "@/lib/supabase/database.types";
@@ -26,7 +25,12 @@ export type SubscriptionPlanGroup = {
   cancelPath: string;
 };
 
-const LEARNER_BENEFITS = ZIGO_PLUS_BENEFITS;
+const LEARNER_BENEFITS = [
+  "Limitsiz soru çözümü ve video izleme",
+  "Tüm branşlarda detaylı performans analizi",
+  "Reklamsız kesintisiz deneyim",
+  "Gelişmiş aile ve veli raporları",
+] as const;
 
 function plan(
   id: string,

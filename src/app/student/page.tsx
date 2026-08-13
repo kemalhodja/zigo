@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { HomeLearningPulse } from "@/app/_components/home/learning-pulse";
 import { ClassGroupManager } from "@/components/class-group-manager";
-import { DailyMissionsCard } from "@/components/daily-missions-card";
+
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { LearningProgressCard } from "@/components/learning-progress-card";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
@@ -14,7 +14,7 @@ import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { allowDemoContent } from "@/lib/domain/demo-env";
-import { getStudentFocusAnalytics } from "@/lib/domain/focus-analytics";
+
 import {
   getDailyMissionProgress,
   getLearningProgressStats,
@@ -116,7 +116,7 @@ export default async function StudentPage() {
         <DashboardLink accent="from-aqua to-mint" href="/learn" label={m.dock.learn} text={d.student.quizzes} />
         <DashboardLink accent="from-sun to-peach" href="/store" label={d.student.store} text={d.student.spendPoints} />
         <DashboardLink accent="from-berry to-peach" href="/avatar" label={d.student.avatar} text={d.student.equipRewards} />
-        <DashboardLink accent="from-violet-500 to-berry" href="/duels" label="Düello" text="Yarış & puan kazan" />
+
       </section>
 
       {data.isSignedOut ? (
@@ -163,7 +163,6 @@ export default async function StudentPage() {
         />
       ) : null}
 
-      <DailyMissionsCard />
       <RecentLearningCard history={data.history} showPreview={data.showPreview} />
 
       {!data.isSignedOut ? (
@@ -186,7 +185,6 @@ async function getStudentDashboardData(): Promise<{
   mode: "student" | "signed-out" | "role-preview" | "preview";
   streakDays: number;
   totalPoints: number;
-  focusAnalytics: Awaited<ReturnType<typeof getStudentFocusAnalytics>> | null;
   isPremium: boolean;
   allowDevActivate: boolean;
   gradeLevel: string | null;
@@ -209,15 +207,7 @@ async function getStudentDashboardData(): Promise<{
           mode: "preview",
           streakDays: 3,
           totalPoints: 240,
-          focusAnalytics: {
-            completedSessions: 4,
-            focusMinutesWeek: 100,
-            sharedMoments: 2,
-            weeklyGoal: 5,
-            weeklyCompleted: 4,
-            pointsFromFocus: 60,
-            activeSession: null,
-          },
+
           isPremium: false,
           allowDevActivate: canUseDevBillingBypass(),
           gradeLevel: null,
@@ -241,7 +231,7 @@ async function getStudentDashboardData(): Promise<{
           mode: "signed-out",
           streakDays: 0,
           totalPoints: 0,
-          focusAnalytics: null,
+
           isPremium: false,
           allowDevActivate: false,
           gradeLevel: null,
@@ -265,15 +255,7 @@ async function getStudentDashboardData(): Promise<{
         mode: "preview",
         streakDays: 3,
         totalPoints: 240,
-        focusAnalytics: {
-          completedSessions: 4,
-          focusMinutesWeek: 100,
-          sharedMoments: 2,
-          weeklyGoal: 5,
-          weeklyCompleted: 4,
-          pointsFromFocus: 60,
-          activeSession: null,
-        },
+
         isPremium: false,
         allowDevActivate: canUseDevBillingBypass(),
         gradeLevel: null as string | null,
@@ -297,7 +279,7 @@ async function getStudentDashboardData(): Promise<{
         mode: "signed-out",
         streakDays: 0,
         totalPoints: 0,
-        focusAnalytics: null,
+
         isPremium: false,
         allowDevActivate: false,
         gradeLevel: null,
@@ -323,7 +305,7 @@ async function getStudentDashboardData(): Promise<{
       mode: "signed-out" as const,
       streakDays: 0,
       totalPoints: 0,
-      focusAnalytics: null,
+
       isPremium: false,
       allowDevActivate: false,
       gradeLevel: null,
@@ -347,7 +329,7 @@ async function getStudentDashboardData(): Promise<{
       mode: "role-preview" as const,
       streakDays: 0,
       totalPoints: 0,
-      focusAnalytics: null,
+
       isPremium: false,
       allowDevActivate: false,
       gradeLevel: null,
@@ -362,11 +344,10 @@ async function getStudentDashboardData(): Promise<{
     };
   }
 
-  const [stats, history, missions, focusAnalytics, subscription, areaId] = await Promise.all([
+  const [stats, history, missions, subscription, areaId] = await Promise.all([
     getLearningProgressStats(supabase, profile.id),
     getRecentLearningHistory(supabase, profile.id),
     getDailyMissionProgress(supabase, profile.id),
-    getStudentFocusAnalytics(supabase),
     getUserSubscription(supabase, profile.id),
     getPrimaryInterestAreaId(supabase, profile.id),
   ]);
@@ -392,7 +373,6 @@ async function getStudentDashboardData(): Promise<{
     mode: "student" as const,
     streakDays: Math.max(0, (profile as unknown as { streak_days?: number }).streak_days ?? 0),
     totalPoints: profile.total_points,
-    focusAnalytics,
     isPremium: subscription.isPremium,
     allowDevActivate: canUseDevBillingBypass(),
     gradeLevel: profile.grade_level,

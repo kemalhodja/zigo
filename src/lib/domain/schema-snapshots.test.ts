@@ -19,11 +19,6 @@ import {
   storyReplySchema,
 } from "@/lib/domain/social/schemas";
 import { redeemProductSchema } from "@/lib/domain/store";
-import {
-  completeFocusSessionSchema,
-  shareStudyMomentSchema,
-  startFocusSessionSchema,
-} from "@/lib/domain/study-moments";
 
 const ids = {
   user: "00000000-0000-4000-8000-000000000301",
@@ -166,31 +161,6 @@ describe("domain schema snapshots", () => {
       redeemProductSchema.parse({
         productId: ids.product,
         note: "Kitap istiyorum",
-      }),
-    ).toMatchSnapshot();
-  });
-
-  it("matches focus session schema snapshot", () => {
-    expect(
-      startFocusSessionSchema.parse({
-        topicLabel: "Paragraf çalışması",
-      }),
-    ).toMatchSnapshot();
-  });
-
-  it("matches focus completion schema snapshot", () => {
-    expect(
-      completeFocusSessionSchema.parse({
-        sessionId: ids.session,
-      }),
-    ).toMatchSnapshot();
-  });
-
-  it("matches study moment share schema snapshot", () => {
-    expect(
-      shareStudyMomentSchema.parse({
-        sessionId: ids.session,
-        caption: "Odaklandım",
       }),
     ).toMatchSnapshot();
   });
