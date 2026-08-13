@@ -382,7 +382,7 @@ async function getStudentDashboardData(): Promise<{
     isSignedOut: false,
     showPreview: false,
     mode: "student" as const,
-    streakDays: Math.max(0, missions.streakDays),
+    streakDays: Math.max(0, (profile as unknown as { streak_days?: number }).streak_days ?? 0),
     totalPoints: profile.total_points,
     focusAnalytics,
     isPremium: subscription.isPremium,

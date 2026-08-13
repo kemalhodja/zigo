@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 type UserStreakBadgeProps = {
   streakCount?: number;
   xpPoints?: number;
@@ -7,10 +9,26 @@ type UserStreakBadgeProps = {
 };
 
 export function UserStreakBadge({
-  streakCount = 3,
-  xpPoints = 120,
+  streakCount: initialStreak = 3,
+  xpPoints: initialXp = 120,
   compact = false,
 }: UserStreakBadgeProps) {
+  const [streakCount, setStreakCount] = useState(initialStreak);
+  const [xpPoints, setXpPoints] = useState(initialXp);
+
+  useEffect(() => {
+    const handleStreakUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<{ streak: number; pointsAwarded: number }>;
+      if (customEvent.detail) {
+        setStreakCount(customEvent.detail.streak);
+        setXpPoints((prev) => prev + customEvent.detail.pointsAwarded);
+      }
+    };
+
+    window.addEventListener("zigo:streak-updated", handleStreakUpdate);
+    return () => window.removeEventListener("zigo:streak-updated", handleStreakUpdate);
+  }, []);
+
   if (compact) {
     return (
       <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-500/10 px-2.5 py-1 text-xs font-black text-amber-500">

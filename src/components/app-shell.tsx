@@ -13,6 +13,7 @@ import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleNextActionBar } from "@/components/role-next-action-bar";
 import { ScrollToTopOnLogoTap } from "@/components/scroll-to-top-on-logo-tap";
+import { useStreakTracker } from "@/hooks/use-streak-tracker";
 import {
   getHeaderPrimaryAction,
   isParentSupervisionRole,
@@ -47,6 +48,9 @@ export function AppShell({
   const _router = useRouter();
   const m = useMessages();
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+
+  // Gamification: Track daily login streak automatically
+  useStreakTracker();
 
   useEffect(() => {
     setUnreadCount(initialUnreadCount);
