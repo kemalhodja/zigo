@@ -122,28 +122,48 @@ export function SocialMediaFrame({
           className="no-scrollbar flex size-full snap-x snap-mandatory overflow-x-auto"
         >
           {items.map((url, idx) => (
-            <div key={url + idx} className="relative size-full flex-none snap-center">
+            <div key={url + idx} className="group relative size-full flex-none snap-center">
               {isVideo ? (
-                <video
-                  aria-label={alt || `Video ${idx + 1}`}
-                  className={`size-full transition-all duration-200 ${fitClass}`}
-                  controls={controls}
-                  loop={!controls}
-                  muted={!controls}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const video = e.currentTarget;
-                    if (video.paused) {
-                      video.play().catch(() => {});
-                    } else {
-                      video.pause();
-                    }
-                  }}
-                  playsInline
-                  preload={controls ? "metadata" : "none"}
-                  src={url}
-                  style={combinedStyle}
-                />
+                <>
+                  <video
+                    aria-label={alt || `Video ${idx + 1}`}
+                    className={`size-full transition-all duration-200 ${fitClass}`}
+                    controls={controls}
+                    loop={!controls}
+                    muted={!controls}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const video = e.currentTarget;
+                      if (video.paused) {
+                        video.play().catch(() => {});
+                      } else {
+                        video.pause();
+                      }
+                    }}
+                    playsInline
+                    preload={controls ? "metadata" : "none"}
+                    src={url}
+                    style={combinedStyle}
+                  />
+                  <button
+                    aria-label="Tam Ekran"
+                    className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity hover:bg-black/70 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const v = e.currentTarget.parentElement?.querySelector("video");
+                      if (v) {
+                        if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
+                        else if ((v as any).webkitRequestFullscreen) (v as any).webkitRequestFullscreen();
+                      }
+                    }}
+                    type="button"
+                  >
+                    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                  </button>
+                </>
               ) : (
                 <Image
                   fill
@@ -160,11 +180,11 @@ export function SocialMediaFrame({
         </div>
       ) : hasMedia ? (
         isVideo ? (
-          <div className="relative w-full h-auto">
+          <div className="group relative h-auto w-full">
             <video
               ref={videoRef}
               aria-label={alt || "Video preview"}
-              className={`w-full h-auto max-h-[75vh] transition-all duration-200 ${fitClass}`}
+              className={`h-auto w-full max-h-[75vh] transition-all duration-200 ${fitClass}`}
               controls={controls}
               loop={!controls}
               muted={!controls}
@@ -182,6 +202,24 @@ export function SocialMediaFrame({
               src={items[0]}
               style={combinedStyle}
             />
+            <button
+              aria-label="Tam Ekran"
+              className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity hover:bg-black/70 group-hover:opacity-100"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const v = videoRef.current;
+                if (v) {
+                  if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
+                  else if ((v as any).webkitRequestFullscreen) (v as any).webkitRequestFullscreen();
+                }
+              }}
+              type="button"
+            >
+              <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              </svg>
+            </button>
           </div>
         ) : (
           <Image
