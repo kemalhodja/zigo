@@ -62,9 +62,7 @@ export function FeedPostCard({
             />
           </div>
 
-          <ExpandableCaption caption={post.caption} />
-
-          <div className="pointer-events-auto space-y-2 px-4">
+          <div className="pointer-events-auto space-y-2 px-4 mt-1">
             <SocialPostActions
               initialComments={post.comments}
               initialLiked={post.isLiked}
@@ -73,6 +71,13 @@ export function FeedPostCard({
               postId={post.postId}
               variant="compact"
             />
+          </div>
+
+          <div className="mt-2">
+            <ExpandableCaption caption={post.caption} />
+          </div>
+
+          <div className="pointer-events-auto px-4 mt-1">
             <p className="text-zigo-meta font-semibold uppercase tracking-wide text-white/70 shadow-black/20 text-shadow-sm">
               {formatFeedTimestamp(post.createdAt)}
             </p>
