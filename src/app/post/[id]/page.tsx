@@ -116,17 +116,18 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   );
 
   return (
-    <div className="space-y-0 pb-3">
+    <div className="h-dvh w-full snap-y snap-mandatory overflow-y-auto bg-black pb-[env(safe-area-inset-bottom)]">
       {displayPosts.map((p, index) => (
-        <FeedPostCard
-          key={p.postId ?? index}
-          post={p}
-          teacherBadges={m.teacherBadges}
-          feedExtras={m.feedExtras}
-          feedEnhancements={m.feedEnhancements}
-          viewerRole={profile?.role}
-          priorityMedia={index === 0}
-        />
+        <div key={p.postId ?? index} className="relative flex h-dvh w-full shrink-0 snap-start snap-always flex-col justify-center">
+          <FeedPostCard
+            post={p}
+            teacherBadges={m.teacherBadges}
+            feedExtras={m.feedExtras}
+            feedEnhancements={m.feedEnhancements}
+            viewerRole={profile?.role}
+            priorityMedia={index === 0}
+          />
+        </div>
       ))}
     </div>
   );

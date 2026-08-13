@@ -139,7 +139,8 @@ export function AppShell({
 
   const isStories = pathname.startsWith("/sparks");
   const isReels = pathname.startsWith("/micro");
-  const isImmersive = isStories || isReels;
+  const isPost = pathname.startsWith("/post");
+  const isImmersive = isStories || isReels || isPost;
   const hideQuickDock =
     isImmersive ||
     pathname === "/" ||
