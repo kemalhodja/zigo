@@ -80,7 +80,7 @@ export function LikeAndShareBar({
         <div className="flex items-center gap-3.5">
           <button
             aria-label={isLiked ? labels.unlike : labels.like}
-            className={`tap-scale relative flex h-9 items-center gap-1.5 transition ${isLiked ? "text-rose-500" : "text-night"}`}
+            className={`tap-scale relative flex h-9 items-center gap-1.5 transition ${isLiked ? "text-rose-500" : "text-white"}`}
             disabled={pendingAction === "likes"}
             onClick={handleLikeClick}
             type="button"
@@ -103,8 +103,8 @@ export function LikeAndShareBar({
           </button>
           <button
             aria-label={labels.understood}
-            className={`tap-scale flex h-9 items-center gap-1 rounded-full px-2.5 text-[0.62rem] font-black transition ${
-              isUnderstood ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+            className={`tap-scale flex h-9 items-center gap-1 rounded-full px-2.5 text-[0.62rem] font-black transition backdrop-blur-sm ${
+              isUnderstood ? "bg-emerald-500/90 text-white" : "bg-white/20 text-white shadow-sm"
             }`}
             onClick={onToggleUnderstood}
             type="button"
@@ -112,16 +112,16 @@ export function LikeAndShareBar({
             <span aria-hidden="true">✓</span>
             {labels.understood}
           </button>
-          <button aria-label={labels.comment} className="tap-scale flex size-9 items-center justify-center text-night" onClick={onLoadComments} type="button">
+          <button aria-label={labels.comment} className="tap-scale flex size-9 items-center justify-center text-white" onClick={onLoadComments} type="button">
             <ActionIcon name="comment" />
           </button>
-          <button aria-label={labels.share} className="tap-scale flex size-9 items-center justify-center text-night" onClick={onSharePost} type="button">
+          <button aria-label={labels.share} className="tap-scale flex size-9 items-center justify-center text-white" onClick={onSharePost} type="button">
             <ActionIcon name="share" />
           </button>
         </div>
         <button
           aria-label={isSaved ? labels.unsave : labels.save}
-          className="tap-scale flex size-9 items-center justify-center text-night transition"
+          className="tap-scale flex size-9 items-center justify-center text-white transition"
           disabled={pendingAction === "saves"}
           onClick={handleSaveClick}
           type="button"

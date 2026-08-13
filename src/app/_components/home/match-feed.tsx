@@ -42,7 +42,7 @@ export function FeedPostCard({
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
-        className="zigo-feed-card zigo-feed-card-enter -mx-4 overflow-hidden"
+        className="zigo-feed-card zigo-feed-card-enter relative -mx-4 overflow-hidden"
         style={containerStyle}
       >
         <FeedMediaViewer 
@@ -52,24 +52,28 @@ export function FeedPostCard({
           oneMinLessonLabel={feedEnhancements.oneMinLesson}
         />
 
-        <FeedPostHeader 
-          post={post}
-          postKey={postKey}
-          teacherBadges={teacherBadges}
-        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent pb-3 pt-24">
+          <div className="pointer-events-auto">
+            <FeedPostHeader 
+              post={post}
+              postKey={postKey}
+              teacherBadges={teacherBadges}
+            />
+          </div>
 
-        <div className="space-y-2 px-4 pb-3">
-          <SocialPostActions
-            initialComments={post.comments}
-            initialLiked={post.isLiked}
-            initialLikes={post.likes}
-            initialSaved={post.isSaved}
-            postId={post.postId}
-            variant="compact"
-          />
-          <p className="text-zigo-meta font-semibold uppercase tracking-wide text-slate-500">
-            {formatFeedTimestamp(post.createdAt)}
-          </p>
+          <div className="pointer-events-auto space-y-2 px-4">
+            <SocialPostActions
+              initialComments={post.comments}
+              initialLiked={post.isLiked}
+              initialLikes={post.likes}
+              initialSaved={post.isSaved}
+              postId={post.postId}
+              variant="compact"
+            />
+            <p className="text-zigo-meta font-semibold uppercase tracking-wide text-white/70 shadow-black/20 text-shadow-sm">
+              {formatFeedTimestamp(post.createdAt)}
+            </p>
+          </div>
         </div>
       </article>
     </DismissibleFeedPost>
