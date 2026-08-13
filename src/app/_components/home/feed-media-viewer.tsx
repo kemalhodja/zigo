@@ -22,7 +22,7 @@ export function FeedMediaViewer({
     >
       <SocialMediaFrame
         alt={post.caption.slice(0, 80)}
-        className="zigo-media"
+        className="zigo-media min-h-[65vh]"
         gradient={post.gradient}
         mediaType={post.mediaType}
         mediaUrl={post.mediaUrl}

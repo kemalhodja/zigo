@@ -239,7 +239,7 @@ export function PostOptionsButton({
     <div className="relative">
       <button
         aria-label={a.postOptions}
-        className={`tap-scale flex size-9 items-center justify-center rounded-lg ${isMuted ? "text-slate-300" : "text-night"}`}
+        className={`tap-scale flex size-9 items-center justify-center rounded-lg ${isMuted ? "text-slate-300" : "text-white"}`}
         disabled={isSaving}
         onClick={() => setIsOpen(true)}
         type="button"
