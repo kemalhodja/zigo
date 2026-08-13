@@ -93,11 +93,15 @@ function ExpandableCaption({ caption }: { caption?: string | null }) {
       className="pointer-events-auto px-4 pb-2"
       onClick={() => setExpanded(!expanded)}
     >
-      <div className={`cursor-pointer text-[0.85rem] text-white/90 drop-shadow-md ${expanded ? "max-h-[50vh] overflow-y-auto" : "line-clamp-1"}`}>
+      <div className={`cursor-pointer text-[0.85rem] drop-shadow-md transition-all duration-200 ${
+        expanded 
+          ? "max-h-[50vh] overflow-y-auto rounded-xl bg-black/60 p-3.5 text-white backdrop-blur-md shadow-lg" 
+          : "line-clamp-1 text-white/90"
+      }`}>
         {caption}
       </div>
       {!expanded && caption.length > 50 ? (
-        <span className="mt-0.5 cursor-pointer text-xs font-bold text-white/60 drop-shadow-sm">
+        <span className="mt-0.5 cursor-pointer text-xs font-bold text-white/60 drop-shadow-sm hover:text-white">
           devamını oku
         </span>
       ) : null}
