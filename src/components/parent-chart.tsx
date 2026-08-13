@@ -1,49 +1,80 @@
 "use client";
 
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+export type ParentChartData = {
+  day: string;
+  minutes: number;
+  quizzes: number;
+};
 
 type ParentChartProps = {
-  data: {
-    day: string;
-    xp: number;
-  }[];
+  data: ParentChartData[];
 };
 
 export function ParentChart({ data }: ParentChartProps) {
   if (!data || data.length === 0) {
-    return <div className="h-32 flex items-center justify-center text-sm font-bold text-slate-400">Veri bulunamadı.</div>;
+    return <div className="flex h-40 items-center justify-center text-sm font-bold text-slate-400">Veri bulunamadı.</div>;
   }
 
   return (
-    <div className="h-40 w-full mt-4">
+    <div className="mt-4 h-48 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <ComposedChart data={data} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
           <XAxis 
             dataKey="day" 
-            tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 700 }} 
+            tick={{ fontSize: 11, fill: "#64748b", fontWeight: 700 }} 
+            axisLine={false} 
+            tickLine={false}
+            dy={10}
+          />
+          <YAxis 
+            yAxisId="left"
+            tick={{ fontSize: 11, fill: "#64748b", fontWeight: 700 }} 
             axisLine={false} 
             tickLine={false} 
           />
           <YAxis 
-            tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 700 }} 
+            yAxisId="right"
+            orientation="right"
+            tick={{ fontSize: 11, fill: "#64748b", fontWeight: 700 }} 
             axisLine={false} 
             tickLine={false} 
           />
           <Tooltip 
-            cursor={{ fill: "transparent" }}
-            contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", fontWeight: "bold", fontSize: "12px", color: "#334155" }}
-            itemStyle={{ color: "#4f46e5", fontWeight: "black" }}
-            formatter={(value: any) => [`${value} XP`, "Kazanılan"]}
+            cursor={{ fill: "#f8fafc" }}
+            contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)", fontWeight: "bold", fontSize: "12px", color: "#334155" }}
+            formatter={(value: any, name: any) => {
+              if (name === "minutes") return [`${value} dk`, "Çalışma Süresi"];
+              if (name === "quizzes") return [`${value} Sınav`, "Çözülen Sınav"];
+              return [value, name];
+            }}
+            labelStyle={{ color: "#0f172a", marginBottom: "4px" }}
           />
+          
           <Bar 
-            dataKey="xp" 
-            fill="#4f46e5" 
-            radius={[4, 4, 4, 4]} 
-            barSize={24}
+            yAxisId="right"
+            dataKey="quizzes" 
+            name="quizzes"
+            fill="#e2e8f0" 
+            radius={[4, 4, 0, 0]} 
+            barSize={32}
             animationDuration={1500}
             animationEasing="ease-out"
           />
-        </BarChart>
+
+          <Line 
+            yAxisId="left"
+            type="monotone"
+            dataKey="minutes" 
+            name="minutes"
+            stroke="#4f46e5"
+            strokeWidth={3}
+            dot={{ r: 4, fill: "#4f46e5", strokeWidth: 2, stroke: "#fff" }}
+            activeDot={{ r: 6 }}
+            animationDuration={1500}
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

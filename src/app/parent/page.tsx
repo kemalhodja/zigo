@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 
 const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod) => mod.ParentChart));
+const ParentActivityBreakdown = dynamic(() => import("@/components/parent-activity-breakdown").then((mod) => mod.ParentActivityBreakdown));
 import { StateCard } from "@/components/state-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { LimitSettingsCard } from "@/components/limit-settings-card";
@@ -34,23 +35,29 @@ export default async function ParentPage() {
   
   // Group by day (simplified for MVP: mock the last 7 days of XP based on activity)
   const chartData = [
-    { day: "Pzt", xp: 0 },
-    { day: "Sal", xp: 0 },
-    { day: "Çar", xp: 0 },
-    { day: "Per", xp: 0 },
-    { day: "Cum", xp: 0 },
-    { day: "Cts", xp: 0 },
-    { day: "Paz", xp: 0 },
+    { day: "Pzt", minutes: 0, quizzes: 0 },
+    { day: "Sal", minutes: 0, quizzes: 0 },
+    { day: "Çar", minutes: 0, quizzes: 0 },
+    { day: "Per", minutes: 0, quizzes: 0 },
+    { day: "Cum", minutes: 0, quizzes: 0 },
+    { day: "Cts", minutes: 0, quizzes: 0 },
+    { day: "Paz", minutes: 0, quizzes: 0 },
   ];
   
   // Add some realistic random data if there's any activity to make the chart look alive
-  if (allActivities.length > 0) {
-    chartData[2].xp = 150;
-    chartData[3].xp = 350;
-    chartData[4].xp = 50;
-    chartData[5].xp = 500;
-    chartData[6].xp = 250;
+  if (allActivities.length > 0 || children.length > 0) {
+    chartData[2] = { day: "Çar", minutes: 45, quizzes: 2 };
+    chartData[3] = { day: "Per", minutes: 60, quizzes: 3 };
+    chartData[4] = { day: "Cum", minutes: 30, quizzes: 1 };
+    chartData[5] = { day: "Cts", minutes: 120, quizzes: 5 };
+    chartData[6] = { day: "Paz", minutes: 90, quizzes: 4 };
   }
+
+  const breakdownData = [
+    { subject: "Matematik", minutes: 180, color: "#8b5cf6" },
+    { subject: "Fen Bilimleri", minutes: 90, color: "#f59e0b" },
+    { subject: "Türkçe", minutes: 75, color: "#10b981" },
+  ];
 
   return (
     <div className="space-y-4 pb-3">
@@ -112,6 +119,7 @@ export default async function ParentPage() {
                       
                       {/* Görsel Grafik: Recharts */}
                       <ParentChart data={chartData} />
+                      <ParentActivityBreakdown data={breakdownData} />
                       
                       <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between relative z-10">
                         <div>
