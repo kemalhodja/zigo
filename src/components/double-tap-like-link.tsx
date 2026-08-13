@@ -13,6 +13,7 @@ type DoubleTapLikeLinkProps = {
   initialLiked?: boolean;
   postId?: string;
   disableNavigation?: boolean;
+  className?: string;
 };
 
 const doubleTapDelayMs = 280;
@@ -23,6 +24,7 @@ export function DoubleTapLikeLink({
   initialLiked = false,
   postId,
   disableNavigation = false,
+  className = "",
 }: DoubleTapLikeLinkProps) {
   const router = useRouter();
   const clickTimerRef = useRef<number | null>(null);
@@ -91,7 +93,7 @@ export function DoubleTapLikeLink({
   return (
     <Link
       aria-label="Open post, double tap to like"
-      className="group relative block"
+      className={`group relative block ${className}`}
       href={href}
       onClick={handleClick}
       onDoubleClick={(event) => {
@@ -100,9 +102,6 @@ export function DoubleTapLikeLink({
       }}
     >
       {children}
-      <span className="pointer-events-none absolute left-3 top-3 rounded-lg bg-black/35 px-2.5 py-1 text-[0.58rem] font-black uppercase tracking-[0.08em] text-white opacity-80 backdrop-blur md:opacity-0 md:group-hover:opacity-100">
-        Double tap to like
-      </span>
       {showBurst ? (
         <span className="pointer-events-none absolute inset-0 grid place-items-center text-white">
           <svg

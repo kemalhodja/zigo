@@ -180,11 +180,11 @@ export function SocialMediaFrame({
         </div>
       ) : hasMedia ? (
         isVideo ? (
-          <div className="group relative h-auto w-full">
+          <div className="group relative flex size-full items-center justify-center">
             <video
               ref={videoRef}
               aria-label={alt || "Video preview"}
-              className={`h-auto w-full max-h-[75vh] transition-all duration-200 ${fitClass}`}
+              className={`size-full transition-all duration-200 ${fitClass}`}
               controls={controls}
               loop={!controls}
               muted={!controls}
