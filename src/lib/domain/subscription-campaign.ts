@@ -42,7 +42,7 @@ export function calculateDynamicPrice(
     isWithinTrialWindow = diffDays <= SUBSCRIPTION_TRIAL_DAYS;
   }
 
-  const discountPercent = STANDARD_DISCOUNT_PERCENT; // Artık otomatik indirim YÖK
+  const discountPercent = isWithinTrialWindow ? EARLY_BIRD_DISCOUNT_PERCENT : STANDARD_DISCOUNT_PERCENT;
 
   const multiplier = (100 - discountPercent) / 100;
   const discountedPrice = Math.max(1, Math.round(listPriceTry * multiplier));

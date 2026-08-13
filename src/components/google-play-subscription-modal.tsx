@@ -22,28 +22,7 @@ export function GooglePlaySubscriptionModal({
   basePriceTry,
   isWithinTrialWindow = false,
 }: GooglePlaySubscriptionModalProps) {
-  const [promoCode, setPromoCode] = useState("");
-  const [promoMessage, setPromoMessage] = useState("");
-  const [currentPrice, setCurrentPrice] = useState(basePriceTry);
-  const [isPromoApplied, setIsPromoApplied] = useState(false);
-
-  // Reset state when modal opens/closes or base price changes
-  useMemo(() => {
-    setCurrentPrice(basePriceTry);
-    setPromoCode("");
-    setPromoMessage("");
-    setIsPromoApplied(false);
-  }, [basePriceTry, isOpen]);
-
   if (!isOpen) return null;
-
-  const handleApplyPromo = () => {
-    if (!promoCode) return;
-    const result = applyPromoCode(basePriceTry, promoCode, isWithinTrialWindow);
-    setCurrentPrice(result.priceTry);
-    setPromoMessage(result.message);
-    setIsPromoApplied(result.success);
-  };
 
   const startDate = new Date();
   const endDate = new Date();
@@ -82,13 +61,13 @@ export function GooglePlaySubscriptionModal({
                 <p className="text-sm text-slate-500">Düzenli abonelik</p>
               </div>
               <div className="text-right">
-                {isPromoApplied && (
+                {isWithinTrialWindow && (
                   <div className="text-sm font-bold text-slate-400 line-through">
-                    {formatTryPrice(basePriceTry)}
+                    {formatTryPrice(basePriceTry * 2)}
                   </div>
                 )}
                 <div className="text-2xl font-black text-emerald-600">
-                  {formatTryPrice(currentPrice)}
+                  {formatTryPrice(basePriceTry)}
                 </div>
               </div>
             </div>
@@ -105,32 +84,11 @@ export function GooglePlaySubscriptionModal({
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="mb-2 block text-sm font-bold text-slate-700">Promosyon Kodu</label>
-            <div className="flex gap-2">
-              <input
-                className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-slate-800 outline-none focus:border-[#1f4e9a] focus:ring-1 focus:ring-[#1f4e9a] disabled:bg-slate-100"
-                disabled={isPromoApplied}
-                onChange={(e) => setPromoCode(e.target.value)}
-                placeholder="Örn: ZIGO50"
-                type="text"
-                value={promoCode}
-              />
-              <button
-                className="rounded-xl bg-slate-800 px-6 py-2.5 font-bold text-white transition hover:bg-slate-700 disabled:opacity-50"
-                disabled={isPromoApplied || !promoCode}
-                onClick={handleApplyPromo}
-                type="button"
-              >
-                Uygula
-              </button>
+          {isWithinTrialWindow && (
+            <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+              <p className="text-sm font-bold text-emerald-700">🎉 İlk 30 güne özel %50 indirim uygulandı!</p>
             </div>
-            {promoMessage && (
-              <p className={`mt-2 text-sm font-bold ${isPromoApplied ? "text-emerald-600" : "text-rose-500"}`}>
-                {promoMessage}
-              </p>
-            )}
-          </div>
+          )}
 
           <p className="mb-6 text-center text-xs text-slate-500">
             Aboneliğiniz, seçtiğiniz dönemin sonunda otomatik olarak yenilenecektir. İstediğiniz zaman iptal edebilirsiniz.
@@ -138,10 +96,10 @@ export function GooglePlaySubscriptionModal({
 
           <button
             className="w-full rounded-xl bg-[#1f4e9a] py-4 text-lg font-bold text-white shadow-md transition hover:bg-[#173f80]"
-            onClick={() => onConfirm?.(isPromoApplied)}
+            onClick={() => onConfirm?.(isWithinTrialWindow)}
             type="button"
           >
-            {formatTryPrice(currentPrice)} ile Abone Ol
+            {formatTryPrice(basePriceTry)} ile Abone Ol
           </button>
         </div>
       </div>

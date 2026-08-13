@@ -154,6 +154,10 @@ function PlanGroupCard({
   userCreatedAt?: string;
 }) {
   const b = useMessages().billingUi;
+  const [selectedInterval, setSelectedInterval] = useState<"monthly" | "yearly">("monthly");
+  
+  if (!group) return null;
+
   const salesUrl = hidePrices
     ? buildOrganizationSalesWhatsAppUrl({
         organizationType,
@@ -207,20 +211,46 @@ function PlanGroupCard({
           <p className="text-xs font-semibold text-white/55">{b.salesSelfServeClosed}</p>
         </div>
       ) : (
-        <div className="mt-4 grid gap-2">
-          {group.plans.map((item) => (
-            <PlanPriceRow
-              allowDevActivate={allowDevActivate}
-              campaignActive={campaignActive}
-              compareAtTry={item.compareAtTry}
-              intervalLabel={item.intervalLabel}
-              key={item.id}
-              planId={item.id}
-              playStoreOnly={playStoreOnly}
-              priceTry={item.priceTry}
-              userCreatedAt={userCreatedAt}
-            />
-          ))}
+        <div className="mt-4">
+          {group.plans.length > 1 && (
+            <div className="mb-4 flex w-full rounded-xl bg-white/10 p-1">
+              <button
+                className={`flex-1 rounded-lg py-2.5 text-sm font-bold transition-all ${
+                  selectedInterval === "monthly" ? "bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow-md" : "text-white/80 hover:bg-white/5 hover:text-white"
+                }`}
+                onClick={() => setSelectedInterval("monthly")}
+                type="button"
+              >
+                Aylık Plan
+              </button>
+              <button
+                className={`flex-1 rounded-lg py-2.5 text-sm font-bold transition-all ${
+                  selectedInterval === "yearly" ? "bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow-md" : "text-white/80 hover:bg-white/5 hover:text-white"
+                }`}
+                onClick={() => setSelectedInterval("yearly")}
+                type="button"
+              >
+                Yıllık Plan
+              </button>
+            </div>
+          )}
+          <div className="grid gap-2">
+            {group.plans
+              .filter((item) => group.plans.length === 1 || item.interval === selectedInterval)
+              .map((item) => (
+                <PlanPriceRow
+                  allowDevActivate={allowDevActivate}
+                  campaignActive={campaignActive}
+                  compareAtTry={item.compareAtTry}
+                  intervalLabel={item.intervalLabel}
+                  key={item.id}
+                  planId={item.id}
+                  playStoreOnly={playStoreOnly}
+                  priceTry={item.priceTry}
+                  userCreatedAt={userCreatedAt}
+                />
+              ))}
+          </div>
         </div>
       )}
     </article>
