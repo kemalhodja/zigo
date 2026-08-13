@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { DismissibleFeedPost } from "@/components/dismissible-feed-post";
 import { FeedEducationBadges } from "@/components/feed-education-badges";
@@ -42,7 +43,7 @@ export function FeedPostCard({
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
-        className="zigo-feed-card zigo-feed-card-enter relative -mx-4 overflow-hidden"
+        className="zigo-feed-card zigo-feed-card-enter relative -mx-4 h-[calc(100dvh-70px)] overflow-hidden bg-black md:h-[700px]"
         style={containerStyle}
       >
         <FeedMediaViewer 
@@ -61,6 +62,8 @@ export function FeedPostCard({
             />
           </div>
 
+          <ExpandableCaption caption={post.caption} />
+
           <div className="pointer-events-auto space-y-2 px-4">
             <SocialPostActions
               initialComments={post.comments}
@@ -77,6 +80,28 @@ export function FeedPostCard({
         </div>
       </article>
     </DismissibleFeedPost>
+  );
+}
+
+function ExpandableCaption({ caption }: { caption?: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  if (!caption) return null;
+
+  return (
+    <div 
+      className="pointer-events-auto px-4 pb-2"
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className={`cursor-pointer text-[0.85rem] text-white/90 drop-shadow-md ${expanded ? "max-h-[50vh] overflow-y-auto" : "line-clamp-1"}`}>
+        {caption}
+      </div>
+      {!expanded && caption.length > 50 ? (
+        <span className="mt-0.5 cursor-pointer text-xs font-bold text-white/60 drop-shadow-sm">
+          devamını oku
+        </span>
+      ) : null}
+    </div>
   );
 }
 
