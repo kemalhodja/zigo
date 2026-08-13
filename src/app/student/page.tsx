@@ -171,6 +171,7 @@ export default async function StudentPage() {
           allowDevActivate={data.allowDevActivate}
           groups={data.planGroups}
           isPremium={data.isPremium}
+          userCreatedAt={data.userCreatedAt}
         />
       ) : null}
     </div>
@@ -196,6 +197,7 @@ async function getStudentDashboardData(): Promise<{
   leaderboard: AreaLeaderboardEntry[];
   leaderboardAreaName: string | null;
   viewerId: string | null;
+  userCreatedAt: string | null;
 }> {
   if (!hasSupabaseEnv()) {
     return allowDemoContent()
@@ -229,6 +231,7 @@ async function getStudentDashboardData(): Promise<{
           ],
           leaderboardAreaName: "LGS Matematik",
           viewerId: "demo-1",
+          userCreatedAt: new Date().toISOString(),
         }
       : {
           history: [],
@@ -249,6 +252,7 @@ async function getStudentDashboardData(): Promise<{
           leaderboard: [],
           leaderboardAreaName: null,
           viewerId: null,
+          userCreatedAt: null,
         };
   }
 
@@ -283,6 +287,7 @@ async function getStudentDashboardData(): Promise<{
         ],
         leaderboardAreaName: "LGS Matematik",
         viewerId: "demo-1",
+        userCreatedAt: new Date().toISOString(),
       }
     : {
         history: [] as LearningHistoryItem[],
@@ -303,6 +308,7 @@ async function getStudentDashboardData(): Promise<{
         leaderboard: [],
         leaderboardAreaName: null,
         viewerId: null,
+        userCreatedAt: null,
       };
 
   return withSupabaseFallback(async () => {
@@ -328,6 +334,7 @@ async function getStudentDashboardData(): Promise<{
       leaderboard: [],
       leaderboardAreaName: null,
       viewerId: null,
+      userCreatedAt: null,
     };
   }
 
@@ -351,6 +358,7 @@ async function getStudentDashboardData(): Promise<{
       leaderboard: [],
       leaderboardAreaName: null,
       viewerId: profile.id,
+      userCreatedAt: profile.created_at ?? null,
     };
   }
 
@@ -395,6 +403,7 @@ async function getStudentDashboardData(): Promise<{
     leaderboard,
     leaderboardAreaName,
     viewerId: profile.id,
+    userCreatedAt: profile.created_at ?? null,
   };
   }, previewFallback);
 }

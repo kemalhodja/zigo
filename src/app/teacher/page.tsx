@@ -324,6 +324,7 @@ export default async function TeacherPage({
         isPremium={teacherCreatorPlus}
         organizationName={profile.full_name}
         organizationType={organizationType}
+        userCreatedAt={profile.created_at ?? undefined}
       />
 
       <WhatsAppSupportCard

@@ -372,7 +372,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           isTrial={billingSection.isTrial}
           organizationName={billingSection.organizationName}
           organizationType={billingSection.organizationType}
-          userCreatedAt={billingSection.userCreatedAt}
+          userCreatedAt={profile.userCreatedAt}
         />
       ) : null}
 
@@ -596,6 +596,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
   isPreview: boolean;
   isSignedOut: boolean;
   avatarUrl: string | null;
+  userCreatedAt?: string;
 }> {
   const signedOutMessages = await getServerMessages();
   const pf = signedOutMessages.profile;
@@ -635,6 +636,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
     isPreview: true,
     isSignedOut: false,
     avatarUrl: null as string | null,
+    userCreatedAt: undefined as string | undefined,
   };
 
   if (!hasSupabaseEnv()) {
@@ -655,6 +657,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
       isPreview: false,
       isSignedOut: true,
       avatarUrl: null as string | null,
+      userCreatedAt: undefined as string | undefined,
     };
   }
 
@@ -675,6 +678,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
         isPreview: false,
         isSignedOut: true,
         avatarUrl: null as string | null,
+        userCreatedAt: undefined as string | undefined,
       };
 
   return withSupabaseFallback(async () => {
@@ -697,6 +701,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
       isPreview: false,
       isSignedOut: true,
       avatarUrl: null as string | null,
+      userCreatedAt: undefined as string | undefined,
     };
   }
 
@@ -775,5 +780,6 @@ function toProfileData(
     isPreview: false,
     isSignedOut: false,
     avatarUrl: profile.avatar_url || null,
+    userCreatedAt: profile.created_at ?? undefined,
   };
 }

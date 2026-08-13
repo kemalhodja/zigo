@@ -25,7 +25,7 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, focusOverview } =
+  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, focusOverview, userCreatedAt } =
     await getParentData();
   const d = messages.dashboard;
 
@@ -165,6 +165,7 @@ export default async function ParentPage() {
           allowDevActivate={allowDevActivate}
           groups={planGroups}
           isPremium={isPremium}
+          userCreatedAt={userCreatedAt}
         />
       ) : null}
     </div>
@@ -187,6 +188,7 @@ async function getParentData(): Promise<{
   classroom: string | null;
   planGroups: ReturnType<typeof resolveProfilePlanGroups>;
   profileId: string | null;
+  userCreatedAt?: string;
 }> {
   const m = await getServerMessages();
   const previewOverview = {
@@ -212,8 +214,9 @@ async function getParentData(): Promise<{
       district: null,
       schoolName: null,
       classroom: null,
-      planGroups: resolveProfilePlanGroups("parent", previewChildren.length > 0),
-      profileId: null,
+      planGroups: resolveProfilePlanGroups("parent", true),
+      profileId: "demo-parent-1",
+      userCreatedAt: new Date().toISOString(),
     };
   }
 
@@ -233,6 +236,7 @@ async function getParentData(): Promise<{
     classroom: null as string | null,
     planGroups: resolveProfilePlanGroups("parent", previewChildren.length > 0),
     profileId: null,
+    userCreatedAt: undefined as string | undefined,
   };
 
   return withSupabaseFallback(async () => {
@@ -255,6 +259,7 @@ async function getParentData(): Promise<{
       classroom: null,
       planGroups: [],
       profileId: null,
+      userCreatedAt: undefined,
     };
   }
   if (profile.role !== "parent") {
@@ -311,6 +316,7 @@ async function getParentData(): Promise<{
     classroom: profile.classroom,
     planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type)),
     profileId: profile.id,
+    userCreatedAt: profile.created_at ?? undefined,
   };
   }, previewFallback);
 }
