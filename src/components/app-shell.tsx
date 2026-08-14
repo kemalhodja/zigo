@@ -105,10 +105,11 @@ export function AppShell({
         let appPlugin = win.Capacitor?.Plugins?.App;
 
         if (!appPlugin) {
-          const capPkg = "@capacitor/app";
-          const appModule = (await import(/* webpackIgnore: true */ capPkg).catch(() => null)) as { App?: typeof appPlugin } | null;
-          if (appModule?.App) {
+          try {
+            const appModule = await import("@capacitor/app");
             appPlugin = appModule.App;
+          } catch {
+            // Native back listener fallback
           }
         }
 
@@ -116,12 +117,20 @@ export function AppShell({
 
         const handle = await appPlugin.addListener("backButton", ({ canGoBack }: { canGoBack: boolean }) => {
           const currentPath = window.location.pathname;
-          if (currentPath === "/" || currentPath === "/auth") {
+          
+          // Ana ekranlarda geriye basılınca uygulamadan çıkılsın
+          if (
+            currentPath === "/" || 
+            currentPath === "/auth" ||
+            currentPath === "/student" ||
+            currentPath === "/teacher" ||
+            currentPath === "/parent" ||
+            currentPath === "/explore"
+          ) {
             void appPlugin.exitApp();
-          } else if (canGoBack || window.history.length > 1) {
-            window.history.back();
           } else {
-            _router.push("/");
+            // Diğer sayfalarda Next.js router üzerinden bir öncekine dön
+            _router.back();
           }
         });
 
