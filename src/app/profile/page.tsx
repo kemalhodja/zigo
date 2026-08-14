@@ -232,7 +232,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <CreatePrivateLessonModal
               areas={educationAreas}
               children={parentChildProfiles}
-              onCreated={() => {}}
             />
           ) : null}
           {(profile.role === "teacher" || profile.role === "student") && !profile.isSignedOut ? (
