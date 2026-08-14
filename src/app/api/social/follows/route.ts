@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -45,6 +46,9 @@ export async function POST(request: Request) {
       followerId: profile.id,
       followingId: body.followingId,
     });
+
+    revalidatePath("/");
+    revalidatePath("/feed");
 
     return NextResponse.json({ data, meta: { action: "toggle-follow" } });
   } catch (error) {
