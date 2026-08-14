@@ -33,14 +33,14 @@ const ROLE_OPTIONS = [
     gradient: "from-sun to-peach",
   },
   {
-    id: "education_institution",
+    id: "institution",
     title: "Eğitim Kurumu",
     description: "Kurum yönetimi, toplu kullanıcı takibi ve kurumsal paylaşım yapın.",
     icon: Building2,
     gradient: "from-indigo-400 to-cyan-400",
   },
   {
-    id: "education_platform",
+    id: "platform",
     title: "Eğitim Platformu",
     description: "Dijital kurs ve müfredat içerikleri sunarak geniş kitlelere ulaşın.",
     icon: MonitorPlay,
