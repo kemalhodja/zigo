@@ -107,7 +107,7 @@ export function AppShell({
         if (!appPlugin) {
           try {
             const appModule = await import("@capacitor/app");
-            appPlugin = appModule.App;
+            appPlugin = appModule.App as any;
           } catch {
             // Native back listener fallback
           }
