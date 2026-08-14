@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
+import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
+import { TeacherLessonMarketplaceTab } from "@/components/teacher-lesson-marketplace-tab";
 import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
@@ -13,9 +16,10 @@ import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
+import { getChildProfiles } from "@/lib/domain/children";
 import { getOrgDashboardSnapshot } from "@/lib/domain/org-dashboard";
 import { getProfileBillingSection } from "@/lib/domain/profile-billing";
-import { getCurrentProfile, getUserInterestAreaNames, parseOrganizationType, type UserProfile } from "@/lib/domain/profiles";
+import { getCurrentProfile, getEducationAreas, getUserInterestAreaNames, parseOrganizationType, type UserProfile } from "@/lib/domain/profiles";
 import { emptyProfilePrimaryHref } from "@/lib/domain/role-navigation";
 import {
   getProfileSocialStats,
@@ -26,6 +30,10 @@ import {
   type ProfileSocialStats,
   type SuggestedCreator,
 } from "@/lib/domain/social";
+import {
+  getMatchedLessonPostsForTeacher,
+  getParentPrivateLessonPosts,
+} from "@/lib/domain/private-lessons";
 import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import type { SocialPostRow } from "@/lib/supabase/database.types";
@@ -37,14 +45,7 @@ const demoSuggestedCreators = [
   { id: undefined, name: "Code Club", handle: "codeclub", area: "Coding", href: "/explore?format=teachers" },
 ] as const;
 
-import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
-import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
-import { TeacherLessonMarketplaceTab } from "@/components/teacher-lesson-marketplace-tab";
-import { getEducationAreas } from "@/lib/domain/profiles";
-import {
-  getMatchedLessonPostsForTeacher,
-  getParentPrivateLessonPosts,
-} from "@/lib/domain/private-lessons";
+
 
 type ProfilePageProps = {
   searchParams: Promise<{ tab?: string }>;
@@ -67,15 +68,20 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   // Private lesson marketplace data
   let educationAreas: any[] = [];
   let parentLessonPosts: any[] = [];
+  let parentChildProfiles: { id: string; name: string }[] = [];
   let teacherMatchedPosts: any[] = [];
 
   if (hasSupabaseEnv() && !profile.isSignedOut) {
     const supabase = await createClient();
     if (profile.role === "parent") {
-      [educationAreas, parentLessonPosts] = await Promise.all([
+      const [areas, posts, children] = await Promise.all([
         getEducationAreas(supabase).catch(() => []),
         getParentPrivateLessonPosts(supabase, profile.id).catch(() => []),
+        getChildProfiles(supabase).catch(() => []),
       ]);
+      educationAreas = areas;
+      parentLessonPosts = posts;
+      parentChildProfiles = (children || []).map((c: any) => ({ id: c.id, name: c.display_name || c.name || "Çocuk" }));
     } else if (profile.role === "teacher") {
       teacherMatchedPosts = await getMatchedLessonPostsForTeacher(supabase, profile.id).catch(() => []);
     }
@@ -225,6 +231,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           {profile.role === "parent" && !profile.isSignedOut ? (
             <CreatePrivateLessonModal
               areas={educationAreas}
+              children={parentChildProfiles}
               onCreated={() => {}}
             />
           ) : null}
