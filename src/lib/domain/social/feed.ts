@@ -316,7 +316,7 @@ export async function getFollowingFeed(
   if (followsError) throw followsError;
 
   const followingIds = (follows ?? []).map((follow) => follow.following_id);
-  const authorIds = [...new Set([...followingIds, viewerId])];
+  const authorIds = [...new Set(followingIds)];
 
   if (authorIds.length === 0) return [];
 
