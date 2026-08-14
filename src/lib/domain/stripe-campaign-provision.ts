@@ -60,8 +60,8 @@ export async function ensureStripeCampaignCoupon(secretInput?: string) {
     coupon = await stripeRequest<StripeCoupon>(secret, "GET", `/coupons/${couponId}`);
   } catch {
     const params = new URLSearchParams({
-      id: couponId,
-      name: "Zigo Yaz 2026 %75",
+      id: couponId || "",
+      name: "Zigo Yaz 2026 %50",
       percent_off: String(SUBSCRIPTION_CAMPAIGN.discountPercent),
       duration: "once",
       redeem_by: String(REDEEM_BY_UNIX),

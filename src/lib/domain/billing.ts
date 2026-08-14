@@ -62,7 +62,7 @@ export async function createZigoPlusCheckoutSession(
     const couponId = getSubscriptionCampaignStripeCouponId(discountPercent);
     if (couponId) {
       body.set("discounts[0][coupon]", couponId);
-      body.set("metadata[campaign_id]", dynamicPricing.isWithinTrialWindow ? "zigo-trial-50" : "zigo-standard-15");
+      body.set("metadata[campaign_id]", dynamicPricing.isWithinTrialWindow ? "zigo-trial-50" : "zigo-standard-0");
     }
     body.set("subscription_data[trial_period_days]", "30"); // 30-Day Trial Logic
   }

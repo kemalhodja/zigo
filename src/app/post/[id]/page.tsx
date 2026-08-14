@@ -91,12 +91,7 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   if (!post) notFound();
 
-  // Fetch explore-like posts instead of home feed so the feed actually continues
-  // even if the user isn't following anyone.
-  const explorePosts = await searchSocialPosts(supabase, "", profile?.id);
-  const suggestedPosts = explorePosts.filter((item) => item.id !== post.id).slice(0, 20);
-
-  const combinedPosts = [post, ...suggestedPosts];
+  const combinedPosts = [post];
 
   const followingByPost = await Promise.all(
     combinedPosts.map((p) =>

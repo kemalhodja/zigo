@@ -92,6 +92,9 @@ export function getSubscriptionCampaignStripeCouponId(discountPercent = 50) {
   if (discountPercent >= 50) {
     return process.env.STRIPE_COUPON_50OFF?.trim() || "zigo-50off";
   }
-  return process.env.STRIPE_COUPON_15OFF?.trim() || "zigo-15off";
+  if (discountPercent > 0) {
+    return process.env.STRIPE_COUPON_15OFF?.trim() || "zigo-15off";
+  }
+  return null;
 }
 

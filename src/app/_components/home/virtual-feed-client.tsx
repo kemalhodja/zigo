@@ -6,8 +6,12 @@ import { useRef } from "react";
 import type { Messages } from "@/lib/i18n/server";
 import type { UserRole } from "@/lib/supabase/database.types";
 
+import dynamic from "next/dynamic";
 import type { DisplayPost, DisplaySuggestedCreator } from "./data";
-import { CreatorRail, FeedPostCard, FollowingStarter } from "./match-feed";
+import { FollowingStarter } from "./match-feed";
+
+const FeedPostCard = dynamic(() => import("./match-feed").then(mod => mod.FeedPostCard), { ssr: false });
+const CreatorRail = dynamic(() => import("./match-feed").then(mod => mod.CreatorRail), { ssr: false });
 
 export function VirtualFeedClient({
   posts,

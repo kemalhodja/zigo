@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ChevronRight, GraduationCap, Loader2, Shield, Sparkles, Users } from "lucide-react";
+import { BookOpen, Building2, CheckCircle2, ChevronRight, GraduationCap, Loader2, MonitorPlay, Shield, Sparkles, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect,useState } from "react";
 import { toast } from "react-hot-toast";
@@ -31,6 +31,27 @@ const ROLE_OPTIONS = [
     description: "Kendi içeriklerini yayınla, öğrencilere ulaş ve gelir elde et.",
     icon: Sparkles,
     gradient: "from-sun to-peach",
+  },
+  {
+    id: "education_institution",
+    title: "Eğitim Kurumu",
+    description: "Kurum yönetimi, toplu kullanıcı takibi ve kurumsal paylaşım yapın.",
+    icon: Building2,
+    gradient: "from-indigo-400 to-cyan-400",
+  },
+  {
+    id: "education_platform",
+    title: "Eğitim Platformu",
+    description: "Dijital kurs ve müfredat içerikleri sunarak geniş kitlelere ulaşın.",
+    icon: MonitorPlay,
+    gradient: "from-fuchsia-400 to-pink-500",
+  },
+  {
+    id: "publisher",
+    title: "Yayınevi",
+    description: "Soru bankası, kaynak ve dijital yayın paylaşımları yapın.",
+    icon: BookOpen,
+    gradient: "from-emerald-400 to-teal-500",
   },
 ] as const;
 
