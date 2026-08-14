@@ -373,7 +373,7 @@ function toExploreTile(post: SocialFeedPost, index: number) {
         : index % 3 === 1
           ? "from-emerald-500 to-teal-500"
           : "from-amber-400 to-orange-500",
-    href: `/post/${post.id}`,
+    href: `/post/${post.id}?feed=explore`,
     mediaUrl: post.media_url,
     mediaType: post.media_type,
   };

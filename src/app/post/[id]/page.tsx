@@ -13,6 +13,7 @@ import type { Metadata, ResolvingMetadata } from "next";
 
 type PostDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ feed?: string }>;
 };
 
 export async function generateMetadata(
@@ -56,8 +57,10 @@ export async function generateMetadata(
   };
 }
 
-export default async function PostDetailPage({ params }: PostDetailPageProps) {
+export default async function PostDetailPage({ params, searchParams }: PostDetailPageProps) {
   const { id } = await params;
+  const sp = await searchParams;
+  const feedType = sp.feed;
   const m = await getServerMessages();
 
   if (!hasSupabaseEnv()) {
@@ -92,6 +95,12 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   if (!post) notFound();
 
   const combinedPosts = [post];
+
+  if (feedType === "explore") {
+    const explorePosts = await searchSocialPosts(supabase, "", profile?.id);
+    const suggestedPosts = explorePosts.filter((item) => item.id !== post.id).slice(0, 20);
+    combinedPosts.push(...suggestedPosts);
+  }
 
   const followingByPost = await Promise.all(
     combinedPosts.map((p) =>
