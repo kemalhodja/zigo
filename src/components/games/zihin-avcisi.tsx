@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import confetti from "canvas-confetti";
 import { MemoryCard } from "./memory-card";
 
 const ICONS = ["🚀", "🪐", "⭐", "🔭", "🌍", "👽", "☄️", "🛸"];
@@ -93,6 +94,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
         prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c))
       );
     } else if (firstChoice.id !== id && !secondChoice) {
+      setIsLocked(true); // Prevent 3rd click instantly
       setSecondChoice(clickedCard);
       setCards((prev) =>
         prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c))
@@ -104,8 +106,6 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   // Evaluate Match
   useEffect(() => {
     if (firstChoice && secondChoice) {
-      setIsLocked(true);
-      
       if (firstChoice.icon === secondChoice.icon) {
         // Match!
         setCards((prev) =>
@@ -145,6 +145,14 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       const rawScore = Math.floor(10000 / Math.max(1, timeElapsed)) - (moves * 10);
       const finalScore = Math.max(10, rawScore); // Minimum 10 points
       setScore(finalScore);
+      
+      // Fire confetti!
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#4f46e5', '#9333ea', '#10b981', '#f59e0b']
+      });
       
       // Send API Request
       handleGameFinish(finalScore, timeElapsed, moves);
