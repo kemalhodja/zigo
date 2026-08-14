@@ -130,6 +130,7 @@ export default async function PostDetailPage({ params, searchParams }: PostDetai
             feedEnhancements={m.feedEnhancements}
             viewerRole={profile?.role}
             priorityMedia={index === 0}
+            fullHeight={true}
           />
         </div>
       ))}

@@ -27,6 +27,7 @@ export function FeedPostCard({
   priorityMedia = false,
   viewerRole = null,
   enterDelayMs = 0,
+  fullHeight = false,
 }: {
   post: DisplayPost;
   teacherBadges: { verifiedTeacher: string; moreAreas: string };
@@ -35,15 +36,18 @@ export function FeedPostCard({
   priorityMedia?: boolean;
   viewerRole?: UserRole | "guest" | null;
   enterDelayMs?: number;
+  fullHeight?: boolean;
 }) {
   const postKey = post.postId ?? post.handle;
   const isMicro = post.badge === "Micro" || post.mediaType === "video";
   const { containerStyle } = useFeedPostState(enterDelayMs);
 
+  const heightClass = fullHeight ? "h-[100dvh] md:h-[100dvh]" : "h-[calc(100dvh-70px)] md:h-[700px]";
+
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
-        className="zigo-feed-card zigo-feed-card-enter relative -mx-4 h-[calc(100dvh-70px)] overflow-hidden bg-black md:h-[700px]"
+        className={`zigo-feed-card zigo-feed-card-enter relative -mx-4 overflow-hidden bg-black ${heightClass}`}
         style={containerStyle}
       >
         <FeedMediaViewer 
