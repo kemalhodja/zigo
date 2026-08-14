@@ -37,6 +37,15 @@ const demoSuggestedCreators = [
   { id: undefined, name: "Code Club", handle: "codeclub", area: "Coding", href: "/explore?format=teachers" },
 ] as const;
 
+import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
+import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
+import { TeacherLessonMarketplaceTab } from "@/components/teacher-lesson-marketplace-tab";
+import { getEducationAreas } from "@/lib/domain/profiles";
+import {
+  getMatchedLessonPostsForTeacher,
+  getParentPrivateLessonPosts,
+} from "@/lib/domain/private-lessons";
+
 type ProfilePageProps = {
   searchParams: Promise<{ tab?: string }>;
 };
@@ -50,8 +59,28 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       ? "reels"
       : params.tab === "saved"
         ? "saved"
-        : "posts";
-  const profile = await getProfileData(activeTab);
+        : params.tab === "market" || params.tab === "lessons"
+          ? "market"
+          : "posts";
+  const profile = await getProfileData(activeTab as any);
+
+  // Private lesson marketplace data
+  let educationAreas: any[] = [];
+  let parentLessonPosts: any[] = [];
+  let teacherMatchedPosts: any[] = [];
+
+  if (hasSupabaseEnv() && !profile.isSignedOut) {
+    const supabase = await createClient();
+    if (profile.role === "parent") {
+      [educationAreas, parentLessonPosts] = await Promise.all([
+        getEducationAreas(supabase).catch(() => []),
+        getParentPrivateLessonPosts(supabase, profile.id).catch(() => []),
+      ]);
+    } else if (profile.role === "teacher") {
+      teacherMatchedPosts = await getMatchedLessonPostsForTeacher(supabase, profile.id).catch(() => []);
+    }
+  }
+
   const organizationType = parseOrganizationType(profile.organization_type);
   const orgDashboard =
     hasSupabaseEnv() && organizationType && profile.id && !profile.isSignedOut
@@ -60,7 +89,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const billingSection = hasSupabaseEnv()
     ? await getProfileBillingSection(await createClient())
     : null;
-  const activeTabLabel = activeTab === "reels" ? m.zigo.micro : activeTab === "saved" ? p.saved : m.common.posts;
+  const activeTabLabel =
+    activeTab === "reels"
+      ? m.zigo.micro
+      : activeTab === "saved"
+        ? p.saved
+        : activeTab === "market"
+          ? "İlanlar"
+          : m.common.posts;
   const orgCopy = {
     eyebrow: m.dashboard.teacher.orgEyebrow,
     titleInstitution: m.dashboard.teacher.orgTitleInstitution,
@@ -186,6 +222,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
             {profile.isSignedOut ? p.feed : p.saved}
           </Link>
+          {profile.role === "parent" && !profile.isSignedOut ? (
+            <CreatePrivateLessonModal
+              areas={educationAreas}
+              onCreated={() => {}}
+            />
+          ) : null}
           {(profile.role === "teacher" || profile.role === "student") && !profile.isSignedOut ? (
             <ProfileAdvertiseModal
               profile={{
@@ -200,6 +242,11 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           ) : null}
         </div>
       </section>
+
+      {/* Veli: Yayınlanan İlanlar Listesi & Teklifleri */}
+      {profile.role === "parent" && !profile.isSignedOut ? (
+        <ParentLessonPostsList posts={parentLessonPosts} />
+      ) : null}
 
       {!profile.isSignedOut ? (
         <section className="-mx-4 bg-white px-4 py-3 border-b border-slate-100">
@@ -217,7 +264,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
       <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} role={profile.role} />
 
-      <section className="-mx-4 mt-2 grid grid-cols-3 border-y border-slate-100 bg-white">
+      <section className={`-mx-4 mt-2 grid ${profile.role === "teacher" ? "grid-cols-4" : "grid-cols-3"} border-y border-slate-100 bg-white`}>
         <Link
           className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
             activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
@@ -254,114 +301,134 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <path d="M6 3h12v18l-6-4-6 4z" />
           </svg>
         </Link>
+        {profile.role === "teacher" ? (
+          <Link
+            className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
+              activeTab === "market" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+            }`}
+            href="/profile?tab=market"
+          >
+            <span className="text-sm">🎯</span>
+            <span className="text-[0.65rem] font-bold">İlanlar</span>
+          </Link>
+        ) : null}
       </section>
 
-      <ProfileGridModeStrip
-        activeTab={activeTab}
-        isSignedOut={profile.isSignedOut}
-        messages={m}
-        tileCount={profile.posts.length}
-      />
+      {activeTab === "market" && profile.role === "teacher" ? (
+        <TeacherLessonMarketplaceTab
+          posts={teacherMatchedPosts}
+          teacherBranches={profile.branches}
+        />
+      ) : (
+        <>
+          <ProfileGridModeStrip
+            activeTab={activeTab as any}
+            isSignedOut={profile.isSignedOut}
+            messages={m}
+            tileCount={profile.posts.length}
+          />
 
-      <section className="hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{m.profileGrid.profileGridLabel}</p>
-            <h2 className="mt-1 text-lg font-black text-night">{activeTabLabel}</h2>
-          </div>
-          <span className="rounded-lg bg-gradient-to-r from-violet-50 to-pink-50 px-3 py-2 text-xs font-black text-berry">
-            {profile.posts.length} tiles
-          </span>
-        </div>
-      </section>
+          <section className="hidden">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{m.profileGrid.profileGridLabel}</p>
+                <h2 className="mt-1 text-lg font-black text-night">{activeTabLabel}</h2>
+              </div>
+              <span className="rounded-lg bg-gradient-to-r from-violet-50 to-pink-50 px-3 py-2 text-xs font-black text-berry">
+                {profile.posts.length} tiles
+              </span>
+            </div>
+          </section>
 
-      <section className="-mx-4 grid grid-cols-3 gap-0.5 bg-white">
-        {profile.posts.length === 0 ? (
-          <div className="col-span-3 bg-white px-6 py-14 text-center">
-            <span className="mx-auto flex size-16 items-center justify-center rounded-lg border-2 border-night text-2xl font-black text-night">
-              <svg aria-hidden="true" className="size-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M4 4h16v16H4z" />
-                <path d="M4 12h16" />
-                <path d="M12 4v16" />
-              </svg>
-            </span>
-            <h3 className="mt-4 text-lg font-black text-night">
-              {profile.isSignedOut
-                ? p.signInTitle
-                : activeTab === "saved"
-                  ? p.noSaved
-                  : activeTab === "reels"
-                    ? p.noMicro
-                    : p.noPosts}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              {profile.isSignedOut
-                ? p.signInDesc
-                : activeTab === "saved"
-                  ? p.noSavedDesc
-                  : activeTab === "reels"
-                    ? p.noMicroDesc
-                    : p.noPostsDesc}
-            </p>
-            <Link
-              className="tap-scale mt-4 inline-flex rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-black text-night"
-              href={
-                profile.isSignedOut
-                  ? "/auth"
-                  : activeTab === "saved"
-                    ? "/collections"
-                    : emptyProfilePrimaryHref(profile.role)
-              }
-            >
-              {profile.isSignedOut
-                ? m.common.signIn
-                : activeTab === "saved"
-                  ? p.saved
-                  : profile.role === "teacher"
-                    ? m.header.create
-                    : profile.role === "student"
-                      ? m.dashboard.student.mode
-                      : profile.role === "parent"
-                        ? m.profilesPage.familySetup
-                        : m.common.open}
-            </Link>
-          </div>
-        ) : (
-          profile.posts.map((item, index) => (
-            <Link className="group block text-[0.68rem] font-black text-white" href={item.href} key={item.id}>
-              <SocialMediaFrame
-                className="aspect-square media-polish"
-                gradient={
-                  index % 3 === 0
-                    ? "from-crystal to-fuchsia-500"
-                    : index % 3 === 1
-                      ? "from-emerald-500 to-teal-500"
-                      : "from-amber-400 to-orange-500"
-                }
-                mediaType={item.mediaType}
-                mediaUrl={item.mediaUrl}
-                scene={index % 4 === 0 ? "math" : index % 4 === 1 ? "science" : index % 4 === 2 ? "coding" : "english"}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="sr-only">
-                    {activeTab === "saved" ? "saved" : item.mediaType === "video" ? "reel" : "post"}
-                  </span>
-                  {item.mediaType === "video" ? (
-                    <span className="flex size-7 items-center justify-center rounded-lg bg-black/30 backdrop-blur">
-                      <svg aria-hidden="true" className="ml-0.5 size-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </span>
-                  ) : null}
-                </div>
-                <div>
-                  <span className="grid-tile-caption">{item.label}</span>
-                </div>
-              </SocialMediaFrame>
-            </Link>
-          ))
-        )}
-      </section>
+          <section className="-mx-4 grid grid-cols-3 gap-0.5 bg-white">
+            {profile.posts.length === 0 ? (
+              <div className="col-span-3 bg-white px-6 py-14 text-center">
+                <span className="mx-auto flex size-16 items-center justify-center rounded-lg border-2 border-night text-2xl font-black text-night">
+                  <svg aria-hidden="true" className="size-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M4 4h16v16H4z" />
+                    <path d="M4 12h16" />
+                    <path d="M12 4v16" />
+                  </svg>
+                </span>
+                <h3 className="mt-4 text-lg font-black text-night">
+                  {profile.isSignedOut
+                    ? p.signInTitle
+                    : activeTab === "saved"
+                      ? p.noSaved
+                      : activeTab === "reels"
+                        ? p.noMicro
+                        : p.noPosts}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {profile.isSignedOut
+                    ? p.signInDesc
+                    : activeTab === "saved"
+                      ? p.noSavedDesc
+                      : activeTab === "reels"
+                        ? p.noMicroDesc
+                        : p.noPostsDesc}
+                </p>
+                <Link
+                  className="tap-scale mt-4 inline-flex rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-black text-night"
+                  href={
+                    profile.isSignedOut
+                      ? "/auth"
+                      : activeTab === "saved"
+                        ? "/collections"
+                        : emptyProfilePrimaryHref(profile.role)
+                  }
+                >
+                  {profile.isSignedOut
+                    ? m.common.signIn
+                    : activeTab === "saved"
+                      ? p.saved
+                      : profile.role === "teacher"
+                        ? m.header.create
+                        : profile.role === "student"
+                          ? m.dashboard.student.mode
+                          : profile.role === "parent"
+                            ? m.profilesPage.familySetup
+                            : m.common.open}
+                </Link>
+              </div>
+            ) : (
+              profile.posts.map((item, index) => (
+                <Link className="group block text-[0.68rem] font-black text-white" href={item.href} key={item.id}>
+                  <SocialMediaFrame
+                    className="aspect-square media-polish"
+                    gradient={
+                      index % 3 === 0
+                        ? "from-crystal to-fuchsia-500"
+                        : index % 3 === 1
+                          ? "from-emerald-500 to-teal-500"
+                          : "from-amber-400 to-orange-500"
+                    }
+                    mediaType={item.mediaType}
+                    mediaUrl={item.mediaUrl}
+                    scene={index % 4 === 0 ? "math" : index % 4 === 1 ? "science" : index % 4 === 2 ? "coding" : "english"}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="sr-only">
+                        {activeTab === "saved" ? "saved" : item.mediaType === "video" ? "reel" : "post"}
+                      </span>
+                      {item.mediaType === "video" ? (
+                        <span className="flex size-7 items-center justify-center rounded-lg bg-black/30 backdrop-blur">
+                          <svg aria-hidden="true" className="ml-0.5 size-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </span>
+                      ) : null}
+                    </div>
+                    <div>
+                      <span className="grid-tile-caption">{item.label}</span>
+                    </div>
+                  </SocialMediaFrame>
+                </Link>
+              ))
+            )}
+          </section>
+        </>
+      )}
 
       {billingSection ? (
         <ZigoPlusPlansSection
