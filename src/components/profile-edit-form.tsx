@@ -26,9 +26,8 @@ type ProfileEditFormProps = {
 
 // Map legacy RegistrationAccountKind (includes kurs/okul) to RequiredSignupOptionId
 function toRequiredId(kind: RegistrationAccountKind): RequiredSignupOptionId {
-  // kurs and okul mapped to institution originally, now just cast to teacher as fallback
-  if (kind === "kurs" || kind === "okul" || kind === "institution" || kind === "platform" || kind === "publisher") {
-    return "teacher" as RequiredSignupOptionId;
+  if (kind === "kurs" || kind === "okul") {
+    return "institution" as RequiredSignupOptionId;
   }
   return kind as RequiredSignupOptionId;
 }

@@ -141,11 +141,39 @@ export const REGISTRATION_REQUIRED_SIGNUP_OPTIONS = [
     emoji: "🎓",
   },
   {
+    id: "parent" as const,
+    label: "Veli",
+    description: "Öğrenci ilerlemesi, YKS hazırlık takibi, onaylar ve aile paketi.",
+    accent: "from-aqua to-mint",
+    emoji: "👪",
+  },
+  {
     id: "teacher" as const,
-    label: "Öğretmen",
-    description: "Bireysel öğretmen; doğrulama sonrası içerik ve stüdyo araçları.",
+    label: "Öğretmen / İçerik Üretici",
+    description: "Bireysel içerik üreticisi; doğrulama sonrası içerik ve stüdyo araçları.",
     accent: "from-sun to-peach",
     emoji: "👩‍🏫",
+  },
+  {
+    id: "institution" as const,
+    label: "Eğitim Kurumu",
+    description: "Kurum yönetimi, toplu kullanıcı takibi ve kurumsal paylaşım.",
+    accent: "from-indigo-400 to-cyan-400",
+    emoji: "🏫",
+  },
+  {
+    id: "platform" as const,
+    label: "Eğitim Platformu",
+    description: "Dijital kurs ve müfredat içerikleri sunma.",
+    accent: "from-fuchsia-400 to-pink-500",
+    emoji: "💻",
+  },
+  {
+    id: "publisher" as const,
+    label: "Yayınevi",
+    description: "Soru bankası, kaynak ve dijital yayın paylaşımları.",
+    accent: "from-emerald-400 to-teal-500",
+    emoji: "📚",
   },
 ] as const;
 
