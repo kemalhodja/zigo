@@ -158,21 +158,19 @@ export async function getMatchedLessonPostsForTeacher(
     .single();
 
   if (userError || !user || user.role !== "teacher") {
-    throw new DomainForbiddenError("İlanlar yalnızca öğretmen hesapları tarafından görüntülenebilir.");
+    return []; // Öğretmen değilse boş döndür
   }
 
-  // 2. Branş kontrolü
+  // 2. Branş kontrolü — branşı yoksa gösterme, ama hata verme
   const teacherAreaIds = await getUserInterestAreaIds(supabase, teacherId);
   if (!teacherAreaIds || teacherAreaIds.length === 0) {
-    return []; // Branşı yoksa ilan göremez
+    return [];
   }
 
-  // 3. Abonelik kontrolü
+  // 3. Abonelik kontrolü — abone değilse yine boş döndür; UI katmanı göstermez
   const subscription = await getUserSubscription(supabase, teacherId);
   if (!subscription.isPremium) {
-    throw new DomainForbiddenError(
-      "Özel ders ilanlarını görüntülemek ve teklif vermek için Zigo Plus Öğretmen Aboneliği gereklidir. İlk 30 gün ücretsiz deneyebilirsiniz.",
-    );
+    return [];
   }
 
   // 4. Eşleşen ilanları getir
