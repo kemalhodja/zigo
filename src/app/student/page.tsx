@@ -118,18 +118,35 @@ export default async function StudentPage() {
         <DashboardLink accent="from-berry to-peach" href="/avatar" label={d.student.avatar} text={d.student.equipRewards} />
       </section>
 
-      <div className="-mx-4 bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-4 my-2 sm:rounded-2xl sm:mx-0 shadow-lg relative overflow-hidden group">
-        <div className="relative z-10 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-black text-white flex items-center gap-2"><span>🧠</span> Zihin Avcısı</h3>
-            <p className="text-indigo-100 text-xs font-bold mt-1">Görsel hafızanı test et, Zigo Puanı kazan!</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 my-2 -mx-4 sm:mx-0">
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-4 sm:rounded-2xl shadow-lg relative overflow-hidden group">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-black text-white flex items-center gap-2"><span>🧠</span> Zihin Avcısı</h3>
+              <p className="text-indigo-100 text-[0.65rem] font-bold mt-1">Görsel hafızanı test et, Puan kazan!</p>
+            </div>
+            <Link href="/student/games/memory" className="tap-scale shrink-0 bg-white text-indigo-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm hover:bg-indigo-50 transition-colors">
+              Oyna
+            </Link>
           </div>
-          <Link href="/student/games/memory" className="tap-scale shrink-0 bg-white text-indigo-700 px-4 py-2.5 rounded-xl text-xs font-black shadow-sm hover:bg-indigo-50 transition-colors">
-            Oyna
-          </Link>
+          <div className="absolute top-0 right-0 -mr-6 -mt-6 text-white/10 text-7xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
+            🧠
+          </div>
         </div>
-        <div className="absolute top-0 right-0 -mr-6 -mt-6 text-white/10 text-8xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
-          🧠
+
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-4 sm:rounded-2xl shadow-lg relative overflow-hidden group">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-black text-white flex items-center gap-2"><span>🧩</span> Blok Zeka</h3>
+              <p className="text-emerald-100 text-[0.65rem] font-bold mt-1">Stratejini konuştur, Puan kazan!</p>
+            </div>
+            <Link href="/student/games/blocks" className="tap-scale shrink-0 bg-white text-emerald-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm hover:bg-emerald-50 transition-colors">
+              Oyna
+            </Link>
+          </div>
+          <div className="absolute top-0 right-0 -mr-6 -mt-6 text-white/10 text-7xl transform -rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
+            🧩
+          </div>
         </div>
       </div>
 
