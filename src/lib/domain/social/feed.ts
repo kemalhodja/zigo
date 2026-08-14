@@ -343,7 +343,6 @@ export async function getFollowingFeed(
     `,
     )
     .in("author_id", authorIds)
-    .eq("status", "published")
     .neq("author_id", viewerId)
     .order("created_at", { ascending: false })
     .limit(50);

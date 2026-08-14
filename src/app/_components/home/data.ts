@@ -160,6 +160,7 @@ import {
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
+import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getHomePosts(): Promise<DisplayPost[]> {
@@ -174,7 +175,10 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     const profile = await getCachedUserProfile();
     if (!profile) return [];
 
-    const followingPosts = await getFollowingFeed(supabase, profile.id).catch(() => []);
+    // Use admin client for getFollowingFeed to bypass RLS which restricts
+    // posts to area-matched content — followers' posts need unrestricted read access
+    const feedClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+    const followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
 
     if (followingPosts.length === 0) return [];
 
