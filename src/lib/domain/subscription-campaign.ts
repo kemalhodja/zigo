@@ -34,12 +34,17 @@ export function calculateDynamicPrice(
   now = new Date(),
 ) {
   let isWithinTrialWindow = true;
+  let trialDaysRemaining = SUBSCRIPTION_TRIAL_DAYS;
 
   if (userCreatedAt) {
     const created = new Date(userCreatedAt);
     const diffTime = Math.abs(now.getTime() - created.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     isWithinTrialWindow = diffDays <= SUBSCRIPTION_TRIAL_DAYS;
+    trialDaysRemaining = Math.max(0, SUBSCRIPTION_TRIAL_DAYS - diffDays);
+  } else {
+    isWithinTrialWindow = true;
+    trialDaysRemaining = SUBSCRIPTION_TRIAL_DAYS;
   }
 
   const discountPercent = isWithinTrialWindow ? EARLY_BIRD_DISCOUNT_PERCENT : STANDARD_DISCOUNT_PERCENT;
@@ -52,6 +57,7 @@ export function calculateDynamicPrice(
     compareAtTry: listPriceTry,
     discountPercent,
     isWithinTrialWindow,
+    trialDaysRemaining,
     trialDays: SUBSCRIPTION_TRIAL_DAYS,
     campaignActive: true as const,
   };

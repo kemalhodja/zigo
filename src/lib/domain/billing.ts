@@ -64,7 +64,11 @@ export async function createZigoPlusCheckoutSession(
       body.set("discounts[0][coupon]", couponId);
       body.set("metadata[campaign_id]", dynamicPricing.isWithinTrialWindow ? "zigo-trial-50" : "zigo-standard-0");
     }
-    body.set("subscription_data[trial_period_days]", "30"); // 30-Day Trial Logic
+    
+    // Yalnızca deneme süresi içindeyse, kalan gün kadar Stripe Trial ver
+    if (dynamicPricing.trialDaysRemaining > 0) {
+      body.set("subscription_data[trial_period_days]", dynamicPricing.trialDaysRemaining.toString());
+    }
   }
 
   const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
