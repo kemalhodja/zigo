@@ -16,7 +16,7 @@ export function FeedMediaViewer({
 }) {
   return (
     <DoubleTapLikeLink
-      className="h-full w-full"
+      className="flex h-full w-full items-center justify-center"
       href={post.postId ? `/post/${post.postId}` : "/micro"}
       initialLiked={post.isLiked}
       postId={post.postId}

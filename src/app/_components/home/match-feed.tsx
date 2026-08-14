@@ -57,7 +57,7 @@ export function FeedPostCard({
           oneMinLessonLabel={feedEnhancements.oneMinLesson}
         />
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/40 to-transparent pb-3 pt-24">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/50 to-transparent pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-24">
           <div className="pointer-events-auto">
             <FeedPostHeader 
               post={post}
@@ -66,7 +66,7 @@ export function FeedPostCard({
             />
           </div>
 
-          <div className="pointer-events-auto space-y-2 px-4 mt-1">
+          <div className="pointer-events-auto mt-2 space-y-2 px-4">
             <SocialPostActions
               initialComments={post.comments}
               initialLiked={post.isLiked}
@@ -81,7 +81,7 @@ export function FeedPostCard({
             <ExpandableCaption caption={post.caption} />
           </div>
 
-          <div className="pointer-events-auto px-4 mt-1">
+          <div className="pointer-events-auto px-4 mt-0.5">
             <p className="text-zigo-meta font-semibold uppercase tracking-wide text-white/70 shadow-black/20 text-shadow-sm">
               {formatFeedTimestamp(post.createdAt)}
             </p>

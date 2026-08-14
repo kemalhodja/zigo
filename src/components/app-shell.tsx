@@ -204,7 +204,7 @@ export function AppShell({
 
       {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
 
-      {isStories ? null : (
+      {isStories || isPost ? null : (
         <div className={isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}>
           <BottomNav
             canCreateSocialPost={canCreateSocialPost}
