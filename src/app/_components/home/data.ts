@@ -174,28 +174,12 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     const profile = await getCachedUserProfile();
     if (!profile) return [];
 
-    // Limit general feed query to 15 items to load faster, and use caching strategy
-    const [followingPosts, generalPage] = await Promise.all([
-      getFollowingFeed(supabase, profile.id).catch(() => []),
-      getCachedSocialFeed(supabase, profile.id, { limit: 15 }).catch(() => ({ posts: [] })),
-    ]);
+    const followingPosts = await getFollowingFeed(supabase, profile.id).catch(() => []);
 
-    const generalPosts = generalPage.posts ?? [];
-
-    // Prioritize posts by creators the user follows at the top
-    const existingIds = new Set(followingPosts.map((post) => post.id));
-    const combinedPosts = [...followingPosts];
-
-    for (const post of generalPosts) {
-      if (!existingIds.has(post.id)) {
-        combinedPosts.push(post);
-      }
-    }
-
-    if (combinedPosts.length === 0) return [];
+    if (followingPosts.length === 0) return [];
 
     // Limit display total to 15 for faster visual rendering
-    const slicedPosts = combinedPosts.slice(0, 15);
+    const slicedPosts = followingPosts.slice(0, 15);
 
     const followingByPost = await Promise.all(
       slicedPosts.map((post) =>
