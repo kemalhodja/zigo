@@ -23,6 +23,37 @@ export function TeacherLessonMarketplaceTab({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Filtre State'leri
+  const [selectedMode, setSelectedMode] = useState<string>("all");
+  const [selectedGrade, setSelectedGrade] = useState<string>("all");
+  const [searchCity, setSearchCity] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"newest" | "bids_asc">("newest");
+
+  // Filtrelenmiş İlanlar
+  const filteredPosts = posts
+    .filter((post) => {
+      if (selectedMode !== "all") {
+        if (selectedMode === "online" && post.mode !== "online" && post.mode !== "both") return false;
+        if (selectedMode === "in_person" && post.mode !== "in_person" && post.mode !== "both") return false;
+      }
+      if (selectedGrade !== "all" && post.grade_level !== selectedGrade) {
+        return false;
+      }
+      if (searchCity.trim()) {
+        const cityLower = (post.city || "").toLowerCase();
+        const distLower = (post.district || "").toLowerCase();
+        const query = searchCity.toLowerCase().trim();
+        if (!cityLower.includes(query) && !distLower.includes(query)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "bids_asc") {
+        return a.bids_count - b.bids_count;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
   const handleSendBid = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPost) return;
@@ -69,19 +100,80 @@ export function TeacherLessonMarketplaceTab({
     <div className="space-y-3 pt-2">
       {/* Bilgilendirme Kartı */}
       <section className="-mx-4 bg-gradient-to-r from-teal-500/10 via-emerald-500/10 to-cyan-500/10 p-4 border-b border-teal-100">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🎯</span>
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-teal-900">
-              Özel Ders İlan Pazaryeri
-            </h2>
-            <p className="text-[0.7rem] font-bold text-teal-700 mt-0.5">
-              {teacherBranches.length > 0
-                ? `Yalnızca branşınızla (${teacherBranches.join(", ")}) eşleşen açık ilanlar listelenir.`
-                : "Profil ayarlarından branşınızı seçerek eşleşen özel ders ilanlarını görebilirsiniz."}
-            </p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🎯</span>
+            <div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-teal-900">
+                Özel Ders İlan Pazaryeri
+              </h2>
+              <p className="text-[0.7rem] font-bold text-teal-700 mt-0.5">
+                {teacherBranches.length > 0
+                  ? `Branşınızla (${teacherBranches.join(", ")}) eşleşen açık ilanlar listelenir.`
+                  : "Profil ayarlarından branşınızı seçerek ilanları görebilirsiniz."}
+              </p>
+            </div>
           </div>
+          <span className="shrink-0 bg-teal-600 text-white font-black text-[0.68rem] px-2.5 py-1 rounded-lg shadow-xs">
+            {filteredPosts.length} İlan
+          </span>
         </div>
+
+        {/* Filtre ve Arama Çubuğu */}
+        {teacherBranches.length > 0 && posts.length > 0 ? (
+          <div className="mt-3.5 pt-3 border-t border-teal-200/60 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* Şehir Arama */}
+            <div>
+              <input
+                type="text"
+                placeholder="🔍 İl veya İlçe Ara..."
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+                className="w-full rounded-xl border border-teal-200 bg-white px-2.5 py-1.5 text-xs font-bold text-night placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+
+            {/* Ders Şekli Filtresi */}
+            <div>
+              <select
+                value={selectedMode}
+                onChange={(e) => setSelectedMode(e.target.value)}
+                className="w-full rounded-xl border border-teal-200 bg-white px-2.5 py-1.5 text-xs font-bold text-night focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="all">Tüm Şekiller (Online/Yüz Yüze)</option>
+                <option value="online">Sadece Online 💻</option>
+                <option value="in_person">Sadece Yüz Yüze 🏫</option>
+              </select>
+            </div>
+
+            {/* Sıralama */}
+            <div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-full rounded-xl border border-teal-200 bg-white px-2.5 py-1.5 text-xs font-bold text-night focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="newest">En Yeni İlanlar ⏱️</option>
+                <option value="bids_asc">En Az Teklif Alanlar 🔥</option>
+              </select>
+            </div>
+
+            {/* Temizle Butonu (Filtre aktifse) */}
+            {(selectedMode !== "all" || searchCity.trim() || sortBy !== "newest") ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMode("all");
+                  setSearchCity("");
+                  setSortBy("newest");
+                }}
+                className="rounded-xl bg-teal-100 text-teal-800 text-xs font-black py-1.5 px-2 hover:bg-teal-200 transition"
+              >
+                Filtreleri Temizle ✕
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       {/* Branş seçilmemiş uyarısı */}
@@ -101,19 +193,19 @@ export function TeacherLessonMarketplaceTab({
             Profili Düzenle → Branş Seç
           </a>
         </div>
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-night">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
             📭
           </div>
-          <h3 className="mt-3 text-sm font-black">Şu an branşınıza uygun açık ilan bulunmuyor</h3>
+          <h3 className="mt-3 text-sm font-black">Filtreye uygun ilan bulunamadı</h3>
           <p className="mt-1 text-xs font-bold text-slate-500 max-w-xs mx-auto">
-            Veliler yeni özel ders ilanı verdiğinde branşınıza göre otomatik olarak bu sekmede görünecektir.
+            Arama kriterlerinizi değiştirerek daha fazla ilana ulaşabilirsiniz.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {posts.map((post) => {
+          {filteredPosts.map((post) => {
             const hasMyBid = Boolean(post.my_bid);
             const isFull = post.bids_count >= 5;
 
