@@ -21,6 +21,17 @@ export async function GET() {
     const userId = authData.user.id;
     const admin = createAdminClient() ?? supabase;
 
+    // Sadece öğrencilere kısıtlama uygula, diğer rollere (veli, öğretmen vs.) serbest
+    const { data: userData } = await admin
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (userData?.role !== "student") {
+      return NextResponse.json({ allowed: true, reason: "not_student" });
+    }
+
     // Türkiye saati (UTC+3)
     const nowUTC = new Date();
     const turkeyHour = (nowUTC.getUTCHours() + 3) % 24;
