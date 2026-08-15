@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { PipeConnect } from "@/components/games/pipe-connect";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
@@ -17,6 +18,10 @@ const ROLE_BACK: Record<string, { href: string; label: string }> = {
 export default async function PipeGamePage() {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
+
+  if (!profile) {
+    redirect("/auth?redirect=/student/games/pipe");
+  }
 
   let isPremium = false;
   if (profile) {

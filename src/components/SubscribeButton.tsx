@@ -25,7 +25,7 @@ interface SubscribeButtonProps {
  */
 export function SubscribeButton({
   productId = "zigo_plus",
-  planId = "zigo-plus-student-montly",
+  planId = "zigo-plus-student-monthly",
   className = "rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-black text-slate-950 shadow-lg hover:brightness-105 disabled:opacity-50 transition-all tap-scale",
   buttonText = "ZigoPlus'a Geç / Abone Ol",
   onSuccess,

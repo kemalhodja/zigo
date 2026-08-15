@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Satın alma fişi / token eksik." }, { status: 400 });
     }
 
-    const planId = body.planId || body.productId || "zigo-plus-student-montly";
+    const planId = body.planId || body.productId || "zigo-plus-student-monthly";
     const now = new Date();
     let expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 

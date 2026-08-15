@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
-
-import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
+import { requirePlatformAdmin } from "@/lib/domain/admin-auth";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
-    const isAdmin = await isCurrentUserPlatformAdmin(supabase);
-
-    if (!isAdmin) {
-      return NextResponse.json({ error: "Yetkisiz işlem - Admin yetkisi gerekiyor" }, { status: 403 });
-    }
+    const auth = await requirePlatformAdmin();
+    if ("error" in auth) return auth.error;
+    
+    const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? auth.supabase;
 
     const body = (await request.json().catch(() => ({}))) as {
       postId?: string;

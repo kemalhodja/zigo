@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BlockPuzzle } from "@/components/games/block-puzzle";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
@@ -17,6 +18,10 @@ const ROLE_BACK: Record<string, { href: string; label: string }> = {
 export default async function BlockGamePage() {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
+
+  if (!profile) {
+    redirect("/auth?redirect=/student/games/blocks");
+  }
 
   let isPremium = false;
   if (profile) {

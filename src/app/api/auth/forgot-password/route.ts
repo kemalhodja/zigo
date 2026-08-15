@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { RateLimitExceededError } from "@/lib/domain/api-errors";
-import { authEmailSchema, enforceAuthRateLimit } from "@/lib/server/auth-request";
+import { authEmailSchema, enforceAuthRateLimit, verifyAuthRecaptcha } from "@/lib/server/auth-request";
 import {
   FORGOT_PASSWORD_ACCOUNT_NOT_FOUND,
   FORGOT_PASSWORD_RATE_LIMIT,
@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const forgotSchema = z.object({
   email: authEmailSchema,
+  recaptchaToken: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -25,6 +26,11 @@ export async function POST(request: Request) {
     const rateLimit = enforceAuthRateLimit(request, "forgot-password", 4, 15 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(FORGOT_PASSWORD_RATE_LIMIT, rateLimit.retryAfterSeconds);
+    }
+
+    const recaptcha = await verifyAuthRecaptcha(request, body.recaptchaToken);
+    if (!recaptcha.ok) {
+      return NextResponse.json({ error: recaptcha.message }, { status: recaptcha.status });
     }
 
     const admin = createAdminClient();

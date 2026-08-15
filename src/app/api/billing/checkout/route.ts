@@ -39,10 +39,10 @@ export async function POST(request: Request) {
     const body = checkoutSchema.parse(await request.json().catch(() => ({})));
     const defaultPlanId =
       profile.role === "teacher"
-        ? "zigo-plus-teachers-montly"
-        : profile.role === "parent"
-          ? "zigo-plus-student-montly"
-          : "zigo-plus-student-montly";
+        ? "zigo-plus-teachers-monthly"
+        : profile.role === "student" || profile.role === "parent"
+          ? "zigo-plus-student-monthly"
+          : "zigo-plus-student-monthly";
     const planId = body.planId ?? defaultPlanId;
 
     if (!findPlanGroup(planId)) {

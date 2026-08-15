@@ -28,7 +28,7 @@ type BillingHavalePageProps = {
 };
 
 export default async function BillingHavalePage({ searchParams }: BillingHavalePageProps) {
-  const { planId = "zigo-plus-student-montly" } = await searchParams;
+  const { planId = "zigo-plus-student-monthly" } = await searchParams;
   const messages = await getServerMessages();
   const h = messages.billingUi.havale;
 

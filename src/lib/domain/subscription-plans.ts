@@ -60,7 +60,7 @@ function learnerPlans(
     benefits: LEARNER_BENEFITS,
     cancelPath,
     plans: [
-      plan("zigo-plus-student-montly", "monthly", "Aylık", 49, userCreatedAt),
+      plan("zigo-plus-student-monthly", "monthly", "Aylık", 49, userCreatedAt),
       plan("zigo-plus-student-yearly", "yearly", "Yıllık", 450, userCreatedAt),
     ],
   };
@@ -74,7 +74,7 @@ function teacherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPla
     benefits: TEACHER_CREATOR_PLUS_BENEFITS,
     cancelPath: "/teacher?billing=cancelled",
     plans: [
-      plan("zigo-plus-teachers-montly", "monthly", "Aylık", 99, userCreatedAt),
+      plan("zigo-plus-teachers-monthly", "monthly", "Aylık", 99, userCreatedAt),
       plan("zigo-plus-teachers-yearly", "yearly", "Yıllık", 749, userCreatedAt),
     ],
   };
@@ -123,7 +123,7 @@ function platformPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPl
     benefits: PLATFORM_BENEFITS,
     cancelPath: "/profile?billing=cancelled",
     plans: [
-      plan("zigo-plus-platform-montly", "monthly", "Aylık", 200, userCreatedAt),
+      plan("zigo-plus-platform-monthly", "monthly", "Aylık", 200, userCreatedAt),
       plan("zigo-plus-platform-yearly", "yearly", "Yıllık", 2000, userCreatedAt),
     ],
   };
@@ -179,13 +179,13 @@ export function resolveProfilePlanGroups(
 }
 
 const STRIPE_PRICE_ENV_BY_PLAN: Record<string, string> = {
-  "zigo-plus-student-montly": "STRIPE_PRICE_STUDENT_MONTHLY",
+  "zigo-plus-student-monthly": "STRIPE_PRICE_STUDENT_MONTHLY",
   "zigo-plus-student-yearly": "STRIPE_PRICE_STUDENT_YEARLY",
-  "zigo-plus-teachers-montly": "STRIPE_PRICE_TEACHER_MONTHLY",
+  "zigo-plus-teachers-monthly": "STRIPE_PRICE_TEACHER_MONTHLY",
   "zigo-plus-teachers-yearly": "STRIPE_PRICE_TEACHER_YEARLY",
   "zigo-plus-educational-institutions-monthly": "STRIPE_PRICE_INSTITUTION_MONTHLY",
   "zigo-plus-educational-institutions-yearly": "STRIPE_PRICE_INSTITUTION_YEARLY",
-  "zigo-plus-platform-montly": "STRIPE_PRICE_PLATFORM_MONTHLY",
+  "zigo-plus-platform-monthly": "STRIPE_PRICE_PLATFORM_MONTHLY",
   "zigo-plus-platform-yearly": "STRIPE_PRICE_PLATFORM_YEARLY",
   "zigo-plus-publisher-monthly": "STRIPE_PRICE_PUBLISHER_MONTHLY",
   "zigo-plus-publisher-yearly": "STRIPE_PRICE_PUBLISHER_YEARLY",

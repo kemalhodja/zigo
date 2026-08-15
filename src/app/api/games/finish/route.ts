@@ -12,8 +12,18 @@ export async function POST(request: Request) {
       try {
         const supabase = await createClient();
         
-        // Kullanıcının puanını güncelle (Gamification Puanı: Her 100 skor = 10 XP veya skora göre oranlı)
-        const awardedPoints = Math.max(5, Math.floor((score || 0) / 10));
+        // 🔒 Güvenlik: İsteği gönderen kişinin gerçekten user_id ile aynı kişi olup olmadığını kontrol et
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData.user || authData.user.id !== user_id) {
+          return NextResponse.json(
+            { success: false, message: "Yetkisiz işlem. Oturum geçersiz." },
+            { status: 401 }
+          );
+        }
+
+        // 🔒 Güvenlik: Hile (manipülasyon) koruması için XP'yi tavan değere sabitle (Max 100 XP)
+        const calculatedPoints = Math.max(5, Math.floor((score || 0) / 10));
+        const awardedPoints = Math.min(100, calculatedPoints);
         
         // Puanı kullanıcının total_points alanına ekle
         const { data: user } = await supabase
