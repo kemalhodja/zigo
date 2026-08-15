@@ -4,6 +4,7 @@ import Link from "next/link";
 const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod) => mod.ParentChart));
 const ParentActivityBreakdown = dynamic(() => import("@/components/parent-activity-breakdown").then((mod) => mod.ParentActivityBreakdown));
 import { StateCard } from "@/components/state-card";
+import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { LimitSettingsCard } from "@/components/limit-settings-card";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
@@ -151,10 +152,13 @@ export default async function ParentPage() {
               </div>
             )}
           </div>
-          
-
         </section>
       )}
+
+      {/* Zigo Mini Oyunlar Salonu */}
+      <div className="-mx-4 bg-white p-4 border-b border-slate-100">
+        <MiniGamesArcadeSection />
+      </div>
 
       {mode === "parent" || mode === "preview" ? (
         <ZigoPlusPlansSection

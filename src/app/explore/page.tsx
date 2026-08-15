@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import Link from "next/link";
 
 import { ExploreSearchBar } from "@/components/explore-search-bar";
+import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -108,6 +109,11 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           </div>
         </section>
       ) : null}
+
+      {/* Mini Games Arcade Section (Tüm Kullanıcılar ve Ziyaretçiler İçin) */}
+      <div className="-mx-4 border-b border-slate-100 bg-white p-4">
+        <MiniGamesArcadeSection />
+      </div>
 
       {/* Trend Radar Section */}
       {!query.trim() && activeFormat === "all" ? (

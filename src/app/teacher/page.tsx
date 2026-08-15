@@ -5,6 +5,7 @@ import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
 import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
+import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { StudioTabsLayout } from "@/components/studio-tabs-layout";
 import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/components/teacher-leaderboard-card";
@@ -259,6 +260,11 @@ export default async function TeacherPage({
                 </Link>
               </div>
             </section>
+
+            {/* Zigo Mini Zeka Oyunları */}
+            <div className="rounded-2xl bg-white p-4 border border-slate-100 shadow-xs">
+              <MiniGamesArcadeSection />
+            </div>
 
             {/* Quiz Builder Form */}
             {profile.is_verified ? (
