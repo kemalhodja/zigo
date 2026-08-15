@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { PipeConnect } from "@/components/games/pipe-connect";
+import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PipeGamePage() {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
+
+  let isPremium = false;
+  if (profile) {
+    const sub = await getUserSubscription(supabase, profile.id);
+    isPremium = sub.isPremium;
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 p-3 sm:p-6 flex flex-col items-center">
@@ -20,7 +28,11 @@ export default async function PipeGamePage() {
         <span className="text-xs font-bold text-cyan-400">Zigo Mantık Oyunu</span>
       </div>
       <div className="w-full">
-        <PipeConnect userId={profile?.id} />
+        {isPremium ? (
+          <PipeConnect userId={profile?.id} />
+        ) : (
+          <GameSubscriptionPaywall gameTitle="Akış Yolu" />
+        )}
       </div>
     </div>
   );

@@ -1,19 +1,29 @@
 import Link from "next/link";
 
-export function MiniGamesArcadeSection({ className = "" }: { className?: string }) {
+export function MiniGamesArcadeSection({
+  className = "",
+  isPremium = true,
+}: {
+  className?: string;
+  isPremium?: boolean;
+}) {
   return (
     <section className={`space-y-2.5 ${className}`}>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <span>🎮</span> Zigo Zeka Oyunları Salonu
+            <span>🎮</span> Zigo Zeka Oyunları Salonu {!isPremium && <span className="text-amber-500">🔒</span>}
           </h2>
           <p className="text-[0.7rem] font-bold text-slate-400">
-            Zihnini dinlendir, odaklan ve Zigo Puanı (XP) kazan!
+            {isPremium
+              ? "Zihnini dinlendir, odaklan ve Zigo Puanı (XP) kazan!"
+              : "30 günlük deneme süresi doldu. Oyunları açmak için abone olun."}
           </p>
         </div>
-        <span className="text-[0.65rem] font-black bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-100">
-          3 Mini Oyun
+        <span className={`text-[0.65rem] font-black px-2 py-0.5 rounded-md border ${
+          isPremium ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-amber-50 text-amber-700 border-amber-200"
+        }`}>
+          {isPremium ? "3 Mini Oyun" : "Kilitli 🔒"}
         </span>
       </div>
 

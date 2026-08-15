@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { BlockPuzzle } from "@/components/games/block-puzzle";
+import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function BlockGamePage() {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
+
+  let isPremium = false;
+  if (profile) {
+    const sub = await getUserSubscription(supabase, profile.id);
+    isPremium = sub.isPremium;
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-6 flex flex-col items-center">
@@ -20,7 +28,11 @@ export default async function BlockGamePage() {
         <span className="text-xs font-bold text-slate-400">Zigo Mini Oyun</span>
       </div>
       <div className="w-full">
-        <BlockPuzzle userId={profile?.id} />
+        {isPremium ? (
+          <BlockPuzzle userId={profile?.id} />
+        ) : (
+          <GameSubscriptionPaywall gameTitle="Blok Zeka" />
+        )}
       </div>
     </div>
   );

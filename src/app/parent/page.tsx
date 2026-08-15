@@ -157,7 +157,7 @@ export default async function ParentPage() {
 
       {/* Zigo Mini Oyunlar Salonu */}
       <div className="-mx-4 bg-white p-4 border-b border-slate-100">
-        <MiniGamesArcadeSection />
+        <MiniGamesArcadeSection isPremium={isPremium} />
       </div>
 
       {mode === "parent" || mode === "preview" ? (

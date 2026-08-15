@@ -263,7 +263,7 @@ export default async function TeacherPage({
 
             {/* Zigo Mini Zeka Oyunları */}
             <div className="rounded-2xl bg-white p-4 border border-slate-100 shadow-xs">
-              <MiniGamesArcadeSection />
+              <MiniGamesArcadeSection isPremium={teacherCreatorPlus} />
             </div>
 
             {/* Quiz Builder Form */}
