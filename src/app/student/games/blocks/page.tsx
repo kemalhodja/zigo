@@ -6,14 +6,7 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
-const ROLE_BACK: Record<string, { href: string; label: string }> = {
-  student: { href: "/student", label: "Öğrenci Paneli" },
-  parent: { href: "/parent", label: "Veli Paneli" },
-  teacher: { href: "/teacher", label: "Öğretmen Stüdyosu" },
-  education_institution: { href: "/teacher", label: "Kurum Paneli" },
-  education_platform: { href: "/teacher", label: "Platform Paneli" },
-  publisher: { href: "/teacher", label: "Yayınevi Paneli" },
-};
+import { ROLE_BACK } from "@/lib/domain/role-navigation";
 
 export default async function BlockGamePage() {
   const supabase = await createClient();
@@ -29,7 +22,7 @@ export default async function BlockGamePage() {
     isPremium = sub.isPremium;
   }
 
-  const role = (profile?.role as string) ?? "student";
+  const role = profile.role ?? "student";
   const back = ROLE_BACK[role] ?? ROLE_BACK.student;
 
   return (

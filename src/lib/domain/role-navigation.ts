@@ -2,6 +2,15 @@ import type { ViewerRole } from "@/lib/domain/role-theme";
 import type { UserRole } from "@/lib/supabase/database.types";
 import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
 
+export const ROLE_BACK: Partial<Record<UserRole, { href: string; label: string }>> = {
+  student: { href: "/student", label: "Öğrenci Paneli" },
+  parent: { href: "/parent", label: "Veli Paneli" },
+  teacher: { href: "/teacher", label: "Öğretmen Stüdyosu" },
+  education_institution: { href: "/teacher", label: "Kurum Paneli" },
+  education_platform: { href: "/teacher", label: "Platform Paneli" },
+  publisher: { href: "/teacher", label: "Yayınevi Paneli" },
+};
+
 export type BottomNavItem = {
   href: string;
   icon: string;

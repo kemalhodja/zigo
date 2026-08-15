@@ -34,15 +34,18 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const rawQuery = (params.q ?? "").trim();
   const query = rawQuery.toLowerCase() === "teachers" || rawQuery.toLowerCase() === "teacher" ? "" : rawQuery;
   const activeFormat = getExploreFormat(params.format);
-  const { posts, suggestedRail, creators } = await getExploreResults(query, activeFormat);
+
+  // 🔧 Refactor: Tekil Supabase Instance
+  const supabase = hasSupabaseEnv() ? await createClient() : null;
+
+  const { posts, suggestedRail, creators } = await getExploreResults(supabase, query, activeFormat);
   const filteredPosts = filterExploreTiles(posts, activeFormat);
   const tilesToRender = filteredPosts;
 
   let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
   let explorePremium = false;
-  if (hasSupabaseEnv()) {
+  if (supabase) {
     try {
-      const supabase = await createClient();
       const profile = await getCachedUserProfile();
       if (profile?.role) viewerRole = profile.role;
       if (profile?.id) {
@@ -54,7 +57,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     }
   }
 
-  const trendTopics = await fetchDynamicTrendTopics(tilesToRender.length);
+  const trendTopics = await fetchDynamicTrendTopics(supabase, tilesToRender.length);
 
   return (
     <div className="space-y-0 pb-3">
@@ -265,16 +268,15 @@ type ExploreResults = {
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 
-async function getExploreResults(query: string, format: ExploreFormat): Promise<ExploreResults> {
+async function getExploreResults(supabase: any, query: string, format: ExploreFormat): Promise<ExploreResults> {
   const m = await getServerMessages();
   const empty: ExploreResults = { creators: [], posts: [], suggestedRail: [] };
 
-  if (!hasSupabaseEnv()) {
+  if (!supabase) {
     return allowDemoContent() ? getExploreDemoResults(m) : empty;
   }
 
   try {
-    const supabase = await createClient();
     const profile = await getCachedUserProfile();
     const trimmedQuery = query.trim();
     const [creatorRows, fetchedPosts, suggested] = await Promise.all([
@@ -422,7 +424,7 @@ type TrendTopicItem = {
   count: string;
 };
 
-async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTopicItem[]> {
+async function fetchDynamicTrendTopics(supabase: any, totalPostsCount: number): Promise<TrendTopicItem[]> {
   const m = await getServerMessages();
   const e = m.explore;
 
@@ -433,7 +435,7 @@ async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTo
     { tag: "İngilizce", label: e.trendTopicEnglish, query: "ingilizce" },
   ];
 
-  if (!hasSupabaseEnv()) {
+  if (!supabase) {
     return baseTopics.map((t) => ({
       tag: t.tag,
       label: t.label,
@@ -445,23 +447,25 @@ async function fetchDynamicTrendTopics(totalPostsCount: number): Promise<TrendTo
   }
 
   try {
-    const supabase = await createClient();
-
-    const fetchCountsCached = unstable_cache(
-      async (q: string) => {
-        const [{ count: totalCount }, { count: videoCount }] = await Promise.all([
-          supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`),
-          supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${q}%`).eq("media_type", "video")
-        ]);
-        return { total: totalCount ?? 0, video: videoCount ?? 0 };
-      },
-      ["explore-trend-counts"],
-      { revalidate: 60 }
-    );
 
     const topicsData = await Promise.all(
       baseTopics.map(async (t) => {
-        const counts = await fetchCountsCached(t.query.toLowerCase());
+        const query = t.query.toLowerCase();
+        
+        // 🔧 Refactor: Dinamik unstable_cache key
+        const fetchCountsCached = unstable_cache(
+          async () => {
+            const [{ count: totalCount }, { count: videoCount }] = await Promise.all([
+              supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${query}%`),
+              supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${query}%`).eq("media_type", "video")
+            ]);
+            return { total: totalCount ?? 0, video: videoCount ?? 0 };
+          },
+          ["explore-trend-counts", query],
+          { revalidate: 60 }
+        );
+
+        const counts = await fetchCountsCached();
         let countText = "";
         
         if (counts.total > 0) {
