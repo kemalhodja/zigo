@@ -7,6 +7,7 @@ import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 import { ROLE_BACK } from "@/lib/domain/role-navigation";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 export default async function PipeGamePage() {
   const supabase = await createClient();
@@ -22,7 +23,7 @@ export default async function PipeGamePage() {
     isPremium = sub.isPremium;
   }
 
-  const role = profile.role ?? "student";
+  const role = (profile?.role as UserRole) ?? "student";
   const back = ROLE_BACK[role] ?? ROLE_BACK.student;
 
   return (

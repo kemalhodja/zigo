@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ROLE_BACK } from "@/lib/domain/role-navigation";
+import type { UserRole } from "@/lib/supabase/database.types";
 import { ZihinAvcisi } from "@/components/games/zihin-avcisi";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
-import { ROLE_BACK } from "@/lib/domain/role-navigation";
+
 
 export default async function MemoryGamePage() {
   const supabase = await createClient();
@@ -22,7 +24,7 @@ export default async function MemoryGamePage() {
     isPremium = sub.isPremium;
   }
 
-  const role = profile.role ?? "student";
+  const role = (profile?.role as UserRole) ?? "student";
   const back = ROLE_BACK[role] ?? ROLE_BACK.student;
 
   return (
