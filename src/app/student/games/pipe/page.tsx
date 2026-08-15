@@ -16,7 +16,7 @@ export default async function PipeGamePage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    return <div className="p-10 text-red-500 font-bold">PROFİL BULUNAMADI: OYUNA GİRİŞ YAPAMAZSINIZ</div>;
+    redirect("/auth?redirect=/student/games/pipe");
   }
 
   let isPremium = false;

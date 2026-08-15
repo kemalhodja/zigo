@@ -185,7 +185,10 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url));
     }
     if (pathname.startsWith('/student') && role !== 'student') {
-      return NextResponse.redirect(new URL('/', request.url));
+      // Allow other roles to access the games section
+      if (!pathname.startsWith('/student/games')) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
     }
   }
 

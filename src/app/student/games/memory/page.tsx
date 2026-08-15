@@ -17,7 +17,7 @@ export default async function MemoryGamePage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    return <div className="p-10 text-red-500 font-bold">PROFİL BULUNAMADI: OYUNA GİRİŞ YAPAMAZSINIZ</div>;
+    redirect("/auth?redirect=/student/games/memory");
   }
 
   let isPremium = false;
