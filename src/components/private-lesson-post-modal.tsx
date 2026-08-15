@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import turkeyData from "@/lib/turkey-data.json";
 
 type Area = { id: number; area_name: string; age_group: string | null };
 type Child = { id: string; name: string };
@@ -45,6 +46,18 @@ export function CreatePrivateLessonModal({
   const [district, setDistrict] = useState("");
   const [budgetTry, setBudgetTry] = useState("");
   const [description, setDescription] = useState("");
+
+  // Şehir seçildiğinde o şehrin ilçelerini bul
+  const selectedCityData = useMemo(
+    () => turkeyData.find((t) => t.city === city),
+    [city]
+  );
+  
+  // Şehirler alfabetik
+  const sortedCities = useMemo(
+    () => [...turkeyData].sort((a, b) => a.city.localeCompare(b.city, 'tr-TR')),
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,24 +230,42 @@ export function CreatePrivateLessonModal({
               {mode !== "online" ? (
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-1">İl (Şehir)</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: İstanbul"
+                    <label className="block text-xs font-black text-slate-700 mb-1">İl (Şehir) *</label>
+                    <select
+                      required={mode !== "online"}
                       value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      onChange={(e) => {
+                        setCity(e.target.value);
+                        setDistrict(""); // Şehir değişince ilçeyi sıfırla
+                      }}
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-night focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
+                    >
+                      <option value="">İl Seçin</option>
+                      {sortedCities.map((c) => (
+                        <option key={c.city} value={c.city}>
+                          {c.city}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-1">İlçe / Bölge</label>
-                    <input
-                      type="text"
-                      placeholder="Örn: Kadıköy"
+                    <label className="block text-xs font-black text-slate-700 mb-1">İlçe / Bölge *</label>
+                    <select
+                      required={mode !== "online"}
                       value={district}
                       onChange={(e) => setDistrict(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-night focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
+                      disabled={!city}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-night focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
+                    >
+                      <option value="">İlçe Seçin</option>
+                      {selectedCityData?.districts
+                        .sort((a, b) => a.localeCompare(b, 'tr-TR'))
+                        .map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               ) : null}
