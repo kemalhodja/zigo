@@ -25,9 +25,23 @@ export function GameTimeLimitWall({ backHref, backLabel, children }: GameTimeLim
 
   useEffect(() => {
     fetch("/api/games/check-limit")
-      .then((r) => r.json())
+      .then((r) => {
+        // 401 veya herhangi bir hata → oyunu engelleme, sayfa zaten auth kontrol etti
+        if (!r.ok) {
+          setStatus({ allowed: true });
+          setLoading(false);
+          return;
+        }
+        return r.json();
+      })
       .then((data) => {
-        setStatus(data);
+        if (!data) return; // early return'den geldi
+        // unauthenticated veya not_student → izin ver
+        if (!data.allowed && (data.reason === "unauthenticated" || data.reason === "not_student")) {
+          setStatus({ allowed: true });
+        } else {
+          setStatus(data);
+        }
         setLoading(false);
       })
       .catch(() => {
