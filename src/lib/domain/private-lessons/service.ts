@@ -229,7 +229,7 @@ export async function createPrivateLessonBid(
   // 1. Öğretmen rol & abonelik kontrolü
   const { data: teacher, error: teacherError } = await supabase
     .from("users")
-    .select("role, is_verified")
+    .select("role, is_verified, full_name")
     .eq("id", teacherId)
     .single();
 
@@ -294,6 +294,28 @@ export async function createPrivateLessonBid(
       throw new DomainForbiddenError("Bu ilana zaten bir teklif vermişsiniz.");
     }
     throw insertError;
+  }
+
+  // 5. Veliye bildirim gönder (İç Bildirim & Push Bildirimi)
+  try {
+    if (post.parent_id && post.parent_id !== teacherId) {
+      // Sistem içi bildirim tablosuna ekle
+      await supabase.from("notifications").insert({
+        user_id: post.parent_id,
+        actor_id: teacherId,
+        type: "lesson_bid",
+      } as any);
+
+      // OneSignal Web Push bildirimi gönder
+      const { sendPushToUser } = await import("@/lib/server/onesignal");
+      await sendPushToUser(post.parent_id, {
+        title: "🎯 Yeni Özel Ders Teklifi!",
+        message: `${teacher?.full_name || "Bir öğretmen"} özel ders talebinize ${input.pricePerHourTry} ₺/saat teklif verdi.`,
+        url: "/profile",
+      });
+    }
+  } catch (notifErr) {
+    console.warn("[Private Lesson Bid] Veliye bildirim gönderilirken hata oluştu:", notifErr);
   }
 
   return bid as PrivateLessonBidWithTeacher;

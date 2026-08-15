@@ -376,9 +376,11 @@ function toNotificationItem(notification: SocialNotification, m: Messages, profi
         ? "gönderine yorum yaptı."
         : notification.kind === "follow"
           ? "seni takip etmeye başladı."
-          : isLessonRequest
-            ? "yeni bir ders talebi gönderdi."
-            : notification.message;
+          : notification.kind === "lesson_bid"
+            ? "özel ders talebine bir teklif sundu 🎯"
+            : isLessonRequest
+              ? "yeni bir ders talebi gönderdi."
+              : notification.message;
 
   return {
     id: notification.id,
