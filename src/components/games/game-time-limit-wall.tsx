@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
 type LimitReason = "night_ban" | "daily_limit" | null;
 
@@ -16,39 +16,46 @@ interface LimitStatus {
   reason?: LimitReason;
   message?: string;
   remainingMinutes?: number;
-  turkeyHour?: number;
+  activeHours?: string;
+}
+
+async function fetchLimitStatus(): Promise<LimitStatus> {
+  const r = await fetch("/api/games/check-limit");
+  if (!r.ok) return { allowed: true };
+  const data = await r.json();
+  if (!data.allowed && (data.reason === "unauthenticated" || data.reason === "not_student")) {
+    return { allowed: true };
+  }
+  return data as LimitStatus;
 }
 
 export function GameTimeLimitWall({ backHref, backLabel, children }: GameTimeLimitWallProps) {
   const [status, setStatus] = useState<LimitStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/games/check-limit")
-      .then((r) => {
-        // 401 veya herhangi bir hata → oyunu engelleme, sayfa zaten auth kontrol etti
-        if (!r.ok) {
-          setStatus({ allowed: true });
-          setLoading(false);
-          return;
-        }
-        return r.json();
-      })
-      .then((data) => {
-        if (!data) return; // early return'den geldi
-        // unauthenticated veya not_student → izin ver
-        if (!data.allowed && (data.reason === "unauthenticated" || data.reason === "not_student")) {
-          setStatus({ allowed: true });
-        } else {
-          setStatus(data);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setStatus({ allowed: true });
-        setLoading(false);
-      });
+  const refresh = useCallback(async () => {
+    try {
+      const data = await fetchLimitStatus();
+      setStatus(data);
+    } catch {
+      setStatus({ allowed: true });
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  // Oturum sırasında limit dolarsa yakalamak için periyodik kontrol
+  useEffect(() => {
+    if (!status?.allowed) return;
+    const interval = window.setInterval(() => {
+      void refresh();
+    }, 60_000);
+    return () => window.clearInterval(interval);
+  }, [status?.allowed, refresh]);
 
   if (loading) {
     return (
@@ -59,13 +66,24 @@ export function GameTimeLimitWall({ backHref, backLabel, children }: GameTimeLim
     );
   }
 
-  if (!status || status.allowed) return <>{children}</>;
+  if (!status || status.allowed) {
+    return (
+      <>
+        {status?.remainingMinutes !== undefined && status.remainingMinutes > 0 ? (
+          <p className="mb-3 text-center text-[0.65rem] font-bold text-slate-400">
+            Bugün kalan oyun süresi: ~{status.remainingMinutes} dk
+            {status.activeHours ? ` · Aktif saatler ${status.activeHours}` : ""}
+          </p>
+        ) : null}
+        {children}
+      </>
+    );
+  }
 
   const isNightBan = status.reason === "night_ban";
 
   return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center px-6 text-center gap-5">
-      {/* Icon */}
       <div
         className={`size-24 rounded-3xl flex items-center justify-center shadow-lg ${
           isNightBan
@@ -76,7 +94,6 @@ export function GameTimeLimitWall({ backHref, backLabel, children }: GameTimeLim
         <span className="text-5xl">{isNightBan ? "🌙" : "⏱️"}</span>
       </div>
 
-      {/* Title */}
       <div>
         <h2 className="text-2xl font-black text-night">
           {isNightBan ? "Gece Modu Aktif" : "Günlük Süren Doldu!"}
@@ -86,8 +103,7 @@ export function GameTimeLimitWall({ backHref, backLabel, children }: GameTimeLim
         </p>
       </div>
 
-      {/* Stats if daily limit */}
-      {!isNightBan && status.remainingMinutes !== undefined && (
+      {!isNightBan ? (
         <div className="w-full max-w-xs bg-amber-50 border border-amber-200 rounded-2xl p-4">
           <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">Kalan Süre</p>
           <p className="text-3xl font-black text-amber-600">0 dk</p>
@@ -95,22 +111,20 @@ export function GameTimeLimitWall({ backHref, backLabel, children }: GameTimeLim
             Limit yarın gece yarısında sıfırlanır
           </p>
         </div>
-      )}
-
-      {/* Night ban info */}
-      {isNightBan && (
+      ) : (
         <div className="w-full max-w-xs bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
           <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-1">
             Oyun Saatleri
           </p>
-          <p className="text-lg font-black text-indigo-700">08:00 – 22:00</p>
+          <p className="text-lg font-black text-indigo-700">
+            {status.activeHours ?? "08:00 – 22:00"}
+          </p>
           <p className="text-xs font-semibold text-indigo-500 mt-1">
             Bu saatler arasında oyunlar aktif olacak
           </p>
         </div>
       )}
 
-      {/* Back button */}
       <Link
         href={backHref}
         className="mt-2 tap-scale inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-2xl font-black text-sm transition shadow-md shadow-indigo-200"

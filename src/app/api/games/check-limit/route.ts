@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+
+import { isNightBanActive, turkeyHourAndDate } from "@/lib/domain/game-limits";
+import { resolveStudentGameLimits } from "@/lib/domain/game-limits-server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/games/check-limit
- * Öğrencinin oyun oynayıp oynayamayacağını kontrol eder.
- * Kontroller:
- *  1. Gece yasağı (22:00 - 08:00, Türkiye saati)
- *  2. Günlük oyun süresi limiti (varsayılan 60 dk)
- *  3. Veli override ayarları (parent_game_settings tablosu)
+ * Öğrenci: gece yasağı (22:00–08:00) + günlük 60 dk (veli ayarı ile değişebilir).
+ * Diğer roller: sınır yok.
  */
 export async function GET() {
   try {
@@ -21,7 +21,6 @@ export async function GET() {
     const userId = authData.user.id;
     const admin = createAdminClient() ?? supabase;
 
-    // Sadece öğrencilere kısıtlama uygula, diğer rollere (veli, öğretmen vs.) serbest
     const { data: userData } = await admin
       .from("users")
       .select("role")
@@ -32,40 +31,30 @@ export async function GET() {
       return NextResponse.json({ allowed: true, reason: "not_student" });
     }
 
-    // Türkiye saati (UTC+3)
-    const nowUTC = new Date();
-    const turkeyHour = (nowUTC.getUTCHours() + 3) % 24;
-    const todayTR = new Date(nowUTC.getTime() + 3 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
+    const limits = await resolveStudentGameLimits();
+    const { turkeyHour, todayTR } = turkeyHourAndDate();
 
-    // --- Veli ayarlarını çek ---
-    // Not: Öğrencinin child_profile'ını bulmak için şu an users tablosunda parent_id veya child_profiles'da user_id yok.
-    // Bu yüzden bağımsız öğrenciler için varsayılan limitleri (60dk / Gece Yasağı) uyguluyoruz.
-    let dailyLimitMinutes = 60;
-    let nightBanEnabled = true;
-    let nightBanStart = 22;
-    let nightBanEnd = 8;
-
-    // --- Gece yasağı kontrolü ---
-    if (nightBanEnabled) {
-      const isNightBan =
-        nightBanStart > nightBanEnd
-          ? turkeyHour >= nightBanStart || turkeyHour < nightBanEnd
-          : turkeyHour >= nightBanStart && turkeyHour < nightBanEnd;
-
-      if (isNightBan) {
-        return NextResponse.json({
-          allowed: false,
-          reason: "night_ban",
-          message: `Oyunlar ${nightBanEnd}:00 - ${nightBanStart}:00 saatleri arasında aktif.`,
-          turkeyHour,
-        });
-      }
+    if (isNightBanActive(turkeyHour, limits)) {
+      return NextResponse.json({
+        allowed: false,
+        reason: "night_ban",
+        message: `Oyunlar ${limits.nightBanEndLabel} - ${limits.nightBanStartLabel} saatleri arasında aktif.`,
+        turkeyHour,
+        activeHours: `${limits.nightBanEndLabel} – ${limits.nightBanStartLabel}`,
+      });
     }
 
-    // --- Günlük süre kontrolü ---
-    const { data: usage } = await (admin as any)
+    const { data: usage } = await (admin as unknown as {
+      from: (table: string) => {
+        select: (cols: string) => {
+          eq: (col: string, val: string) => {
+            eq: (col2: string, val2: string) => {
+              maybeSingle: () => Promise<{ data: { seconds_played?: number } | null }>;
+            };
+          };
+        };
+      };
+    })
       .from("game_daily_usage")
       .select("seconds_played")
       .eq("user_id", userId)
@@ -73,14 +62,14 @@ export async function GET() {
       .maybeSingle();
 
     const secondsPlayed = usage?.seconds_played ?? 0;
-    const limitSeconds = dailyLimitMinutes * 60;
+    const limitSeconds = limits.dailyLimitMinutes * 60;
     const remaining = Math.max(0, limitSeconds - secondsPlayed);
 
     if (secondsPlayed >= limitSeconds) {
       return NextResponse.json({
         allowed: false,
         reason: "daily_limit",
-        message: `Günlük ${dailyLimitMinutes} dakikalık oyun süren doldu. Yarın devam edebilirsin! 🌙`,
+        message: `Günlük ${limits.dailyLimitMinutes} dakikalık oyun süren doldu. Yarın devam edebilirsin! 🌙`,
         secondsPlayed,
         limitSeconds,
         remaining: 0,
@@ -92,11 +81,12 @@ export async function GET() {
       secondsPlayed,
       limitSeconds,
       remaining,
-      remainingMinutes: Math.floor(remaining / 60),
+      remainingMinutes: Math.ceil(remaining / 60),
+      dailyLimitMinutes: limits.dailyLimitMinutes,
+      activeHours: `${limits.nightBanEndLabel} – ${limits.nightBanStartLabel}`,
     });
   } catch (error) {
     console.error("[check-limit]", error);
-    // Hata durumunda oyuna izin ver (kullanıcı deneyimini kesmemek için)
     return NextResponse.json({ allowed: true, reason: "error_fallback" });
   }
 }

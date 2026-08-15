@@ -39,32 +39,22 @@ export async function POST(request: Request) {
             .eq("id", user_id);
         }
 
-        // 🕹️ Günlük oyun süresi takibi
+        // 🕹️ Günlük oyun süresi takibi (oturum sonu — useGameSessionTimer ana kaynak)
         if (played_seconds && typeof played_seconds === "number" && played_seconds > 0) {
-          const safeSeconds = Math.min(played_seconds, 7200); // max 2 saat tek seferde
+          const safeSeconds = Math.min(Math.floor(played_seconds), 7200);
           const todayTR = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().split("T")[0];
-          
           const admin = (await import("@/lib/supabase/admin")).createAdminClient();
           const dbClient = admin ?? supabase;
-          
-          await (dbClient as any).from("game_daily_usage").upsert(
-            {
-              user_id,
-              date: todayTR,
-              seconds_played: safeSeconds,
-            },
-            {
-              onConflict: "user_id,date",
-            }
-          );
 
-          // Mevcut değere eklemek için raw SQL ile güncelle
-          await (dbClient as any).rpc("increment_game_seconds", {
+          await (dbClient as unknown as {
+            rpc: (
+              fn: string,
+              args: Record<string, string | number>,
+            ) => Promise<{ error: unknown }>;
+          }).rpc("increment_game_seconds", {
             p_user_id: user_id,
             p_date: todayTR,
             p_seconds: safeSeconds,
-          }).catch(() => {
-            // RPC yoksa fallback: mevcut değeri çekip güncelle
           });
         }
       } catch (dbErr) {

@@ -3,10 +3,18 @@ import Link from "next/link";
 export function MiniGamesArcadeSection({
   className = "",
   isPremium = true,
+  isStudent = false,
 }: {
   className?: string;
   isPremium?: boolean;
+  isStudent?: boolean;
 }) {
+  const subtitle = !isPremium
+    ? "30 günlük deneme süresi doldu. Oyunları açmak için abone olun."
+    : isStudent
+      ? "Günde 1 saat · 08:00–22:00 · Zigo Puanı (XP) kazan!"
+      : "Zihnini dinlendir, odaklan ve Zigo Puanı (XP) kazan!";
+
   return (
     <section className={`space-y-2.5 ${className}`}>
       <div className="flex items-center justify-between">
@@ -15,9 +23,7 @@ export function MiniGamesArcadeSection({
             <span>🎮</span> Zigo Zeka Oyunları Salonu {!isPremium && <span className="text-amber-500">🔒</span>}
           </h2>
           <p className="text-[0.7rem] font-bold text-slate-400">
-            {isPremium
-              ? "Zihnini dinlendir, odaklan ve Zigo Puanı (XP) kazan!"
-              : "30 günlük deneme süresi doldu. Oyunları açmak için abone olun."}
+            {subtitle}
           </p>
         </div>
         <span className={`text-[0.65rem] font-black px-2 py-0.5 rounded-md border ${

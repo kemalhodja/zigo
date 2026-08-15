@@ -4,6 +4,7 @@ import { ROLE_BACK } from "@/lib/domain/role-navigation";
 import type { UserRole } from "@/lib/supabase/database.types";
 import { ZihinAvcisi } from "@/components/games/zihin-avcisi";
 import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
+import { GameSessionTracker } from "@/components/games/game-session-tracker";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
@@ -16,7 +17,7 @@ export default async function MemoryGamePage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    redirect("/auth?redirect=/student/games/memory");
+    return <div className="p-10 text-red-500 font-bold">PROFİL BULUNAMADI: OYUNA GİRİŞ YAPAMAZSINIZ</div>;
   }
 
   let isPremium = false;
@@ -27,6 +28,8 @@ export default async function MemoryGamePage() {
 
   const role = (profile?.role as UserRole) ?? "student";
   const back = ROLE_BACK[role] ?? ROLE_BACK.student;
+
+  const isStudent = role === "student";
 
   return (
     <div className="min-h-screen bg-slate-100 p-3 sm:p-6 flex flex-col items-center">
@@ -43,12 +46,15 @@ export default async function MemoryGamePage() {
       <div className="w-full">
         <GameTimeLimitWall backHref={back.href} backLabel={back.label}>
           {isPremium ? (
-            <ZihinAvcisi userId={profile?.id} />
+            <GameSessionTracker enabled={isStudent} userId={profile?.id}>
+              <ZihinAvcisi userId={profile?.id} />
+            </GameSessionTracker>
           ) : (
             <GameSubscriptionPaywall
               gameTitle="Zihin Avcısı"
               backHref={back.href}
               backLabel={back.label}
+              isStudent={isStudent}
             />
           )}
         </GameTimeLimitWall>

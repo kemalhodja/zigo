@@ -44,7 +44,7 @@ test.describe("mobile viewport and safe area layout", () => {
     expect(navBox?.y).toBeGreaterThan(600);
     
     // Simulate a toast trigger or check absolute bottom elements
-    const zigoToasts = page.locator(".toast-container, [data-sonner-toaster]");
+    const zigoToasts = page.locator(".zigo-toast-stack, [data-sonner-toaster]");
     if (await zigoToasts.count() > 0) {
       const toastBox = await zigoToasts.first().boundingBox();
       if (toastBox && navBox) {

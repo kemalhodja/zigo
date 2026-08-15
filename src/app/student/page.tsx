@@ -120,7 +120,7 @@ export default async function StudentPage() {
       </section>
 
       <div className="-mx-4 sm:mx-0 my-2">
-        <MiniGamesArcadeSection isPremium={data.isPremium} />
+        <MiniGamesArcadeSection isPremium={data.isPremium} isStudent />
       </div>
 
       {data.isSignedOut ? (
