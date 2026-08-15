@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { user_id, score, game_type, stats } = body;
+    const { user_id, score, game_type, stats, played_seconds } = body;
 
     console.log(`[Mini Game Finish] Game: ${game_type}, User: ${user_id}, Score: ${score}`, stats);
 
@@ -37,6 +37,35 @@ export async function POST(request: Request) {
             .from("users")
             .update({ total_points: (user.total_points || 0) + awardedPoints })
             .eq("id", user_id);
+        }
+
+        // 🕹️ Günlük oyun süresi takibi
+        if (played_seconds && typeof played_seconds === "number" && played_seconds > 0) {
+          const safeSeconds = Math.min(played_seconds, 7200); // max 2 saat tek seferde
+          const todayTR = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().split("T")[0];
+          
+          const admin = (await import("@/lib/supabase/admin")).createAdminClient();
+          const dbClient = admin ?? supabase;
+          
+          await (dbClient as any).from("game_daily_usage").upsert(
+            {
+              user_id,
+              date: todayTR,
+              seconds_played: safeSeconds,
+            },
+            {
+              onConflict: "user_id,date",
+            }
+          );
+
+          // Mevcut değere eklemek için raw SQL ile güncelle
+          await (dbClient as any).rpc("increment_game_seconds", {
+            p_user_id: user_id,
+            p_date: todayTR,
+            p_seconds: safeSeconds,
+          }).catch(() => {
+            // RPC yoksa fallback: mevcut değeri çekip güncelle
+          });
         }
       } catch (dbErr) {
         console.warn("[Mini Game Finish] Veritabanı puan güncelleme atlandı:", dbErr);

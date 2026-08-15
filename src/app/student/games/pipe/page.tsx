@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PipeConnect } from "@/components/games/pipe-connect";
+import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
@@ -39,15 +40,17 @@ export default async function PipeGamePage() {
         <span className="text-xs font-bold text-cyan-400">Zigo Mantık Oyunu</span>
       </div>
       <div className="w-full">
-        {isPremium ? (
-          <PipeConnect userId={profile?.id} />
-        ) : (
-          <GameSubscriptionPaywall
-            gameTitle="Akış Yolu"
-            backHref={back.href}
-            backLabel={back.label}
-          />
-        )}
+        <GameTimeLimitWall backHref={back.href} backLabel={back.label}>
+          {isPremium ? (
+            <PipeConnect userId={profile?.id} />
+          ) : (
+            <GameSubscriptionPaywall
+              gameTitle="Akış Yolu"
+              backHref={back.href}
+              backLabel={back.label}
+            />
+          )}
+        </GameTimeLimitWall>
       </div>
     </div>
   );

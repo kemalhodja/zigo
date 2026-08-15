@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ROLE_BACK } from "@/lib/domain/role-navigation";
 import type { UserRole } from "@/lib/supabase/database.types";
 import { BlockPuzzle } from "@/components/games/block-puzzle";
+import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
@@ -40,15 +41,17 @@ export default async function BlockGamePage() {
         <span className="text-xs font-bold text-slate-400">Zigo Mini Oyun</span>
       </div>
       <div className="w-full">
-        {isPremium ? (
-          <BlockPuzzle userId={profile?.id} />
-        ) : (
-          <GameSubscriptionPaywall
-            gameTitle="Blok Zeka"
-            backHref={back.href}
-            backLabel={back.label}
-          />
-        )}
+        <GameTimeLimitWall backHref={back.href} backLabel={back.label}>
+          {isPremium ? (
+            <BlockPuzzle userId={profile?.id} />
+          ) : (
+            <GameSubscriptionPaywall
+              gameTitle="Blok Zeka"
+              backHref={back.href}
+              backLabel={back.label}
+            />
+          )}
+        </GameTimeLimitWall>
       </div>
     </div>
   );
