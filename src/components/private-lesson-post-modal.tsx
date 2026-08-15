@@ -232,7 +232,7 @@ export function CreatePrivateLessonModal({
                   <div>
                     <label className="block text-xs font-black text-slate-700 mb-1">İl (Şehir) *</label>
                     <select
-                      required={mode !== "online"}
+                      required
                       value={city}
                       onChange={(e) => {
                         setCity(e.target.value);
@@ -251,7 +251,7 @@ export function CreatePrivateLessonModal({
                   <div>
                     <label className="block text-xs font-black text-slate-700 mb-1">İlçe / Bölge *</label>
                     <select
-                      required={mode !== "online"}
+                      required
                       value={district}
                       onChange={(e) => setDistrict(e.target.value)}
                       disabled={!city}
