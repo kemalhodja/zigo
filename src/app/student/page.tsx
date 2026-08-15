@@ -118,34 +118,52 @@ export default async function StudentPage() {
         <DashboardLink accent="from-berry to-peach" href="/avatar" label={d.student.avatar} text={d.student.equipRewards} />
       </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 my-2 -mx-4 sm:mx-0">
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-4 sm:rounded-2xl shadow-lg relative overflow-hidden group">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 my-2 -mx-4 sm:mx-0">
+        {/* Oyun 1: Zihin Avcısı (Hafıza) */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-3.5 py-3.5 sm:rounded-2xl shadow-md relative overflow-hidden group">
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-black text-white flex items-center gap-2"><span>🧠</span> Zihin Avcısı</h3>
-              <p className="text-indigo-100 text-[0.65rem] font-bold mt-1">Görsel hafızanı test et, Puan kazan!</p>
+              <h3 className="text-base font-black text-white flex items-center gap-1.5"><span>🧠</span> Zihin Avcısı</h3>
+              <p className="text-indigo-100 text-[0.62rem] font-bold mt-0.5">Görsel hafıza</p>
             </div>
-            <Link href="/student/games/memory" className="tap-scale shrink-0 bg-white text-indigo-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm hover:bg-indigo-50 transition-colors">
+            <Link href="/student/games/memory" className="tap-scale shrink-0 bg-white text-indigo-700 px-2.5 py-1.5 rounded-lg text-xs font-black shadow-xs hover:bg-indigo-50 transition-colors">
               Oyna
             </Link>
           </div>
-          <div className="absolute top-0 right-0 -mr-6 -mt-6 text-white/10 text-7xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
             🧠
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-4 sm:rounded-2xl shadow-lg relative overflow-hidden group">
+        {/* Oyun 2: Blok Zeka (Mekansal) */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-3.5 py-3.5 sm:rounded-2xl shadow-md relative overflow-hidden group">
           <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-black text-white flex items-center gap-2"><span>🧩</span> Blok Zeka</h3>
-              <p className="text-emerald-100 text-[0.65rem] font-bold mt-1">Stratejini konuştur, Puan kazan!</p>
+              <h3 className="text-base font-black text-white flex items-center gap-1.5"><span>🧩</span> Blok Zeka</h3>
+              <p className="text-emerald-100 text-[0.62rem] font-bold mt-0.5">Mekansal strateji</p>
             </div>
-            <Link href="/student/games/blocks" className="tap-scale shrink-0 bg-white text-emerald-700 px-3 py-2 rounded-xl text-xs font-black shadow-sm hover:bg-emerald-50 transition-colors">
+            <Link href="/student/games/blocks" className="tap-scale shrink-0 bg-white text-emerald-700 px-2.5 py-1.5 rounded-lg text-xs font-black shadow-xs hover:bg-emerald-50 transition-colors">
               Oyna
             </Link>
           </div>
-          <div className="absolute top-0 right-0 -mr-6 -mt-6 text-white/10 text-7xl transform -rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform -rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
             🧩
+          </div>
+        </div>
+
+        {/* Oyun 3: Akış Yolu (Mantık) */}
+        <div className="bg-gradient-to-r from-cyan-600 to-blue-700 px-3.5 py-3.5 sm:rounded-2xl shadow-md relative overflow-hidden group">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-white flex items-center gap-1.5"><span>⚡</span> Akış Yolu</h3>
+              <p className="text-cyan-100 text-[0.62rem] font-bold mt-0.5">Mantık & rota</p>
+            </div>
+            <Link href="/student/games/pipe" className="tap-scale shrink-0 bg-white text-cyan-700 px-2.5 py-1.5 rounded-lg text-xs font-black shadow-xs hover:bg-cyan-50 transition-colors">
+              Oyna
+            </Link>
+          </div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-6 transition-transform group-hover:scale-110 pointer-events-none">
+            ⚡
           </div>
         </div>
       </div>
