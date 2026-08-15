@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BlockPuzzle } from "@/components/games/block-puzzle";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
@@ -7,10 +8,21 @@ export default async function BlockGamePage() {
   const profile = await getCurrentProfile(supabase);
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 sm:p-8 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-100 p-3 sm:p-6 flex flex-col items-center">
+      <div className="w-full max-w-sm flex items-center justify-between mb-4">
+        <Link
+          href="/student"
+          className="tap-scale flex items-center gap-1 text-xs font-black text-slate-600 bg-white px-3 py-2 rounded-xl shadow-xs border border-slate-200 hover:bg-slate-50 transition"
+        >
+          <span>←</span>
+          <span>Öğrenci Paneli</span>
+        </Link>
+        <span className="text-xs font-bold text-slate-400">Zigo Mini Oyun</span>
+      </div>
       <div className="w-full">
         <BlockPuzzle userId={profile?.id} />
       </div>
     </div>
   );
 }
+
