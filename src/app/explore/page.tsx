@@ -14,6 +14,7 @@ import {
   searchSocialPosts,
   type SocialFeedPost,
 } from "@/lib/domain/social";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,10 +39,16 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const tilesToRender = filteredPosts;
 
   let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
+  let explorePremium = false;
   if (hasSupabaseEnv()) {
     try {
+      const supabase = await createClient();
       const profile = await getCachedUserProfile();
       if (profile?.role) viewerRole = profile.role;
+      if (profile?.id) {
+        const sub = await getUserSubscription(supabase, profile.id);
+        explorePremium = sub.isPremium;
+      }
     } catch {
       viewerRole = "guest";
     }
@@ -112,7 +119,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
       {/* Mini Games Arcade Section (Tüm Kullanıcılar ve Ziyaretçiler İçin) */}
       <div className="-mx-4 border-b border-slate-100 bg-white p-4">
-        <MiniGamesArcadeSection />
+        <MiniGamesArcadeSection isPremium={explorePremium} />
       </div>
 
       {/* Trend Radar Section */}
