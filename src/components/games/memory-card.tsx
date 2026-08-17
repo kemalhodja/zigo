@@ -22,30 +22,34 @@ export const MemoryCard = memo(function MemoryCard({
       type="button"
       onClick={() => onClick(id)}
       disabled={isFlipped || isMatched}
-      className={`relative aspect-square w-full rounded-2xl shadow-sm transition-transform duration-300 transform-gpu preserve-3d tap-scale focus:outline-none focus:ring-4 focus:ring-emerald-500/50 ${
+      className={`relative aspect-square w-full rounded-2xl transition-all duration-300 transform-gpu preserve-3d focus:outline-none tap-scale ${
         isFlipped || isMatched ? "rotate-y-180" : ""
-      }`}
+      } ${isMatched ? "cursor-default" : "cursor-pointer"}`}
     >
-      {/* Arka Yüz (Kapalı Durum) */}
+      {/* Arka Yüz (Kapalı) */}
       <div
         className={`absolute inset-0 flex items-center justify-center rounded-2xl backface-hidden ${
-          isMatched ? "hidden" : "bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md"
+          isMatched
+            ? "hidden"
+            : "bg-gradient-to-br from-violet-600 to-indigo-700 shadow-lg shadow-violet-500/30 border border-violet-400/30"
         }`}
       >
-        <span className="text-3xl font-black text-white/30">?</span>
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-2xl opacity-30">🌟</span>
+        </div>
       </div>
 
-      {/* Ön Yüz (Açık Durum) */}
+      {/* Ön Yüz (Açık) */}
       <div
         className={`absolute inset-0 flex items-center justify-center rounded-2xl backface-hidden rotate-y-180 ${
           isMatched
-            ? "bg-emerald-100 shadow-inner"
-            : "bg-white shadow-md border-2 border-indigo-100"
+            ? "bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/30 border border-emerald-300/50"
+            : "bg-white shadow-md border-2 border-indigo-200"
         }`}
       >
         <span
-          className={`text-4xl sm:text-5xl transition-opacity duration-500 ${
-            isMatched ? "opacity-50 grayscale" : "opacity-100"
+          className={`text-3xl sm:text-4xl transition-all duration-300 ${
+            isMatched ? "scale-90 drop-shadow-sm" : "scale-100"
           }`}
         >
           {icon}

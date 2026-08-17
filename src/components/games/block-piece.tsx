@@ -5,6 +5,7 @@ import { memo } from "react";
 export type ShapeType = {
   matrix: number[][];
   color: string;
+  glowColor: string;
 };
 
 type BlockPieceProps = {
@@ -24,18 +25,23 @@ export const BlockPiece = memo(function BlockPiece({
     return <div className="w-20 h-20 opacity-0" />;
   }
 
-  const { matrix, color } = shape;
+  const { matrix, color, glowColor } = shape;
   const rows = matrix.length;
   const cols = matrix[0].length;
+  // Dinamik boyutlandırma: büyük parçaların hücreler daha küçük olsun
+  const maxDim = Math.max(rows, cols);
+  const cellSize = maxDim <= 2 ? "w-6 h-6" : maxDim <= 3 ? "w-5 h-5" : "w-4 h-4";
 
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`tap-scale p-2 rounded-xl transition-all flex items-center justify-center min-w-[5rem] min-h-[5rem] ${
-        isSelected ? "bg-slate-200 shadow-inner scale-110 ring-2 ring-indigo-500" : "bg-slate-50 hover:bg-slate-100 border border-slate-100"
-      } ${disabled ? "opacity-30 cursor-not-allowed grayscale" : ""}`}
+      className={`tap-scale p-2.5 rounded-2xl transition-all duration-200 flex items-center justify-center min-w-[5rem] min-h-[5rem] ${
+        isSelected
+          ? `bg-white/20 shadow-inner scale-110 ring-2 ring-white/50 ${glowColor}`
+          : "bg-white/5 hover:bg-white/10 border border-white/10"
+      } ${disabled ? "opacity-30 cursor-not-allowed grayscale" : "cursor-pointer"}`}
     >
       <div
         className="grid gap-[2px]"
@@ -48,8 +54,10 @@ export const BlockPiece = memo(function BlockPiece({
           row.map((cell, cIndex) => (
             <div
               key={`${rIndex}-${cIndex}`}
-              className={`w-4 h-4 sm:w-5 sm:h-5 rounded-sm ${
-                cell === 1 ? `${color} shadow-sm border border-black/10` : "bg-transparent"
+              className={`${cellSize} rounded-sm transition-all ${
+                cell === 1
+                  ? `${color} shadow-sm border border-white/20`
+                  : "bg-transparent"
               }`}
             />
           ))

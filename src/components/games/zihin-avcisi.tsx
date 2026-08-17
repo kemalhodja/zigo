@@ -4,8 +4,12 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
 import { MemoryCard } from "./memory-card";
 
-const ICONS = ["🚀", "🪐", "⭐", "🔭", "🌍", "👽", "☄️", "🛸"];
-const PAIRS = [...ICONS, ...ICONS];
+// Seviyeler: Her seviyede farklı sayıda çift
+const LEVELS = [
+  { pairs: 4, icons: ["🚀", "⭐", "🌍", "☄️"] },
+  { pairs: 6, icons: ["🚀", "⭐", "🌍", "☄️", "🪐", "👽"] },
+  { pairs: 8, icons: ["🚀", "⭐", "🌍", "☄️", "🪐", "👽", "🔭", "🛸"] },
+];
 
 type Card = {
   id: string;
@@ -19,7 +23,6 @@ type ZihinAvcisiProps = {
   onGameEnd?: (score: number, stats: { time: number; moves: number }) => void;
 };
 
-// Shuffle function
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -30,142 +33,158 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
+  const [currentLevel, setCurrentLevel] = useState(0);
+  const [startLevel, setStartLevel] = useState<number | null>(null); // Kaydedilen seviyeyi yükle
   const [cards, setCards] = useState<Card[]>([]);
   const [moves, setMoves] = useState(0);
-  const [startTime, setStartTime] = useState<number | null>(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isGameFinished, setIsGameFinished] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-  
-  // Selection state
+  const [isLevelComplete, setIsLevelComplete] = useState(false);
+  const [totalScore, setTotalScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+  const [levelScore, setLevelScore] = useState(0);
+
   const [firstChoice, setFirstChoice] = useState<Card | null>(null);
   const [secondChoice, setSecondChoice] = useState<Card | null>(null);
   const [isLocked, setIsLocked] = useState(false);
-  
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize Game
-  const initGame = useCallback(() => {
-    const shuffledCards = shuffleArray(PAIRS).map((icon) => ({
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+
+  // Kaydedilen ilerlemeyi yükle
+  useEffect(() => {
+    if (userId === "guest") return;
+    fetch("/api/games/progress?game_type=memory_card")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.high_score) setHighScore(data.high_score);
+        if (data.last_level) {
+          setStartLevel(data.last_level);
+          setCurrentLevel(Math.min(data.last_level, LEVELS.length - 1));
+        }
+      })
+      .catch(() => {});
+  }, [userId]);
+
+  const initLevel = useCallback((lvlIndex: number) => {
+    const level = LEVELS[lvlIndex % LEVELS.length];
+    const pairs = [...level.icons, ...level.icons];
+    const shuffled = shuffleArray(pairs).map((icon) => ({
       id: crypto.randomUUID(),
       icon,
       isFlipped: false,
       isMatched: false,
     }));
-    
-    setCards(shuffledCards);
+
+    setCards(shuffled);
     setMoves(0);
     setFirstChoice(null);
     setSecondChoice(null);
+    setIsLocked(false);
+    setIsLevelComplete(false);
     setIsGameFinished(false);
-    setScore(null);
     setTimeElapsed(0);
-    setStartTime(Date.now());
-    
+
     if (timerRef.current) clearInterval(timerRef.current);
+    startTimeRef.current = Date.now();
     timerRef.current = setInterval(() => {
-      setStartTime((prevStartTime) => {
-        if (prevStartTime) {
-          setTimeElapsed(Math.floor((Date.now() - prevStartTime) / 1000));
-        }
-        return prevStartTime;
-      });
+      if (startTimeRef.current) {
+        setTimeElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }
     }, 1000);
   }, []);
 
-  // Run once on mount
+  // İlerleme yüklenmeden önce bekle
   useEffect(() => {
-    initGame();
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [initGame]);
+    if (userId !== "guest" && startLevel === null) return; // Henüz yüklenmedi
+    initLevel(currentLevel);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentLevel, startLevel]);
 
-  // Handle Card Click
   const handleCardClick = (id: string) => {
-    if (isLocked || isGameFinished) return;
-    
+    if (isLocked || isLevelComplete) return;
+
     const clickedCard = cards.find((c) => c.id === id);
     if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched) return;
 
     if (!firstChoice) {
       setFirstChoice(clickedCard);
-      setCards((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c))
-      );
+      setCards((prev) => prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c)));
     } else if (firstChoice.id !== id && !secondChoice) {
-      setIsLocked(true); // Prevent 3rd click instantly
+      setIsLocked(true);
       setSecondChoice(clickedCard);
-      setCards((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c))
-      );
+      setCards((prev) => prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c)));
       setMoves((prev) => prev + 1);
     }
   };
 
-  // Evaluate Match
   useEffect(() => {
-    if (firstChoice && secondChoice) {
-      if (firstChoice.icon === secondChoice.icon) {
-        // Match!
+    if (!firstChoice || !secondChoice) return;
+
+    if (firstChoice.icon === secondChoice.icon) {
+      setCards((prev) =>
+        prev.map((c) => (c.icon === firstChoice.icon ? { ...c, isMatched: true } : c))
+      );
+      setFirstChoice(null);
+      setSecondChoice(null);
+      setIsLocked(false);
+    } else {
+      const t = setTimeout(() => {
         setCards((prev) =>
-          prev.map((c) => {
-            if (c.icon === firstChoice.icon) {
-              return { ...c, isMatched: true };
-            }
-            return c;
-          })
+          prev.map((c) =>
+            c.id === firstChoice.id || c.id === secondChoice.id
+              ? { ...c, isFlipped: false }
+              : c
+          )
         );
-        resetTurn();
-      } else {
-        // No match - hide after 1 second
-        setTimeout(() => {
-          setCards((prev) =>
-            prev.map((c) => {
-              if (c.id === firstChoice.id || c.id === secondChoice.id) {
-                return { ...c, isFlipped: false };
-              }
-              return c;
-            })
-          );
-          resetTurn();
-        }, 1000);
-      }
+        setFirstChoice(null);
+        setSecondChoice(null);
+        setIsLocked(false);
+      }, 900);
+      return () => clearTimeout(t);
     }
   }, [firstChoice, secondChoice]);
 
-  // Check Game End
   useEffect(() => {
-    if (cards.length > 0 && cards.every((c) => c.isMatched)) {
-      if (timerRef.current) clearInterval(timerRef.current);
+    if (cards.length === 0) return;
+    if (!cards.every((c) => c.isMatched)) return;
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    setIsLevelComplete(true);
+
+    const earned = Math.max(10, Math.floor(1000 / Math.max(1, timeElapsed)) - moves * 5);
+    const newTotal = totalScore + earned;
+    setLevelScore(earned);
+    setTotalScore(newTotal);
+
+    confetti({
+      particleCount: 120,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#6366f1", "#a855f7", "#10b981", "#f59e0b"],
+    });
+
+    const isLast = currentLevel >= LEVELS.length - 1;
+    if (isLast) {
       setIsGameFinished(true);
-      
-      // Calculate score: (1000 / Süre) - (Hamle Sayısı * 5)
-      // We'll adjust it to be a more positive number generally.
-      const rawScore = Math.floor(10000 / Math.max(1, timeElapsed)) - (moves * 10);
-      const finalScore = Math.max(10, rawScore); // Minimum 10 points
-      setScore(finalScore);
-      
-      // Fire confetti!
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#4f46e5', '#9333ea', '#10b981', '#f59e0b']
-      });
-      
-      // Send API Request
-      handleGameFinish(finalScore, timeElapsed, moves);
+      saveProgress(newTotal, currentLevel);
     }
-  }, [cards, timeElapsed, moves]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards]);
 
-  const resetTurn = () => {
-    setFirstChoice(null);
-    setSecondChoice(null);
-    setIsLocked(false);
-  };
+  const saveProgress = async (score: number, level: number) => {
+    if (userId === "guest") return;
+    try {
+      const res = await fetch("/api/games/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ game_type: "memory_card", score, level }),
+      });
+      const data = await res.json();
+      if (data.high_score) setHighScore(data.high_score);
+    } catch {}
 
-  const handleGameFinish = async (finalScore: number, timeTaken: number, movesMade: number) => {
     try {
       await fetch("/api/games/finish", {
         method: "POST",
@@ -173,111 +192,145 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
         body: JSON.stringify({
           game_type: "memory_card",
           user_id: userId,
-          score: finalScore,
-          stats: { time: timeTaken, moves: movesMade },
+          score,
+          stats: { time: timeElapsed, moves },
         }),
       });
-      console.log("Oyun skoru başarıyla gönderildi:", finalScore);
-      
-      if (onGameEnd) {
-        onGameEnd(finalScore, { time: timeTaken, moves: movesMade });
-      }
-    } catch (error) {
-      console.error("Skor gönderme hatası:", error);
-    }
+    } catch {}
+
+    if (onGameEnd) onGameEnd(score, { time: timeElapsed, moves });
   };
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
+  const handleNextLevel = () => {
+    const next = currentLevel + 1;
+    saveProgress(totalScore, next);
+    setCurrentLevel(next);
   };
+
+  const handleRestart = () => {
+    setTotalScore(0);
+    setCurrentLevel(0);
+    initLevel(0);
+  };
+
+  const formatTime = (s: number) =>
+    `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+
+  const level = LEVELS[currentLevel % LEVELS.length];
+  const cols = level.pairs <= 4 ? 4 : level.pairs <= 6 ? 4 : 4;
 
   return (
-    <div className="w-full max-w-xl mx-auto p-4 sm:p-6 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm">
-      {/* Required CSS for 3D Flips */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .preserve-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-      `}} />
+    <div className="w-full max-w-sm mx-auto select-none">
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .preserve-3d { transform-style: preserve-3d; }
+          .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+          .rotate-y-180 { transform: rotateY(180deg); }
+        `
+      }} />
 
-      {/* Header / HUD */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-black text-indigo-900 flex items-center gap-2">
-            <span>🧠</span> Zihin Avcısı
-          </h2>
-          <p className="text-xs font-bold text-slate-500 mt-1">Görsel Hafıza Egzersizi</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="bg-white px-3 py-1.5 rounded-xl shadow-xs border border-slate-100 flex flex-col items-center">
-            <span className="text-[0.65rem] font-black uppercase text-slate-400">Süre</span>
-            <span className="text-sm font-black text-night">{formatTime(timeElapsed)}</span>
+      {/* Header */}
+      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-3xl p-4 mb-3 shadow-2xl shadow-violet-500/30 border border-violet-400/20">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+              🧠 Zihin Avcısı
+            </h2>
+            <p className="text-xs font-bold text-violet-200">
+              Seviye {currentLevel + 1} / {LEVELS.length} · {level.pairs} Çift
+            </p>
           </div>
-          <div className="bg-white px-3 py-1.5 rounded-xl shadow-xs border border-slate-100 flex flex-col items-center">
-            <span className="text-[0.65rem] font-black uppercase text-slate-400">Hamle</span>
-            <span className="text-sm font-black text-night">{moves}</span>
+          {highScore > 0 && (
+            <div className="bg-yellow-400/20 border border-yellow-300/30 rounded-2xl px-3 py-1.5 text-center">
+              <span className="text-[0.55rem] font-black text-yellow-200 block uppercase tracking-wider">Rekor</span>
+              <span className="text-sm font-black text-yellow-300">🏆 {highScore}</span>
+            </div>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm">
+            <span className="text-[0.6rem] font-black text-violet-200 block uppercase">Süre</span>
+            <span className="text-sm font-black text-white">{formatTime(timeElapsed)}</span>
+          </div>
+          <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm">
+            <span className="text-[0.6rem] font-black text-violet-200 block uppercase">Hamle</span>
+            <span className="text-sm font-black text-white">{moves}</span>
+          </div>
+          <div className="bg-white/20 rounded-xl p-2 text-center backdrop-blur-sm border border-white/20">
+            <span className="text-[0.6rem] font-black text-violet-200 block uppercase">Puan</span>
+            <span className="text-sm font-black text-white">{totalScore}</span>
           </div>
         </div>
       </div>
 
       {/* Game Grid */}
-      <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-6">
-        {cards.map((card) => (
-          <MemoryCard
-            key={card.id}
-            id={card.id}
-            icon={card.icon}
-            isFlipped={card.isFlipped}
-            isMatched={card.isMatched}
-            onClick={handleCardClick}
-          />
-        ))}
-      </div>
-
-      {/* Actions */}
-      <div className="flex justify-center">
-        <button
-          onClick={initGame}
-          className="tap-scale bg-white border border-slate-200 text-night text-xs font-black px-4 py-2 rounded-xl shadow-xs hover:bg-slate-50 transition"
+      <div className="bg-slate-900 rounded-3xl p-3 border border-slate-800 shadow-2xl mb-3">
+        <div
+          className="grid gap-2"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
         >
-          Yeniden Başlat 🔄
-        </button>
+          {cards.map((card) => (
+            <MemoryCard
+              key={card.id}
+              id={card.id}
+              icon={card.icon}
+              isFlipped={card.isFlipped}
+              isMatched={card.isMatched}
+              onClick={handleCardClick}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Game Over Overlay */}
-      {isGameFinished && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-md text-4xl">
-              🎉
+      {/* Level Complete Overlay */}
+      {isLevelComplete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 rounded-3xl p-7 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-violet-500/40 text-4xl">
+              {isGameFinished ? "🏆" : "⭐"}
             </div>
-            <h3 className="text-2xl font-black text-night mb-2">Harika İş Çıkardın!</h3>
-            <p className="text-sm text-slate-500 font-medium mb-6">
-              Hafızanı başarıyla test ettin. İşte sonuçların:
+            <h3 className="text-2xl font-black text-white mb-1">
+              {isGameFinished ? "Tüm Seviyeleri Bitirdin!" : `Seviye ${currentLevel + 1} Tamamlandı!`}
+            </h3>
+            <p className="text-sm text-slate-400 font-medium mb-5">
+              {isGameFinished ? "Hafıza şampiyonusun! 🎉" : `Bu seviyede ${levelScore} puan kazandın!`}
             </p>
-            
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase">Toplam Süre</p>
-                <p className="text-lg font-black text-indigo-600">{formatTime(timeElapsed)}</p>
+
+            <div className="grid grid-cols-3 gap-2 mb-5">
+              <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
+                <p className="text-[0.6rem] font-bold text-slate-400 uppercase">Süre</p>
+                <p className="text-base font-black text-violet-400">{formatTime(timeElapsed)}</p>
               </div>
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                <p className="text-xs font-bold text-slate-400 uppercase">Hamle Sayısı</p>
-                <p className="text-lg font-black text-purple-600">{moves}</p>
+              <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
+                <p className="text-[0.6rem] font-bold text-slate-400 uppercase">Hamle</p>
+                <p className="text-base font-black text-indigo-400">{moves}</p>
               </div>
-              <div className="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-500 p-3 rounded-2xl text-white shadow-lg shadow-emerald-500/20">
-                <p className="text-xs font-bold text-emerald-100 uppercase">Kazanılan Zigo Puanı</p>
-                <p className="text-2xl font-black">+{score}</p>
+              <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-2xl p-3 border border-emerald-400/30">
+                <p className="text-[0.6rem] font-bold text-emerald-400 uppercase">Puan</p>
+                <p className="text-base font-black text-emerald-400">+{levelScore}</p>
               </div>
             </div>
 
+            {isGameFinished ? (
+              <button
+                onClick={handleRestart}
+                className="tap-scale w-full bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
+              >
+                Baştan Başla 🔄
+              </button>
+            ) : (
+              <button
+                onClick={handleNextLevel}
+                className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
+              >
+                Sonraki Seviye → Seviye {currentLevel + 2} 🚀
+              </button>
+            )}
             <button
-              onClick={initGame}
-              className="tap-scale w-full bg-night text-white font-black py-3.5 rounded-xl shadow-md hover:bg-slate-800 transition"
+              onClick={handleRestart}
+              className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2.5 rounded-2xl hover:bg-white/10 transition text-xs border border-white/10"
             >
-              Tekrar Oyna
+              Baştan Başla
             </button>
           </div>
         </div>

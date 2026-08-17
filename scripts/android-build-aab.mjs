@@ -9,7 +9,7 @@ const androidDir = join(root, "android");
 const gradleHome = "C:\\dev\\gradle85";
 const tmpDir = "C:\\dev\\tmp";
 const aabSource = join(androidDir, "app", "build", "outputs", "bundle", "release", "app-release.aab");
-const aabTarget = join(root, "Zigo-release.aab");
+const aabTarget = join(root, "Zigo-YENI-release.aab");
 const keystorePath = join(androidDir, "app", "zigo-release.keystore");
 const keystorePropsPath = join(androidDir, "keystore.properties");
 
@@ -70,7 +70,7 @@ function ensureReleaseKeystore() {
 function runGradle() {
   const result = spawnSync(
     process.platform === "win32" ? "gradlew.bat" : "./gradlew",
-    ["bundleRelease", "--no-daemon", "--max-workers=1", "--no-build-cache"],
+    ["clean", "bundleRelease", "--no-daemon", "--max-workers=1", "--no-build-cache"],
     {
       cwd: androidDir,
       env: {
@@ -89,7 +89,7 @@ function runGradle() {
   return result.status === 0;
 }
 
-const productionServerUrl = (process.env.CAPACITOR_SERVER_URL || "https://zigo.app").replace(/\/$/, "");
+const productionServerUrl = (process.env.CAPACITOR_SERVER_URL || "https://zigo-kohl.vercel.app").replace(/\/$/, "");
 
 function runCapSync() {
   console.log(`Capacitor server URL: ${productionServerUrl}`);
