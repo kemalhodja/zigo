@@ -192,7 +192,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         if (guess[j] === key) {
           const s = getLetterState(guess, j);
           if (s === "correct") return "bg-emerald-500 border-emerald-600 text-white";
-          if (s === "present" && state !== "correct") state = "present";
+          if (s === "present") state = "present";
           if (s === "absent" && state === "empty") state = "absent";
         }
       }

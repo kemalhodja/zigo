@@ -57,7 +57,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     }
   }
 
-  const trendTopics = await fetchDynamicTrendTopics(supabase, tilesToRender.length);
+  // trend konular arayüzden kaldırıldığı için çekilmesine gerek kalmadı.
 
   return (
     <div className="space-y-0 pb-3">
@@ -97,9 +97,6 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       <div className="-mx-4 border-b border-slate-100 bg-white p-4">
         <MiniGamesArcadeSection isPremium={explorePremium} />
       </div>
-
-      ) : null}
-
       {/* Teacher results for teachers format */}
       {activeFormat === "teachers" && creators.length > 0 ? (
         <section className="-mx-4 bg-white">

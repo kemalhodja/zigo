@@ -362,6 +362,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       y: e.clientY,
       offsetX: e.clientX - rect.left,
       offsetY: e.clientY - rect.top,
+      targetRow: null,
+      targetCol: null,
+      isValidDrop: false,
     });
   };
 
