@@ -71,6 +71,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     y: number;
     offsetX: number;
     offsetY: number;
+    touchOffsetY: number;
     targetRow: number | null;
     targetCol: number | null;
     isValidDrop: boolean;
@@ -82,6 +83,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     y: 0,
     offsetX: 0,
     offsetY: 0,
+    touchOffsetY: 0,
     targetRow: null,
     targetCol: null,
     isValidDrop: false,
@@ -289,13 +291,28 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
         let targetCol: null | number = null;
         let isValidDrop = false;
 
-        const target = document.elementFromPoint(e.clientX, e.clientY);
-        if (target) {
-          const rowAttr = target.getAttribute("data-row");
-          const colAttr = target.getAttribute("data-col");
-          if (rowAttr !== null && colAttr !== null) {
-            targetRow = parseInt(rowAttr, 10);
-            targetCol = parseInt(colAttr, 10);
+        // Y-offset so the finger doesn't hide the piece on mobile
+        const isTouch = e.pointerType === "touch";
+        const touchOffsetY = isTouch ? 60 : 0;
+        
+        const ghostX = e.clientX - prev.offsetX;
+        const ghostY = e.clientY - prev.offsetY - touchOffsetY;
+
+        if (boardRef.current) {
+          const boardRect = boardRef.current.getBoundingClientRect();
+          const cellWidth = boardRect.width / GRID_SIZE;
+          const cellHeight = boardRect.height / GRID_SIZE;
+
+          // Calculate which column/row the center of the top-left block of the shape falls into
+          const relativeX = ghostX - boardRect.left + (cellWidth / 2);
+          const relativeY = ghostY - boardRect.top + (cellHeight / 2);
+
+          const col = Math.floor(relativeX / cellWidth);
+          const row = Math.floor(relativeY / cellHeight);
+
+          if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+            targetRow = row;
+            targetCol = col;
             
             if (prev.shape) {
               let canFit = true;
@@ -325,18 +342,14 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     const handlePointerUp = (e: PointerEvent) => {
       if (!dragState.isDragging || dragState.shape === null || dragState.shapeIdx === null) return;
       
-      const target = document.elementFromPoint(e.clientX, e.clientY);
-      if (target) {
-        const rowAttr = target.getAttribute("data-row");
-        const colAttr = target.getAttribute("data-col");
-        if (rowAttr !== null && colAttr !== null) {
-          const row = parseInt(rowAttr, 10);
-          const col = parseInt(colAttr, 10);
-          handleDrop(row, col, dragState.shape, dragState.shapeIdx);
+      setDragState((prev) => {
+        if (prev.isValidDrop && prev.targetRow !== null && prev.targetCol !== null) {
+          handleDrop(prev.targetRow, prev.targetCol, prev.shape!, prev.shapeIdx!);
+        } else {
+          playSound("error"); // Geçersiz bırakma durumunda hata sesi çal
         }
-      }
-
-      setDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, targetRow: null, targetCol: null, isValidDrop: false });
+        return { isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, touchOffsetY: 0, targetRow: null, targetCol: null, isValidDrop: false };
+      });
     };
 
     if (dragState.isDragging) {
@@ -353,6 +366,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const onPointerDownBlock = (e: React.PointerEvent, shape: ShapeType, idx: number) => {
     if (isGameOver || disabled) return;
     
+    const isTouch = e.pointerType === "touch";
+    const touchOffsetY = isTouch ? 60 : 0;
+    
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setDragState({
       isDragging: true,
@@ -362,6 +378,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       y: e.clientY,
       offsetX: e.clientX - rect.left,
       offsetY: e.clientY - rect.top,
+      touchOffsetY,
       targetRow: null,
       targetCol: null,
       isValidDrop: false,
@@ -378,7 +395,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
           className="fixed z-50 pointer-events-none"
           style={{
             left: dragState.x - dragState.offsetX,
-            top: dragState.y - dragState.offsetY,
+            top: dragState.y - dragState.offsetY - dragState.touchOffsetY,
           }}
         >
           <BlockPiece shape={dragState.shape} isSelected={true} onClick={() => {}} disabled={false} />
