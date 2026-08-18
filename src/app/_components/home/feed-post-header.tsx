@@ -11,22 +11,29 @@ export function FeedPostHeader({
   post,
   postKey,
   teacherBadges,
+  theme = "dark",
 }: {
   post: DisplayPost;
   postKey: string;
   teacherBadges: { verifiedTeacher: string; moreAreas: string };
+  theme?: "dark" | "light";
 }) {
+  const isDark = theme === "dark";
+  const textColorClass = isDark ? "text-white shadow-black/20 text-shadow-sm" : "text-night";
+  const subTextColorClass = isDark ? "text-white/80 shadow-black/20 text-shadow-sm" : "text-slate-600";
+  const badgeBgClass = isDark ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700 border border-slate-200";
+
   return (
-    <div className="flex items-center justify-between px-4 py-2.5">
+    <div className="flex items-center justify-between px-4 py-3">
       <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
         <SocialAvatar className="size-9" label={post.authorName} imageUrl={post.avatarUrl} online={post.verified} />
         <div className="min-w-0">
-          <p className="truncate text-zigo-body font-bold text-white shadow-black/20 text-shadow-sm">
+          <p className={`truncate text-[0.95rem] font-bold ${textColorClass}`}>
             {post.handle}
             {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
           </p>
           {post.verified ? (
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
               <TeacherTrustBadges
                 branches={post.area ? [post.area] : []}
                 moreLabel={teacherBadges.moreAreas}
@@ -35,16 +42,16 @@ export function FeedPostHeader({
                 verifiedLabel={teacherBadges.verifiedTeacher}
               />
               {post.locationName || post.city ? (
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-white/20 px-1.5 py-0.5 text-[0.62rem] font-bold text-white shadow-sm backdrop-blur">
+                <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[0.62rem] font-bold shadow-sm backdrop-blur ${badgeBgClass}`}>
                   📍 {post.locationName || post.city}
                 </span>
               ) : null}
             </div>
           ) : (
-            <div className="flex items-center gap-1.5">
-              <p className="truncate text-zigo-meta font-semibold text-white/80 shadow-black/20 text-shadow-sm">{post.area}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <p className={`truncate text-[0.75rem] font-semibold ${subTextColorClass}`}>{post.area}</p>
               {post.locationName || post.city ? (
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-white/20 px-1.5 py-0.5 text-[0.62rem] font-bold text-white shadow-sm backdrop-blur">
+                <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[0.62rem] font-bold shadow-sm backdrop-blur ${badgeBgClass}`}>
                   📍 {post.locationName || post.city}
                 </span>
               ) : null}
@@ -52,7 +59,7 @@ export function FeedPostHeader({
           )}
         </div>
       </Link>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-3">
         {post.canFollowCreator && post.authorId && !post.isOwner ? (
           <FollowButton
             followingId={post.authorId}
@@ -68,6 +75,7 @@ export function FeedPostHeader({
           isOwner={post.isOwner}
           postId={post.postId}
           postKey={postKey}
+          variant={isDark ? "overlay" : "ghost"}
         />
       </div>
     </div>

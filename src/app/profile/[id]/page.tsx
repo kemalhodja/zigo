@@ -233,7 +233,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
 
       <section className="-mx-4 mt-2 grid grid-cols-2 border-y border-slate-100 bg-white">
         <Link
-          className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
+          className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 ${
             activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
           }`}
           href={`/profile/${profile.id}`}
@@ -246,7 +246,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           </svg>
         </Link>
         <Link
-          className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
+          className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 ${
             activeTab === "reels" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
           }`}
           href={`/profile/${profile.id}?tab=micro`}

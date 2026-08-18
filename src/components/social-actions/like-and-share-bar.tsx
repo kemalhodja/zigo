@@ -60,9 +60,13 @@ export function LikeAndShareBar({
   onSetComment,
   onSubmitComment,
   labels,
-}: LikeAndShareBarProps) {
+  theme = "dark",
+}: LikeAndShareBarProps & { theme?: "dark" | "light" }) {
   const [bounceKey, setBounceKey] = React.useState(0);
   const [saveBounceKey, setSaveBounceKey] = React.useState(0);
+
+  const isDark = theme === "dark";
+  const iconColor = isDark ? "text-white" : "text-slate-700";
 
   function handleLikeClick() {
     setBounceKey((k) => k + 1);
@@ -80,13 +84,12 @@ export function LikeAndShareBar({
         <div className="flex items-center gap-3.5">
           <button
             aria-label={isLiked ? labels.unlike : labels.like}
-            className={`tap-scale relative flex h-9 items-center gap-1.5 transition ${isLiked ? "text-rose-500" : "text-white"}`}
+            className={`tap-scale active:scale-95 relative flex h-9 items-center gap-1.5 transition ${isLiked ? "text-rose-500" : iconColor}`}
             disabled={pendingAction === "likes"}
             onClick={handleLikeClick}
             type="button"
           >
             <div className="relative flex size-9 items-center justify-center">
-              {/* Burst ring animasyonu beğeni anında */}
               {isLiked && bounceKey > 0 ? (
                 <span
                   key={`burst-${bounceKey}`}
@@ -99,37 +102,62 @@ export function LikeAndShareBar({
                 <ActionIcon name="like" filled={isLiked} />
               </span>
             </div>
-            <span className="text-sm font-bold">{numberFormatter.format(likes)}</span>
+            {likes > 0 ? (
+              <span className={`pr-2 text-[0.82rem] font-bold ${isLiked ? "text-rose-500" : iconColor} ${isDark ? "shadow-black/20 text-shadow-sm" : ""}`}>
+                {numberFormatter.format(likes)}
+              </span>
+            ) : null}
           </button>
+
           <button
-            aria-label={labels.understood}
-            className={`tap-scale flex h-9 items-center gap-1 rounded-full px-2.5 text-[0.62rem] font-black transition backdrop-blur-sm ${
-              isUnderstood ? "bg-emerald-500/90 text-white" : "bg-white/20 text-white shadow-sm"
-            }`}
-            onClick={onToggleUnderstood}
+            aria-label={labels.viewComments}
+            className={`tap-scale active:scale-95 flex h-9 items-center gap-1.5 transition hover:text-crystal ${iconColor}`}
+            onClick={onLoadComments}
             type="button"
           >
-            <span aria-hidden="true">✓</span>
-            {labels.understood}
+            <div className="flex size-9 items-center justify-center">
+              <ActionIcon name="comment" />
+            </div>
+            {comments > 0 ? (
+              <span className={`pr-2 text-[0.82rem] font-bold ${iconColor} ${isDark ? "shadow-black/20 text-shadow-sm" : ""}`}>
+                {numberFormatter.format(comments)}
+              </span>
+            ) : null}
           </button>
-          <button aria-label={labels.comment} className="tap-scale flex size-9 items-center justify-center text-white" onClick={onLoadComments} type="button">
-            <ActionIcon name="comment" />
-          </button>
-          <button aria-label={labels.share} className="tap-scale flex size-9 items-center justify-center text-white" onClick={onSharePost} type="button">
+
+          <button
+            aria-label={labels.share}
+            className={`tap-scale active:scale-95 flex size-9 items-center justify-center transition hover:text-crystal ${iconColor}`}
+            onClick={onSharePost}
+            type="button"
+          >
             <ActionIcon name="share" />
           </button>
         </div>
-        <button
-          aria-label={isSaved ? labels.unsave : labels.save}
-          className="tap-scale flex size-9 items-center justify-center text-white transition"
-          disabled={pendingAction === "saves"}
-          onClick={handleSaveClick}
-          type="button"
-        >
-          <span key={`save-${saveBounceKey}`} className={saveBounceKey > 0 ? "save-bounce" : ""}>
-            <ActionIcon name="save" filled={isSaved} />
-          </span>
-        </button>
+
+        <div className="flex items-center gap-1">
+          <button
+            aria-label={labels.understood}
+            className={`tap-scale active:scale-95 flex size-9 items-center justify-center transition ${isUnderstood ? "text-emerald-400" : iconColor}`}
+            onClick={onToggleUnderstood}
+            title={labels.understood}
+            type="button"
+          >
+            <ActionIcon name="check" filled={isUnderstood} />
+          </button>
+
+          <button
+            aria-label={isSaved ? labels.unsave : labels.save}
+            className={`tap-scale active:scale-95 relative flex size-9 items-center justify-center transition ${isSaved ? "text-amber-400" : iconColor}`}
+            disabled={pendingAction === "saves"}
+            onClick={handleSaveClick}
+            type="button"
+          >
+            <span key={`save-${saveBounceKey}`} className={saveBounceKey > 0 ? "save-bounce" : ""}>
+              <ActionIcon name="save" filled={isSaved} />
+            </span>
+          </button>
+        </div>
       </div>
       {variant === "full" ? (
         <>

@@ -43,6 +43,56 @@ export function FeedPostCard({
 
   const heightClass = fullHeight ? "h-[100dvh] md:h-[100dvh]" : "h-[calc(100dvh-70px)] md:h-[700px]";
 
+  if (!isMicro) {
+    return (
+      <DismissibleFeedPost postKey={postKey}>
+        <article
+          className="zigo-feed-card zigo-feed-card-enter bg-white mb-2 pb-5 pt-1 border-b border-slate-100"
+          style={containerStyle}
+        >
+          <div className="pointer-events-auto">
+            <FeedPostHeader 
+              post={post}
+              postKey={postKey}
+              teacherBadges={teacherBadges}
+              theme="light"
+            />
+          </div>
+
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-slate-50">
+            <FeedMediaViewer 
+              post={post}
+              priorityMedia={priorityMedia}
+              isMicro={false}
+              oneMinLessonLabel={feedEnhancements.oneMinLesson}
+            />
+          </div>
+
+          <div className="pointer-events-auto mt-3 space-y-2 px-4">
+            <SocialPostActions
+              initialComments={post.comments}
+              initialLiked={post.isLiked}
+              initialLikes={post.likes}
+              initialSaved={post.isSaved}
+              postId={post.postId}
+              variant="default"
+            />
+          </div>
+
+          <div className="mt-2.5">
+            <ExpandableCaption caption={post.caption} theme="light" />
+          </div>
+
+          <div className="pointer-events-auto px-4 mt-1.5">
+            <p className="text-[0.65rem] font-bold uppercase tracking-wider text-slate-400">
+              {formatFeedTimestamp(post.createdAt)}
+            </p>
+          </div>
+        </article>
+      </DismissibleFeedPost>
+    );
+  }
+
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
@@ -64,6 +114,7 @@ export function FeedPostCard({
               post={post}
               postKey={postKey}
               teacherBadges={teacherBadges}
+              theme="dark"
             />
           </div>
 
@@ -79,7 +130,7 @@ export function FeedPostCard({
           </div>
 
           <div className="mt-2">
-            <ExpandableCaption caption={post.caption} />
+            <ExpandableCaption caption={post.caption} theme="dark" />
           </div>
 
           <div className="pointer-events-auto px-4 mt-0.5">
@@ -93,25 +144,30 @@ export function FeedPostCard({
   );
 }
 
-function ExpandableCaption({ caption }: { caption?: string | null }) {
+function ExpandableCaption({ caption, theme = "dark" }: { caption?: string | null; theme?: "dark" | "light" }) {
   const [expanded, setExpanded] = useState(false);
   
   if (!caption) return null;
+
+  const isDark = theme === "dark";
+  const bgClass = isDark ? "bg-black/60 text-white shadow-lg" : "bg-slate-50 text-night shadow-sm border border-slate-100";
+  const clampedTextClass = isDark ? "text-white/90" : "text-slate-800";
+  const readMoreClass = isDark ? "text-white/60 hover:text-white" : "text-slate-500 hover:text-slate-800";
 
   return (
     <div 
       className="pointer-events-auto px-4 pb-2"
       onClick={() => setExpanded(!expanded)}
     >
-      <div className={`cursor-pointer text-[0.85rem] drop-shadow-md transition-all duration-200 ${
+      <div className={`cursor-pointer text-[0.85rem] transition-all duration-200 ${
         expanded 
-          ? "max-h-[50vh] overflow-y-auto rounded-xl bg-black/60 p-3.5 text-white backdrop-blur-md shadow-lg" 
-          : "line-clamp-1 text-white/90"
+          ? `max-h-[50vh] overflow-y-auto rounded-xl p-3.5 backdrop-blur-md ${bgClass}` 
+          : `line-clamp-1 ${clampedTextClass} ${isDark ? 'drop-shadow-md' : ''}`
       }`}>
         {caption}
       </div>
       {!expanded && caption.length > 50 ? (
-        <span className="mt-0.5 cursor-pointer text-xs font-bold text-white/60 drop-shadow-sm hover:text-white">
+        <span className={`mt-0.5 cursor-pointer text-xs font-bold drop-shadow-sm transition-colors ${readMoreClass}`}>
           devamını oku
         </span>
       ) : null}

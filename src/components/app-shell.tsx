@@ -331,7 +331,7 @@ function Header({
   const isHomePage = pathname === "/";
 
   return (
-    <header className="safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2">
+    <header className="safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm transition-all duration-300">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {!isHomePage ? <BackButton fallbackHref="/" /> : null}

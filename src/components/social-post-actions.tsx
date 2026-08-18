@@ -41,7 +41,8 @@ export function SocialPostActions({
   initialLiked = false,
   initialSaved = false,
   variant = "full",
-}: SocialPostActionsProps) {
+  theme = "dark",
+}: SocialPostActionsProps & { theme?: "dark" | "light" }) {
   const { actions: a, storyUi: s, postDetail: p, feedExtras: f, feedEnhancements: fe } = useMessages();
   const locale = useLocale();
   const numberFormatter = useMemo(() => new Intl.NumberFormat(locale === "en" ? "en-US" : "tr-TR"), [locale]);
@@ -373,6 +374,7 @@ export function SocialPostActions({
         pendingAction={pendingAction}
         safeQuickReplies={safeQuickReplies}
         variant={variant}
+        theme={theme}
       />
       <SaveCollectionSheet
         onClose={() => setIsCollectionSheetOpen(false)}
