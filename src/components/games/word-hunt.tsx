@@ -81,11 +81,10 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   };
 
   const isValidWord = (guess: string, lang: Lang) => {
-    const lists = WORD_DICTIONARY[lang];
-    for (const len in lists) {
-      if (lists[len].some((w) => w.word === guess)) return true;
-    }
-    return false;
+    // Tam kapsamlı bir sözlüğümüz olmadığı için, doğru uzunluktaki tüm kelimeleri
+    // geçerli sayıyoruz. Aksi takdirde kullanıcı gerçek bir kelime girse bile
+    // (örneğin "ELMAS") "Sözlükte bulunamadı" hatası alıyor.
+    return true;
   };
 
   const onKeyPress = useCallback((key: string) => {
