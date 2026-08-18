@@ -21,7 +21,7 @@ export function FeedPostHeader({
       <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
         <SocialAvatar className="size-9" label={post.authorName} imageUrl={post.avatarUrl} online={post.verified} />
         <div className="min-w-0">
-          <p className="truncate text-zigo-body font-bold text-white shadow-black/20 text-shadow-sm">
+          <p className="truncate text-zigo-body font-bold text-night">
             {post.handle}
             {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
           </p>
@@ -35,16 +35,16 @@ export function FeedPostHeader({
                 verifiedLabel={teacherBadges.verifiedTeacher}
               />
               {post.locationName || post.city ? (
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-white/20 px-1.5 py-0.5 text-[0.62rem] font-bold text-white shadow-sm backdrop-blur">
+                <span className="inline-flex items-center gap-0.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.62rem] font-bold text-slate-600 shadow-sm">
                   📍 {post.locationName || post.city}
                 </span>
               ) : null}
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
-              <p className="truncate text-zigo-meta font-semibold text-white/80 shadow-black/20 text-shadow-sm">{post.area}</p>
+              <p className="truncate text-zigo-meta font-semibold text-slate-500">{post.area}</p>
               {post.locationName || post.city ? (
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-white/20 px-1.5 py-0.5 text-[0.62rem] font-bold text-white shadow-sm backdrop-blur">
+                <span className="inline-flex items-center gap-0.5 rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.62rem] font-bold text-slate-600 shadow-sm">
                   📍 {post.locationName || post.city}
                 </span>
               ) : null}
