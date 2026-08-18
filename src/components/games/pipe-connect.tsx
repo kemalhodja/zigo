@@ -35,9 +35,7 @@ type CellData = {
   isFilled: boolean;
 };
 
-const GRID_SIZE = 5;
-
-// 5 seviye - kaldığı yerden devam
+// GRID_SIZE is now dynamic based on level size
 const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
   [
     [
@@ -602,28 +600,6 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
   [
     [
       {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
         "type": "source",
         "correctRotation": 0
       },
@@ -632,6 +608,88 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
         "correctRotation": 90
       },
       {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
         "type": "straight",
         "correctRotation": 90
       },
@@ -658,110 +716,6 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
         "correctRotation": 0
       },
       {
-        "type": "straight",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "corner",
-        "correctRotation": 270
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "target",
-        "correctRotation": 0
-      }
-    ]
-  ],
-  [
-    [
-      {
-        "type": "source",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 180
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 180
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
         "type": "empty",
         "correctRotation": 0
       },
@@ -772,10 +726,6 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
       {
         "type": "empty",
         "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
       }
     ],
     [
@@ -783,24 +733,6 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
         "type": "empty",
         "correctRotation": 0
       },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 180
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
       {
         "type": "empty",
         "correctRotation": 0
@@ -826,24 +758,28 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
   [
     [
       {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
         "type": "source",
         "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "corner",
-        "correctRotation": 180
       }
     ],
     [
@@ -864,6 +800,10 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
         "correctRotation": 0
       },
       {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
         "type": "straight",
         "correctRotation": 0
       }
@@ -874,15 +814,19 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
         "correctRotation": 0
       },
       {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
         "type": "corner",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
         "correctRotation": 90
       },
       {
@@ -895,226 +839,6 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
         "type": "empty",
         "correctRotation": 0
       },
-      {
-        "type": "straight",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "target",
-        "correctRotation": 0
-      }
-    ]
-  ],
-  [
-    [
-      {
-        "type": "source",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "corner",
-        "correctRotation": 180
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "target",
-        "correctRotation": 0
-      }
-    ]
-  ],
-  [
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 90
-      },
-      {
-        "type": "straight",
-        "correctRotation": 90
-      },
-      {
-        "type": "corner",
-        "correctRotation": 180
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
-      {
-        "type": "source",
-        "correctRotation": 0
-      },
-      {
-        "type": "corner",
-        "correctRotation": 270
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      },
-      {
-        "type": "straight",
-        "correctRotation": 0
-      },
-      {
-        "type": "empty",
-        "correctRotation": 0
-      }
-    ],
-    [
       {
         "type": "empty",
         "correctRotation": 0
@@ -1147,6 +871,934 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
       },
       {
         "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "target",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
         "correctRotation": 0
       },
       {
@@ -1155,6 +1807,642 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
       },
       {
         "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ],
+  [
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
         "correctRotation": 0
       }
     ]
@@ -1443,8 +2731,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
         <div
           className="grid gap-2"
           style={{
-            gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-            gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${grid.length || 5}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${grid.length || 5}, minmax(0, 1fr))`,
           }}
         >
           {grid.map((row, rIndex) =>

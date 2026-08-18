@@ -4,25 +4,11 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
 import { LeaderboardModal } from "./leaderboard-modal";
 import { useAudio } from "@/hooks/use-audio";
-
-// Eğitici, pozitif ve yaygın 5 harfli Türkçe kelimeler
-const WORD_LIST = [
-  "BİLİM", "KİTAP", "KALEM", "ZİHİN", "SANAT", "EVREN", "DÜNYA", "SEVGİ", "SAYGI", "HAYAT",
-  "DOĞRU", "ERDEM", "ZEKİA", "HEDEF", "ODAKL", "BİLGİ", "MERAK", "KEŞİF", "İKLİM", "GÜNEŞ",
-  "YILDI", "ÇELİK", "DEMİR", "KURAL", "DEĞER", "SABIR", "UMUTL", "BARIŞ", "İNANÇ", "DOĞAL",
-  "KİMYA", "FİZİK", "MANTK", "ROBOT", "MODEL", "PROJE", "TEMEL", "UZMAN", "BEYİN", "ROMAN",
-  "MASAL", "ŞİİR", "SÖZLÜ", "YAZAR", "OKUMA", "SÜREÇ", "DENEY", "HESAP", "TEMA", "KAVRAM",
-  "BAŞARI", "CESUR", "MUTLU", "GÜZEL", "KİBAR", "AYDIN", "BİLGE", "İDEAL", "MÜZİK", "RİTİM",
-  "TABLO", "RESİM", "YAPIT", "HİKAY", "ANLAM", "VİZYON", "KÜRE", "MADDE", "ENERJ", "IŞIMA"
-].map(w => w.length > 5 ? w.substring(0, 5) : w); // Fallback: ensure strictly 5 letters.
-
-// Gerçek bir kelime listesi için genellikle çok geniş bir sözlük gerekir. 
-// Oyunu basit tutmak için yukarıdaki geçerli kelimeler listesini kullanacağız.
+import { WORD_DICTIONARY, WordEntry } from "./word-dictionary";
 
 const ROWS = 6;
-const COLS = 5;
-
 type LetterState = "correct" | "present" | "absent" | "empty";
+type Lang = "TR" | "EN";
 
 type WordHuntProps = {
   userId?: string;
@@ -30,8 +16,10 @@ type WordHuntProps = {
 };
 
 export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
+  const [selectedLang, setSelectedLang] = useState<Lang | null>(null);
+  
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [targetWord, setTargetWord] = useState("");
+  const [targetWordObj, setTargetWordObj] = useState<WordEntry | null>(null);
   const [guesses, setGuesses] = useState<string[]>(Array(ROWS).fill(""));
   const [currentRow, setCurrentRow] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -46,7 +34,10 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const { playSound } = useAudio();
   const keyboardRef = useRef<HTMLDivElement>(null);
 
-  // Load High Score
+  const targetWord = targetWordObj?.word || "";
+  const targetMeaning = targetWordObj?.meaning || "";
+  const cols = targetWord.length || 5;
+
   useEffect(() => {
     if (userId === "guest") return;
     fetch("/api/games/progress?game_type=word_hunt")
@@ -58,10 +49,15 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
       .catch(() => {});
   }, [userId]);
 
-  const initLevel = useCallback((level: number) => {
-    // Pick a word based on level progression, or random if exhausted
-    const wordIndex = (level - 1) % WORD_LIST.length;
-    setTargetWord(WORD_LIST[wordIndex]);
+  const initLevel = useCallback((level: number, lang: Lang) => {
+    let wordLen = 4;
+    if (level >= 3 && level <= 5) wordLen = 5;
+    if (level >= 6) wordLen = 6;
+    
+    const wordList = WORD_DICTIONARY[lang][wordLen];
+    const wordObj = wordList[Math.floor(Math.random() * wordList.length)];
+    
+    setTargetWordObj(wordObj);
     setGuesses(Array(ROWS).fill(""));
     setCurrentRow(0);
     setIsGameOver(false);
@@ -71,8 +67,10 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   }, []);
 
   useEffect(() => {
-    initLevel(currentLevel);
-  }, [currentLevel, initLevel]);
+    if (selectedLang) {
+      initLevel(currentLevel, selectedLang);
+    }
+  }, [currentLevel, selectedLang, initLevel]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -80,29 +78,40 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     setTimeout(() => setToastMessage(null), 2000);
   };
 
+  const isValidWord = (guess: string, lang: Lang) => {
+    const lists = WORD_DICTIONARY[lang];
+    for (const len in lists) {
+      if (lists[len].some((w) => w.word === guess)) return true;
+    }
+    return false;
+  };
+
   const onKeyPress = useCallback((key: string) => {
-    if (isGameOver) return;
+    if (isGameOver || !selectedLang || !targetWord) return;
     playSound("pop");
 
     if (key === "ENTER") {
-      if (guesses[currentRow].length !== COLS) {
+      if (guesses[currentRow].length !== cols) {
         setShakeRow(currentRow);
-        showToast("Yeterli harf yok");
+        showToast(selectedLang === "TR" ? "Yeterli harf yok" : "Not enough letters");
         setTimeout(() => setShakeRow(-1), 500);
         return;
       }
       
-      // In a real wordle, you'd check if the word is in the dictionary.
-      // Here we assume any 5 letters is a valid guess to not frustrate kids.
-
       const guess = guesses[currentRow];
+      
+      if (!isValidWord(guess, selectedLang)) {
+        setShakeRow(currentRow);
+        showToast(selectedLang === "TR" ? "Sözlükte bulunamadı" : "Not in dictionary");
+        setTimeout(() => setShakeRow(-1), 500);
+        return;
+      }
+
       if (guess === targetWord) {
-        // WIN
         setHasWon(true);
         setIsGameOver(true);
         playSound("success");
         
-        // Puan hesaplama (Ne kadar erken bulursa o kadar iyi)
         const earned = Math.max(10, 100 - currentRow * 15);
         const newScore = score + earned;
         setScore(newScore);
@@ -117,7 +126,6 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         saveProgress(newScore, currentLevel + 1);
       } else {
         if (currentRow === ROWS - 1) {
-          // LOSE
           setIsGameOver(true);
           playSound("error");
           showToast(targetWord);
@@ -133,7 +141,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         return newGuesses;
       });
     } else {
-      if (guesses[currentRow].length < COLS) {
+      if (guesses[currentRow].length < cols) {
         setGuesses((prev) => {
           const newGuesses = [...prev];
           newGuesses[currentRow] += key;
@@ -141,12 +149,11 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         });
       }
     }
-  }, [currentRow, guesses, isGameOver, playSound, targetWord, score, currentLevel]);
+  }, [currentRow, guesses, isGameOver, playSound, targetWord, score, currentLevel, cols, selectedLang]);
 
-  // Physical Keyboard Support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.ctrlKey || e.metaKey || e.altKey || !selectedLang) return;
       
       const key = e.key.toUpperCase();
       if (key === "ENTER") onKeyPress("ENTER");
@@ -156,7 +163,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onKeyPress]);
+  }, [onKeyPress, selectedLang]);
 
   const saveProgress = async (finalScore: number, newLevel: number) => {
     if (userId === "guest") return;
@@ -178,7 +185,6 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     const letter = guess[index];
     if (targetWord[index] === letter) return "correct";
     if (targetWord.includes(letter)) {
-      // Çift harf mantığı basit tutulmuştur
       return "present";
     }
     return "absent";
@@ -188,7 +194,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     let state: LetterState = "empty";
     for (let i = 0; i < currentRow; i++) {
       const guess = guesses[i];
-      for (let j = 0; j < COLS; j++) {
+      for (let j = 0; j < cols; j++) {
         if (guess[j] === key) {
           const s = getLetterState(guess, j);
           if (s === "correct") return "bg-emerald-500 border-emerald-600 text-white";
@@ -202,11 +208,43 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     return "bg-slate-800 border-slate-700 text-white hover:bg-slate-700 active:bg-slate-600";
   };
 
-  const KEYBOARD_ROWS = [
+  const KEYBOARD_TR = [
     ["E", "R", "T", "Y", "U", "I", "O", "P", "Ğ", "Ü"],
     ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ş", "İ"],
     ["ENTER", "Z", "C", "V", "B", "N", "M", "Ö", "Ç", "BACKSPACE"]
   ];
+
+  const KEYBOARD_EN = [
+    ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+    ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+    ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "BACKSPACE"]
+  ];
+
+  const keyboardRows = selectedLang === "EN" ? KEYBOARD_EN : KEYBOARD_TR;
+
+  if (!selectedLang) {
+    return (
+      <div className="w-full max-w-sm mx-auto p-6 bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl text-center">
+        <h2 className="text-2xl font-black text-white mb-6">🔤 Word Hunt<br/><span className="text-sm text-teal-400">Kelime Avı</span></h2>
+        <p className="text-sm font-bold text-slate-400 mb-6">Hangi dilde oynamak istersin?<br/>Choose your language</p>
+        
+        <div className="flex flex-col gap-3">
+          <button 
+            onClick={() => setSelectedLang("TR")}
+            className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition text-lg"
+          >
+            🇹🇷 Türkçe
+          </button>
+          <button 
+            onClick={() => setSelectedLang("EN")}
+            className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition text-lg"
+          >
+            🇬🇧 English
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-sm mx-auto select-none relative">
@@ -232,16 +270,16 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-lg font-black text-white flex items-center gap-2">
-              🔤 Kelime Avı
+              🔤 {selectedLang === "TR" ? "Kelime Avı" : "Word Hunt"}
             </h2>
             <p className="text-xs font-bold text-teal-200">
-              Seviye {currentLevel}
+              {selectedLang === "TR" ? "Seviye" : "Level"} {currentLevel}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
             {highScore > 0 && (
               <div className="bg-yellow-400/20 border border-yellow-300/30 rounded-xl px-2 py-1 text-center">
-                <span className="text-[0.5rem] font-black text-yellow-200 block uppercase">Rekor</span>
+                <span className="text-[0.5rem] font-black text-yellow-200 block uppercase">{selectedLang === "TR" ? "Rekor" : "Best"}</span>
                 <span className="text-xs font-black text-yellow-300">🏆 {highScore}</span>
               </div>
             )}
@@ -249,12 +287,12 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
               onClick={() => setIsLeaderboardOpen(true)}
               className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
             >
-              🏅 Tablo
+              🏅 {selectedLang === "TR" ? "Tablo" : "Ranks"}
             </button>
           </div>
         </div>
         <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm">
-          <span className="text-[0.6rem] font-black text-teal-200 block uppercase">Toplam Puan</span>
+          <span className="text-[0.6rem] font-black text-teal-200 block uppercase">{selectedLang === "TR" ? "Toplam Puan" : "Total Score"}</span>
           <span className="text-lg font-black text-white">{score}</span>
         </div>
       </div>
@@ -262,7 +300,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
       {/* Grid */}
       <div className="bg-slate-900 rounded-3xl p-4 border border-slate-800 shadow-2xl mb-3 flex flex-col items-center gap-2 relative">
         {toastMessage && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-black px-4 py-2 rounded-xl shadow-2xl z-20 animate-in fade-in zoom-in duration-200">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-black font-black px-4 py-2 rounded-xl shadow-2xl z-20 animate-in fade-in zoom-in duration-200 text-center whitespace-nowrap">
             {toastMessage}
           </div>
         )}
@@ -276,12 +314,12 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
               key={i} 
               className={`flex gap-2 ${shakeRow === i ? "animate-shake" : ""}`}
             >
-              {Array.from({ length: COLS }).map((_, j) => {
+              {Array.from({ length: cols }).map((_, j) => {
                 const letter = guess[j] || "";
-                let bgClass = "bg-slate-800 border-slate-700 text-white"; // Empty
+                let bgClass = "bg-slate-800 border-slate-700 text-white";
                 
                 if (letter && isCurrentRow) {
-                  bgClass = "bg-slate-800 border-slate-500 text-white border-2 scale-105 transition-transform"; // Typed
+                  bgClass = "bg-slate-800 border-slate-500 text-white border-2 scale-105 transition-transform";
                 } else if (isSubmitted) {
                   const state = getLetterState(guess, j);
                   if (state === "correct") bgClass = "bg-emerald-500 border-emerald-600 text-white animate-flip";
@@ -289,10 +327,14 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
                   else bgClass = "bg-slate-700 border-slate-800 text-slate-400 animate-flip";
                 }
 
+                let boxSize = "w-12 h-12 sm:w-14 sm:h-14";
+                if (cols > 5) boxSize = "w-10 h-10 sm:w-12 sm:h-12";
+                if (cols > 6) boxSize = "w-8 h-8 sm:w-10 sm:h-10";
+
                 return (
                   <div
                     key={j}
-                    className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl border-2 text-2xl font-black uppercase ${bgClass}`}
+                    className={`${boxSize} flex items-center justify-center rounded-xl border-2 text-2xl font-black uppercase ${bgClass}`}
                     style={{ animationDelay: `${j * 100}ms` }}
                   >
                     {letter}
@@ -306,7 +348,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
       {/* Keyboard */}
       <div ref={keyboardRef} className="bg-slate-900 rounded-3xl p-3 border border-slate-800 shadow-2xl mb-3">
-        {KEYBOARD_ROWS.map((row, i) => (
+        {keyboardRows.map((row, i) => (
           <div key={i} className="flex justify-center gap-1 sm:gap-1.5 mb-1.5 last:mb-0">
             {row.map((key) => {
               const isAction = key === "ENTER" || key === "BACKSPACE";
@@ -318,7 +360,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
                     isAction ? "w-12 sm:w-16 h-12 text-[0.65rem] bg-slate-700 border-slate-800 text-white" : `w-8 sm:w-10 h-12 text-lg ${getKeyColor(key)}`
                   }`}
                 >
-                  {key === "BACKSPACE" ? "⌫" : key === "ENTER" ? "GİR" : key}
+                  {key === "BACKSPACE" ? "⌫" : key === "ENTER" ? (selectedLang === "TR" ? "GİR" : "ENT") : key}
                 </button>
               );
             })}
@@ -336,25 +378,36 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
               {hasWon ? "🎉" : "💔"}
             </div>
             <h3 className="text-xl font-black text-white mb-2">
-              {hasWon ? "Tebrikler!" : "Maalesef Bilemedin"}
+              {hasWon 
+                ? (selectedLang === "TR" ? "Tebrikler!" : "Congratulations!") 
+                : (selectedLang === "TR" ? "Maalesef Bilemedin" : "Game Over")}
             </h3>
             <p className="text-sm text-slate-400 font-bold mb-4">
-              Kelime: <span className="text-emerald-400 uppercase tracking-widest">{targetWord}</span>
+              {selectedLang === "TR" ? "Kelime:" : "Word:"} <span className="text-emerald-400 uppercase tracking-widest text-lg ml-1">{targetWord}</span>
             </p>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4 text-left">
+              <span className="text-[0.6rem] font-black text-slate-400 block uppercase mb-1">{selectedLang === "TR" ? "ANLAMI" : "MEANING"}</span>
+              <p className="text-sm text-white font-semibold leading-relaxed">
+                {targetMeaning}
+              </p>
+            </div>
             
             <button
               onClick={() => {
                 if (hasWon) {
                   setCurrentLevel(prev => prev + 1);
                 } else {
-                  initLevel(currentLevel);
+                  initLevel(currentLevel, selectedLang);
                 }
               }}
               className={`tap-scale w-full text-white font-black py-3 rounded-xl shadow-lg transition text-sm ${
                 hasWon ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110" : "bg-gradient-to-r from-slate-700 to-slate-600 hover:bg-slate-600"
               }`}
             >
-              {hasWon ? `Seviye ${currentLevel + 1}'e Geç 🚀` : "Tekrar Dene 🔄"}
+              {hasWon 
+                ? (selectedLang === "TR" ? `Seviye ${currentLevel + 1}'e Geç 🚀` : `Next Level ${currentLevel + 1} 🚀`) 
+                : (selectedLang === "TR" ? "Tekrar Dene 🔄" : "Try Again 🔄")}
             </button>
           </div>
         </div>
@@ -364,7 +417,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         isOpen={isLeaderboardOpen} 
         onClose={() => setIsLeaderboardOpen(false)} 
         gameType="word_hunt" 
-        gameTitle="Kelime Avı" 
+        gameTitle={selectedLang === "TR" ? "Kelime Avı" : "Word Hunt"} 
       />
     </div>
   );
