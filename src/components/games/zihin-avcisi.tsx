@@ -84,7 +84,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     
     const pairs = [...selectedIcons, ...selectedIcons];
     const shuffled = shuffleArray(pairs).map((icon) => ({
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2, 10) + Date.now().toString(36),
       icon,
       isFlipped: false,
       isMatched: false,

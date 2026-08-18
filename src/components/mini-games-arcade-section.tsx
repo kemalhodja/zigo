@@ -42,6 +42,10 @@ export function MiniGamesArcadeSection({
                 <span>🧠</span> Zihin Avcısı
               </h3>
               <p className="text-indigo-100 text-[0.62rem] font-bold mt-0.5">Görsel Hafıza</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Bugün 15.300 kişi oynadı
+              </div>
             </div>
             <Link
               href="/student/games/memory"
@@ -63,6 +67,10 @@ export function MiniGamesArcadeSection({
                 <span>🧩</span> Blok Zeka
               </h3>
               <p className="text-emerald-100 text-[0.62rem] font-bold mt-0.5">Mekansal Strateji</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Bugün 12.450 kişi oynadı
+              </div>
             </div>
             <Link
               href="/student/games/blocks"
@@ -84,6 +92,10 @@ export function MiniGamesArcadeSection({
                 <span>⚡</span> Akış Yolu
               </h3>
               <p className="text-cyan-100 text-[0.62rem] font-bold mt-0.5">Mantık & Akış</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Bugün 18.200 kişi oynadı
+              </div>
             </div>
             <Link
               href="/student/games/pipe"
@@ -105,6 +117,10 @@ export function MiniGamesArcadeSection({
                 <span>🧮</span> Matematik Ustası
               </h3>
               <p className="text-rose-100 text-[0.62rem] font-bold mt-0.5">Analitik Düşünce</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Bugün 21.100 kişi oynadı
+              </div>
             </div>
             <Link
               href="/student/games/math"
@@ -126,6 +142,10 @@ export function MiniGamesArcadeSection({
                 <span>🔤</span> Kelime Avı
               </h3>
               <p className="text-teal-100 text-[0.62rem] font-bold mt-0.5">Sözel Zeka</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Bugün 19.850 kişi oynadı
+              </div>
             </div>
             <Link
               href="/student/games/word"

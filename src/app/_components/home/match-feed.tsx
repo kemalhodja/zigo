@@ -72,7 +72,7 @@ export function FeedPostCard({
             initialLikes={post.likes}
             initialSaved={post.isSaved}
             postId={post.postId}
-            variant="default"
+            variant="full"
           />
           
           <div className="mt-2 text-sm text-night">

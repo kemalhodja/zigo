@@ -93,9 +93,16 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         </section>
       ) : null}
 
-      {/* Mini Games Arcade Section (Tüm Kullanıcılar ve Ziyaretçiler İçin) */}
+      {/* Mini Games Arcade Section Link */}
       <div className="-mx-4 border-b border-slate-100 bg-white p-4">
-        <MiniGamesArcadeSection isPremium={explorePremium} />
+        <Link 
+          href="/student/games" 
+          className="tap-scale w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-center py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg shadow-purple-500/30"
+        >
+          <span className="text-2xl mb-1 drop-shadow-md">🎮</span> 
+          <span className="text-sm tracking-wide">ZİGO OYUN SALONU</span>
+          <span className="text-[0.65rem] font-semibold text-white/80">Oyunları keşfet ve XP kazan</span>
+        </Link>
       </div>
       {/* Teacher results for teachers format */}
       {activeFormat === "teachers" && creators.length > 0 ? (
