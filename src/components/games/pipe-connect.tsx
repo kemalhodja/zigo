@@ -2617,7 +2617,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
         colors: ["#22d3ee", "#38bdf8", "#818cf8", "#34d399"],
       });
 
-      saveProgress(newTotal, currentLevel);
+      saveProgress(newTotal, currentLevel + 1);
     }
   };
 
