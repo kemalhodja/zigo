@@ -69,12 +69,16 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       .then((r) => r.json())
       .then((data) => {
         if (data.high_score) setHighScore(data.high_score);
-        if (data.last_level) {
+        if (data.last_level !== undefined && data.last_level !== null) {
           setStartLevel(data.last_level);
           setCurrentLevel(data.last_level);
+        } else {
+          setStartLevel(0);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setStartLevel(0);
+      });
   }, [userId]);
 
   const initLevel = useCallback((lvlIndex: number) => {
