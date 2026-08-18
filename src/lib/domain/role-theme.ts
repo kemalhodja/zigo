@@ -21,6 +21,7 @@ export function getRoleAccentLabel(
   if (options?.organizationType === "yayinevi") return roles.publisher ?? "Yayınevi";
   if (options?.organizationType === "egitim_platformu") return roles.platform ?? "Eğitim Platformu";
   if (options?.organizationType === "egitim_kurumu" || options?.organizationType === "kurs" || options?.organizationType === "okul") {
+    if (options.organizationType === "kurs") return "Kurs";
     return roles.institution ?? "Eğitim Kurumu";
   }
   if (role === "student") return roles.student;

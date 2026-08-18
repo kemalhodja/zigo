@@ -402,8 +402,7 @@ function LogoLink({ roleAccentLabel, viewerRole }: { roleAccentLabel: string; vi
     }
   }
 
-  const allowedLabels = [m.roles.student, m.roles.teacher, m.roles.parent];
-  const showRoleAccent = viewerRole !== "guest" && allowedLabels.includes(roleAccentLabel);
+  const showRoleAccent = viewerRole !== "guest" && roleAccentLabel && roleAccentLabel !== m.roles.guest;
 
   return (
     <Link href="/" className="tap-scale flex min-w-0 items-center gap-1.5 overflow-hidden" onClick={handleLogoClick}>
