@@ -185,7 +185,7 @@ export const catalogEn = {
     noMicro: "No Micro lessons yet",
     noMicroDesc: "Verified micro lessons will appear here.",
     noPosts: "No posts yet",
-    noPostsDesc: "Share your first post or return to the feed.",
+    noPostsDesc: "Share a new post or return to the feed.",
     feed: "Feed",
     saved: "Saved",
     discoverCreators: "Discover creators",

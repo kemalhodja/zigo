@@ -184,7 +184,7 @@ export const catalogTr = {
     noMicro: "Henüz kısa ders yok",
     noMicroDesc: "Doğrulanmış kısa dersler burada listelenir.",
     noPosts: "Henüz gönderi yok",
-    noPostsDesc: "İlk gönderini paylaş veya akışa dön.",
+    noPostsDesc: "Yeni gönderi paylaş veya akışa dön.",
     feed: "Akış",
     saved: "Kaydedilenler",
     discoverCreators: "Öğretmenleri keşfet",
