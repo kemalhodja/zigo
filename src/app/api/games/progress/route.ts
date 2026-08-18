@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
-type GameType = "memory_card" | "block_puzzle" | "pipe_connect";
+type GameType = "memory_card" | "block_puzzle" | "pipe_connect" | "word_hunt" | "zihin_avcisi" | "math_master";
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
