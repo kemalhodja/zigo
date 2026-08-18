@@ -67,33 +67,6 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           initialQuery={query}
           placeholder={viewerRole === "teacher" ? e.teacherSearchPlaceholder : e.searchPlaceholder}
         />
-        {!query.trim() && (
-          <div className="mt-2.5 flex items-center justify-center rounded-lg bg-indigo-50/50 px-3 py-1.5 text-[0.68rem] font-bold text-indigo-500 shadow-sm border border-indigo-100/50">
-            Tüm alanlardan doğrulanmış içerikler
-          </div>
-        )}
-      </section>
-
-      {/* Format filter tabs */}
-      <section className="-mx-4 border-b border-slate-100 bg-white">
-        <div className="no-scrollbar flex gap-1 overflow-x-auto px-3 py-2">
-          {EXPLORE_FORMATS.map((format) => (
-            <Link
-              className={`tap-scale whitespace-nowrap rounded-full border px-4 py-1.5 text-xs font-black transition ${
-                activeFormat === format
-                  ? "border-crystal bg-crystal/10 text-crystal"
-                  : "border-slate-200 text-slate-500 hover:border-slate-300"
-              }`}
-              href={getExploreHref({ format, query })}
-              key={format}
-            >
-              {format === "all" ? e.allLabel
-                : format === "micro" ? e.microLabel
-                : format === "lessons" ? e.lessonsLabel
-                : e.teachersLabel}
-            </Link>
-          ))}
-        </div>
       </section>
 
       {/* Suggested creators rail */}
@@ -125,34 +98,6 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         <MiniGamesArcadeSection isPremium={explorePremium} />
       </div>
 
-      {/* Trend Radar Section */}
-      {!query.trim() && activeFormat === "all" ? (
-        <section className="-mx-4 border-b border-slate-100 bg-gradient-to-r from-violet-50/80 via-fuchsia-50/60 to-cyan-50/70 p-4">
-          <div className="mb-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex size-6 items-center justify-center rounded-lg bg-crystal text-white shadow-sm">
-                <svg aria-hidden="true" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </span>
-              <h3 className="text-xs font-black uppercase tracking-[0.12em] text-night">{e.trendTopicsHeading}</h3>
-            </div>
-            <span className="rounded-full bg-crystal/10 px-2.5 py-0.5 text-[0.62rem] font-black text-crystal">{e.liveStream}</span>
-          </div>
-          <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-0.5">
-            {trendTopics.map((topic) => (
-              <Link
-                className="tap-scale group shrink-0 rounded-xl border border-white/80 bg-white/90 p-2.5 shadow-sm backdrop-blur transition hover:border-crystal/40 hover:shadow-md"
-                href={topic.href}
-                key={topic.tag}
-              >
-                <p className="text-[0.68rem] font-black text-crystal group-hover:underline">#{topic.tag}</p>
-                <p className="mt-0.5 text-xs font-bold text-night">{topic.label}</p>
-                <p className="mt-1 text-[0.6rem] font-bold text-slate-600">{topic.count}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
       ) : null}
 
       {/* Teacher results for teachers format */}

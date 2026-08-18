@@ -39,86 +39,1126 @@ const GRID_SIZE = 5;
 
 // 5 seviye - kaldığı yerden devam
 const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
-  // Seviye 1: Başlangıç
   [
-    [{ type: "source", correctRotation: 0 }, { type: "corner", correctRotation: 90 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 90 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "target", correctRotation: 0 }],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 2: T Birleşimli
   [
-    [{ type: "source", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 90 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "t_junction", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 90 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 270 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "straight", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "target", correctRotation: 0 }],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 3: Çapraz Akış
   [
-    [{ type: "source", correctRotation: 0 }, { type: "corner", correctRotation: 90 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "cross", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 90 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "t_junction", correctRotation: 180 }, { type: "corner", correctRotation: 90 }],
-    [{ type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
-    [{ type: "target", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "corner", correctRotation: 270 }],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 4: Labirent
   [
-    [{ type: "source", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "t_junction", correctRotation: 270 }, { type: "corner", correctRotation: 270 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "corner", correctRotation: 270 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 90 }, { type: "empty", correctRotation: 0 }, { type: "target", correctRotation: 0 }],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 5: Usta
   [
-    [{ type: "source", correctRotation: 0 }, { type: "t_junction", correctRotation: 270 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "cross", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "t_junction", correctRotation: 180 }, { type: "corner", correctRotation: 90 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 90 }, { type: "target", correctRotation: 0 }],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 6: Karmaşık Labirent
   [
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "source", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "corner", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "cross", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }],
-    [{ type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
-    [{ type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "t_junction", correctRotation: 180 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 270 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "target", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 7: Dolambaçlı Yollar
   [
-    [{ type: "source", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "corner", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "target", correctRotation: 0 }, { type: "corner", correctRotation: 270 }],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 8: Paralel Akış
   [
-    [{ type: "source", correctRotation: 0 }, { type: "t_junction", correctRotation: 180 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "t_junction", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "t_junction", correctRotation: 0 }, { type: "target", correctRotation: 0 }],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 9: Zikzak
   [
-    [{ type: "source", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "target", correctRotation: 0 }],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
   ],
-  // Seviye 10: Büyük Düğüm
   [
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "source", correctRotation: 0 }, { type: "cross", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "cross", correctRotation: 0 }, { type: "target", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 270 }, { type: "empty", correctRotation: 0 }],
-    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
-  ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 180
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "source",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 90
+      },
+      {
+        "type": "corner",
+        "correctRotation": 270
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      }
+    ],
+    [
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "empty",
+        "correctRotation": 0
+      },
+      {
+        "type": "corner",
+        "correctRotation": 0
+      },
+      {
+        "type": "straight",
+        "correctRotation": 90
+      },
+      {
+        "type": "target",
+        "correctRotation": 0
+      }
+    ]
+  ]
 ];
 
 type PipeConnectProps = {

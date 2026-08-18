@@ -71,6 +71,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     y: number;
     offsetX: number;
     offsetY: number;
+    targetRow: number | null;
+    targetCol: number | null;
+    isValidDrop: boolean;
   }>({
     isDragging: false,
     shapeIdx: null,
@@ -79,6 +82,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     y: 0,
     offsetX: 0,
     offsetY: 0,
+    targetRow: null,
+    targetCol: null,
+    isValidDrop: false,
   });
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -276,14 +282,49 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   useEffect(() => {
     const handlePointerMove = (e: PointerEvent) => {
       if (!dragState.isDragging) return;
-      e.preventDefault(); // dokunmatik cihazlarda ekranı kaydırmayı engellemek için
-      setDragState((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
+      e.preventDefault(); 
+      
+      setDragState((prev) => {
+        let targetRow: null | number = null;
+        let targetCol: null | number = null;
+        let isValidDrop = false;
+
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        if (target) {
+          const rowAttr = target.getAttribute("data-row");
+          const colAttr = target.getAttribute("data-col");
+          if (rowAttr !== null && colAttr !== null) {
+            targetRow = parseInt(rowAttr, 10);
+            targetCol = parseInt(colAttr, 10);
+            
+            if (prev.shape) {
+              let canFit = true;
+              const matrix = prev.shape.matrix;
+              if (targetRow + matrix.length > GRID_SIZE || targetCol + matrix[0].length > GRID_SIZE) {
+                 canFit = false;
+              } else {
+                for (let r = 0; r < matrix.length; r++) {
+                  for (let c = 0; c < matrix[0].length; c++) {
+                    if (matrix[r][c] === 1 && board[targetRow + r][targetCol + c] !== EMPTY_CELL) {
+                      canFit = false;
+                      break;
+                    }
+                  }
+                  if (!canFit) break;
+                }
+              }
+              isValidDrop = canFit;
+            }
+          }
+        }
+
+        return { ...prev, x: e.clientX, y: e.clientY, targetRow, targetCol, isValidDrop };
+      });
     };
 
     const handlePointerUp = (e: PointerEvent) => {
       if (!dragState.isDragging || dragState.shape === null || dragState.shapeIdx === null) return;
       
-      // Bırakılan elementi bul (hayalet elementi yoksaymak için pointer-events-none olacak)
       const target = document.elementFromPoint(e.clientX, e.clientY);
       if (target) {
         const rowAttr = target.getAttribute("data-row");
@@ -295,7 +336,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
         }
       }
 
-      setDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0 });
+      setDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, targetRow: null, targetCol: null, isValidDrop: false });
     };
 
     if (dragState.isDragging) {
@@ -307,7 +348,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       window.removeEventListener("pointerup", handlePointerUp);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dragState]);
+  }, [dragState.isDragging, dragState.shape, board]);
 
   const onPointerDownBlock = (e: React.PointerEvent, shape: ShapeType, idx: number) => {
     if (isGameOver || disabled) return;
@@ -394,6 +435,29 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
               const isHighlighted =
                 justCleared &&
                 (justCleared.rows.includes(rIndex) || justCleared.cols.includes(cIndex));
+
+              // Önizleme mantığı
+              let isPreview = false;
+              if (
+                dragState.isDragging &&
+                dragState.isValidDrop &&
+                dragState.shape &&
+                dragState.targetRow !== null &&
+                dragState.targetCol !== null
+              ) {
+                const rDiff = rIndex - dragState.targetRow;
+                const cDiff = cIndex - dragState.targetCol;
+                if (
+                  rDiff >= 0 &&
+                  rDiff < dragState.shape.matrix.length &&
+                  cDiff >= 0 &&
+                  cDiff < dragState.shape.matrix[0].length &&
+                  dragState.shape.matrix[rDiff][cDiff] === 1
+                ) {
+                  isPreview = true;
+                }
+              }
+
               return (
                 <div
                   key={`${rIndex}-${cIndex}`}
@@ -402,6 +466,8 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
                   className={`aspect-square rounded-md transition-all duration-300 ${
                     isHighlighted
                       ? "bg-white scale-0 rotate-45 opacity-0 z-10"
+                      : isPreview
+                      ? `${dragState.shape?.color} border border-white/40 opacity-60 shadow-lg scale-95`
                       : cell !== EMPTY_CELL
                       ? `${cell} border border-white/20 shadow-sm animate-in zoom-in-75 duration-200`
                       : "bg-white/5 border border-white/5"

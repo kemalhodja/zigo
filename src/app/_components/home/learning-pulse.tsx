@@ -10,12 +10,6 @@ export function HomeLearningPulse() {
   const f = m.feed;
   const [collapsed, setCollapsed] = useState(false);
 
-  const trendingTopics = [
-    { label: "Kesirler", href: "/explore?q=kesirler" },
-    { label: "Fen Bilimleri", href: "/explore?q=fen" },
-    { label: "Dil Bilgisi", href: "/explore?q=dilbilgisi" },
-  ];
-
   return (
     <section className="feed-pulse-hero -mx-4 overflow-hidden text-white transition-all duration-300">
       <div className="relative z-[1] flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -56,20 +50,7 @@ export function HomeLearningPulse() {
             </Link>
           </div>
 
-          <div className="border-t border-white/10 pt-2">
-            <p className="text-[10px] font-black uppercase tracking-wider text-pink-200">Popüler Konular</p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {trendingTopics.map((topic) => (
-                <Link
-                  className="tap-scale rounded-full border border-white/15 bg-white/8 px-2.5 py-1 text-xs font-bold text-white/90 transition hover:border-white/30 hover:text-white"
-                  href={topic.href}
-                  key={topic.label}
-                >
-                  #{topic.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+
         </div>
       ) : null}
     </section>
