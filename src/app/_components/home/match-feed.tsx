@@ -42,21 +42,15 @@ export function FeedPostCard({
   const isMicro = post.badge === "Micro" || post.mediaType === "video";
   const { containerStyle } = useFeedPostState(enterDelayMs);
 
+  const heightClass = fullHeight ? "h-[100dvh] md:h-[100dvh]" : "h-[calc(100dvh-70px)] md:h-[700px]";
+
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
-        className="zigo-feed-card zigo-feed-card-enter relative -mx-4 mb-4 border-b border-slate-100 bg-white"
+        className={`zigo-feed-card zigo-feed-card-enter relative -mx-4 overflow-hidden bg-black ${heightClass}`}
         style={containerStyle}
       >
-        <div className="pointer-events-auto text-night">
-          <FeedPostHeader 
-            post={post}
-            postKey={postKey}
-            teacherBadges={teacherBadges}
-          />
-        </div>
-
-        <div className="relative w-full aspect-square bg-slate-100 overflow-hidden">
+        <div className="absolute inset-0 pb-36">
           <FeedMediaViewer 
             post={post}
             priorityMedia={priorityMedia}
@@ -65,24 +59,35 @@ export function FeedPostCard({
           />
         </div>
 
-        <div className="pointer-events-auto px-4 py-3 space-y-2 text-night">
-          <SocialPostActions
-            initialComments={post.comments}
-            initialLiked={post.isLiked}
-            initialLikes={post.likes}
-            initialSaved={post.isSaved}
-            postId={post.postId}
-            variant="full"
-          />
-          
-          <div className="mt-2 text-sm text-night">
-            <span className="font-bold mr-2">{post.handle}</span>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/50 to-transparent pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-24">
+          <div className="pointer-events-auto">
+            <FeedPostHeader 
+              post={post}
+              postKey={postKey}
+              teacherBadges={teacherBadges}
+            />
+          </div>
+
+          <div className="pointer-events-auto mt-2 space-y-2 px-4">
+            <SocialPostActions
+              initialComments={post.comments}
+              initialLiked={post.isLiked}
+              initialLikes={post.likes}
+              initialSaved={post.isSaved}
+              postId={post.postId}
+              variant="compact"
+            />
+          </div>
+
+          <div className="mt-2">
             <ExpandableCaption caption={post.caption} />
           </div>
 
-          <p className="mt-1 text-[0.65rem] font-bold uppercase tracking-wide text-slate-500">
-            {formatFeedTimestamp(post.createdAt)}
-          </p>
+          <div className="pointer-events-auto px-4 mt-0.5">
+            <p className="text-zigo-meta font-semibold uppercase tracking-wide text-white/70 shadow-black/20 text-shadow-sm">
+              {formatFeedTimestamp(post.createdAt)}
+            </p>
+          </div>
         </div>
       </article>
     </DismissibleFeedPost>
