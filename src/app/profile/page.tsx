@@ -1,10 +1,9 @@
 import Link from "next/link";
 
-import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
-import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
-import { TeacherLessonMarketplaceTab } from "@/components/teacher-lesson-marketplace-tab";
 import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
+import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
+import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
 import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { ProfileSocialLinks } from "@/components/profile-social-links";
@@ -12,12 +11,17 @@ import { ProfileSocialStats as ProfileSocialStatsSection } from "@/components/pr
 import { SignOutButton } from "@/components/sign-out-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
+import { TeacherLessonMarketplaceTab } from "@/components/teacher-lesson-marketplace-tab";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
-import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getChildProfiles } from "@/lib/domain/children";
+import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getOrgDashboardSnapshot } from "@/lib/domain/org-dashboard";
+import {
+  getMatchedLessonPostsForTeacher,
+  getParentPrivateLessonPosts,
+} from "@/lib/domain/private-lessons";
 import { getProfileBillingSection } from "@/lib/domain/profile-billing";
 import { getCurrentProfile, getEducationAreas, getUserInterestAreaNames, parseOrganizationType, type UserProfile } from "@/lib/domain/profiles";
 import { emptyProfilePrimaryHref } from "@/lib/domain/role-navigation";
@@ -30,10 +34,6 @@ import {
   type ProfileSocialStats,
   type SuggestedCreator,
 } from "@/lib/domain/social";
-import {
-  getMatchedLessonPostsForTeacher,
-  getParentPrivateLessonPosts,
-} from "@/lib/domain/private-lessons";
 import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import type { SocialPostRow } from "@/lib/supabase/database.types";

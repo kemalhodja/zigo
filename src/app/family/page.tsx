@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { ChildAreaSelector } from "@/components/child-area-selector";
-
 import { ChildGradeLevelForm } from "@/components/child-grade-level-form";
 import { ChildProfileForm } from "@/components/child-profile-form";
 import { ChildQuizActivityPanel } from "@/components/child-quiz-activity-panel";

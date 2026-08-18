@@ -1,10 +1,9 @@
 "use client";
 
+import confetti from "canvas-confetti";
 import { useEffect, useRef } from "react";
 
 import { createClient } from "@/lib/supabase/client";
-
-import confetti from "canvas-confetti";
 
 export function useStreakTracker() {
   const trackedRef = useRef(false);

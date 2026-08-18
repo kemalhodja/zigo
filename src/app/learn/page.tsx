@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-
 import { LearnQuizCard } from "@/components/learn-quiz-card";
 import { LearnVideoCard } from "@/components/learn-video-card";
 import { StateCard } from "@/components/state-card";

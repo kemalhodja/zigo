@@ -156,7 +156,6 @@ import {
   isFollowing,
   type SocialFeedPost,
 } from "@/lib/domain/social";
-
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";

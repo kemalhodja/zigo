@@ -1,11 +1,12 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { getUserSubscription } from "@/lib/domain/subscription";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
 import { ROLE_BACK } from "@/lib/domain/role-navigation";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import type { UserRole } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function ArcadePage() {
   const supabase = await createClient();

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo,useState } from "react";
+
 import turkeyData from "@/lib/turkey-data.json";
 
 type Area = { id: number; area_name: string; age_group: string | null };

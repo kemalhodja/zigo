@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+
 import { MathMaster } from "@/components/games/math-master";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";

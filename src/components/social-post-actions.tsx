@@ -1,9 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
-import dynamic from "next/dynamic";
 import {
   type CollectionFolderId,
   rememberPostCollection,

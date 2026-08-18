@@ -1,21 +1,20 @@
 import Link from "next/link";
 
 import { AdCampaignsManager } from "@/components/ad-campaigns-manager";
-import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
 import { AnalyticsDashboard } from "@/components/analytics-dashboard";
+import { CreateAdCampaignModal } from "@/components/create-ad-campaign-modal";
 import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
+import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { StudioTabsLayout } from "@/components/studio-tabs-layout";
 import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/components/teacher-leaderboard-card";
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
-
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
-import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";

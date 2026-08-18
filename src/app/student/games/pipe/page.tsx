@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PipeConnect } from "@/components/games/pipe-connect";
-import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
+
 import { GameSessionTracker } from "@/components/games/game-session-tracker";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
+import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
+import { PipeConnect } from "@/components/games/pipe-connect";
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { getUserSubscription } from "@/lib/domain/subscription";
-import { createClient } from "@/lib/supabase/server";
-
 import { ROLE_BACK } from "@/lib/domain/role-navigation";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import type { UserRole } from "@/lib/supabase/database.types";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function PipeGamePage() {
   const supabase = await createClient();

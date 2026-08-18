@@ -1,3 +1,4 @@
+import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 
 import { toDisplayPost } from "@/app/_components/home/data";
@@ -8,8 +9,6 @@ import { getSocialPostById, isFollowing,searchSocialPosts } from "@/lib/domain/s
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-
-import type { Metadata, ResolvingMetadata } from "next";
 
 type PostDetailPageProps = {
   params: Promise<{ id: string }>;

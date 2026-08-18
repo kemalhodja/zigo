@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ROLE_BACK } from "@/lib/domain/role-navigation";
-import type { UserRole } from "@/lib/supabase/database.types";
+
 import { BlockPuzzle } from "@/components/games/block-puzzle";
-import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
 import { GameSessionTracker } from "@/components/games/game-session-tracker";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
+import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { ROLE_BACK } from "@/lib/domain/role-navigation";
 import { getUserSubscription } from "@/lib/domain/subscription";
+import type { UserRole } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 

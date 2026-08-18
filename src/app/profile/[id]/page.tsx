@@ -1,3 +1,4 @@
+import type { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -23,8 +24,6 @@ import {
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-
-import type { Metadata, ResolvingMetadata } from "next";
 
 type PublicProfilePageProps = {
   params: Promise<{ id: string }>;

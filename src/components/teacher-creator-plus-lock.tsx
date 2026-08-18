@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 
-
 import { TEACHER_CREATOR_PLUS_BENEFITS } from "@/lib/domain/teacher-creator-plus";
 
 type TeacherCreatorPlusLockProps = {

@@ -3,15 +3,14 @@ import Link from "next/link";
 
 const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod) => mod.ParentChart));
 const ParentActivityBreakdown = dynamic(() => import("@/components/parent-activity-breakdown").then((mod) => mod.ParentActivityBreakdown));
-import { StateCard } from "@/components/state-card";
-import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
-import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { LimitSettingsCard } from "@/components/limit-settings-card";
+import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
+import { StateCard } from "@/components/state-card";
+import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
-
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";

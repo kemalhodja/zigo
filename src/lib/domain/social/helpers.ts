@@ -319,8 +319,8 @@ function scoreSocialPost(
 
   let sponsoredBoost = 0;
   let locationBoost = 0;
-  let audienceBoost = 0;
-  let interestBoost = 0;
+  const audienceBoost = 0;
+  const interestBoost = 0;
 
   // Active approved sponsored ad scoring (Temporarily disabled)
   if (post.sponsored_status === "active") {

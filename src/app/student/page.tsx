@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { HomeLearningPulse } from "@/app/_components/home/learning-pulse";
 import { ClassGroupManager } from "@/components/class-group-manager";
-
 import { GradeLevelForm } from "@/components/grade-level-form";
 import { LearningProgressCard } from "@/components/learning-progress-card";
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
@@ -15,7 +14,6 @@ import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { allowDemoContent } from "@/lib/domain/demo-env";
-
 import {
   getDailyMissionProgress,
   getLearningProgressStats,

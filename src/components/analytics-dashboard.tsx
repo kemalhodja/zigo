@@ -2,21 +2,22 @@
 
 import { useState } from "react";
 import {
-  LineChart,
-  Line,
-  BarChart,
   Bar,
-  PieChart,
-  Pie,
+  BarChart,
+  CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
-import { getAnalyticsData, TimeRange } from "@/lib/domain/analytics";
+
+import { getAnalyticsData, type TimeRange } from "@/lib/domain/analytics";
 
 export function AnalyticsDashboard({ postCount = 1 }: { postCount?: number }) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");

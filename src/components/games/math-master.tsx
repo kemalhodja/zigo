@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
-import { LeaderboardModal } from "./leaderboard-modal";
+import { useCallback, useEffect, useRef,useState } from "react";
+
 import { useAudio } from "@/hooks/use-audio";
+
+import { LeaderboardModal } from "./leaderboard-modal";
 
 type MathMasterProps = {
   userId?: string;

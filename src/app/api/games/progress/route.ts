@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { type NextRequest, NextResponse } from "next/server";
+
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { createClient } from "@/lib/supabase/server";
 
 type GameType = "memory_card" | "block_puzzle" | "pipe_connect";
 

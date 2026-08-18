@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
 import confetti from "canvas-confetti";
-import { PipeCell, type PipeType } from "./pipe-cell";
-import { LeaderboardModal } from "./leaderboard-modal";
+import { useCallback,useEffect, useState } from "react";
+
 import { useAudio } from "@/hooks/use-audio";
+
+import { LeaderboardModal } from "./leaderboard-modal";
+import { PipeCell, type PipeType } from "./pipe-cell";
 
 const BASE_DIRECTIONS: Record<PipeType, [boolean, boolean, boolean, boolean]> = {
   empty: [false, false, false, false],

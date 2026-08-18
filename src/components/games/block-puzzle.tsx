@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
+import { useCallback, useEffect, useRef,useState } from "react";
+
+import { useAudio } from "@/hooks/use-audio";
+
 import { BlockPiece, type ShapeType } from "./block-piece";
 import { LeaderboardModal } from "./leaderboard-modal";
-import { useAudio } from "@/hooks/use-audio";
 
 // Vibrant renk paleti - Tailwind gradient classes
 const COLOR_SETS = [

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+
 import { WordHunt } from "@/components/games/word-hunt";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";

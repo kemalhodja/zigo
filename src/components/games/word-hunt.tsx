@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
-import { LeaderboardModal } from "./leaderboard-modal";
+import { useCallback, useEffect, useRef,useState } from "react";
+
 import { useAudio } from "@/hooks/use-audio";
-import { WORD_DICTIONARY, WordEntry } from "./word-dictionary";
+
+import { LeaderboardModal } from "./leaderboard-modal";
+import { WORD_DICTIONARY, type WordEntry } from "./word-dictionary";
 
 const ROWS = 6;
 type LetterState = "correct" | "present" | "absent" | "empty";

@@ -1,12 +1,12 @@
 "use client";
 
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import dynamic from "next/dynamic";
 import { useRef } from "react";
 
 import type { Messages } from "@/lib/i18n/server";
 import type { UserRole } from "@/lib/supabase/database.types";
 
-import dynamic from "next/dynamic";
 import type { DisplayPost, DisplaySuggestedCreator } from "./data";
 import { FollowingStarter } from "./match-feed";
 
