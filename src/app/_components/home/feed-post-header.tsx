@@ -75,7 +75,6 @@ export function FeedPostHeader({
           isOwner={post.isOwner}
           postId={post.postId}
           postKey={postKey}
-          variant={isDark ? "overlay" : "ghost"}
         />
       </div>
     </div>

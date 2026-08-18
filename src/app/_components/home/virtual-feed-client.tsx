@@ -31,7 +31,7 @@ export function VirtualFeedClient({
   const virtualizer = useWindowVirtualizer({
     count: posts.length,
     estimateSize: () => 700, // Estimated pixel height of a single FeedPostCard
-    overscan: 4, // Keeps 4 posts in DOM out of view for smooth scrolling
+    overscan: 2, // Optimize memory by keeping fewer off-screen items
   });
 
   if (posts.length === 0) {

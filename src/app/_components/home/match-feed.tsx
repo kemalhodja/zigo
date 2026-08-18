@@ -47,7 +47,7 @@ export function FeedPostCard({
     return (
       <DismissibleFeedPost postKey={postKey}>
         <article
-          className="zigo-feed-card zigo-feed-card-enter bg-white mb-2 pb-5 pt-1 border-b border-slate-100"
+          className="zigo-feed-card zigo-feed-card-enter relative mb-3 bg-white pb-5 pt-2 shadow-sm ring-1 ring-slate-900/5 sm:rounded-3xl"
           style={containerStyle}
         >
           <div className="pointer-events-auto">
@@ -75,7 +75,7 @@ export function FeedPostCard({
               initialLikes={post.likes}
               initialSaved={post.isSaved}
               postId={post.postId}
-              variant="default"
+              variant="full"
             />
           </div>
 

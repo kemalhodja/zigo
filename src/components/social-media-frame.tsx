@@ -169,7 +169,7 @@ export function SocialMediaFrame({
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   alt={alt ? `${alt} (${idx + 1}/${items.length})` : "Media"}
-                  className={`transition-all duration-200 ${fitClass}`}
+                  className={`bg-slate-100 animate-in fade-in duration-700 transition-all ${fitClass}`}
                   priority={priority && idx === 0}
                   src={url}
                   style={combinedStyle}

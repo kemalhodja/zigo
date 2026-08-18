@@ -109,12 +109,14 @@ export function PullToRefresh() {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed left-1/2 z-50 flex -translate-x-1/2 items-center justify-center transition-all duration-150"
-      style={{ top: `${Math.max(pullY - 15, 52)}px` }}
+      className="pointer-events-none fixed left-1/2 z-50 flex -translate-x-1/2 flex-col items-center justify-center gap-2 transition-all duration-300 ease-out"
+      style={{ top: `${Math.max(pullY - 15, 60)}px` }}
     >
       <div
-        className={`flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-xl transition-transform duration-150 ${isRefreshing ? "scale-100" : ""}`}
-        style={{ transform: `scale(${0.4 + progress * 0.6})`, opacity: progress }}
+        className={`flex size-10 items-center justify-center rounded-full border border-slate-100 bg-white/90 shadow-lg backdrop-blur-md ring-1 ring-black/5 transition-all duration-300 ${
+          isRefreshing ? "scale-100 animate-pulse" : ""
+        }`}
+        style={{ transform: `scale(${0.5 + progress * 0.5})`, opacity: progress }}
       >
         <svg
           aria-hidden="true"
@@ -133,15 +135,6 @@ export function PullToRefresh() {
           <path d="M20 4v6h-6" />
         </svg>
       </div>
-      {isReady && !isRefreshing ? (
-        <span className="ml-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-black text-crystal shadow-sm">
-          Bırakın ve Yenileyin
-        </span>
-      ) : isRefreshing ? (
-        <span className="ml-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-black text-slate-600 shadow-sm">
-          Yenileniyor…
-        </span>
-      ) : null}
     </div>
   );
 }
