@@ -7,6 +7,7 @@ type MemoryCardProps = {
   icon: string;
   isFlipped: boolean;
   isMatched: boolean;
+  isError?: boolean;
   onClick: (id: string) => void;
 };
 
@@ -15,6 +16,7 @@ export const MemoryCard = memo(function MemoryCard({
   icon,
   isFlipped,
   isMatched,
+  isError = false,
   onClick,
 }: MemoryCardProps) {
   return (
@@ -24,7 +26,7 @@ export const MemoryCard = memo(function MemoryCard({
       disabled={isFlipped || isMatched}
       className={`relative aspect-square w-full rounded-2xl transition-all duration-300 transform-gpu preserve-3d focus:outline-none tap-scale ${
         isFlipped || isMatched ? "rotate-y-180" : ""
-      } ${isMatched ? "cursor-default" : "cursor-pointer"}`}
+      } ${isMatched ? "cursor-default" : "cursor-pointer"} ${isError ? "animate-shake" : ""}`}
     >
       {/* Arka Yüz (Kapalı) */}
       <div
@@ -44,6 +46,8 @@ export const MemoryCard = memo(function MemoryCard({
         className={`absolute inset-0 flex items-center justify-center rounded-2xl backface-hidden rotate-y-180 ${
           isMatched
             ? "bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/30 border border-emerald-300/50"
+            : isError
+            ? "bg-red-50 shadow-md border-2 border-red-400"
             : "bg-white shadow-md border-2 border-indigo-200"
         }`}
       >

@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { PipeCell, type PipeType } from "./pipe-cell";
+import { LeaderboardModal } from "./leaderboard-modal";
+import { useAudio } from "@/hooks/use-audio";
 
 const BASE_DIRECTIONS: Record<PipeType, [boolean, boolean, boolean, boolean]> = {
   empty: [false, false, false, false],
@@ -77,6 +79,46 @@ const PRESET_LEVELS: { type: PipeType; correctRotation: number }[][][] = [
     [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
     [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 90 }, { type: "target", correctRotation: 0 }],
   ],
+  // Seviye 6: Karmaşık Labirent
+  [
+    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "source", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "corner", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "cross", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }],
+    [{ type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
+    [{ type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "t_junction", correctRotation: 180 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 270 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "target", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+  ],
+  // Seviye 7: Dolambaçlı Yollar
+  [
+    [{ type: "source", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "corner", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 270 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "target", correctRotation: 0 }, { type: "corner", correctRotation: 270 }],
+  ],
+  // Seviye 8: Paralel Akış
+  [
+    [{ type: "source", correctRotation: 0 }, { type: "t_junction", correctRotation: 180 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "t_junction", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "t_junction", correctRotation: 0 }, { type: "target", correctRotation: 0 }],
+  ],
+  // Seviye 9: Zikzak
+  [
+    [{ type: "source", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "target", correctRotation: 0 }],
+  ],
+  // Seviye 10: Büyük Düğüm
+  [
+    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 90 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 180 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "source", correctRotation: 0 }, { type: "cross", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "cross", correctRotation: 0 }, { type: "target", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "straight", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "corner", correctRotation: 0 }, { type: "straight", correctRotation: 90 }, { type: "corner", correctRotation: 270 }, { type: "empty", correctRotation: 0 }],
+    [{ type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }, { type: "empty", correctRotation: 0 }],
+  ],
 ];
 
 type PipeConnectProps = {
@@ -95,6 +137,9 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
   const [isLevelCompleted, setIsLevelCompleted] = useState(false);
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [levelScore, setLevelScore] = useState(0);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+
+  const { playSound } = useAudio();
 
   // Kaydedilen ilerlemeyi yükle
   useEffect(() => {
@@ -104,7 +149,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
       .then((data) => {
         if (data.high_score) setHighScore(data.high_score);
         if (data.last_level) {
-          const savedLevel = Math.min(data.last_level, PRESET_LEVELS.length - 1);
+          const savedLevel = data.last_level;
           setStartLevel(savedLevel);
           setCurrentLevel(savedLevel);
         } else {
@@ -208,6 +253,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     const cell = grid[rIndex][cIndex];
     if (cell.type === "empty" || cell.type === "source" || cell.type === "target") return;
 
+    playSound("pop");
+
     setMoves((prev) => prev + 1);
     setTotalMoves((prev) => prev + 1);
 
@@ -220,7 +267,13 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     const { newGrid: flowGrid, targetReached } = calculateFlow(newGrid);
     setGrid(flowGrid);
 
+    // Flow states changed?
+    const currentFilled = grid.flat().filter(c => c.isFilled).length;
+    const newFilled = flowGrid.flat().filter(c => c.isFilled).length;
+    if (newFilled > currentFilled) playSound("water");
+
     if (targetReached && !isLevelCompleted) {
+      playSound("success");
       setIsLevelCompleted(true);
       const earned = Math.max(50, 200 - (moves + 1) * 5);
       setLevelScore(earned);
@@ -234,11 +287,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
         colors: ["#22d3ee", "#38bdf8", "#818cf8", "#34d399"],
       });
 
-      const isLast = currentLevel >= PRESET_LEVELS.length - 1;
-      if (isLast) {
-        setIsGameFinished(true);
-        saveProgress(newTotal, currentLevel);
-      }
+      saveProgress(newTotal, currentLevel);
     }
   };
 
@@ -302,15 +351,23 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
               ⚡ Akış Yolu
             </h2>
             <p className="text-xs font-bold text-slate-400">
-              Seviye {currentLevel + 1} / {PRESET_LEVELS.length}
+              Seviye {currentLevel + 1}
             </p>
           </div>
-          {highScore > 0 && (
-            <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-2xl px-3 py-1.5 text-center">
-              <span className="text-[0.55rem] font-black text-yellow-400 block uppercase">Rekor</span>
-              <span className="text-sm font-black text-yellow-300">🏆 {highScore}</span>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-1">
+            {highScore > 0 && (
+              <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-xl px-2 py-1 text-center">
+                <span className="text-[0.5rem] font-black text-yellow-400 block uppercase">Rekor</span>
+                <span className="text-xs font-black text-yellow-300">🏆 {highScore}</span>
+              </div>
+            )}
+            <button 
+              onClick={() => setIsLeaderboardOpen(true)}
+              className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+            >
+              🏅 Tablo
+            </button>
+          </div>
         </div>
 
         {/* Seviye İlerleme Çubuğu */}
@@ -319,9 +376,9 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
             <div
               key={idx}
               className={`h-1.5 flex-1 rounded-full transition-all ${
-                idx < currentLevel
+                idx < (currentLevel % PRESET_LEVELS.length)
                   ? "bg-cyan-400"
-                  : idx === currentLevel
+                  : idx === (currentLevel % PRESET_LEVELS.length)
                   ? "bg-cyan-400/50"
                   : "bg-white/10"
               }`}
@@ -371,35 +428,27 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
               {isGameFinished ? "🏆" : "💧"}
             </div>
             <h3 className="text-xl font-black text-white mb-1">
-              {isGameFinished ? "Tüm Seviyeleri Bitirdin!" : "Akış Sağlandı!"}
+              Akış Sağlandı!
             </h3>
             <p className="text-xs text-cyan-300 font-bold mb-1">
-              {isGameFinished
-                ? "Boru bağlantı ustasısın! 🎉"
-                : `+${levelScore} puan kazandın!`}
+              +{levelScore} puan kazandın!
             </p>
-            {isGameFinished && highScore > 0 && totalScore >= highScore && (
-              <p className="text-xs font-black text-yellow-400 mb-2">🏆 Yeni Rekor!</p>
-            )}
             <p className="text-[0.65rem] text-slate-400 mb-4">{moves} hamlede tamamlandı</p>
 
-            {isGameFinished ? (
-              <button
-                type="button"
-                onClick={handleRestart}
-                className="tap-scale w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black py-3 rounded-xl shadow-lg hover:brightness-110 transition text-sm"
-              >
-                Baştan Başla 🔄
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleNextLevel}
-                className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-xl shadow-lg hover:brightness-110 transition text-sm"
-              >
-                Seviye {currentLevel + 2} → 🚀
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleNextLevel}
+              className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-xl shadow-lg hover:brightness-110 transition text-sm"
+            >
+              Seviye {currentLevel + 2} → 🚀
+            </button>
+            <button
+              type="button"
+              onClick={handleRestart}
+              className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2 rounded-xl hover:bg-white/10 transition text-xs border border-white/10"
+            >
+              Baştan Başla 🔄
+            </button>
           </div>
         )}
       </div>
@@ -407,6 +456,14 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
       <p className="text-center text-[0.65rem] font-bold text-slate-500 mt-1">
         Boruları döndürmek için dokun · Enerjiyi hedefe ulaştır
       </p>
+
+      {/* Leaderboard Modal */}
+      <LeaderboardModal 
+        isOpen={isLeaderboardOpen} 
+        onClose={() => setIsLeaderboardOpen(false)} 
+        gameType="pipe_connect" 
+        gameTitle="Akış Yolu" 
+      />
     </div>
   );
 }

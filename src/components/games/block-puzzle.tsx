@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
 import { BlockPiece, type ShapeType } from "./block-piece";
+import { LeaderboardModal } from "./leaderboard-modal";
+import { useAudio } from "@/hooks/use-audio";
 
 // Vibrant renk paleti - Tailwind gradient classes
 const COLOR_SETS = [
@@ -49,12 +51,37 @@ type BlockPuzzleProps = {
 export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const [board, setBoard] = useState<string[][]>([]);
   const [options, setOptions] = useState<(ShapeType | null)[]>([]);
-  const [selectedOptionIdx, setSelectedOptionIdx] = useState<number | null>(null);
+  
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [linesClearedTotal, setLinesClearedTotal] = useState(0);
+  const [level, setLevel] = useState(1);
   const [isGameOver, setIsGameOver] = useState(false);
   const [justCleared, setJustCleared] = useState<{ rows: number[]; cols: number[] } | null>(null);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+
+  const { playSound } = useAudio();
+
+  // Sürükle-Bırak state
+  const [dragState, setDragState] = useState<{
+    isDragging: boolean;
+    shapeIdx: number | null;
+    shape: ShapeType | null;
+    x: number;
+    y: number;
+    offsetX: number;
+    offsetY: number;
+  }>({
+    isDragging: false,
+    shapeIdx: null,
+    shape: null,
+    x: 0,
+    y: 0,
+    offsetX: 0,
+    offsetY: 0,
+  });
+
+  const boardRef = useRef<HTMLDivElement>(null);
 
   // Kaydedilen en yüksek skoru yükle
   useEffect(() => {
@@ -71,9 +98,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     );
     setBoard(emptyBoard);
     setOptions([getRandomShape(), getRandomShape(), getRandomShape()]);
-    setSelectedOptionIdx(null);
     setScore(0);
     setLinesClearedTotal(0);
+    setLevel(1);
     setIsGameOver(false);
     setJustCleared(null);
   }, []);
@@ -107,12 +134,12 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
     if (options.every((opt) => opt === null)) {
       setOptions([getRandomShape(), getRandomShape(), getRandomShape()]);
-      setSelectedOptionIdx(null);
       return;
     }
 
     const hasMove = options.some((opt) => opt !== null && canFitAnywhere(opt, board));
     if (!hasMove) {
+      playSound("error");
       setIsGameOver(true);
       confetti({
         particleCount: 80,
@@ -131,7 +158,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
         const res = await fetch("/api/games/progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ game_type: "block_puzzle", score: finalScore, level: 0 }),
+          body: JSON.stringify({ game_type: "block_puzzle", score: finalScore, level: level }),
         });
         const data = await res.json();
         if (data.high_score) setHighScore(data.high_score);
@@ -153,11 +180,8 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     if (onGameEnd) onGameEnd(finalScore, { lines });
   };
 
-  const handleCellClick = (row: number, col: number) => {
-    if (isGameOver || selectedOptionIdx === null) return;
-
-    const shape = options[selectedOptionIdx];
-    if (!shape) return;
+  const handleDrop = (row: number, col: number, shape: ShapeType, shapeIdx: number) => {
+    if (isGameOver) return;
 
     // Sınır kontrolü
     if (row + shape.matrix.length > GRID_SIZE || col + shape.matrix[0].length > GRID_SIZE) return;
@@ -181,12 +205,14 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       }
     }
 
-    const newOptions = [...options];
-    newOptions[selectedOptionIdx] = null;
-    setOptions(newOptions);
-    setSelectedOptionIdx(null);
+    playSound("pop");
 
-    let newScore = score + blocksPlaced * 2;
+    const newOptions = [...options];
+    newOptions[shapeIdx] = null;
+    setOptions(newOptions);
+
+    let currentLevel = level;
+    let newScore = score + (blocksPlaced * 2 * currentLevel);
 
     // Temizlenecek satır ve sütunlar
     const rowsToClear: number[] = [];
@@ -201,12 +227,29 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
     const linesCleared = rowsToClear.length + colsToClear.length;
     if (linesCleared > 0) {
+      playSound("clear");
       setJustCleared({ rows: rowsToClear, cols: colsToClear });
       setTimeout(() => setJustCleared(null), 400);
 
-      setLinesClearedTotal((prev) => prev + linesCleared);
+      const newTotalLines = linesClearedTotal + linesCleared;
+      setLinesClearedTotal(newTotalLines);
+      
+      // Seviye hesaplama (Her 5 satırda bir seviye atlar)
+      const calculatedLevel = Math.floor(newTotalLines / 5) + 1;
+      if (calculatedLevel > currentLevel) {
+        playSound("success");
+        currentLevel = calculatedLevel;
+        setLevel(currentLevel);
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.3 },
+          colors: ["#fcd34d", "#f59e0b", "#fbbf24"],
+        });
+      }
+
       // Combo puanı
-      newScore += linesCleared === 1 ? 15 : linesCleared === 2 ? 40 : linesCleared * 20;
+      newScore += (linesCleared === 1 ? 15 : linesCleared === 2 ? 40 : linesCleared * 20) * currentLevel;
 
       rowsToClear.forEach((r) => {
         for (let c = 0; c < GRID_SIZE; c++) newBoard[r][c] = EMPTY_CELL;
@@ -215,50 +258,130 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
         for (let r = 0; r < GRID_SIZE; r++) newBoard[r][c] = EMPTY_CELL;
       });
 
-      confetti({
-        particleCount: linesCleared * 30,
-        spread: 50,
-        origin: { y: 0.5 },
-        colors: ["#06b6d4", "#8b5cf6", "#10b981"],
-      });
+      if (calculatedLevel === level) { // Eğer seviye atlamadıysa normal konfeti
+        confetti({
+          particleCount: linesCleared * 30,
+          spread: 50,
+          origin: { y: 0.5 },
+          colors: ["#06b6d4", "#8b5cf6", "#10b981"],
+        });
+      }
     }
 
     setScore(newScore);
     setBoard(newBoard);
   };
 
+  // Drag and Drop global listeners
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!dragState.isDragging) return;
+      e.preventDefault(); // dokunmatik cihazlarda ekranı kaydırmayı engellemek için
+      setDragState((prev) => ({ ...prev, x: e.clientX, y: e.clientY }));
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (!dragState.isDragging || dragState.shape === null || dragState.shapeIdx === null) return;
+      
+      // Bırakılan elementi bul (hayalet elementi yoksaymak için pointer-events-none olacak)
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      if (target) {
+        const rowAttr = target.getAttribute("data-row");
+        const colAttr = target.getAttribute("data-col");
+        if (rowAttr !== null && colAttr !== null) {
+          const row = parseInt(rowAttr, 10);
+          const col = parseInt(colAttr, 10);
+          handleDrop(row, col, dragState.shape, dragState.shapeIdx);
+        }
+      }
+
+      setDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0 });
+    };
+
+    if (dragState.isDragging) {
+      window.addEventListener("pointermove", handlePointerMove, { passive: false });
+      window.addEventListener("pointerup", handlePointerUp);
+    }
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragState]);
+
+  const onPointerDownBlock = (e: React.PointerEvent, shape: ShapeType, idx: number) => {
+    if (isGameOver || disabled) return;
+    
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setDragState({
+      isDragging: true,
+      shapeIdx: idx,
+      shape: shape,
+      x: e.clientX,
+      y: e.clientY,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+    });
+  };
+
+  const disabled = isGameOver;
+
   return (
-    <div className="w-full max-w-sm mx-auto select-none">
+    <div className="w-full max-w-sm mx-auto select-none relative">
+      {/* Ghost Element for Dragging */}
+      {dragState.isDragging && dragState.shape && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: dragState.x - dragState.offsetX,
+            top: dragState.y - dragState.offsetY,
+          }}
+        >
+          <BlockPiece shape={dragState.shape} isSelected={true} onClick={() => {}} disabled={false} />
+        </div>
+      )}
+
       {/* Header */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 mb-3 border border-white/10 shadow-2xl">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 mb-3 border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="flex items-center justify-between mb-3 relative z-10">
           <div>
             <h2 className="text-lg font-black text-white flex items-center gap-2">
-              🧩 Blok Zeka
+              🧩 Blok Zeka <span className="text-[0.65rem] bg-indigo-500 px-2 py-0.5 rounded-full text-white font-bold ml-1">Seviye {level}</span>
             </h2>
-            <p className="text-xs font-bold text-slate-400">Satır/Sütun temizle, puan kazan!</p>
+            <p className="text-xs font-bold text-slate-400">Satır/Sütun temizle, seviye atla!</p>
           </div>
-          {highScore > 0 && (
-            <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-2xl px-3 py-1.5 text-center">
-              <span className="text-[0.55rem] font-black text-yellow-400 block uppercase">Rekor</span>
-              <span className="text-sm font-black text-yellow-300">🏆 {highScore}</span>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-1">
+            {highScore > 0 && (
+              <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-xl px-2 py-1 text-center">
+                <span className="text-[0.5rem] font-black text-yellow-400 block uppercase">Rekor</span>
+                <span className="text-xs font-black text-yellow-300">🏆 {highScore}</span>
+              </div>
+            )}
+            <button 
+              onClick={() => setIsLeaderboardOpen(true)}
+              className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+            >
+              🏅 Tablo
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 relative z-10">
           <div className="bg-white/5 rounded-xl p-2 text-center border border-white/10">
             <span className="text-[0.6rem] font-black text-slate-400 block uppercase">Satır</span>
-            <span className="text-base font-black text-cyan-400">{linesClearedTotal}</span>
+            <span className="text-base font-black text-cyan-400">{linesClearedTotal} <span className="text-xs text-slate-500">/ {(level * 5)}</span></span>
           </div>
           <div className="bg-gradient-to-r from-indigo-500/20 to-purple-600/20 rounded-xl p-2 text-center border border-indigo-400/30">
             <span className="text-[0.6rem] font-black text-indigo-300 block uppercase">Skor</span>
             <span className="text-base font-black text-white">{score}</span>
           </div>
         </div>
+        
+        {/* Progress Bar for Level */}
+        <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-300" style={{ width: `${(linesClearedTotal % 5) * 20}%` }}></div>
       </div>
 
       {/* Game Grid */}
-      <div className="bg-slate-900 rounded-3xl p-2.5 border border-white/10 shadow-2xl mb-3 relative">
+      <div className="bg-slate-900 rounded-3xl p-2.5 border border-white/10 shadow-2xl mb-3 relative" ref={boardRef}>
         <div
           className="grid gap-[3px]"
           style={{
@@ -274,14 +397,13 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
               return (
                 <div
                   key={`${rIndex}-${cIndex}`}
-                  onClick={() => handleCellClick(rIndex, cIndex)}
-                  className={`aspect-square rounded-md transition-all duration-150 cursor-pointer ${
+                  data-row={rIndex}
+                  data-col={cIndex}
+                  className={`aspect-square rounded-md transition-all duration-300 ${
                     isHighlighted
-                      ? "bg-white scale-110 z-10"
+                      ? "bg-white scale-0 rotate-45 opacity-0 z-10"
                       : cell !== EMPTY_CELL
-                      ? `${cell} border border-white/20 shadow-sm`
-                      : selectedOptionIdx !== null
-                      ? "bg-white/5 hover:bg-white/15 border border-white/5"
+                      ? `${cell} border border-white/20 shadow-sm animate-in zoom-in-75 duration-200`
                       : "bg-white/5 border border-white/5"
                   }`}
                 />
@@ -314,25 +436,33 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       {/* Block Options */}
       <div className="bg-slate-900 rounded-3xl p-3 border border-white/10">
         <p className="text-center text-[0.65rem] font-bold text-slate-500 uppercase tracking-wider mb-2">
-          Bloğu Seç → Izgara'ya Tıkla
+          Bloğu Sürükle ve Bırak
         </p>
         <div className="flex justify-around items-center gap-1">
           {options.map((opt, idx) => (
-            <div key={idx} className="flex-1 flex justify-center">
+            <div key={idx} className="flex-1 flex justify-center touch-none">
               <BlockPiece
                 shape={opt}
-                isSelected={selectedOptionIdx === idx}
-                onClick={() => {
-                  if (opt && !isGameOver) {
-                    setSelectedOptionIdx(selectedOptionIdx === idx ? null : idx);
-                  }
+                isSelected={false}
+                onClick={() => {}}
+                onPointerDown={(e) => {
+                  if (opt) onPointerDownBlock(e, opt, idx);
                 }}
-                disabled={isGameOver}
+                disabled={disabled}
+                isDragging={dragState.isDragging && dragState.shapeIdx === idx}
               />
             </div>
           ))}
         </div>
       </div>
+
+      {/* Leaderboard Modal */}
+      <LeaderboardModal 
+        isOpen={isLeaderboardOpen} 
+        onClose={() => setIsLeaderboardOpen(false)} 
+        gameType="block_puzzle" 
+        gameTitle="Blok Zeka" 
+      />
     </div>
   );
 }

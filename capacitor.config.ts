@@ -12,6 +12,7 @@ const config: CapacitorConfig = {
           cleartext: serverUrl.startsWith("http://"),
           url: serverUrl,
           allowNavigation: [serverUrl.replace(/^https?:\/\//, "").replace(/\/$/, ""), "*.vercel.app"],
+          errorPath: "error.html"
         },
       }
     : {}),

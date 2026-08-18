@@ -29,11 +29,11 @@ export function MiniGamesArcadeSection({
         <span className={`text-[0.65rem] font-black px-2 py-0.5 rounded-md border ${
           isPremium ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-amber-50 text-amber-700 border-amber-200"
         }`}>
-          {isPremium ? "3 Mini Oyun" : "Kilitli 🔒"}
+          {isPremium ? "5 Mini Oyun" : "Kilitli 🔒"}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {/* Oyun 1: Zihin Avcısı (Hafıza) */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-3.5 py-3.5 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition">
           <div className="relative z-10 flex items-center justify-between">
@@ -94,6 +94,48 @@ export function MiniGamesArcadeSection({
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-6 transition-transform group-hover:scale-110 pointer-events-none">
             ⚡
+          </div>
+        </div>
+
+        {/* Oyun 4: Matematik Ustası (Hız & Analitik) */}
+        <div className="bg-gradient-to-r from-rose-500 to-pink-600 px-3.5 py-3.5 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-white flex items-center gap-1.5">
+                <span>🧮</span> Matematik Ustası
+              </h3>
+              <p className="text-rose-100 text-[0.62rem] font-bold mt-0.5">Analitik Düşünce</p>
+            </div>
+            <Link
+              href="/student/games/math"
+              className="tap-scale shrink-0 bg-white text-rose-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-rose-50 transition-colors"
+            >
+              Oyna
+            </Link>
+          </div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform -rotate-6 transition-transform group-hover:scale-110 pointer-events-none">
+            🧮
+          </div>
+        </div>
+
+        {/* Oyun 5: Kelime Avı (Sözel Zeka) */}
+        <div className="bg-gradient-to-r from-teal-500 to-emerald-600 px-3.5 py-3.5 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-white flex items-center gap-1.5">
+                <span>🔤</span> Kelime Avı
+              </h3>
+              <p className="text-teal-100 text-[0.62rem] font-bold mt-0.5">Sözel Zeka</p>
+            </div>
+            <Link
+              href="/student/games/word"
+              className="tap-scale shrink-0 bg-white text-teal-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-teal-50 transition-colors"
+            >
+              Oyna
+            </Link>
+          </div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
+            🔤
           </div>
         </div>
       </div>

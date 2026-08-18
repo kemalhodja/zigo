@@ -3,12 +3,19 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import confetti from "canvas-confetti";
 import { MemoryCard } from "./memory-card";
+import { LeaderboardModal } from "./leaderboard-modal";
+import { useAudio } from "@/hooks/use-audio";
 
-// Seviyeler: Her seviyede farklı sayıda çift
-const LEVELS = [
-  { pairs: 4, icons: ["🚀", "⭐", "🌍", "☄️"] },
-  { pairs: 6, icons: ["🚀", "⭐", "🌍", "☄️", "🪐", "👽"] },
-  { pairs: 8, icons: ["🚀", "⭐", "🌍", "☄️", "🪐", "👽", "🔭", "🛸"] },
+const ALL_ICONS = [
+  "🚀", "⭐", "🌍", "☄️", "🪐", "👽", "🔭", "🛸", "🍎", "🍌", 
+  "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🥭", "🥝", "🐶", "🐱", 
+  "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", 
+  "⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🏉", "🎱", "🏓", "🏸", 
+  "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐",
+  "⌚", "📱", "💻", "⌨️", "🖥️", "🖨️", "🖱️", "🖲️", "🕹️", "🗜️",
+  "😀", "😁", "😂", "🤣", "😃", "😄", "😅", "😆", "😉", "😊",
+  "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔",
+  "🍔", "🍕", "🍟", "🌭", "🍿", "🧂", "🥓", "🥚", "🍳", "🧇"
 ];
 
 type Card = {
@@ -16,6 +23,7 @@ type Card = {
   icon: string;
   isFlipped: boolean;
   isMatched: boolean;
+  isError?: boolean;
 };
 
 type ZihinAvcisiProps = {
@@ -47,6 +55,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const [firstChoice, setFirstChoice] = useState<Card | null>(null);
   const [secondChoice, setSecondChoice] = useState<Card | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+  
+  const { playSound } = useAudio();
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -60,20 +71,24 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
         if (data.high_score) setHighScore(data.high_score);
         if (data.last_level) {
           setStartLevel(data.last_level);
-          setCurrentLevel(Math.min(data.last_level, LEVELS.length - 1));
+          setCurrentLevel(data.last_level);
         }
       })
       .catch(() => {});
   }, [userId]);
 
   const initLevel = useCallback((lvlIndex: number) => {
-    const level = LEVELS[lvlIndex % LEVELS.length];
-    const pairs = [...level.icons, ...level.icons];
+    // Çift sayısı 4'ten başlar, her 2 seviyede bir artar, maksimum 18'e kadar çıkar
+    const pairCount = Math.min(4 + Math.floor(lvlIndex / 2), 18);
+    const selectedIcons = shuffleArray(ALL_ICONS).slice(0, pairCount);
+    
+    const pairs = [...selectedIcons, ...selectedIcons];
     const shuffled = shuffleArray(pairs).map((icon) => ({
       id: crypto.randomUUID(),
       icon,
       isFlipped: false,
       isMatched: false,
+      isError: false,
     }));
 
     setCards(shuffled);
@@ -108,6 +123,8 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     const clickedCard = cards.find((c) => c.id === id);
     if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched) return;
 
+    playSound("pop");
+
     if (!firstChoice) {
       setFirstChoice(clickedCard);
       setCards((prev) => prev.map((c) => (c.id === id ? { ...c, isFlipped: true } : c)));
@@ -123,6 +140,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     if (!firstChoice || !secondChoice) return;
 
     if (firstChoice.icon === secondChoice.icon) {
+      playSound("click");
       setCards((prev) =>
         prev.map((c) => (c.icon === firstChoice.icon ? { ...c, isMatched: true } : c))
       );
@@ -130,11 +148,21 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       setSecondChoice(null);
       setIsLocked(false);
     } else {
+      setCards((prev) =>
+        prev.map((c) =>
+          c.id === firstChoice.id || c.id === secondChoice.id
+            ? { ...c, isError: true }
+            : c
+        )
+      );
+      
+      playSound("error");
+
       const t = setTimeout(() => {
         setCards((prev) =>
           prev.map((c) =>
             c.id === firstChoice.id || c.id === secondChoice.id
-              ? { ...c, isFlipped: false }
+              ? { ...c, isFlipped: false, isError: false }
               : c
           )
         );
@@ -165,11 +193,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       colors: ["#6366f1", "#a855f7", "#10b981", "#f59e0b"],
     });
 
-    const isLast = currentLevel >= LEVELS.length - 1;
-    if (isLast) {
-      setIsGameFinished(true);
-      saveProgress(newTotal, currentLevel);
-    }
+    playSound("success");
+
+    saveProgress(newTotal, currentLevel);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]);
 
@@ -216,8 +242,12 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 
-  const level = LEVELS[currentLevel % LEVELS.length];
-  const cols = level.pairs <= 4 ? 4 : level.pairs <= 6 ? 4 : 4;
+  const currentPairs = Math.min(4 + Math.floor(currentLevel / 2), 18);
+  let cols = 4;
+  if (currentPairs === 15 || currentPairs === 18) cols = 6;
+  else if (currentPairs >= 10 && currentPairs % 5 === 0) cols = 5;
+  else if (currentPairs >= 16) cols = 6;
+  else cols = 4;
 
   return (
     <div className="w-full max-w-sm mx-auto select-none">
@@ -226,6 +256,13 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
           .preserve-3d { transform-style: preserve-3d; }
           .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
           .rotate-y-180 { transform: rotateY(180deg); }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-5deg); }
+            50% { transform: translateX(5px) rotate(5deg); }
+            75% { transform: translateX(-5px) rotate(-5deg); }
+          }
+          .animate-shake { animation: shake 0.4s ease-in-out; }
         `
       }} />
 
@@ -237,15 +274,23 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               🧠 Zihin Avcısı
             </h2>
             <p className="text-xs font-bold text-violet-200">
-              Seviye {currentLevel + 1} / {LEVELS.length} · {level.pairs} Çift
+              Seviye {currentLevel + 1} · {currentPairs} Çift
             </p>
           </div>
-          {highScore > 0 && (
-            <div className="bg-yellow-400/20 border border-yellow-300/30 rounded-2xl px-3 py-1.5 text-center">
-              <span className="text-[0.55rem] font-black text-yellow-200 block uppercase tracking-wider">Rekor</span>
-              <span className="text-sm font-black text-yellow-300">🏆 {highScore}</span>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-1">
+            {highScore > 0 && (
+              <div className="bg-yellow-400/20 border border-yellow-300/30 rounded-xl px-2 py-1 text-center">
+                <span className="text-[0.5rem] font-black text-yellow-200 block uppercase tracking-wider">Rekor</span>
+                <span className="text-xs font-black text-yellow-300">🏆 {highScore}</span>
+              </div>
+            )}
+            <button 
+              onClick={() => setIsLeaderboardOpen(true)}
+              className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+            >
+              🏅 Tablo
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm">
@@ -276,6 +321,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               icon={card.icon}
               isFlipped={card.isFlipped}
               isMatched={card.isMatched}
+              isError={card.isError}
               onClick={handleCardClick}
             />
           ))}
@@ -290,10 +336,10 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               {isGameFinished ? "🏆" : "⭐"}
             </div>
             <h3 className="text-2xl font-black text-white mb-1">
-              {isGameFinished ? "Tüm Seviyeleri Bitirdin!" : `Seviye ${currentLevel + 1} Tamamlandı!`}
+              Seviye {currentLevel + 1} Tamamlandı!
             </h3>
             <p className="text-sm text-slate-400 font-medium mb-5">
-              {isGameFinished ? "Hafıza şampiyonusun! 🎉" : `Bu seviyede ${levelScore} puan kazandın!`}
+              Bu seviyede {levelScore} puan kazandın!
             </p>
 
             <div className="grid grid-cols-3 gap-2 mb-5">
@@ -311,21 +357,12 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               </div>
             </div>
 
-            {isGameFinished ? (
-              <button
-                onClick={handleRestart}
-                className="tap-scale w-full bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
-              >
-                Baştan Başla 🔄
-              </button>
-            ) : (
-              <button
-                onClick={handleNextLevel}
-                className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
-              >
-                Sonraki Seviye → Seviye {currentLevel + 2} 🚀
-              </button>
-            )}
+            <button
+              onClick={handleNextLevel}
+              className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
+            >
+              Sonraki Seviye → Seviye {currentLevel + 2} 🚀
+            </button>
             <button
               onClick={handleRestart}
               className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2.5 rounded-2xl hover:bg-white/10 transition text-xs border border-white/10"
@@ -335,6 +372,14 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
           </div>
         </div>
       )}
+
+      {/* Leaderboard Modal */}
+      <LeaderboardModal 
+        isOpen={isLeaderboardOpen} 
+        onClose={() => setIsLeaderboardOpen(false)} 
+        gameType="memory_card" 
+        gameTitle="Zihin Avcısı" 
+      />
     </div>
   );
 }

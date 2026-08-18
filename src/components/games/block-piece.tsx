@@ -12,14 +12,18 @@ type BlockPieceProps = {
   shape: ShapeType | null;
   isSelected: boolean;
   onClick: () => void;
+  onPointerDown?: (e: React.PointerEvent) => void;
   disabled?: boolean;
+  isDragging?: boolean;
 };
 
 export const BlockPiece = memo(function BlockPiece({
   shape,
   isSelected,
   onClick,
+  onPointerDown,
   disabled,
+  isDragging,
 }: BlockPieceProps) {
   if (!shape) {
     return <div className="w-20 h-20 opacity-0" />;
@@ -36,12 +40,14 @@ export const BlockPiece = memo(function BlockPiece({
     <button
       type="button"
       onClick={onClick}
+      onPointerDown={onPointerDown}
       disabled={disabled}
       className={`tap-scale p-2.5 rounded-2xl transition-all duration-200 flex items-center justify-center min-w-[5rem] min-h-[5rem] ${
         isSelected
           ? `bg-white/20 shadow-inner scale-110 ring-2 ring-white/50 ${glowColor}`
           : "bg-white/5 hover:bg-white/10 border border-white/10"
-      } ${disabled ? "opacity-30 cursor-not-allowed grayscale" : "cursor-pointer"}`}
+      } ${disabled ? "opacity-30 cursor-not-allowed grayscale" : "cursor-pointer"} ${isDragging ? "opacity-50 scale-90" : ""}`}
+      style={{ touchAction: "none" }} // prevent scrolling while dragging
     >
       <div
         className="grid gap-[2px]"

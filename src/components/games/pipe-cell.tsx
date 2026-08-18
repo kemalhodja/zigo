@@ -24,8 +24,8 @@ export const PipeCell = memo(function PipeCell({
   }
 
   // Akış rengi: Enerji/Su akıyorsa cyan/mavi neon, akmıyorsa gri/slate
-  const pipeColor = isFilled ? "bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]" : "bg-slate-400";
-  const glowBorder = isFilled ? "border-cyan-200" : "border-slate-300";
+  const pipeColor = isFilled ? "bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,1)] animate-pulse" : "bg-slate-400 transition-colors duration-300";
+  const glowBorder = isFilled ? "border-cyan-200" : "border-slate-500";
 
   return (
     <button
