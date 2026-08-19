@@ -65,10 +65,10 @@ export function BottomNav({
               isActive
                 ? variant === "overlay"
                   ? "bg-white/25 text-white shadow-sm"
-                  : "bg-violet-50/80 text-crystal"
+                  : "bg-white/10 text-white"
                 : variant === "overlay"
                   ? "text-white/80 hover:text-white"
-                  : "text-slate-500 hover:text-crystal"
+                  : "text-slate-400 hover:text-white"
             }`}
             href={item.href}
             key={item.href}
@@ -76,7 +76,7 @@ export function BottomNav({
             <span className={`role-nav-icon flex size-7 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
               <NavIcon active={isActive} name={item.icon} variant={variant} />
             </span>
-            <span className={`max-w-full truncate px-0.5 text-center text-[0.63rem] leading-tight ${isActive ? "font-bold text-night" : "font-semibold"}`}>
+            <span className={`max-w-full truncate px-0.5 text-center text-[0.63rem] leading-tight ${isActive ? "font-bold text-white" : "font-semibold"}`}>
               {item.label}
             </span>
             {item.href === "/notifications" && unreadCount > 0 ? (

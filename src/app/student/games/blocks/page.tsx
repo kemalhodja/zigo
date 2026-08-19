@@ -33,16 +33,16 @@ export default async function BlockGamePage() {
   const isStudent = role === "student";
 
   return (
-    <div className="min-h-screen bg-slate-100 p-3 sm:p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-slate-950 p-3 sm:p-6 flex flex-col items-center">
       <div className="w-full max-w-sm flex items-center justify-between mb-4">
         <Link
           href={back.href}
-          className="tap-scale flex items-center gap-1 text-xs font-black text-slate-600 bg-white px-3 py-2 rounded-xl shadow-xs border border-slate-200 hover:bg-slate-50 transition"
+          className="tap-scale flex items-center gap-1 text-xs font-black text-slate-300 bg-white/10 px-3 py-2 rounded-xl shadow-xs border border-white/10 hover:bg-white/20 transition backdrop-blur-sm"
         >
           <span>←</span>
           <span>{back.label}</span>
         </Link>
-        <span className="text-xs font-bold text-slate-400">Zigo Mini Oyun</span>
+        <span className="text-xs font-bold text-slate-500">Zigo Mini Oyun</span>
       </div>
       <div className="w-full">
         <GameTimeLimitWall backHref={back.href} backLabel={back.label}>

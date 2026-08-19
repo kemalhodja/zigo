@@ -149,8 +149,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 label={creator.full_name}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-night">{creator.full_name}</p>
-                <p className="text-xs font-bold text-slate-500">
+                <p className="truncate text-sm font-black text-white">{creator.full_name}</p>
+                <p className="text-xs font-bold text-slate-400">
                   {creator.role === "teacher" ? e.teachers : creator.role}
                   {creator.is_verified ? e.teacherVerifiedBadge : ""}
                 </p>
@@ -162,21 +162,21 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           ))}
         </section>
       ) : activeFormat === "teachers" ? (
-        <div className="-mx-4 bg-white px-6 py-14 text-center">
+        <div className="-mx-4 bg-black px-6 py-14 text-center">
           <span className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry shadow-lg shadow-crystal/20">
             <svg aria-hidden="true" className="size-9 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </span>
-          <h2 className="mt-5 text-xl font-black text-night">{e.noTeachers || "Öğretmen Bulunamadı"}</h2>
-          <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-500">
+          <h2 className="mt-5 text-xl font-black text-white">{e.noTeachers || "Öğretmen Bulunamadı"}</h2>
+          <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-400">
             Aradığınız kriterlere uygun doğrulanmış öğretmen bulunamadı.
           </p>
         </div>
       ) : null}
 
       {/* Post grid */}
-      <section className="-mx-4 columns-2 sm:columns-3 gap-1 px-1 bg-white">
+      <section className="-mx-4 columns-2 sm:columns-3 gap-1 px-1 bg-black">
         {tilesToRender.length === 0 && activeFormat !== "teachers" ? (
           <div className="col-span-3 px-6 py-14 text-center">
             <span className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry shadow-lg shadow-crystal/20">
@@ -185,8 +185,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 <path d="M20 20l-4-4" />
               </svg>
             </span>
-            <h2 className="mt-5 text-xl font-black text-night">{e.noPosts}</h2>
-            <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-500">{e.trendDesc}</p>
+            <h2 className="mt-5 text-xl font-black text-white">{e.noPosts}</h2>
+            <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-400">{e.trendDesc}</p>
           </div>
         ) : activeFormat !== "teachers" ? (
           tilesToRender.map((tile, index) => (
