@@ -78,7 +78,7 @@ export async function createPrivateLessonPost(
       *,
       area:education_areas!area_id (id, area_name),
       parent:users!parent_id (id, full_name, avatar_url),
-      child_profile:child_profiles!child_profile_id (id, name)
+      child_profile:child_profiles!child_profile_id (id, display_name)
     `,
     )
     .single();
@@ -101,7 +101,7 @@ export async function getParentPrivateLessonPosts(
       *,
       area:education_areas!area_id (id, area_name),
       parent:users!parent_id (id, full_name, avatar_url),
-      child_profile:child_profiles!child_profile_id (id, name)
+      child_profile:child_profiles!child_profile_id (id, display_name)
     `,
     )
     .eq("parent_id", parentId)
@@ -206,7 +206,7 @@ export async function getMatchedLessonPostsForTeacher(
       *,
       area:education_areas!area_id (id, area_name),
       parent:users!parent_id (id, full_name, avatar_url),
-      child_profile:child_profiles!child_profile_id (id, name)
+      child_profile:child_profiles!child_profile_id (id, display_name)
     `,
     )
     .in("area_id", matchingAreaIds)
