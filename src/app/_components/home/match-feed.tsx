@@ -43,57 +43,6 @@ export function FeedPostCard({
 
   const heightClass = fullHeight ? "h-[100dvh] md:h-[100dvh]" : "h-[calc(100dvh-70px)] md:h-[700px]";
 
-  if (!isMicro) {
-    return (
-      <DismissibleFeedPost postKey={postKey}>
-        <article
-          className="zigo-feed-card zigo-feed-card-enter relative bg-white pb-4 pt-1 mb-2 border-b border-slate-200 sm:border sm:border-slate-200 sm:rounded-xl sm:mb-6 sm:shadow-sm -mx-4 sm:mx-0"
-          style={containerStyle}
-        >
-          <div className="pointer-events-auto">
-            <FeedPostHeader 
-              post={post}
-              postKey={postKey}
-              teacherBadges={teacherBadges}
-              theme="light"
-            />
-          </div>
-
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-slate-50">
-            <FeedMediaViewer 
-              post={post}
-              priorityMedia={priorityMedia}
-              isMicro={false}
-              oneMinLessonLabel={feedEnhancements.oneMinLesson}
-            />
-          </div>
-
-          <div className="pointer-events-auto mt-3 space-y-2 px-4">
-            <SocialPostActions
-              initialComments={post.comments}
-              initialLiked={post.isLiked}
-              initialLikes={post.likes}
-              initialSaved={post.isSaved}
-              postId={post.postId}
-              variant="full"
-              theme="light"
-            />
-          </div>
-
-          <div className="mt-2.5">
-            <ExpandableCaption caption={post.caption} theme="light" />
-          </div>
-
-          <div className="pointer-events-auto px-4 mt-1.5">
-            <p className="text-[0.65rem] font-bold uppercase tracking-wider text-slate-400">
-              {formatFeedTimestamp(post.createdAt)}
-            </p>
-          </div>
-        </article>
-      </DismissibleFeedPost>
-    );
-  }
-
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
