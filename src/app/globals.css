@@ -2,9 +2,8 @@
 @config "../../tailwind.config.ts";
 
 :root {
-  color-scheme: dark;
-  background: #000000;
-  color: #f8fafc;
+  --zigo-bg: #f8fafc;
+  --zigo-text: #0f172a;
   --zigo-text-micro: 0.6875rem;
   --zigo-text-caption: 0.75rem;
   --zigo-text-meta: 0.8125rem;
@@ -19,6 +18,12 @@
   --zigo-leading-normal: 1.5;
   --zigo-tracking-eyebrow: 0.1em;
   --zigo-tracking-tight: -0.02em;
+}
+
+html.dark-theme {
+  color-scheme: dark;
+  --zigo-bg: #000000;
+  --zigo-text: #f8fafc;
 }
 
 * {
@@ -50,10 +55,8 @@ body {
   max-width: 100%;
   font-size: var(--zigo-text-body);
   line-height: var(--zigo-leading-normal);
-  background:
-    radial-gradient(circle at top, rgb(124 58 237 / 0.15), transparent 28rem),
-    radial-gradient(circle at bottom right, rgb(236 72 153 / 0.12), transparent 24rem),
-    #000000;
+  background: var(--zigo-bg);
+  color: var(--zigo-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -webkit-overflow-scrolling: touch;
@@ -182,7 +185,7 @@ a,
   font-weight: 800;
   letter-spacing: var(--zigo-tracking-tight);
   line-height: var(--zigo-leading-tight);
-  color: #f8fafc;
+  color: var(--zigo-text);
 }
 
 .zigo-display {
