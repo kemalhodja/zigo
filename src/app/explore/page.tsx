@@ -176,7 +176,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       ) : null}
 
       {/* Post grid */}
-      <section className="-mx-4 grid auto-rows-[8.35rem] grid-cols-3 gap-px bg-white">
+      <section className="-mx-4 columns-2 sm:columns-3 gap-1 px-1 bg-white">
         {tilesToRender.length === 0 && activeFormat !== "teachers" ? (
           <div className="col-span-3 px-6 py-14 text-center">
             <span className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry shadow-lg shadow-crystal/20">
@@ -191,7 +191,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         ) : activeFormat !== "teachers" ? (
           tilesToRender.map((tile, index) => (
             <Link
-              className={`tap-scale group block overflow-hidden text-xs font-black text-white ${tile.span}`}
+              className={`tap-scale group block break-inside-avoid overflow-hidden rounded-md text-xs font-black text-white mb-1 ${tile.span}`}
               href={tile.href ?? (index % 2 === 0 ? "/micro" : "/profile")}
               key={tile.id}
             >
@@ -348,7 +348,7 @@ function toExploreTileFromDemo(post: ReturnType<typeof buildDemoPosts>[number], 
   return {
     id: `demo-explore-tile-${index}`,
     title: post.caption.slice(0, 36) || post.area,
-    span: index % 5 === 0 ? "row-span-2" : "",
+    span: index % 5 === 0 ? "h-[16rem]" : index % 3 === 0 ? "h-[13rem]" : "h-[9rem]",
     color: post.gradient,
     href: post.mediaType === "video" ? "/micro" : "/explore",
     mediaUrl: null,
@@ -360,7 +360,7 @@ function toExploreTile(post: SocialFeedPost, index: number) {
   return {
     id: post.id,
     title: post.caption.slice(0, 36) || "Post",
-    span: index % 5 === 0 ? "row-span-2" : "",
+    span: index % 5 === 0 ? "h-[16rem]" : index % 3 === 0 ? "h-[13rem]" : "h-[9rem]",
     color:
       index % 3 === 0
         ? "from-crystal to-fuchsia-500"

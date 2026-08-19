@@ -162,6 +162,24 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           ) : null}
           <ProfileSocialLinks bio={profile.bio} />
           
+          {/* Instagram-style Highlights */}
+          <div className="mt-6 -mx-4 px-4 overflow-x-auto hide-scrollbar flex gap-4 pb-2">
+            {[
+              { id: 1, title: profile.role === "student" ? "Notlarım" : "Derslerim", emoji: "📚", color: "from-blue-400 to-cyan-300" },
+              { id: 2, title: "Çözümler", emoji: "✍️", color: "from-violet-400 to-fuchsia-300" },
+              { id: 3, title: "Başarılar", emoji: "🏆", color: "from-amber-400 to-orange-300" },
+              { id: 4, title: "Sertifikalar", emoji: "🎓", color: "from-emerald-400 to-teal-300" },
+            ].map(highlight => (
+              <div key={highlight.id} className="flex flex-col items-center gap-1.5 cursor-pointer group">
+                <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-slate-200 to-slate-300 group-hover:from-crystal group-hover:to-berry transition-all">
+                  <div className={`w-full h-full rounded-full bg-gradient-to-br ${highlight.color} border-2 border-white flex items-center justify-center text-2xl shadow-inner`}>
+                    {highlight.emoji}
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-slate-700">{highlight.title}</span>
+              </div>
+            ))}
+          </div>
           {profile.role === "student" && (
             <div className="mt-4 rounded-xl bg-gradient-to-r from-fuchsia-50 to-pink-50 p-4 border border-fuchsia-100">
               <h3 className="font-black text-fuchsia-900 text-sm mb-2">Öğrenci Gelişimi</h3>

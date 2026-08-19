@@ -71,17 +71,17 @@ export function LeaderboardModal({ isOpen, onClose, gameType, gameTitle }: Leade
             data.map((player, idx) => (
               <div 
                 key={player.user_id + idx} 
-                className={`flex items-center gap-3 p-3 rounded-2xl border ${
-                  idx === 0 ? "bg-amber-500/10 border-amber-500/30" :
-                  idx === 1 ? "bg-slate-300/10 border-slate-300/20" :
-                  idx === 2 ? "bg-orange-700/10 border-orange-700/20" :
+                className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
+                  idx === 0 ? "bg-gradient-to-r from-amber-500/20 to-amber-700/20 border-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] scale-[1.02] z-10 relative" :
+                  idx === 1 ? "bg-gradient-to-r from-slate-300/20 to-slate-500/20 border-slate-300/80 shadow-[0_0_12px_rgba(203,213,225,0.3)] scale-[1.01] z-10 relative" :
+                  idx === 2 ? "bg-gradient-to-r from-orange-500/20 to-orange-700/20 border-orange-500/80 shadow-[0_0_12px_rgba(249,115,22,0.3)] z-10 relative" :
                   "bg-white/5 border-white/5"
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
-                  idx === 0 ? "bg-amber-400 text-amber-900 shadow-md shadow-amber-500/30" :
-                  idx === 1 ? "bg-slate-300 text-slate-800 shadow-md" :
-                  idx === 2 ? "bg-orange-400 text-orange-950 shadow-md" :
+                  idx === 0 ? "bg-amber-400 text-amber-950 shadow-[0_0_10px_rgba(251,191,36,0.8)]" :
+                  idx === 1 ? "bg-slate-300 text-slate-900 shadow-[0_0_10px_rgba(203,213,225,0.6)]" :
+                  idx === 2 ? "bg-orange-500 text-orange-950 shadow-[0_0_10px_rgba(249,115,22,0.6)]" :
                   "bg-slate-700 text-slate-300"
                 }`}>
                   {idx + 1}
