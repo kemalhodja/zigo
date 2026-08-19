@@ -152,6 +152,7 @@ import {
   getActiveStories,
   getCachedSocialFeed,
   getFollowingFeed,
+  getExplorePosts,
   getSuggestedCreators,
   isFollowing,
   type SocialFeedPost,
@@ -177,12 +178,18 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     // Use admin client for getFollowingFeed to bypass RLS which restricts
     // posts to area-matched content — followers' posts need unrestricted read access
     const feedClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
-    const followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
+    let followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
+
+    // Eğer kullanıcının takip ettiği kişilerin hiç gönderisi yoksa (örn. yeni kayıt)
+    // boş ekran yerine global keşfet gönderilerini (popüler olanları) fallback olarak göster.
+    if (followingPosts.length === 0) {
+      followingPosts = await getExplorePosts(supabase, profile.id, "", 30).catch(() => []);
+    }
 
     if (followingPosts.length === 0) return [];
 
-    // Limit display total to 15 for faster visual rendering
-    const slicedPosts = followingPosts.slice(0, 15);
+    // Limit display total to 30 for more content
+    const slicedPosts = followingPosts.slice(0, 30);
 
     const followingByPost = await Promise.all(
       slicedPosts.map((post) =>

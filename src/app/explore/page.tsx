@@ -61,12 +61,42 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
   return (
     <div className="space-y-0 pb-3">
-      {/* Search bar */}
-      <section className="sticky top-[3.45rem] z-10 -mx-4 border-b border-slate-100 bg-white/95 px-4 pb-2.5 pt-2 backdrop-blur">
-        <ExploreSearchBar
-          initialQuery={query}
-          placeholder={viewerRole === "teacher" ? e.teacherSearchPlaceholder : e.searchPlaceholder}
-        />
+      {/* Search bar & Tabs */}
+      <section className="sticky top-[3.45rem] z-10 -mx-4 border-b border-slate-100 bg-white/95 px-4 pb-0 pt-2 backdrop-blur">
+        <div className="pb-2">
+          <ExploreSearchBar
+            initialQuery={query}
+            placeholder={viewerRole === "teacher" ? e.teacherSearchPlaceholder : e.searchPlaceholder}
+          />
+        </div>
+        
+        {/* Explore Tabs */}
+        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-1">
+          <Link
+            href={`/explore?format=all${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}`}
+            className={`whitespace-nowrap pb-1.5 text-[0.8rem] font-bold transition border-b-2 ${activeFormat === "all" ? "text-night border-night" : "text-slate-400 border-transparent hover:text-slate-700"}`}
+          >
+            Tümü
+          </Link>
+          <Link
+            href={`/explore?format=micro${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}`}
+            className={`whitespace-nowrap pb-1.5 text-[0.8rem] font-bold transition border-b-2 ${activeFormat === "micro" ? "text-night border-night" : "text-slate-400 border-transparent hover:text-slate-700"}`}
+          >
+            Reels
+          </Link>
+          <Link
+            href={`/explore?format=lessons${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}`}
+            className={`whitespace-nowrap pb-1.5 text-[0.8rem] font-bold transition border-b-2 ${activeFormat === "lessons" ? "text-night border-night" : "text-slate-400 border-transparent hover:text-slate-700"}`}
+          >
+            Dersler
+          </Link>
+          <Link
+            href={`/explore?format=teachers${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}`}
+            className={`whitespace-nowrap pb-1.5 text-[0.8rem] font-bold transition border-b-2 ${activeFormat === "teachers" ? "text-night border-night" : "text-slate-400 border-transparent hover:text-slate-700"}`}
+          >
+            Öğretmenler
+          </Link>
+        </div>
       </section>
 
       {/* Suggested creators rail */}
