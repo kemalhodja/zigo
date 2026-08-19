@@ -7,6 +7,7 @@ import { useAudio } from "@/hooks/use-audio";
 
 import { LeaderboardModal } from "./leaderboard-modal";
 import { WORD_DICTIONARY, type WordEntry } from "./word-dictionary";
+import { TURKISH_WORDS } from "./turkish-words";
 
 const ROWS = 6;
 type LetterState = "correct" | "present" | "absent" | "empty";
@@ -81,9 +82,10 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   };
 
   const isValidWord = (guess: string, lang: Lang) => {
-    // Tam kapsamlı bir sözlüğümüz olmadığı için, doğru uzunluktaki tüm kelimeleri
-    // geçerli sayıyoruz. Aksi takdirde kullanıcı gerçek bir kelime girse bile
-    // (örneğin "ELMAS") "Sözlükte bulunamadı" hatası alıyor.
+    const upperGuess = guess.toUpperCase();
+    if (lang === "TR") {
+      return TURKISH_WORDS.has(upperGuess);
+    }
     return true;
   };
 
