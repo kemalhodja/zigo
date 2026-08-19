@@ -216,7 +216,8 @@ export function CommentSheet({
                     >
                       <svg
                         aria-hidden="true"
-                        className={`size-3.5 ${likedCommentIds[item.id] ? "fill-rose-500" : "fill-none"}`}
+                        className={`size-3.5 transition-transform duration-300 ${likedCommentIds[item.id] ? "fill-rose-500 scale-110" : "fill-none scale-100"}`}
+                        style={likedCommentIds[item.id] ? { animation: 'like-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both' } : {}}
                         stroke="currentColor"
                         strokeWidth="2"
                         viewBox="0 0 24 24"
@@ -246,23 +247,33 @@ export function CommentSheet({
             </button>
           </div>
         ) : null}
-        <div className="flex gap-2 border-t border-slate-100 pt-3">
-          <input
-            ref={commentSheetInputRef}
-            className="min-w-0 flex-1 rounded-lg bg-slate-100 px-4 py-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-slate-200"
-            maxLength={1000}
-            onChange={(event) => onSetComment(event.target.value)}
-            placeholder={labels.addComment}
-            value={comment}
-          />
-          <button
-            className="tap-scale zigo-cta tap-scale rounded-lg px-5 py-3 text-xs font-black text-white disabled:opacity-40"
-            disabled={!comment.trim() || isCommentSaving}
-            onClick={onSubmitComment}
-            type="button"
-          >
-            {isCommentSaving ? labels.posting : labels.post}
-          </button>
+        <div className="flex gap-2 border-t border-slate-100 pt-3 items-center">
+          <div className="flex-1 relative flex items-center bg-slate-100 rounded-full px-4 py-1.5 focus-within:ring-2 focus-within:ring-crystal/20 focus-within:bg-white transition-all shadow-sm">
+            <input
+              ref={commentSheetInputRef}
+              className="w-full bg-transparent text-sm py-1.5 outline-none text-night placeholder:text-slate-400"
+              maxLength={1000}
+              onChange={(event) => onSetComment(event.target.value)}
+              placeholder={labels.addComment}
+              value={comment}
+            />
+            <button
+              className="ml-2 font-black text-crystal text-sm tap-scale disabled:opacity-40 transition-colors hover:text-violet-700"
+              disabled={!comment.trim() || isCommentSaving}
+              onClick={onSubmitComment}
+              type="button"
+            >
+              {isCommentSaving ? (
+                <span className="flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-crystal animate-bounce" />
+                  <span className="size-1.5 rounded-full bg-crystal animate-bounce [animation-delay:0.1s]" />
+                  <span className="size-1.5 rounded-full bg-crystal animate-bounce [animation-delay:0.2s]" />
+                </span>
+              ) : (
+                labels.post
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </section>
