@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { DomainForbiddenError } from "@/lib/domain/domain-errors";
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import type { Database } from "@/lib/supabase/database.types";
@@ -173,7 +174,31 @@ export async function getMatchedLessonPostsForTeacher(
     return [];
   }
 
-  // 4. Eşleşen ilanları getir
+  // 4. Öğretmenin branşlarının jenerik isimlerini (Örn: "Matematik") bul,
+  // ve veritabanındaki aynı jenerik isme sahip TÜM area_id'leri topla.
+  // Bu sayede "LGS Matematik" öğreten öğretmen, "Matematik" olarak açılmış veli ilanını da görür.
+  const { data: allAreas } = await (supabase as any)
+    .from("education_areas")
+    .select("id, area_name");
+
+  let matchingAreaIds = teacherAreaIds;
+  if (allAreas && allAreas.length > 0) {
+    const teacherGenericBranches = new Set(
+      allAreas
+        .filter((a: any) => teacherAreaIds.includes(a.id))
+        .map((a: any) => displayEducationAreaName(a.area_name))
+    );
+
+    matchingAreaIds = allAreas
+      .filter((a: any) => teacherGenericBranches.has(displayEducationAreaName(a.area_name)))
+      .map((a: any) => a.id);
+  }
+
+  if (matchingAreaIds.length === 0) {
+    return [];
+  }
+
+  // 5. Eşleşen ilanları getir
   const { data: posts, error: postsError } = await (supabase as any)
     .from("private_lesson_posts")
     .select(
@@ -184,7 +209,7 @@ export async function getMatchedLessonPostsForTeacher(
       child_profile:child_profiles!child_profile_id (id, name)
     `,
     )
-    .in("area_id", teacherAreaIds)
+    .in("area_id", matchingAreaIds)
     .eq("status", "open")
     .order("created_at", { ascending: false })
     .limit(50);

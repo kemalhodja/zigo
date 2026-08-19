@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo,useState } from "react";
+import { useMemo, useState } from "react";
 
+import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import turkeyData from "@/lib/turkey-data.json";
 
 type Area = { id: number; area_name: string; age_group: string | null };
@@ -59,6 +60,20 @@ export function CreatePrivateLessonModal({
     () => [...turkeyData].sort((a, b) => a.city.localeCompare(b.city, 'tr-TR')),
     []
   );
+
+  // Sadece jenerik branş isimlerini çıkarıp tekilleştiriyoruz (örn: "1-4 Matematik" -> "Matematik")
+  const genericBranches = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const a of areas) {
+      const genericName = displayEducationAreaName(a.area_name);
+      if (!map.has(genericName)) {
+        map.set(genericName, a.id);
+      }
+    }
+    return Array.from(map.entries())
+      .map(([name, id]) => ({ name, id }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'tr-TR'));
+  }, [areas]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,9 +194,9 @@ export function CreatePrivateLessonModal({
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-night focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   >
                     <option value="">Branş Seçin</option>
-                    {areas.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.area_name}
+                    {genericBranches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
                       </option>
                     ))}
                   </select>
