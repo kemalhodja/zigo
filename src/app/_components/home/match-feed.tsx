@@ -47,7 +47,7 @@ export function FeedPostCard({
     return (
       <DismissibleFeedPost postKey={postKey}>
         <article
-          className="zigo-feed-card zigo-feed-card-enter relative mb-5 bg-white pb-6 pt-3 shadow-xl shadow-fuchsia-500/5 ring-1 ring-slate-900/5 sm:rounded-[2.5rem] rounded-[1.5rem] overflow-hidden"
+          className="zigo-feed-card zigo-feed-card-enter relative bg-white pb-4 pt-1 mb-2 border-b border-slate-200 sm:border sm:border-slate-200 sm:rounded-xl sm:mb-6 sm:shadow-sm -mx-4 sm:mx-0"
           style={containerStyle}
         >
           <div className="pointer-events-auto">
