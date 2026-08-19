@@ -26,7 +26,7 @@ export function FeedPostHeader({
   return (
     <div className="flex items-center justify-between px-4 py-3">
       <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
-        <SocialAvatar className="size-9" label={post.authorName} imageUrl={post.avatarUrl} online={post.verified} />
+        <SocialAvatar className="size-9" label={post.authorName} imageUrl={post.avatarUrl} />
         <div className="min-w-0">
           <p className={`truncate text-[0.95rem] font-bold ${textColorClass}`}>
             {post.handle}
