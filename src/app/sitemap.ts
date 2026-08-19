@@ -12,6 +12,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/explore`, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/auth`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/share/learning`, changeFrequency: "weekly", priority: 0.4 },
+    { url: `${base}/about`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/pricing`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/help`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/legal/privacy`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/legal/terms`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/legal/kvkk`, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   if (!hasSupabaseEnv()) {

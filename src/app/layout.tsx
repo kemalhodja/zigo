@@ -30,11 +30,13 @@ const jakarta = Plus_Jakarta_Sans({
 
 export async function generateMetadata(): Promise<Metadata> {
   const meta = (await getServerMessages()).meta;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app";
 
   return {
+    metadataBase: new URL(baseUrl),
     title: {
-      default: "Zigo",
-      template: "%s · Zigo",
+      default: "Zigo | Eğitim Sosyal Ağı",
+      template: "%s | Zigo",
     },
     description: meta.description,
     applicationName: "Zigo",
@@ -42,6 +44,9 @@ export async function generateMetadata(): Promise<Metadata> {
       capable: true,
       statusBarStyle: "default",
       title: "Zigo",
+    },
+    alternates: {
+      canonical: "/",
     },
     icons: {
       icon: [
@@ -52,10 +57,24 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     manifest: "/manifest.json",
     openGraph: {
-      title: "Zigo",
+      title: "Zigo | Eğitim Sosyal Ağı",
       description: meta.description,
       siteName: "Zigo",
       type: "website",
+      images: [
+        {
+          url: "/og-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: "Zigo Eğitim Platformu",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Zigo | Eğitim Sosyal Ağı",
+      description: meta.description,
+      images: ["/og-image.jpg"],
     },
   };
 }
@@ -67,8 +86,6 @@ export async function generateViewport(): Promise<Viewport> {
     themeColor: getRoleThemeColor(shellState.viewerRole),
     width: "device-width",
     initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
     viewportFit: "cover",
     interactiveWidget: "resizes-content",
   };
@@ -84,8 +101,32 @@ export default async function RootLayout({
   const messages = await getServerMessages();
 
   return (
-    <html lang={getHtmlLang(locale)}>
+    <html lang="tr">
       <body className={`${jakarta.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Zigo",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app",
+              "description": messages.meta.description
+            })
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Zigo",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app",
+              "logo": (process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app") + "/icon.svg"
+            })
+          }}
+        />
         <LocaleProvider initialLocale={locale}>
           <ToastProvider>
             <OfflineIndicator />

@@ -52,6 +52,7 @@ export function AuthPanel() {
   const [message, setMessage] = useState(searchParams.get("error") ?? a.defaultMessage);
   const [botTrap, setBotTrap] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [kvkkAccepted, setKvkkAccepted] = useState(false);
   const recaptcha = useRecaptcha(mode === "sign-up" ? "signup" : "signin");
 
   useEffect(() => {
@@ -96,9 +97,9 @@ export function AuthPanel() {
       const trimmedFullName = fullName.trim();
 
       if (mode === "sign-up") {
-        if (!termsAccepted) {
+        if (!termsAccepted || !kvkkAccepted) {
           setStatus("error");
-          setMessage("Lütfen Kullanım Koşulları ve Gizlilik Politikasını okuyup kabul edin.");
+          setMessage("Lütfen Kullanım Koşulları, Gizlilik Politikası ve KVKK Aydınlatma Metnini okuyup kabul edin.");
           submittingRef.current = false;
           return;
         }
@@ -311,6 +312,7 @@ export function AuthPanel() {
             id="website_url"
             name="website_url"
             tabIndex={-1}
+            aria-hidden="true"
             autoComplete="off"
             value={botTrap}
             onChange={(e) => setBotTrap(e.target.value)}
@@ -318,25 +320,42 @@ export function AuthPanel() {
         </div>
 
         {mode === "sign-up" ? (
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-            <input
-              required
-              type="checkbox"
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-0.5 size-4 rounded border-slate-300 text-crystal focus:ring-crystal"
-            />
-            <span className="text-xs font-semibold leading-relaxed text-slate-700">
-              <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
-                Kullanım Koşullarını
-              </a>{" "}
-              ve{" "}
-              <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
-                Gizlilik Politikasını
-              </a>{" "}
-              okudum, kabul ediyorum. *
-            </span>
-          </label>
+          <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                required
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5 size-4 rounded border-slate-300 text-crystal focus:ring-crystal"
+              />
+              <span className="text-xs font-semibold leading-relaxed text-slate-700">
+                <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
+                  Kullanım Koşullarını
+                </a>{" "}
+                ve{" "}
+                <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
+                  Gizlilik Politikasını
+                </a>{" "}
+                okudum, kabul ediyorum. *
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                required
+                type="checkbox"
+                checked={kvkkAccepted}
+                onChange={(e) => setKvkkAccepted(e.target.checked)}
+                className="mt-0.5 size-4 rounded border-slate-300 text-crystal focus:ring-crystal"
+              />
+              <span className="text-xs font-semibold leading-relaxed text-slate-700">
+                <a href="/legal/kvkk" target="_blank" rel="noopener noreferrer" className="font-bold text-crystal underline">
+                  KVKK Aydınlatma Metnini
+                </a>{" "}
+                okudum, açık rıza veriyorum. *
+              </span>
+            </label>
+          </div>
         ) : null}
 
         {mode === "sign-in" ? (
