@@ -1136,3 +1136,21 @@ body.role-theme-teacher {
 .page-transition-fade {
   animation: page-fade-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+@layer utilities {
+  .bg-white {
+    background-color: #000000 !important;
+  }
+  .bg-slate-50, .bg-slate-100 {
+    background-color: #020617 !important;
+  }
+  .text-slate-900, .text-slate-800, .text-slate-700, .text-night {
+    color: #f8fafc !important;
+  }
+  .text-slate-600, .text-slate-500 {
+    color: #94a3b8 !important;
+  }
+  .border-slate-200, .border-slate-100, .border-slate-300 {
+    border-color: #1e293b !important;
+  }
+}
