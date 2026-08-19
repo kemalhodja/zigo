@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Giriş Yap",
+  description: "Zigo'ya giriş yapın veya yeni bir hesap oluşturun.",
+  alternates: {
+    canonical: "/auth",
+  },
+};
 
 import { AuthLegalLinks } from "@/components/auth-legal-links";
 import { AuthPanel } from "@/components/auth-panel";

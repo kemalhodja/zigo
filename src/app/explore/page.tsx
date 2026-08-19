@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Keşfet",
+  description: "Zigo'da eğitim içeriklerini, kısa dersleri ve öğretmenleri keşfet.",
+  alternates: {
+    canonical: "/explore",
+  },
+};
 
 import { ExploreSearchBar } from "@/components/explore-search-bar";
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
