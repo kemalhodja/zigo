@@ -1,9 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
+  const supabase = createAdminClient() || await createClient();
   const gameType = req.nextUrl.searchParams.get("game_type");
 
   if (!gameType) {
