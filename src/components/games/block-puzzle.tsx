@@ -400,7 +400,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
             top: dragState.y - dragState.offsetY - dragState.touchOffsetY,
           }}
         >
-          <BlockPiece shape={dragState.shape} isSelected={true} onClick={() => {}} disabled={false} />
+          <BlockPiece shape={dragState.shape} isSelected={false} isGhost={true} onClick={() => {}} disabled={false} />
         </div>
       )}
 
