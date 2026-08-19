@@ -49,7 +49,7 @@ export function FeedPostCard({
         className={`zigo-feed-card zigo-feed-card-enter relative -mx-4 overflow-hidden bg-black ${heightClass}`}
         style={containerStyle}
       >
-        <div className="absolute inset-0 pb-36">
+        <div className="absolute inset-0">
           <FeedMediaViewer 
             post={post}
             priorityMedia={priorityMedia}

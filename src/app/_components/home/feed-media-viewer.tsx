@@ -29,6 +29,7 @@ export function FeedMediaViewer({
         mediaUrl={post.mediaUrl}
         priority={priorityMedia}
         scene={post.scene}
+        objectFit="cover"
       />
     </DoubleTapLikeLink>
   );
