@@ -353,14 +353,19 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
         return { isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, touchOffsetY: 0, targetRow: null, targetCol: null, isValidDrop: false };
       });
     };
+    const handlePointerCancel = () => {
+      setDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, touchOffsetY: 0, targetRow: null, targetCol: null, isValidDrop: false });
+    };
 
     if (dragState.isDragging) {
       window.addEventListener("pointermove", handlePointerMove, { passive: false });
       window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerCancel);
     }
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerCancel);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragState.isDragging, dragState.shape, board]);
@@ -368,8 +373,11 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const onPointerDownBlock = (e: React.PointerEvent, shape: ShapeType, idx: number) => {
     if (isGameOver || disabled) return;
     
-    const isTouch = e.pointerType === "touch";
-    const touchOffsetY = isTouch ? 60 : 0;
+    // Stabilite için pointer'ı yakala
+    e.currentTarget.setPointerCapture(e.pointerId);
+    
+    const isTouch = e.pointerType === "touch" || e.pointerType === "pen";
+    const touchOffsetY = isTouch ? 50 : 0; // Biraz azaltıldı ki parmaktan çok kopmasın
     
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setDragState({
@@ -390,7 +398,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const disabled = isGameOver;
 
   return (
-    <div className="w-full max-w-sm mx-auto select-none relative">
+    <div className="w-full max-w-sm mx-auto select-none relative touch-none">
       {/* Ghost Element for Dragging */}
       {dragState.isDragging && dragState.shape && (
         <div
