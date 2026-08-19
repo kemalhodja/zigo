@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-
 import { LegalLayout } from "@/components/legal-layout";
+
+export const metadata: Metadata = {
+  title: "KVKK Aydınlatma Metni",
+  description: "Zigo Kişisel Verilerin Korunması Kanunu aydınlatma metni."
+};
 
 export default function KvkkPage() {
   return (
