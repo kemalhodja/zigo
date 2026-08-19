@@ -25,7 +25,7 @@ export function BackButton({ fallbackHref = "/", className, label }: BackButtonP
       aria-label={backLabel}
       className={
         className ??
-        "tap-scale flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-night transition hover:bg-slate-200"
+        "tap-scale flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-slate-100 transition hover:bg-slate-800"
       }
       onClick={handleBack}
       title={backLabel}

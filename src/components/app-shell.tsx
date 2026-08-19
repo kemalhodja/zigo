@@ -331,7 +331,7 @@ function Header({
   const isHomePage = pathname === "/";
 
   return (
-    <header className="safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm transition-all duration-300">
+    <header className="safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50 shadow-sm transition-all duration-300">
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {!isHomePage ? <BackButton fallbackHref="/" /> : null}
@@ -341,7 +341,7 @@ function Header({
         <div className="flex shrink-0 items-center gap-2">
           <Link
             aria-label="Ders Talepleri"
-            className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-crystal"
+            className="tap-scale flex size-9 items-center justify-center text-slate-100 transition hover:text-crystal"
             href="/teacher/lessons"
             title="Ders Talepleri"
           >
@@ -352,7 +352,7 @@ function Header({
 
           <Link
             aria-label={primaryAction.isAdmin ? "Yönetici Paneli" : primaryAction.isCreate ? h.create : h.askQuestion}
-            className="tap-scale flex size-9 items-center justify-center text-night transition hover:text-crystal"
+            className="tap-scale flex size-9 items-center justify-center text-slate-100 transition hover:text-crystal"
             href={primaryAction.href}
           >
             {primaryAction.isAdmin ? (
@@ -373,7 +373,7 @@ function Header({
               </svg>
             )}
           </Link>
-          <Link aria-label={h.notifications} className="tap-scale relative flex size-9 items-center justify-center text-night transition hover:text-berry" href="/notifications">
+          <Link aria-label={h.notifications} className="tap-scale relative flex size-9 items-center justify-center text-slate-100 transition hover:text-berry" href="/notifications">
             <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5" />
               <path d="M9.5 17a2.5 2.5 0 0 0 5 0" />

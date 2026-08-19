@@ -82,9 +82,9 @@ export default async function HomePage() {
       ) : null}
 
       {/* Following feed header */}
-      <section className="-mx-4 flex items-center justify-between border-b border-slate-100 bg-white/98 px-4 py-2.5 backdrop-blur">
+      <section className="-mx-4 flex items-center justify-between border-b border-slate-800/50 bg-slate-950/98 px-4 py-2.5 backdrop-blur">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-black text-night">{m.feed.following}</h2>
+          <h2 className="text-sm font-black text-slate-100">{m.feed.following}</h2>
         </div>
         <Link className="tap-scale text-xs font-black text-crystal" href="/explore">
           {m.zigo.discover}
