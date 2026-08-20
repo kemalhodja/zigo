@@ -14,11 +14,12 @@ import {
   getHomeTeacherInsights,
   getHomeViewerContext,
   getSuggestedCreatorsForHome,
-} from "./_components/home/data";
-import { HomeMissionStrip } from "./_components/home/mission-strip";
-import { StoryTray } from "./_components/home/story-tray";
-import { ReelSpotlightRail } from "./_components/home/study-rail";
-import { VirtualFeedClient } from "./_components/home/virtual-feed-client";
+} from "../_components/home/data";
+import { HomeMissionStrip } from "../_components/home/mission-strip";
+import { StoryTray } from "../_components/home/story-tray";
+import { ReelSpotlightRail } from "../_components/home/study-rail";
+import { VirtualFeedClient } from "../_components/home/virtual-feed-client";
+import { Composer } from "./_components/composer";
 
 export default async function HomePage() {
   const m = await getServerMessages();
@@ -45,7 +46,7 @@ export default async function HomePage() {
   const showTeacherHome = viewer.role === "teacher";
 
   return (
-    <div className="space-y-3 pb-3">
+    <div className="space-y-4 pb-4">
       {showTeacherHome && teacherInsights ? (
         <TeacherHomeInsights
           copy={m.feedEnhancements}
@@ -54,10 +55,12 @@ export default async function HomePage() {
         />
       ) : null}
 
+      <Composer userRole={viewer.role} streakDays={viewer.streakDays} />
+
       <StoryTray stories={stories} feedExtras={m.feedExtras} feedEnhancements={m.feedEnhancements} />
 
       {viewer.role === null ? (
-        <section className="-mx-4 bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-8 text-slate-950">
+        <section className="-mx-4 md:mx-0 md:rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-8 text-slate-950">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-night/70">Zigo'ya Hoş Geldiniz</p>
           <h1 className="mt-2 text-2xl font-black leading-tight">Zigo Plus'ı 30 Gün Ücretsiz Deneyin!</h1>
           <p className="mt-2 text-sm font-bold text-night/80">
@@ -81,15 +84,6 @@ export default async function HomePage() {
         </>
       ) : null}
 
-      {/* Following feed header */}
-      <section className="-mx-4 flex items-center justify-between border-b border-slate-800/50 bg-slate-950/98 px-4 py-2.5 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-black text-slate-100">{m.feed.following}</h2>
-        </div>
-        <Link className="tap-scale text-xs font-black text-crystal" href="/explore">
-          {m.zigo.discover}
-        </Link>
-      </section>
 
       {showStudentHomeModules && posts.length > 0 ? <ReelSpotlightRail messages={m} spotlights={reelSpotlights} /> : null}
 
@@ -105,8 +99,3 @@ export default async function HomePage() {
     </div>
   );
 }
-
-// Invariants: FeedRefreshControl HomeLearningPulse feed.selectedAreas zigo-cta zigo-quick-action-primary text-white post.area?.area_name getCachedSocialFeed
-
-
-// zigo-quick-action-primary text-white DoubleTapLikeLink

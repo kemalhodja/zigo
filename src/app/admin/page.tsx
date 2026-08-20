@@ -1,29 +1,33 @@
-import dynamic from "next/dynamic";
-import Link from "next/link";
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
-const AdminAnalyticsDashboard = dynamic(() => import("@/components/admin-analytics-dashboard").then((mod) => mod.AdminAnalyticsDashboard));
-import { AdminBankTransferActions } from "@/components/admin-bank-transfer-actions";
-import { AdminBillingGrantLedger } from "@/components/admin-billing-grant-ledger";
-import { AdminBroadcastButton } from "@/components/admin-broadcast-button";
-import { AdminLivePulse } from "@/components/admin-live-pulse";
-import { AdminRedemptionStatus } from "@/components/admin-redemption-status";
-import { AdminRoleRequests } from "@/components/admin-role-requests";
-import { AdminStockForm } from "@/components/admin-stock-form";
-import { AdminStripeCampaignPanel } from "@/components/admin-stripe-campaign-panel";
-import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
-import { AdminUserDirectory } from "@/components/admin-user-directory";
-import { StateCard } from "@/components/state-card";
-import { hasSupabaseEnv } from "@/lib/config";
+import { AdminAdApprovalQueue } from "@/components/admin-ad-approval-queue";
+
+const AdminAnalyticsDashboard = dynamic(() =>
+  import('@/components/admin-analytics-dashboard').then(mod => mod.AdminAnalyticsDashboard)
+);
+import { AdminBankTransferActions } from '@/components/admin-bank-transfer-actions';
+import { AdminBillingGrantLedger } from '@/components/admin-billing-grant-ledger';
+import { AdminBroadcastButton } from '@/components/admin-broadcast-button';
+import { AdminLivePulse } from '@/components/admin-live-pulse';
+import { AdminRedemptionStatus } from '@/components/admin-redemption-status';
+import { AdminRoleRequests } from '@/components/admin-role-requests';
+import { AdminStockForm } from '@/components/admin-stock-form';
+import { AdminStripeCampaignPanel } from '@/components/admin-stripe-campaign-panel';
+import { AdminStudentDocumentActions } from '@/components/admin-student-document-actions';
+import { AdminUserDirectory } from '@/components/admin-user-directory';
+import { StateCard } from '@/components/state-card';
+import { hasSupabaseEnv } from '@/lib/config';
 import {
   getAdminStoreProducts,
   getAdminStoreRedemptions,
   getStudentDocumentQueue,
   getUserVerificationQueue,
   isCurrentUserPlatformAdmin,
-} from "@/lib/domain/admin";
-import { listRecentAdminBillingGrants } from "@/lib/domain/admin-billing-grant";
-import { getPendingBankTransferQueue } from "@/lib/domain/bank-transfer";
-import { evaluateExpansionReadiness } from "@/lib/domain/expansion-readiness";
+} from '@/lib/domain/admin';
+import { listRecentAdminBillingGrants } from '@/lib/domain/admin-billing-grant';
+import { getPendingBankTransferQueue } from '@/lib/domain/bank-transfer';
+import { evaluateExpansionReadiness } from '@/lib/domain/expansion-readiness';
 import {
   type DensityBand,
   EXAM_DENSITY_AGE_GROUPS,
@@ -32,30 +36,30 @@ import {
   getVerifiedInactiveTeachers,
   parseDensityAgeGroups,
   PRIORITY_EXAM_AGE_GROUPS,
-} from "@/lib/domain/feed-density";
-import { LAUNCH_COVERAGE_TARGET, LAUNCH_PRIORITY_TRACKS } from "@/lib/domain/launch-scope";
+} from '@/lib/domain/feed-density';
+import { LAUNCH_COVERAGE_TARGET, LAUNCH_PRIORITY_TRACKS } from '@/lib/domain/launch-scope';
 import {
   formatRetentionPercent,
   getLearningActionRetention,
   LEARNING_RETENTION_TARGET,
-} from "@/lib/domain/learning-retention";
-import { isAiModerationConfigured } from "@/lib/domain/moderation-ai";
-import { getModerationSlaReport,MODERATION_SLA_HOURS } from "@/lib/domain/moderation-sla";
-import { getCurrentProfile, getEducationAreas } from "@/lib/domain/profiles";
-import { getRevenueOpsSnapshot } from "@/lib/domain/revenue-ops";
-import { getTeacherActivationFunnel } from "@/lib/domain/verification-activation";
-import { getServerMessages } from "@/lib/i18n/server";
-import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+} from '@/lib/domain/learning-retention';
+import { isAiModerationConfigured } from '@/lib/domain/moderation-ai';
+import { getModerationSlaReport, MODERATION_SLA_HOURS } from '@/lib/domain/moderation-sla';
+import { getCurrentProfile, getEducationAreas } from '@/lib/domain/profiles';
+import { getRevenueOpsSnapshot } from '@/lib/domain/revenue-ops';
+import { getTeacherActivationFunnel } from '@/lib/domain/verification-activation';
+import { getServerMessages } from '@/lib/i18n/server';
+import { createAdminClient, hasServiceRoleEnv } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 
 type AdminPageProps = {
-  searchParams: Promise<{ densityGroups?: string }>;
+  searchParams: Promise<{ densityGroups?: string; tab?: string }>;
 };
 
 function densityBandClass(band: DensityBand) {
-  if (band === "healthy") return "bg-emerald-50 text-emerald-700";
-  if (band === "thin") return "bg-amber-50 text-amber-700";
-  return "bg-rose-50 text-rose-700";
+  if (band === 'healthy') return 'bg-emerald-50 text-emerald-700';
+  if (band === 'thin') return 'bg-amber-50 text-amber-700';
+  return 'bg-rose-50 text-rose-700';
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -64,8 +68,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const c = m.ops.common;
   const params = await searchParams;
   const densityAgeGroups = parseDensityAgeGroups(params.densityGroups);
-  const densityFilterKey = densityAgeGroups.join(",");
-  const priorityFilterKey = PRIORITY_EXAM_AGE_GROUPS.join(",");
+  const currentTab = params.tab || 'overview';
+  const densityFilterKey = densityAgeGroups.join(',');
+  const priorityFilterKey = PRIORITY_EXAM_AGE_GROUPS.join(',');
   const isPriorityFilter = densityFilterKey === priorityFilterKey;
 
   if (!hasSupabaseEnv()) {
@@ -119,24 +124,39 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const metricsClient = adminClient ?? supabase;
   const serviceRoleReady = hasServiceRoleEnv();
 
-  const [users, products, redemptions, areas, studentDocuments, bankTransfers, densityReport, inactiveTeachers, activationFunnel, learningRetention, moderationSla, revenueOps, billingGrants] =
-    await Promise.all([
-      getUserVerificationQueue(supabase),
-      getAdminStoreProducts(supabase),
-      getAdminStoreRedemptions(supabase),
-      getEducationAreas(supabase),
-      getStudentDocumentQueue(supabase),
-      getPendingBankTransferQueue(supabase),
-      getAreaFeedDensityMetrics(metricsClient, { ageGroups: densityAgeGroups, sinceDays: 7 }),
-      getVerifiedInactiveTeachers(metricsClient, { sinceDays: 7 }),
-      getTeacherActivationFunnel(metricsClient),
-      getLearningActionRetention(metricsClient),
-      getModerationSlaReport(supabase),
-      getRevenueOpsSnapshot(metricsClient),
-      adminClient ? listRecentAdminBillingGrants(adminClient, 12).catch(() => []) : Promise.resolve([]),
-    ]);
+  const [
+    users,
+    products,
+    redemptions,
+    areas,
+    studentDocuments,
+    bankTransfers,
+    densityReport,
+    inactiveTeachers,
+    activationFunnel,
+    learningRetention,
+    moderationSla,
+    revenueOps,
+    billingGrants,
+  ] = await Promise.all([
+    getUserVerificationQueue(supabase),
+    getAdminStoreProducts(supabase),
+    getAdminStoreRedemptions(supabase),
+    getEducationAreas(supabase),
+    getStudentDocumentQueue(supabase),
+    getPendingBankTransferQueue(supabase),
+    getAreaFeedDensityMetrics(metricsClient, { ageGroups: densityAgeGroups, sinceDays: 7 }),
+    getVerifiedInactiveTeachers(metricsClient, { sinceDays: 7 }),
+    getTeacherActivationFunnel(metricsClient),
+    getLearningActionRetention(metricsClient),
+    getModerationSlaReport(supabase),
+    getRevenueOpsSnapshot(metricsClient),
+    adminClient
+      ? listRecentAdminBillingGrants(adminClient, 12).catch(() => [])
+      : Promise.resolve([]),
+  ]);
 
-  const pendingUsers = users.filter((u) => !u.is_verified);
+  const pendingUsers = users.filter(u => !u.is_verified);
   const bandLabels: Record<DensityBand, string> = {
     empty: a.densityBandEmpty,
     thin: a.densityBandThin,
@@ -180,511 +200,649 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     { label: a.queueStock, value: products.length },
   ];
 
+  const tabs = [
+    { id: 'overview', label: '📊 Genel Bakış' },
+    { id: 'users', label: '👥 Kullanıcı & Onaylar' },
+    { id: 'finance', label: '💰 Finans & Mağaza' },
+    { id: 'growth', label: '📈 Büyüme & Sağlık' },
+    { id: 'moderation', label: '🛡️ Moderasyon' },
+  ];
+
   return (
     <div className="space-y-5">
-      <AdminLivePulse
-        aiConfigured={isAiModerationConfigured()}
-        initialModerationBreaches={moderationSla.breachedReports + moderationSla.breachedSafety}
-        initialPendingBankTransfers={bankTransfers.length}
-        initialPendingUsers={pendingUsers.length}
-      />
-
-      <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{a.eyebrow}</p>
-            <h2 className="mt-1 text-2xl font-black text-night">{a.title}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">{a.desc}</p>
-          </div>
-          <AdminBroadcastButton />
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="inline-block rounded-lg bg-violet-50 px-3 py-1 text-xs font-black text-crystal">
-            {a.platformFocus}
-          </span>
-          <span className="inline-block rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
-            {a.launchFreezeLabel}
-          </span>
-        </div>
-      </section>
-
-      <section className="-mx-4 bg-slate-50 px-4 py-6">
-        <AdminAnalyticsDashboard
-          activationData={[
-            { step: "Kayıt Bekleyen", count: activationFunnel.pendingVerification },
-            { step: "Branşsız Onaylı", count: activationFunnel.verifiedMissingAreas },
-            { step: "Gönderisiz Onaylı", count: activationFunnel.verifiedNoPosts },
-            { step: "Tam Aktif", count: activationFunnel.activated },
-          ]}
-          retentionData={[
-            { name: "Aktif Premium", value: revenueOps.activePremiumCount },
-            { name: "Bireysel Premium", value: revenueOps.individualPremiumCount },
-            { name: "Kurumsal Premium", value: revenueOps.orgPremiumCount },
-          ]}
-          revenueData={[
-            { month: "Aktif Reklam", amount: revenueOps.activeSponsorCampaigns },
-            { month: "Bekleyen Havale", amount: revenueOps.pendingBankTransfers },
-          ]}
-        />
-      </section>
-
-      <section className="-mx-4 bg-white px-4 py-6">
-        <h3 className="text-sm font-black text-night">Rol Değişikliği İstekleri</h3>
-        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
-          Kullanıcıların rol yükseltme (Örn: Öğrenci -&gt; Öğretmen) ve onay bekleyen talepleri.
-        </p>
-        <div className="mt-4">
-          <AdminRoleRequests />
-        </div>
-      </section>
-
-      <section className="-mx-4 bg-white px-4 py-4">
-        <h3 className="text-sm font-black text-night">{a.activationFunnelTitle}</h3>
-        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.activationFunnelDesc}</p>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{activationFunnel.pendingVerification}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.queuePendingTeachers}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{activationFunnel.verifiedMissingAreas}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.queueVerifiedNoAreas}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{activationFunnel.verifiedNoPosts}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.queueVerifiedNoPosts}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{activationFunnel.activated}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.queueActivatedTeachers}
-            </p>
-          </div>
-        </div>
-        <p className="mt-3 text-xs font-bold text-slate-500">
-          {a.queueFeedCoverage}: {formatCoveragePercent(densityReport.coverageRatio)} · hedef{" "}
-          {Math.round(LAUNCH_COVERAGE_TARGET * 100)}% ({LAUNCH_PRIORITY_TRACKS.join(" · ")})
-          {coverageOnTarget ? " · hedefte" : " · altında"}
-        </p>
-      </section>
-
-      <section className="-mx-4 bg-white px-4 py-4">
-        <h3 className="text-sm font-black text-night">{a.retentionTitle}</h3>
-        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.retentionDesc}</p>
-        {!serviceRoleReady ? (
-          <p className="mt-2 text-xs font-bold leading-5 text-amber-700">{a.retentionNeedsServiceRole}</p>
-        ) : null}
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{learningRetention.cohortSize}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.retentionCohort}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{learningRetention.retainedCount}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.retentionReturned}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">
-              {formatRetentionPercent(learningRetention.retentionRatio)}
-            </p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.retentionRate}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p
-              className={`text-sm font-black ${
-                learningRetention.onTarget ? "text-emerald-700" : "text-amber-700"
-              }`}
-            >
-              {learningRetention.onTarget ? a.retentionOnTarget : a.retentionBelowTarget}
-            </p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              ≥ {Math.round(LEARNING_RETENTION_TARGET * 100)}%
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="-mx-4 bg-white px-4 py-4">
-        <h3 className="text-sm font-black text-night">{a.moderationSlaTitle}</h3>
-        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.moderationSlaDesc}</p>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{moderationSla.openReports}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.moderationSlaOpen}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className={`text-lg font-black ${moderationSla.breachedReports > 0 ? "text-amber-700" : "text-night"}`}>
-              {moderationSla.breachedReports}
-            </p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.moderationSlaBreachReports}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className={`text-lg font-black ${moderationSla.breachedSafety > 0 ? "text-amber-700" : "text-night"}`}>
-              {moderationSla.breachedSafety}
-            </p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.moderationSlaBreachText}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className={`text-sm font-black ${moderationSla.onTarget ? "text-emerald-700" : "text-amber-700"}`}>
-              {moderationSla.onTarget ? a.retentionOnTarget : a.retentionBelowTarget}
-            </p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.moderationSlaMedian}
-              {moderationSla.medianResolveHours == null
-                ? ""
-                : `: ${moderationSla.medianResolveHours.toFixed(1)}h`}
-            </p>
-          </div>
-        </div>
-        <Link className="mt-3 inline-flex text-xs font-black text-crystal" href="/moderation">
-          {a.linkModeration}
-        </Link>
-      </section>
-
-      <section className="-mx-4 bg-white px-4 py-4">
-        <h3 className="text-sm font-black text-night">{a.revenueOpsTitle}</h3>
-        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.revenueOpsDesc}</p>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{revenueOps.activePremiumCount}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.revenuePremium}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{revenueOps.orgPremiumCount}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.revenueOrgPremium}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{revenueOps.individualPremiumCount}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.revenueIndividualPremium}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-lg font-black text-night">{revenueOps.activeSponsorCampaigns}</p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.revenueSponsors}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p
-              className={`text-lg font-black ${
-                revenueOps.expiringSponsorsSoon > 0 ? "text-amber-700" : "text-night"
-              }`}
-            >
-              {revenueOps.expiringSponsorsSoon}
-            </p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.revenueSponsorsExpiring}
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p
-              className={`text-lg font-black ${
-                revenueOps.pendingBankTransfers > 0 ? "text-amber-700" : "text-night"
-              }`}
-            >
-              {revenueOps.pendingBankTransfers}
-            </p>
-            <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.revenuePendingBank}
-            </p>
-          </div>
-        </div>
-        {revenueOps.sponsorsReconciled > 0 ? (
-          <p className="mt-3 text-xs font-bold text-slate-500">
-            {a.revenueSponsorsReconciled}: {revenueOps.sponsorsReconciled}
-          </p>
-        ) : null}
-      </section>
-
-      <AdminBillingGrantLedger grants={billingGrants} labels={a} />
-
-      <section className="-mx-4 bg-white px-4 py-4">
-        <h3 className="text-sm font-black text-night">{a.expansionTitle}</h3>
-        <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.expansionDesc}</p>
-        <p
-          className={`mt-3 text-sm font-black ${expansion.ready ? "text-emerald-700" : "text-amber-700"}`}
-        >
-          {expansion.ready ? a.expansionReady : a.expansionBlocked} · {expansion.readyCount}/
-          {expansion.totalCount}
-        </p>
-        <ul className="mt-3 space-y-2">
-          {expansion.signals.map((signal) => {
-            const label =
-              signal.id === "feedCoverage"
-                ? `${a.expansionSignalCoverage}: ${formatCoveragePercent(expansion.feedCoverageRatio)} (≥ ${Math.round(LAUNCH_COVERAGE_TARGET * 100)}%)`
-                : signal.id === "moderationSla"
-                  ? `${a.expansionSignalSla}: ${
-                      signal.ready
-                        ? `≤ ${MODERATION_SLA_HOURS}h`
-                        : `${expansion.moderationBreaches}`
-                    }`
-                  : expansion.learningCohortSize === 0
-                    ? a.expansionNoD7Cohort
-                    : `${a.expansionSignalD7}: ${formatRetentionPercent(expansion.learningRetentionRatio)} (≥ ${Math.round(LEARNING_RETENTION_TARGET * 100)}%)`;
-
+      <div className="mb-4">
+        <h1 className="mb-3 text-lg font-black text-night">Yönetim Paneli</h1>
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((t) => {
+            const isActive = currentTab === t.id;
             return (
-              <li
-                key={signal.id}
-                className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600"
+              <Link
+                key={t.id}
+                href={`/admin?tab=${t.id}${densityFilterKey ? `&densityGroups=${densityFilterKey}` : ""}`}
+                className={`flex-1 min-w-[140px] tap-scale rounded-2xl px-4 py-3 text-center text-sm font-black transition-all border ${
+                  isActive
+                    ? "bg-crystal border-crystal text-white shadow-md shadow-cyan-500/20"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-crystal/30 hover:bg-cyan-50"
+                }`}
               >
-                <span className={signal.ready ? "text-emerald-600" : "text-amber-600"}>
-                  {signal.ready ? "✓" : "!"}
-                </span>
-                <span>{label}</span>
-              </li>
+                {t.label}
+              </Link>
             );
           })}
-        </ul>
-      </section>
-
-      <section className="-mx-4 bg-white px-4 py-4">
-        <h3 className="text-sm font-black text-night">{a.quickLinksTitle}</h3>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/moderation">
-            {a.linkModeration}
-          </Link>
-          <Link className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/setup">
-            {a.linkSetup}
-          </Link>
-          <Link className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night" href="/explore">
-            {a.linkExplore}
-          </Link>
         </div>
-      </section>
+      </div>
 
-      <AdminStripeCampaignPanel />
+      {currentTab === 'overview' && (
+        <>
+          <AdminLivePulse
+            aiConfigured={isAiModerationConfigured()}
+            initialModerationBreaches={moderationSla.breachedReports + moderationSla.breachedSafety}
+            initialPendingBankTransfers={bankTransfers.length}
+            initialPendingUsers={pendingUsers.length}
+          />
 
-      <section className="-mx-4 bg-white">
-        <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="text-lg font-black text-night">{a.densitySectionTitle}</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.densitySectionDesc}</p>
-          {!serviceRoleReady ? (
-            <p className="mt-2 text-xs font-bold leading-5 text-amber-700">{a.densityNeedsServiceRole}</p>
-          ) : null}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <p className="w-full text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-              {a.densityFilterLabel}
-            </p>
-            <Link
-              className={`rounded-lg px-3 py-2 text-xs font-black ${
-                isPriorityFilter ? "bg-crystal text-white" : "bg-slate-100 text-night"
-              }`}
-              href="/admin"
-            >
-              {a.densityPriorityPreset}
-            </Link>
-            {EXAM_DENSITY_AGE_GROUPS.map((group) => {
-              const active = densityFilterKey === group;
-              return (
-                <Link
-                  className={`rounded-lg px-3 py-2 text-xs font-black ${
-                    active ? "bg-crystal text-white" : "bg-slate-100 text-night"
-                  }`}
-                  href={`/admin?densityGroups=${group}`}
-                  key={group}
-                >
-                  {group}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-        {densityReport.metrics.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">{a.densityEmptyTitle}</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
-              {a.densityEmptyDesc}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-xs">
-              <thead className="border-b border-slate-100 bg-slate-50 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">{a.densityColArea}</th>
-                  <th className="px-4 py-3">{a.densityColTrack}</th>
-                  <th className="px-4 py-3">{a.densityColPosts}</th>
-                  <th className="px-4 py-3">{a.densityColCreators}</th>
-                  <th className="px-4 py-3">{a.densityColSubscribers}</th>
-                  <th className="px-4 py-3">{a.densityColStatus}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {densityReport.metrics.map((row) => (
-                  <tr className="border-b border-slate-100" key={row.areaId}>
-                    <td className="px-4 py-3 font-black text-night">{row.areaName}</td>
-                    <td className="px-4 py-3 font-bold text-slate-500">{row.ageGroup ?? "—"}</td>
-                    <td className="px-4 py-3 font-bold text-slate-700">{row.postsInWindow}</td>
-                    <td className="px-4 py-3 font-bold text-slate-700">{row.weeklyCreatorCount}</td>
-                    <td className="px-4 py-3 font-bold text-slate-700">{row.subscriberCount}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block rounded-lg px-2 py-1 text-[0.65rem] font-black ${densityBandClass(row.densityBand)}`}
-                      >
-                        {bandLabels[row.densityBand]}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section className="-mx-4 bg-white">
-        <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="text-lg font-black text-night">{a.bankTransferSectionTitle}</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.bankTransferSectionDesc}</p>
-        </div>
-        {bankTransfers.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">{a.noBankTransfersTitle}</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noBankTransfersDesc}</p>
-          </div>
-        ) : (
-          bankTransfers.map((transfer) => {
-            const transferUser = transfer.user as { full_name?: string; email?: string } | null;
-            return (
-              <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={transfer.id}>
-                <div>
-                  <p className="font-black text-night">{transferUser?.full_name ?? c.unknownUser}</p>
-                  <p className="text-xs font-bold text-slate-500">{transferUser?.email}</p>
-                  <p className="mt-1 text-xs font-black text-crystal">{transfer.reference_code}</p>
-                </div>
-                <AdminBankTransferActions request={transfer as unknown as Parameters<typeof AdminBankTransferActions>[0]["request"]} />
-              </div>
-            );
-          })
-        )}
-      </section>
-
-      <section className="-mx-4 bg-gradient-to-r from-violet-50 via-pink-50 to-cyan-50 px-4 py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">{a.auditEyebrow}</p>
-            <h3 className="mt-1 text-xl font-black text-night">{a.auditTitle}</h3>
-            <p className="mt-1 text-sm font-bold leading-6 text-slate-600">{a.auditDesc}</p>
-          </div>
-          <span className="rounded-lg bg-white px-3 py-2 text-xs font-black text-crystal">{c.live}</span>
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {auditItems.map((item) => (
-            <div className="rounded-lg bg-white p-3" key={item.label}>
-              <p className="text-lg font-black text-night">{item.value}</p>
-              <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">{item.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="-mx-4 bg-white">
-        <div className="border-b border-slate-100 px-4 py-3">
-          <h3 className="text-lg font-black text-night">{a.studentDocSectionTitle}</h3>
-          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.studentDocSectionDesc}</p>
-        </div>
-        {studentDocuments.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">{a.noStudentDocsTitle}</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noStudentDocsDesc}</p>
-          </div>
-        ) : (
-          studentDocuments.map((student) => (
-            <div className="border-b border-slate-100 px-4 py-4" key={student.id}>
-              <AdminStudentDocumentActions
-                documentUrl={student.student_document_url}
-                fullName={student.full_name}
-                gradeLevel={student.grade_level}
-                studentId={student.id}
-              />
-            </div>
-          ))
-        )}
-      </section>
-
-      <AdminUserDirectory
-        areas={areas}
-        pendingBankTransferUserIds={bankTransfers.map((b) => b.user_id).filter((id): id is string => Boolean(id))}
-        studentDocumentUserIds={studentDocuments.map((s) => s.id)}
-        users={users}
-      />
-
-      <section className="-mx-4 bg-white">
-        <h3 className="border-b border-slate-100 px-4 py-3 text-lg font-black text-night">{a.storeOrdersTitle}</h3>
-        {redemptions.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">{a.noOrdersTitle}</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noOrdersDesc}</p>
-          </div>
-        ) : (
-          redemptions.map((redemption) => (
-            <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={redemption.id}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-black text-night">{redemption.product?.name ?? c.zigoProduct}</p>
-                  <p className="text-xs font-bold text-slate-500">
-                    {redemption.child?.display_name ??
-                      redemption.user?.full_name ??
-                      c.unknownUser}
-                  </p>
-                  {redemption.note ? (
-                    <p className="mt-2 text-xs leading-5 text-slate-600">{redemption.note}</p>
-                  ) : null}
-                </div>
-                <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-night">
-                  {redemption.points_spent} Zigo
-                </span>
-              </div>
-              <AdminRedemptionStatus redemptionId={redemption.id} status={redemption.status} />
-            </div>
-          ))
-        )}
-      </section>
-
-      <section className="-mx-4 bg-white">
-        <h3 className="border-b border-slate-100 px-4 py-3 text-lg font-black text-night">{a.stockTitle}</h3>
-        {products.length === 0 ? (
-          <div className="px-4 py-8 text-center">
-            <p className="text-sm font-black text-night">{a.noProductsTitle}</p>
-            <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">{a.noProductsDesc}</p>
-          </div>
-        ) : (
-          products.map((product) => (
-            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-4" key={product.id}>
+          <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-black text-night">{product.name}</p>
-                <p className="text-xs font-bold text-slate-500">
-                  {product.price_points} Zigo · {product.category}
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+                  {a.eyebrow}
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-night">{a.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">{a.desc}</p>
+              </div>
+              <AdminBroadcastButton />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="inline-block rounded-lg bg-violet-50 px-3 py-1 text-xs font-black text-crystal">
+                {a.platformFocus}
+              </span>
+              <span className="inline-block rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">
+                {a.launchFreezeLabel}
+              </span>
+            </div>
+          </section>
+
+          <section className="-mx-4 bg-slate-50 px-4 py-6">
+            <AdminAnalyticsDashboard
+              activationData={[
+                { step: 'Kayıt Bekleyen', count: activationFunnel.pendingVerification },
+                { step: 'Branşsız Onaylı', count: activationFunnel.verifiedMissingAreas },
+                { step: 'Gönderisiz Onaylı', count: activationFunnel.verifiedNoPosts },
+                { step: 'Tam Aktif', count: activationFunnel.activated },
+              ]}
+              retentionData={[
+                { name: 'Aktif Premium', value: revenueOps.activePremiumCount },
+                { name: 'Bireysel Premium', value: revenueOps.individualPremiumCount },
+                { name: 'Kurumsal Premium', value: revenueOps.orgPremiumCount },
+              ]}
+              revenueData={[
+                { month: 'Aktif Reklam', amount: revenueOps.activeSponsorCampaigns },
+                { month: 'Bekleyen Havale', amount: revenueOps.pendingBankTransfers },
+              ]}
+            />
+          </section>
+
+          <section className="-mx-4 bg-white px-4 py-4">
+            <h3 className="text-sm font-black text-night">{a.quickLinksTitle}</h3>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night"
+                href="/moderation"
+              >
+                {a.linkModeration}
+              </Link>
+              <Link
+                className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night"
+                href="/setup"
+              >
+                {a.linkSetup}
+              </Link>
+              <Link
+                className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night"
+                href="/explore"
+              >
+                {a.linkExplore}
+              </Link>
+            </div>
+          </section>
+
+          <section className="-mx-4 bg-gradient-to-r from-violet-50 via-pink-50 to-cyan-50 px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-crystal">
+                  {a.auditEyebrow}
+                </p>
+                <h3 className="mt-1 text-xl font-black text-night">{a.auditTitle}</h3>
+                <p className="mt-1 text-sm font-bold leading-6 text-slate-600">{a.auditDesc}</p>
+              </div>
+              <span className="rounded-lg bg-white px-3 py-2 text-xs font-black text-crystal">
+                {c.live}
+              </span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {auditItems.map(item => (
+                <div className="rounded-lg bg-white p-3" key={item.label}>
+                  <p className="text-lg font-black text-night">{item.value}</p>
+                  <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                    {item.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {currentTab === 'users' && (
+        <>
+          <section className="-mx-4 bg-white px-4 py-6">
+            <h3 className="text-sm font-black text-night">Rol Değişikliği İstekleri</h3>
+            <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+              Kullanıcıların rol yükseltme (Örn: Öğrenci -&gt; Öğretmen) ve onay bekleyen talepleri.
+            </p>
+            <div className="mt-4">
+              <AdminRoleRequests />
+            </div>
+          </section>
+
+          <section className="-mx-4 bg-white">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <h3 className="text-lg font-black text-night">{a.studentDocSectionTitle}</h3>
+              <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+                {a.studentDocSectionDesc}
+              </p>
+            </div>
+            {studentDocuments.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm font-black text-night">{a.noStudentDocsTitle}</p>
+                <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
+                  {a.noStudentDocsDesc}
                 </p>
               </div>
-              <AdminStockForm productId={product.id} stockCount={product.stock_count} />
+            ) : (
+              studentDocuments.map(student => (
+                <div className="border-b border-slate-100 px-4 py-4" key={student.id}>
+                  <AdminStudentDocumentActions
+                    documentUrl={student.student_document_url}
+                    fullName={student.full_name}
+                    gradeLevel={student.grade_level}
+                    studentId={student.id}
+                  />
+                </div>
+              ))
+            )}
+          </section>
+
+          <AdminUserDirectory
+            areas={areas}
+            pendingBankTransferUserIds={bankTransfers
+              .map(b => b.user_id)
+              .filter((id): id is string => Boolean(id))}
+            studentDocumentUserIds={studentDocuments.map(s => s.id)}
+            users={users}
+          />
+        </>
+      )}
+
+      {currentTab === 'finance' && (
+        <>
+          <section className="-mx-4 bg-white px-4 py-4">
+            <h3 className="text-sm font-black text-night">{a.revenueOpsTitle}</h3>
+            <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.revenueOpsDesc}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{revenueOps.activePremiumCount}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.revenuePremium}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{revenueOps.orgPremiumCount}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.revenueOrgPremium}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{revenueOps.individualPremiumCount}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.revenueIndividualPremium}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{revenueOps.activeSponsorCampaigns}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.revenueSponsors}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p
+                  className={`text-lg font-black ${
+                    revenueOps.expiringSponsorsSoon > 0 ? 'text-amber-700' : 'text-night'
+                  }`}
+                >
+                  {revenueOps.expiringSponsorsSoon}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.revenueSponsorsExpiring}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p
+                  className={`text-lg font-black ${
+                    revenueOps.pendingBankTransfers > 0 ? 'text-amber-700' : 'text-night'
+                  }`}
+                >
+                  {revenueOps.pendingBankTransfers}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.revenuePendingBank}
+                </p>
+              </div>
             </div>
-          ))
-        )}
-      </section>
+            {revenueOps.sponsorsReconciled > 0 ? (
+              <p className="mt-3 text-xs font-bold text-slate-500">
+                {a.revenueSponsorsReconciled}: {revenueOps.sponsorsReconciled}
+              </p>
+            ) : null}
+          </section>
+
+          <AdminBillingGrantLedger grants={billingGrants} labels={a} />
+
+          <AdminStripeCampaignPanel />
+
+          <section className="-mx-4 bg-white">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <h3 className="text-lg font-black text-night">{a.bankTransferSectionTitle}</h3>
+              <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+                {a.bankTransferSectionDesc}
+              </p>
+            </div>
+            {bankTransfers.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm font-black text-night">{a.noBankTransfersTitle}</p>
+                <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
+                  {a.noBankTransfersDesc}
+                </p>
+              </div>
+            ) : (
+              bankTransfers.map(transfer => {
+                const transferUser = transfer.user as { full_name?: string; email?: string } | null;
+                return (
+                  <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={transfer.id}>
+                    <div>
+                      <p className="font-black text-night">
+                        {transferUser?.full_name ?? c.unknownUser}
+                      </p>
+                      <p className="text-xs font-bold text-slate-500">{transferUser?.email}</p>
+                      <p className="mt-1 text-xs font-black text-crystal">
+                        {transfer.reference_code}
+                      </p>
+                    </div>
+                    <AdminBankTransferActions
+                      request={
+                        transfer as unknown as Parameters<
+                          typeof AdminBankTransferActions
+                        >[0]['request']
+                      }
+                    />
+                  </div>
+                );
+              })
+            )}
+          </section>
+
+          <section className="-mx-4 bg-white">
+            <h3 className="border-b border-slate-100 px-4 py-3 text-lg font-black text-night">
+              {a.storeOrdersTitle}
+            </h3>
+            {redemptions.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm font-black text-night">{a.noOrdersTitle}</p>
+                <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
+                  {a.noOrdersDesc}
+                </p>
+              </div>
+            ) : (
+              redemptions.map(redemption => (
+                <div className="space-y-3 border-b border-slate-100 px-4 py-4" key={redemption.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-black text-night">
+                        {redemption.product?.name ?? c.zigoProduct}
+                      </p>
+                      <p className="text-xs font-bold text-slate-500">
+                        {redemption.child?.display_name ??
+                          redemption.user?.full_name ??
+                          c.unknownUser}
+                      </p>
+                      {redemption.note ? (
+                        <p className="mt-2 text-xs leading-5 text-slate-600">{redemption.note}</p>
+                      ) : null}
+                    </div>
+                    <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-night">
+                      {redemption.points_spent} Zigo
+                    </span>
+                  </div>
+                  <AdminRedemptionStatus redemptionId={redemption.id} status={redemption.status} />
+                </div>
+              ))
+            )}
+          </section>
+
+          <section className="-mx-4 bg-white">
+            <h3 className="border-b border-slate-100 px-4 py-3 text-lg font-black text-night">
+              {a.stockTitle}
+            </h3>
+            {products.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm font-black text-night">{a.noProductsTitle}</p>
+                <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
+                  {a.noProductsDesc}
+                </p>
+              </div>
+            ) : (
+              products.map(product => (
+                <div
+                  className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-4"
+                  key={product.id}
+                >
+                  <div>
+                    <p className="font-black text-night">{product.name}</p>
+                    <p className="text-xs font-bold text-slate-500">
+                      {product.price_points} Zigo · {product.category}
+                    </p>
+                  </div>
+                  <AdminStockForm productId={product.id} stockCount={product.stock_count} />
+                </div>
+              ))
+            )}
+          </section>
+        </>
+      )}
+
+      {currentTab === 'growth' && (
+        <>
+          <section className="-mx-4 bg-white px-4 py-4">
+            <h3 className="text-sm font-black text-night">{a.activationFunnelTitle}</h3>
+            <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+              {a.activationFunnelDesc}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">
+                  {activationFunnel.pendingVerification}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.queuePendingTeachers}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">
+                  {activationFunnel.verifiedMissingAreas}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.queueVerifiedNoAreas}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{activationFunnel.verifiedNoPosts}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.queueVerifiedNoPosts}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{activationFunnel.activated}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.queueActivatedTeachers}
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs font-bold text-slate-500">
+              {a.queueFeedCoverage}: {formatCoveragePercent(densityReport.coverageRatio)} · hedef{' '}
+              {Math.round(LAUNCH_COVERAGE_TARGET * 100)}% ({LAUNCH_PRIORITY_TRACKS.join(' · ')})
+              {coverageOnTarget ? ' · hedefte' : ' · altında'}
+            </p>
+          </section>
+
+          <section className="-mx-4 bg-white px-4 py-4">
+            <h3 className="text-sm font-black text-night">{a.retentionTitle}</h3>
+            <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.retentionDesc}</p>
+            {!serviceRoleReady ? (
+              <p className="mt-2 text-xs font-bold leading-5 text-amber-700">
+                {a.retentionNeedsServiceRole}
+              </p>
+            ) : null}
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{learningRetention.cohortSize}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.retentionCohort}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">{learningRetention.retainedCount}</p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.retentionReturned}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">
+                  {formatRetentionPercent(learningRetention.retentionRatio)}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.retentionRate}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p
+                  className={`text-sm font-black ${
+                    learningRetention.onTarget ? 'text-emerald-700' : 'text-amber-700'
+                  }`}
+                >
+                  {learningRetention.onTarget ? a.retentionOnTarget : a.retentionBelowTarget}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  ≥ {Math.round(LEARNING_RETENTION_TARGET * 100)}%
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="-mx-4 bg-white px-4 py-4">
+            <h3 className="text-sm font-black text-night">{a.expansionTitle}</h3>
+            <p className="mt-1 text-xs font-bold leading-5 text-slate-500">{a.expansionDesc}</p>
+            <p
+              className={`mt-3 text-sm font-black ${expansion.ready ? 'text-emerald-700' : 'text-amber-700'}`}
+            >
+              {expansion.ready ? a.expansionReady : a.expansionBlocked} · {expansion.readyCount}/
+              {expansion.totalCount}
+            </p>
+            <ul className="mt-3 space-y-2">
+              {expansion.signals.map(signal => {
+                const label =
+                  signal.id === 'feedCoverage'
+                    ? `${a.expansionSignalCoverage}: ${formatCoveragePercent(expansion.feedCoverageRatio)} (≥ ${Math.round(LAUNCH_COVERAGE_TARGET * 100)}%)`
+                    : signal.id === 'moderationSla'
+                      ? `${a.expansionSignalSla}: ${
+                          signal.ready
+                            ? `≤ ${MODERATION_SLA_HOURS}h`
+                            : `${expansion.moderationBreaches}`
+                        }`
+                      : expansion.learningCohortSize === 0
+                        ? a.expansionNoD7Cohort
+                        : `${a.expansionSignalD7}: ${formatRetentionPercent(expansion.learningRetentionRatio)} (≥ ${Math.round(LEARNING_RETENTION_TARGET * 100)}%)`;
+
+                return (
+                  <li
+                    key={signal.id}
+                    className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600"
+                  >
+                    <span className={signal.ready ? 'text-emerald-600' : 'text-amber-600'}>
+                      {signal.ready ? '✓' : '!'}
+                    </span>
+                    <span>{label}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+
+          <section className="-mx-4 bg-white">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <h3 className="text-lg font-black text-night">{a.densitySectionTitle}</h3>
+              <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+                {a.densitySectionDesc}
+              </p>
+              {!serviceRoleReady ? (
+                <p className="mt-2 text-xs font-bold leading-5 text-amber-700">
+                  {a.densityNeedsServiceRole}
+                </p>
+              ) : null}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <p className="w-full text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.densityFilterLabel}
+                </p>
+                <Link
+                  className={`rounded-lg px-3 py-2 text-xs font-black ${
+                    isPriorityFilter ? 'bg-crystal text-white' : 'bg-slate-100 text-night'
+                  }`}
+                  href="/admin"
+                >
+                  {a.densityPriorityPreset}
+                </Link>
+                {EXAM_DENSITY_AGE_GROUPS.map(group => {
+                  const active = densityFilterKey === group;
+                  return (
+                    <Link
+                      className={`rounded-lg px-3 py-2 text-xs font-black ${
+                        active ? 'bg-crystal text-white' : 'bg-slate-100 text-night'
+                      }`}
+                      href={`/admin?densityGroups=${group}`}
+                      key={group}
+                    >
+                      {group}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+            {densityReport.metrics.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-sm font-black text-night">{a.densityEmptyTitle}</p>
+                <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
+                  {a.densityEmptyDesc}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-xs">
+                  <thead className="border-b border-slate-100 bg-slate-50 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3">{a.densityColArea}</th>
+                      <th className="px-4 py-3">{a.densityColTrack}</th>
+                      <th className="px-4 py-3">{a.densityColPosts}</th>
+                      <th className="px-4 py-3">{a.densityColCreators}</th>
+                      <th className="px-4 py-3">{a.densityColSubscribers}</th>
+                      <th className="px-4 py-3">{a.densityColStatus}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {densityReport.metrics.map(row => (
+                      <tr className="border-b border-slate-100" key={row.areaId}>
+                        <td className="px-4 py-3 font-black text-night">{row.areaName}</td>
+                        <td className="px-4 py-3 font-bold text-slate-500">
+                          {row.ageGroup ?? '—'}
+                        </td>
+                        <td className="px-4 py-3 font-bold text-slate-700">{row.postsInWindow}</td>
+                        <td className="px-4 py-3 font-bold text-slate-700">
+                          {row.weeklyCreatorCount}
+                        </td>
+                        <td className="px-4 py-3 font-bold text-slate-700">
+                          {row.subscriberCount}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-block rounded-lg px-2 py-1 text-[0.65rem] font-black ${densityBandClass(row.densityBand)}`}
+                          >
+                            {bandLabels[row.densityBand]}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
+
+      {currentTab === 'moderation' && (
+        <>
+          <section className="-mx-4 bg-white px-4 py-4">
+            <h3 className="text-sm font-black text-night">
+              {a.moderationSlaTitle}
+            </h3>
+            <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+              {a.moderationSlaDesc}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p className="text-lg font-black text-night">
+                  {moderationSla.openReports}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.moderationSlaOpen}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p
+                  className={`text-lg font-black ${moderationSla.breachedReports > 0 ? "text-amber-700" : "text-night"}`}
+                >
+                  {moderationSla.breachedReports}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.moderationSlaBreachReports}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p
+                  className={`text-lg font-black ${moderationSla.breachedSafety > 0 ? "text-amber-700" : "text-night"}`}
+                >
+                  {moderationSla.breachedSafety}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.moderationSlaBreachText}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-3">
+                <p
+                  className={`text-sm font-black ${moderationSla.onTarget ? "text-emerald-700" : "text-amber-700"}`}
+                >
+                  {moderationSla.onTarget
+                    ? a.retentionOnTarget
+                    : a.retentionBelowTarget}
+                </p>
+                <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">
+                  {a.moderationSlaMedian}
+                  {moderationSla.medianResolveHours == null
+                    ? ""
+                    : `: ${moderationSla.medianResolveHours.toFixed(1)}h`}
+                </p>
+              </div>
+            </div>
+            <Link
+              className="mt-3 inline-flex text-xs font-black text-crystal"
+              href="/moderation"
+            >
+              Tüm Kullanıcı ve İçerik Şikayetlerini Görüntüle →
+            </Link>
+          </section>
+          <div className="mt-4">
+            <AdminAdApprovalQueue />
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -178,17 +178,17 @@ function ReelSection({
             />
           ) : null}
         </div>
-        <p className="text-sm leading-5 text-white/90">
+        <p className="text-sm leading-5 text-slate-900/90">
           <span className="font-black">{reel.title}.</span> {reel.caption}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <SocialPill tone="glass">{ru.creatorAudio}</SocialPill>
-          <span className="rounded-lg bg-black/20 px-3 py-1 text-xs font-black text-white/70 backdrop-blur">
+          <span className="rounded-lg bg-slate-100/80 px-3 py-1 text-xs font-black text-slate-700 backdrop-blur">
             {ru.watchForPoints}
           </span>
         </div>
         <ReelLearningDock messages={m} postId={reel.postId} viewerRole={viewerRole} />
-        <div className="text-xs font-black text-white/80">
+        <div className="text-xs font-black text-slate-900/80">
           <ReelLearningPoints
             areaId={reel.areaId}
             quizId={reel.quizId}
@@ -198,7 +198,7 @@ function ReelSection({
         </div>
       </div>
       {index === 0 ? (
-        <div className="pointer-events-none absolute bottom-20 left-1/2 z-10 -translate-x-1/2 text-center text-[0.65rem] font-black uppercase tracking-[0.18em] text-white/50">
+        <div className="pointer-events-none absolute bottom-20 left-1/2 z-10 -translate-x-1/2 text-center text-[0.65rem] font-black uppercase tracking-[0.18em] text-slate-900/50">
           {mp.swipeUp}
         </div>
       ) : null}
@@ -220,18 +220,18 @@ function ReelContextOverlay({
   const mp = messages.microPage;
   return (
     <aside className="hidden">
-      <p className="text-[0.56rem] font-black uppercase tracking-[0.16em] text-white/55">{messages.nav.micro}</p>
+      <p className="text-[0.56rem] font-black uppercase tracking-[0.16em] text-slate-900/55">{messages.nav.micro}</p>
       <p className="mt-1 truncate text-xs font-black">{activeFeed === "following" ? mp.followingLane : mp.matchFeedLane}</p>
-      <div className="mt-3 space-y-2 text-[0.58rem] font-black uppercase tracking-[0.08em] text-white/65">
+      <div className="mt-3 space-y-2 text-[0.58rem] font-black uppercase tracking-[0.08em] text-slate-900/65">
         <div className="flex items-center justify-between gap-2">
           <span>{mp.creatorLabel}</span>
-          <span className="truncate text-white">@{reel.creator}</span>
+          <span className="truncate text-slate-900">@{reel.creator}</span>
         </div>
         <div className="flex items-center justify-between gap-2">
           <span>{mp.nextLabel}</span>
           <span className="text-mint">+10</span>
         </div>
-        <div className="h-1 overflow-hidden rounded-full bg-white/15">
+        <div className="h-1 overflow-hidden rounded-full bg-slate-900/15">
           <span className="block h-full rounded-full bg-gradient-to-r from-mint to-aqua" style={{ width: `${Math.min(92, 34 + index * 18)}%` }} />
         </div>
       </div>
@@ -274,14 +274,14 @@ function ReelLearningDock({
             ];
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-2 backdrop-blur">
-      <div className="mb-2 flex items-center justify-between px-1 text-[0.65rem] font-black uppercase tracking-[0.1em] text-white/70">
+    <div className="rounded-2xl border border-slate-200 bg-white/80 p-2 backdrop-blur">
+      <div className="mb-2 flex items-center justify-between px-1 text-[0.65rem] font-black uppercase tracking-[0.1em] text-slate-900/70">
         <span>{mp.watchLoop}</span>
         <span>{mp.verifiedLabel}</span>
       </div>
       <div className="zigo-action-grid text-center text-xs font-black">
         {actions.map((action) => (
-          <Link className="zigo-action-chip tap-scale min-h-0 rounded-xl bg-white/12 px-1.5 py-2 text-white" href={action.href} key={action.label}>
+          <Link className="zigo-action-chip tap-scale min-h-0 rounded-xl bg-slate-100 px-1.5 py-2 text-slate-900" href={action.href} key={action.label}>
             <span className="block leading-tight">{action.label}</span>
             <span className="mt-0.5 block text-[0.65rem] font-bold leading-tight text-white/70">{action.meta}</span>
           </Link>

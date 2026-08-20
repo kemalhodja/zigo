@@ -2,6 +2,7 @@
 @config "../../tailwind.config.ts";
 
 :root {
+  color-scheme: light;
   --zigo-bg: #f8fafc;
   --zigo-text: #0f172a;
   --zigo-text-micro: 0.6875rem;
@@ -55,7 +56,7 @@ body {
   max-width: 100%;
   font-size: var(--zigo-text-body);
   line-height: var(--zigo-leading-normal);
-  background: var(--zigo-bg);
+  background-color: var(--zigo-bg);
   color: var(--zigo-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -761,11 +762,15 @@ a,
 }
 
 .role-theme-parent .role-accent-chip {
-  background: rgb(6 182 212 / 0.12);
-  color: #0e7490;
+  background: #06b6d4;
+  color: #ffffff;
   text-transform: none;
   font-size: var(--zigo-text-caption);
   letter-spacing: 0;
+}
+.dark-theme .role-theme-parent .role-accent-chip {
+  background: #06b6d4;
+  color: #ffffff;
 }
 
 .role-theme-teacher .role-accent-chip {
@@ -795,23 +800,23 @@ a,
 
 body.role-theme-student {
   background:
-    radial-gradient(circle at top, rgb(124 58 237 / 0.15), transparent 26rem),
-    radial-gradient(circle at bottom right, rgb(236 72 153 / 0.12), transparent 22rem),
-    #000000;
+    radial-gradient(circle at top, rgb(124 58 237 / 0.05), transparent 26rem),
+    radial-gradient(circle at bottom right, rgb(236 72 153 / 0.05), transparent 22rem),
+    #ffffff;
 }
 
 body.role-theme-parent {
   background:
-    radial-gradient(circle at top, rgb(8 145 178 / 0.15), transparent 26rem),
-    radial-gradient(circle at bottom right, rgb(6 182 212 / 0.12), transparent 22rem),
-    #000000;
+    radial-gradient(circle at top, rgb(8 145 178 / 0.05), transparent 26rem),
+    radial-gradient(circle at bottom right, rgb(6 182 212 / 0.05), transparent 22rem),
+    #ffffff;
 }
 
 body.role-theme-teacher {
   background:
-    radial-gradient(circle at top, rgb(16 24 40 / 0.15), transparent 26rem),
-    radial-gradient(circle at bottom right, rgb(51 65 85 / 0.12), transparent 22rem),
-    #000000;
+    radial-gradient(circle at top, rgb(16 24 40 / 0.05), transparent 26rem),
+    radial-gradient(circle at bottom right, rgb(51 65 85 / 0.05), transparent 22rem),
+    #ffffff;
 }
 
 .role-theme-student .zigo-shell-bg {
@@ -1140,20 +1145,3 @@ body.role-theme-teacher {
   animation: page-fade-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@layer utilities {
-  .bg-white {
-    background-color: #000000 !important;
-  }
-  .bg-slate-50, .bg-slate-100 {
-    background-color: #020617 !important;
-  }
-  .text-slate-900, .text-slate-800, .text-slate-700, .text-night {
-    color: #f8fafc !important;
-  }
-  .text-slate-600, .text-slate-500 {
-    color: #94a3b8 !important;
-  }
-  .border-slate-200, .border-slate-100, .border-slate-300 {
-    border-color: #1e293b !important;
-  }
-}

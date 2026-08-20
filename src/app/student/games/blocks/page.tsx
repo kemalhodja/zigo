@@ -33,7 +33,7 @@ export default async function BlockGamePage() {
   const isStudent = role === "student";
 
   return (
-    <div className="min-h-screen bg-slate-950 p-3 sm:p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-slate-50 p-3 sm:p-6 flex flex-col items-center">
       <div className="w-full max-w-sm flex items-center justify-between mb-4">
         <Link
           href={back.href}

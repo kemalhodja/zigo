@@ -43,6 +43,32 @@ export function FeedPostCard({
 
   const heightClass = fullHeight ? "h-[100dvh] md:h-[100dvh]" : "h-[calc(100dvh-70px)] md:h-[700px]";
 
+  if (!isMicro) {
+    return (
+      <DismissibleFeedPost postKey={postKey}>
+        <article className="zigo-feed-card zigo-feed-card-enter relative -mx-4 mb-[2px] bg-black pb-4" style={containerStyle}>
+          <div className="px-4 py-3">
+            <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="dark" />
+          </div>
+          <div className="relative aspect-square w-full bg-slate-950">
+            <FeedMediaViewer post={post} priorityMedia={priorityMedia} isMicro={false} oneMinLessonLabel={feedEnhancements.oneMinLesson} />
+          </div>
+          <div className="px-4 mt-3 space-y-2">
+            <SocialPostActions initialComments={post.comments} initialLiked={post.isLiked} initialLikes={post.likes} initialSaved={post.isSaved} postId={post.postId} variant="compact" />
+          </div>
+          <div className="mt-2">
+            <ExpandableCaption caption={post.caption} theme="dark" />
+          </div>
+          <div className="px-4 mt-1">
+            <p className="text-zigo-meta font-semibold uppercase tracking-wide text-slate-500">
+              {formatFeedTimestamp(post.createdAt)}
+            </p>
+          </div>
+        </article>
+      </DismissibleFeedPost>
+    );
+  }
+
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
@@ -53,12 +79,12 @@ export function FeedPostCard({
           <FeedMediaViewer 
             post={post}
             priorityMedia={priorityMedia}
-            isMicro={isMicro}
+            isMicro={true}
             oneMinLessonLabel={feedEnhancements.oneMinLesson}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/50 to-transparent pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-24">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/70 to-transparent pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-24">
           <div className="pointer-events-auto">
             <FeedPostHeader 
               post={post}

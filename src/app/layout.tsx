@@ -84,6 +84,7 @@ export async function generateViewport(): Promise<Viewport> {
 
   return {
     themeColor: getRoleThemeColor(shellState.viewerRole),
+    colorScheme: "light",
     width: "device-width",
     initialScale: 1,
     viewportFit: "cover",
@@ -102,6 +103,10 @@ export default async function RootLayout({
 
   return (
     <html lang="tr">
+      <head>
+        <meta name="color-scheme" content="light only" />
+        <meta name="darkreader-lock" />
+      </head>
       <body className={`${jakarta.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
         <script
           type="application/ld+json"

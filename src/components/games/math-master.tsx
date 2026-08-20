@@ -270,12 +270,22 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
                 <span className="text-xs font-black text-yellow-300">🏆 {highScore}</span>
               </div>
             )}
-            <button 
-              onClick={() => setIsLeaderboardOpen(true)}
-              className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
-            >
-              🏅 Tablo
-            </button>
+            <div className="flex gap-1">
+              {!isGameOver && (
+                <button 
+                  onClick={endGame}
+                  className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+                >
+                  🛑 Bitir
+                </button>
+              )}
+              <button 
+                onClick={() => setIsLeaderboardOpen(true)}
+                className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+              >
+                🏅 Tablo
+              </button>
+            </div>
           </div>
         </div>
 

@@ -13,7 +13,7 @@ export default async function WordHuntPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col p-4">
+    <div className="min-h-screen bg-slate-50 flex flex-col p-4">
       <div className="flex-1 w-full max-w-sm mx-auto flex flex-col justify-center">
         <WordHunt userId={profile.id} />
       </div>

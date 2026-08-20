@@ -151,12 +151,7 @@ export function AppShell({
   }, [_router, pathname]);
 
   useEffect(() => {
-    const isDarkPage =
-      pathname === "/" ||
-      pathname.startsWith("/explore") ||
-      pathname.startsWith("/sparks") ||
-      pathname.startsWith("/micro") ||
-      pathname.startsWith("/post");
+    const isDarkPage = pathname === "/";
 
     if (isDarkPage) {
       document.documentElement.classList.add("dark-theme");
@@ -202,7 +197,7 @@ export function AppShell({
 
       <main
         key={pathname}
-        className={`min-w-0 flex-1 page-transition-fade ${isImmersive ? "overflow-hidden p-0" : "px-4 py-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6"}`}
+        className={`min-w-0 flex-1 page-transition-fade ${isImmersive ? "overflow-hidden p-0" : `px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 ${pathname === "/" ? "pt-0" : "py-3"}`}`}
         id="main-content"
       >
         {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
@@ -344,11 +339,7 @@ function Header({
   const _router = useRouter();
   const primaryAction = getHeaderPrimaryAction(viewerRole, canCreateSocialPost, { isPlatformAdmin });
   const isHomePage = pathname === "/";
-  const isExplorePage = pathname.startsWith("/explore");
-  const isStories = pathname.startsWith("/sparks");
-  const isReels = pathname.startsWith("/micro");
-  const isPost = pathname.startsWith("/post");
-  const isDarkPage = isHomePage || isExplorePage || isStories || isReels || isPost;
+  const isDarkPage = isHomePage;
 
   return (
     <header className={`safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2 backdrop-blur-xl border-b shadow-sm transition-all duration-300 ${

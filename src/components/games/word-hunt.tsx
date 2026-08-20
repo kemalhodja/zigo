@@ -286,12 +286,26 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
                 <span className="text-xs font-black text-yellow-300">🏆 {highScore}</span>
               </div>
             )}
-            <button 
-              onClick={() => setIsLeaderboardOpen(true)}
-              className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
-            >
-              🏅 {selectedLang === "TR" ? "Tablo" : "Ranks"}
-            </button>
+            <div className="flex gap-1">
+              {!isGameOver && (
+                <button 
+                  onClick={() => {
+                    setIsGameOver(true);
+                    setHasWon(false);
+                    saveProgress(score, currentLevel);
+                  }}
+                  className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+                >
+                  🛑 {selectedLang === "TR" ? "Bitir" : "Finish"}
+                </button>
+              )}
+              <button 
+                onClick={() => setIsLeaderboardOpen(true)}
+                className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+              >
+                🏅 {selectedLang === "TR" ? "Tablo" : "Ranks"}
+              </button>
+            </div>
           </div>
         </div>
         <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm">

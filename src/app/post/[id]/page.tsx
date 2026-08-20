@@ -119,7 +119,7 @@ export default async function PostDetailPage({ params, searchParams }: PostDetai
   );
 
   return (
-    <div className="h-dvh w-full overflow-x-hidden snap-y snap-mandatory overflow-y-auto bg-black pb-[env(safe-area-inset-bottom)]">
+    <div className="h-dvh w-full overflow-x-hidden snap-y snap-mandatory overflow-y-auto bg-slate-50 pb-[env(safe-area-inset-bottom)]">
       {displayPosts.map((p, index) => (
         <div key={p.postId ?? index} className="relative flex h-dvh w-full overflow-x-hidden shrink-0 snap-start snap-always flex-col justify-center">
           <FeedPostCard
