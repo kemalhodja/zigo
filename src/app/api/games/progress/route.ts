@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 type GameType = "memory_card" | "block_puzzle" | "pipe_connect" | "word_hunt" | "zihin_avcisi" | "math_master";
@@ -56,19 +57,34 @@ export async function POST(req: NextRequest) {
   const newLastLevel = Math.max(level, (existing as any)?.last_level ?? 0);
   const newTotalPlays = ((existing as any)?.total_plays ?? 0) + 1;
 
-  const { error } = await supabase
-    .from("game_progress" as any)
-    .upsert(
-      {
+  const adminClient = createAdminClient() || supabase;
+
+  let error;
+  if (existing) {
+    const { error: updateError } = await adminClient
+      .from("game_progress" as any)
+      .update({
+        high_score: newHighScore,
+        last_level: newLastLevel,
+        total_plays: newTotalPlays,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", profile.id)
+      .eq("game_type", game_type);
+    error = updateError;
+  } else {
+    const { error: insertError } = await adminClient
+      .from("game_progress" as any)
+      .insert({
         user_id: profile.id,
         game_type,
         high_score: newHighScore,
         last_level: newLastLevel,
         total_plays: newTotalPlays,
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,game_type" }
-    );
+      });
+    error = insertError;
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

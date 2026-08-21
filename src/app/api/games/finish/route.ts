@@ -26,15 +26,18 @@ export async function POST(request: Request) {
         const calculatedPoints = Math.max(5, Math.floor((score || 0) / 10));
         const awardedPoints = Math.min(100, calculatedPoints);
         
+        const admin = (await import("@/lib/supabase/admin")).createAdminClient();
+        const dbClient = admin ?? supabase;
+
         // Puanı kullanıcının total_points alanına ekle
-        const { data: user } = await supabase
+        const { data: user } = await dbClient
           .from("users")
           .select("total_points")
           .eq("id", user_id)
           .single();
         
         if (user) {
-          await supabase
+          await dbClient
             .from("users")
             .update({ total_points: (user.total_points || 0) + awardedPoints })
             .eq("id", user_id);

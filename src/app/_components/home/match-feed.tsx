@@ -46,18 +46,18 @@ export function FeedPostCard({
   if (!isMicro) {
     return (
       <DismissibleFeedPost postKey={postKey}>
-        <article className="zigo-feed-card zigo-feed-card-enter relative -mx-4 mb-[2px] bg-black pb-4" style={containerStyle}>
+        <article className="zigo-feed-card zigo-feed-card-enter relative -mx-4 mb-[2px] bg-white pb-4 border-b border-slate-100" style={containerStyle}>
           <div className="px-4 py-3">
-            <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="dark" />
+            <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="light" />
           </div>
-          <div className="relative aspect-square w-full bg-slate-950">
+          <div className="relative aspect-square w-full bg-slate-50 border-y border-slate-100">
             <FeedMediaViewer post={post} priorityMedia={priorityMedia} isMicro={false} oneMinLessonLabel={feedEnhancements.oneMinLesson} />
           </div>
           <div className="px-4 mt-3 space-y-2">
-            <SocialPostActions initialComments={post.comments} initialLiked={post.isLiked} initialLikes={post.likes} initialSaved={post.isSaved} postId={post.postId} variant="compact" />
+            <SocialPostActions initialComments={post.comments} initialLiked={post.isLiked} initialLikes={post.likes} initialSaved={post.isSaved} postId={post.postId} variant="compact" theme="light" />
           </div>
           <div className="mt-2">
-            <ExpandableCaption caption={post.caption} theme="dark" />
+            <ExpandableCaption caption={post.caption} theme="light" />
           </div>
           <div className="px-4 mt-1">
             <p className="text-zigo-meta font-semibold uppercase tracking-wide text-slate-500">
@@ -161,9 +161,9 @@ export function CreatorRail({
   seeAll: string;
 }) {
   return (
-    <section className="-mx-4 px-4 py-4 bg-slate-950">
+    <section className="-mx-4 px-4 py-4 bg-white border-b border-slate-100">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-zigo-body font-bold text-slate-100">{label}</p>
+        <p className="text-zigo-body font-bold text-slate-900">{label}</p>
         <Link className="text-zigo-caption font-bold text-crystal" href="/explore?format=teachers">
           {seeAll}
         </Link>
@@ -173,8 +173,8 @@ export function CreatorRail({
           <article className="min-w-28 text-center" key={creator.id ?? creator.handle}>
             <Link className="tap-scale block" href={creator.href}>
               <SocialAvatar className="mx-auto size-16" label={creator.name} />
-              <p className="zigo-fit-text mt-2 text-zigo-caption font-bold text-slate-100">{creator.handle}</p>
-              <p className="zigo-fit-text mt-0.5 text-zigo-meta text-slate-400">{creator.area}</p>
+              <p className="zigo-fit-text mt-2 text-zigo-caption font-bold text-slate-900">{creator.handle}</p>
+              <p className="zigo-fit-text mt-0.5 text-zigo-meta text-slate-500">{creator.area}</p>
             </Link>
             <div className="mt-2 flex justify-center">
               <FollowButton
@@ -199,22 +199,22 @@ export function FollowingStarter({
 }) {
   const f = messages.feedExtras;
   return (
-    <section className="zigo-empty-hero -mx-4 px-6 py-12 text-center bg-slate-950">
-      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-black text-white shadow-lg shadow-slate-900/20 border border-slate-800">
+    <section className="zigo-empty-hero -mx-4 px-6 py-12 text-center bg-white border-b border-slate-100">
+      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-slate-50 text-2xl font-black text-slate-400 shadow-lg shadow-slate-100 border border-slate-100">
         +
       </span>
-      <h2 className="zigo-section-title mt-5 text-slate-100">{f.buildFeed || "Akışını Oluştur"}</h2>
-      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-400">{f.buildFeedDesc || "İlgi alanlarını seçerek veya öğretmenleri takip ederek akışını oluştur."}</p>
+      <h2 className="zigo-section-title mt-5 text-slate-900">{f.buildFeed || "Akışını Oluştur"}</h2>
+      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-500">{f.buildFeedDesc || "İlgi alanlarını seçerek veya öğretmenleri takip ederek akışını oluştur."}</p>
       <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white bg-crystal" href="/onboarding">
         İlgi alanını seç
       </Link>
       <div className="no-scrollbar mt-7 flex gap-3 overflow-x-auto pb-1 text-left">
         {creators.map((creator) => (
-          <article className="min-w-32 rounded-xl border border-slate-800 bg-slate-900 p-3 shadow-sm" key={creator.id ?? creator.handle}>
+          <article className="min-w-32 rounded-xl border border-slate-100 bg-white p-3 shadow-sm" key={creator.id ?? creator.handle}>
             <Link className="tap-scale block" href={creator.href}>
               <SocialAvatar className="size-10" label={creator.name} ring={false} />
-              <p className="zigo-fit-text mt-3 text-zigo-body font-bold text-slate-100">@{creator.handle}</p>
-              <p className="mt-1 text-zigo-caption text-slate-400">{creator.area}</p>
+              <p className="zigo-fit-text mt-3 text-zigo-body font-bold text-slate-900">@{creator.handle}</p>
+              <p className="mt-1 text-zigo-caption text-slate-500">{creator.area}</p>
             </Link>
             <div className="mt-3">
               <FollowButton followingId={creator.id} initialFollowing={creator.isFollowing} variant="compact" />
