@@ -317,6 +317,7 @@ function RailButton({
   label,
   onClick,
   disabled = false,
+  id,
 }: {
   active?: boolean;
   ariaLabel: string;
