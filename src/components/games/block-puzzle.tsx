@@ -419,19 +419,6 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
   return (
     <div className="w-full max-w-sm mx-auto select-none relative touch-none">
-      {/* Ghost Element for Dragging */}
-      {dragState.isDragging && dragState.shape && (
-        <div
-          className="fixed z-50 pointer-events-none"
-          style={{
-            left: dragState.x - dragState.offsetX,
-            top: dragState.y - dragState.offsetY - dragState.touchOffsetY,
-          }}
-        >
-          <BlockPiece shape={dragState.shape} isSelected={false} isGhost={true} onClick={() => {}} disabled={false} />
-        </div>
-      )}
-
       {/* Header */}
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 mb-3 border border-white/10 shadow-2xl relative overflow-hidden">
         <div className="flex items-center justify-between mb-3 relative z-10">
@@ -499,6 +486,28 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
                 justCleared &&
                 (justCleared.rows.includes(rIndex) || justCleared.cols.includes(cIndex));
 
+              // Bırakma önizlemesi: parça nereye oturacaksa hücreleri yarı saydam gösterilir
+              let isPreview = false;
+              if (
+                dragState.isDragging &&
+                dragState.isValidDrop &&
+                dragState.shape &&
+                dragState.targetRow !== null &&
+                dragState.targetCol !== null
+              ) {
+                const rDiff = rIndex - dragState.targetRow;
+                const cDiff = cIndex - dragState.targetCol;
+                if (
+                  rDiff >= 0 &&
+                  rDiff < dragState.shape.matrix.length &&
+                  cDiff >= 0 &&
+                  cDiff < dragState.shape.matrix[0].length &&
+                  dragState.shape.matrix[rDiff][cDiff] === 1
+                ) {
+                  isPreview = true;
+                }
+              }
+
               return (
                 <div
                   key={`${rIndex}-${cIndex}`}
@@ -507,6 +516,8 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
                   className={`aspect-square rounded-md transition-all duration-300 ${
                     isHighlighted
                       ? "bg-white scale-0 rotate-45 opacity-0 z-10"
+                      : isPreview
+                      ? `${dragState.shape?.color} border border-white/40 opacity-60 shadow-lg scale-95`
                       : cell !== EMPTY_CELL
                       ? `${cell} border border-white/20 shadow-sm animate-in zoom-in-75 duration-200`
                       : "bg-white/5 border border-white/5"
