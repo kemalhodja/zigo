@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef,useState } from "react";
 import { useAudio } from "@/hooks/use-audio";
 
 import { LeaderboardModal } from "./leaderboard-modal";
-import { WORD_DICTIONARY, type WordEntry } from "./word-dictionary";
 import { TURKISH_WORDS } from "./turkish-words";
+import { WORD_DICTIONARY, type WordEntry } from "./word-dictionary";
 
 const ROWS = 6;
 type LetterState = "correct" | "present" | "absent" | "empty";
@@ -159,8 +159,14 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
       if (e.ctrlKey || e.metaKey || e.altKey || !selectedLang) return;
       
       const key = e.key.toUpperCase();
-      if (key === "ENTER") onKeyPress("ENTER");
-      else if (key === "BACKSPACE") onKeyPress("BACKSPACE");
+      if (key === "ENTER") {
+        e.preventDefault();
+        onKeyPress("ENTER");
+      }
+      else if (key === "BACKSPACE") {
+        e.preventDefault();
+        onKeyPress("BACKSPACE");
+      }
       else if (/^[A-ZÇĞİÖŞÜ]$/.test(key)) onKeyPress(key);
     };
 
@@ -360,8 +366,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
                   else bgClass = "bg-slate-700 border-slate-800 text-slate-400 animate-flip";
                 }
 
-                let boxSize = "w-12 h-12 sm:w-14 sm:h-14";
-                if (cols > 5) boxSize = "w-10 h-10 sm:w-12 sm:h-12";
+                let boxSize = "w-11 h-11 sm:w-14 sm:h-14";
+                if (cols > 5) boxSize = "w-9 h-9 sm:w-12 sm:h-12";
                 if (cols > 6) boxSize = "w-8 h-8 sm:w-10 sm:h-10";
 
                 return (
@@ -390,7 +396,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
                   key={key}
                   onClick={() => onKeyPress(key)}
                   className={`tap-scale border-b-4 rounded-xl flex items-center justify-center font-black transition-colors ${
-                    isAction ? "w-12 sm:w-16 h-12 text-[0.65rem] bg-slate-700 border-slate-800 text-white" : `w-8 sm:w-10 h-12 text-lg ${getKeyColor(key)}`
+                    isAction ? "w-11 sm:w-16 h-10 sm:h-12 text-[0.6rem] sm:text-[0.65rem] bg-slate-700 border-slate-800 text-white" : `w-[1.9rem] sm:w-10 h-10 sm:h-12 text-lg ${getKeyColor(key)}`
                   }`}
                 >
                   {key === "BACKSPACE" ? "⌫" : key === "ENTER" ? (selectedLang === "TR" ? "GİR" : "ENT") : key}
@@ -403,8 +409,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
       {/* Game Over Overlay */}
       {isGameOver && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full text-center shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl">
             <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-xl ${
               hasWon ? "bg-emerald-500 shadow-emerald-500/40" : "bg-rose-500 shadow-rose-500/40"
             }`}>
