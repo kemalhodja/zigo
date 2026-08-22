@@ -13,6 +13,20 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: securityHeaders,
       },
+      {
+        // Aggressive cache for static assets
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        // Cache public images/fonts
+        source: "/images/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
+      },
     ];
   },
   async redirects() {
@@ -24,10 +38,20 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
-    optimizePackageImports: ["@supabase/supabase-js", "lucide-react"],
+    optimizePackageImports: [
+      "@supabase/supabase-js",
+      "@supabase/ssr",
+      "lucide-react",
+      "recharts",
+      "zod",
+    ],
+    ppr: false,
   },
   images: {
     formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
+    deviceSizes: [390, 430, 768, 1080, 1280],
+    imageSizes: [64, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",

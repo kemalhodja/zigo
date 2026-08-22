@@ -188,21 +188,30 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
 
     if (followingPosts.length === 0) return [];
 
-    // Limit display total to 30 for more content
-    const slicedPosts = followingPosts.slice(0, 30);
+    // Limit display total to 20 for faster initial load
+    const slicedPosts = followingPosts.slice(0, 20);
 
-    const followingByPost = await Promise.all(
-      slicedPosts.map((post) =>
-        profile && post.author?.id && post.author.id !== profile.id
-          ? isFollowing(supabase, profile.id, post.author.id)
-          : Promise.resolve(false),
-      ),
-    );
+    // Single batch query for following status — avoids N individual round-trips
+    const followedAuthorIds = slicedPosts
+      .map((post) => post.author?.id)
+      .filter((id): id is string => Boolean(id) && id !== profile?.id);
+
+    let followedSet = new Set<string>();
+    if (profile && followedAuthorIds.length > 0) {
+      const { data: followRows } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", profile.id)
+        .in("following_id", followedAuthorIds);
+      if (followRows) {
+        followedSet = new Set(followRows.map((r) => r.following_id).filter(Boolean) as string[]);
+      }
+    }
 
     return slicedPosts.map((post, index) =>
       toDisplayPost(post, index, {
         canFollowCreator: Boolean(profile && post.author?.id && post.author.id !== profile.id),
-        isFollowingCreator: followingByPost[index] ?? false,
+        isFollowingCreator: Boolean(post.author?.id && followedSet.has(post.author.id)),
         viewerRole: profile?.role ?? null,
         viewerId: profile?.id ?? null,
       }),

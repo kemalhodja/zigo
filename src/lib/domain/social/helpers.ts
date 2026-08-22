@@ -137,17 +137,19 @@ async function batchCountRowsByPostId(
   for (const postId of postIds) counts.set(postId, 0);
   if (postIds.length === 0) return counts;
 
-  await Promise.all(
-    postIds.map(async (postId) => {
-      const { count, error } = await supabase
-        .from(table)
-        .select("*", { count: "exact", head: true })
-        .eq("post_id", postId);
-      if (!error && count !== null) {
-        counts.set(postId, count);
+  // Single query to fetch all rows, then count in memory — far faster than N individual COUNT queries
+  const { data, error } = await supabase
+    .from(table)
+    .select("post_id")
+    .in("post_id", postIds);
+
+  if (!error && data) {
+    for (const row of data) {
+      if (row.post_id) {
+        counts.set(row.post_id, (counts.get(row.post_id) ?? 0) + 1);
       }
-    })
-  );
+    }
+  }
 
   return counts;
 }
@@ -160,18 +162,20 @@ async function batchCountApprovedCommentsByPostId(
   for (const postId of postIds) counts.set(postId, 0);
   if (postIds.length === 0) return counts;
 
-  await Promise.all(
-    postIds.map(async (postId) => {
-      const { count, error } = await supabase
-        .from("post_comments")
-        .select("*", { count: "exact", head: true })
-        .eq("post_id", postId)
-        .eq("moderation_status", "approved");
-      if (!error && count !== null) {
-        counts.set(postId, count);
+  // Single query for all comments — count in memory instead of N separate COUNT calls
+  const { data, error } = await supabase
+    .from("post_comments")
+    .select("post_id")
+    .in("post_id", postIds)
+    .eq("moderation_status", "approved");
+
+  if (!error && data) {
+    for (const row of data) {
+      if (row.post_id) {
+        counts.set(row.post_id, (counts.get(row.post_id) ?? 0) + 1);
       }
-    })
-  );
+    }
+  }
 
   return counts;
 }
