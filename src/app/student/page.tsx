@@ -15,7 +15,6 @@ import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import {
-  getDailyMissionProgress,
   getLearningProgressStats,
   getRecentLearningHistory,
   type LearningHistoryItem,
@@ -346,10 +345,9 @@ async function getStudentDashboardData(): Promise<{
     };
   }
 
-  const [stats, history, missions, subscription, areaId] = await Promise.all([
+  const [stats, history, subscription, areaId] = await Promise.all([
     getLearningProgressStats(supabase, profile.id),
     getRecentLearningHistory(supabase, profile.id),
-    getDailyMissionProgress(supabase, profile.id),
     getUserSubscription(supabase, profile.id),
     getPrimaryInterestAreaId(supabase, profile.id),
   ]);

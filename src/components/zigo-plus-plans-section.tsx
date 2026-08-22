@@ -39,8 +39,7 @@ export function ZigoPlusPlansSection({
 }: ZigoPlusPlansSectionProps) {
   const b = useMessages().billingUi;
   const [playStoreOnly, setPlayStoreOnly] = useState(false);
-   
-  const [platformMessage, setPlatformMessage] = useState("");
+  const [, setPlatformMessage] = useState("");
   const campaignActive = isSubscriptionCampaignActive();
 
   let trialDaysRemaining = 30;
@@ -261,8 +260,7 @@ function PlanPriceRow({
   planId,
   intervalLabel,
   priceTry,
-  compareAtTry,
-  allowDevActivate,  // eslint-disable-line @typescript-eslint/no-unused-vars
+  compareAtTry: _compareAtTry,
   playStoreOnly,
   campaignActive,
   userCreatedAt,
@@ -271,7 +269,7 @@ function PlanPriceRow({
   intervalLabel: string;
   priceTry: number;
   compareAtTry: number;
-  allowDevActivate: boolean;
+  allowDevActivate?: boolean;
   playStoreOnly: boolean;
   campaignActive: boolean;
   userCreatedAt?: string;

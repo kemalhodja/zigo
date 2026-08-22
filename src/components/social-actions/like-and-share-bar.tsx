@@ -42,7 +42,6 @@ type LikeAndShareBarProps = {
 
 export function LikeAndShareBar({
   isLiked,
-  isUnderstood,
   isSaved,
   likes,
   comments,
@@ -53,7 +52,6 @@ export function LikeAndShareBar({
   comment,
   isCommentSaving,
   onToggleLike,
-  onToggleUnderstood,
   onToggleSave,
   onLoadComments,
   onSharePost,

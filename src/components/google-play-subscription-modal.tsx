@@ -1,9 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useMemo,useState } from "react";
 
-import { applyPromoCode } from "@/lib/domain/subscription-campaign";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
 
 type GooglePlaySubscriptionModalProps = {

@@ -42,7 +42,7 @@ export function ParentActivityBreakdown({ data }: ParentActivityBreakdownProps) 
               </Pie>
               <Tooltip
                 contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", fontSize: "11px", fontWeight: "bold" }}
-                formatter={(value: any) => [`${value} dk`, "Süre"]}
+                formatter={(value) => [`${value} dk`, "Süre"]}
               />
             </PieChart>
           </ResponsiveContainer>

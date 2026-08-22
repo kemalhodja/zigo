@@ -102,7 +102,6 @@ export function PullToRefresh() {
   }, [pullY, isRefreshing, router]);
 
   const progress = Math.min(pullY / PULL_THRESHOLD, 1);
-  const isReady = pullY >= PULL_THRESHOLD;
 
   if (pullY < 2 && !isRefreshing) return null;
 

@@ -6,13 +6,9 @@ import type { DisplayPost } from "./data";
 export function FeedMediaViewer({
   post,
   priorityMedia = false,
-  isMicro = false,
-  oneMinLessonLabel,
 }: {
   post: DisplayPost;
   priorityMedia?: boolean;
-  isMicro?: boolean;
-  oneMinLessonLabel: string;
 }) {
   let parsedMediaUrls: string[] | undefined = undefined;
   let singleMediaUrl: string | null | undefined = post.mediaUrl;
@@ -21,7 +17,7 @@ export function FeedMediaViewer({
     try {
       parsedMediaUrls = JSON.parse(post.mediaUrl);
       singleMediaUrl = undefined;
-    } catch (e) {
+    } catch {
       console.warn("Failed to parse carousel mediaUrl", post.mediaUrl);
     }
   }

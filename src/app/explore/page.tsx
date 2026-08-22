@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -10,8 +9,9 @@ export const metadata: Metadata = {
   },
 };
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { ExploreSearchBar } from "@/components/explore-search-bar";
-import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar } from "@/components/social-primitives";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -23,8 +23,8 @@ import {
   searchSocialPosts,
   type SocialFeedPost,
 } from "@/lib/domain/social";
-import { getUserSubscription } from "@/lib/domain/subscription";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
+import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 const EXPLORE_FORMATS = ["all", "micro", "lessons", "teachers"] as const;
@@ -52,15 +52,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const tilesToRender = filteredPosts;
 
   let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
-  let explorePremium = false;
   if (supabase) {
     try {
       const profile = await getCachedUserProfile();
       if (profile?.role) viewerRole = profile.role;
-      if (profile?.id) {
-        const sub = await getUserSubscription(supabase, profile.id);
-        explorePremium = sub.isPremium;
-      }
     } catch {
       viewerRole = "guest";
     }
@@ -256,7 +251,11 @@ type ExploreResults = {
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 
-async function getExploreResults(supabase: any, query: string, format: ExploreFormat): Promise<ExploreResults> {
+async function getExploreResults(
+  supabase: SupabaseClient<Database> | null,
+  query: string,
+  format: ExploreFormat,
+): Promise<ExploreResults> {
   const m = await getServerMessages();
   const empty: ExploreResults = { creators: [], posts: [], suggestedRail: [] };
 
@@ -392,100 +391,6 @@ function filterExploreTiles<T extends { mediaType: string }>(items: T[], format:
 function getExploreFormat(value?: string): ExploreFormat {
   const normalized = value === "reels" ? "micro" : value;
   return EXPLORE_FORMATS.includes(normalized as ExploreFormat) ? (normalized as ExploreFormat) : "all";
-}
-
-function getExploreHref({ format, query }: { format: ExploreFormat; query: string }) {
-  const search = new URLSearchParams();
-  const trimmed = query.trim();
-  if (trimmed && trimmed.toLowerCase() !== "teachers" && trimmed.toLowerCase() !== "teacher") {
-    search.set("q", trimmed);
-  }
-  if (format !== "all") search.set("format", format);
-  const suffix = search.toString();
-  return suffix ? `/explore?${suffix}` : "/explore";
-}
-
-type TrendTopicItem = {
-  tag: string;
-  label: string;
-  href: string;
-  count: string;
-};
-
-async function fetchDynamicTrendTopics(supabase: any, totalPostsCount: number): Promise<TrendTopicItem[]> {
-  const m = await getServerMessages();
-  const e = m.explore;
-
-  const baseTopics = [
-    { tag: "Matematik", label: e.trendTopicMath, query: "matematik" },
-    { tag: "FenBilimleri", label: e.trendTopicScience, query: "fen" },
-    { tag: "Kodlama", label: e.trendTopicCoding, query: "kodlama" },
-    { tag: "İngilizce", label: e.trendTopicEnglish, query: "ingilizce" },
-  ];
-
-  if (!supabase) {
-    return baseTopics.map((t) => ({
-      tag: t.tag,
-      label: t.label,
-      href: `/explore?q=${encodeURIComponent(t.tag)}`,
-      count: totalPostsCount > 0
-        ? e.trendTopicContent.replace("{count}", String(totalPostsCount))
-        : e.trendTopicPopular,
-    }));
-  }
-
-  try {
-
-    const topicsData = await Promise.all(
-      baseTopics.map(async (t) => {
-        const query = t.query.toLowerCase();
-        
-        // 🔧 Refactor: Dinamik unstable_cache key
-        const fetchCountsCached = unstable_cache(
-          async () => {
-            const [{ count: totalCount }, { count: videoCount }] = await Promise.all([
-              supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${query}%`),
-              supabase.from("social_posts").select("id", { count: "exact", head: true }).ilike("caption", `%${query}%`).eq("media_type", "video")
-            ]);
-            return { total: totalCount ?? 0, video: videoCount ?? 0 };
-          },
-          ["explore-trend-counts", query],
-          { revalidate: 60 }
-        );
-
-        const counts = await fetchCountsCached();
-        let countText = "";
-        
-        if (counts.total > 0) {
-          countText = counts.video > 0
-            ? e.trendTopicPostsWithLesson
-                .replace("{count}", String(counts.total))
-                .replace("{lesson}", String(counts.video))
-            : e.trendTopicPosts.replace("{count}", String(counts.total));
-        } else if (totalPostsCount > 0) {
-          countText = e.trendTopicContent.replace("{count}", String(totalPostsCount));
-        } else {
-          countText = e.trendTopicPopular;
-        }
-
-        return {
-          tag: t.tag,
-          label: t.label,
-          href: `/explore?q=${encodeURIComponent(t.tag)}`,
-          count: countText,
-        };
-      })
-    );
-
-    return topicsData;
-  } catch {
-    return baseTopics.map((t) => ({
-      tag: t.tag,
-      label: t.label,
-      href: `/explore?q=${encodeURIComponent(t.tag)}`,
-      count: e.trendTopicContent.replace("{count}", String(totalPostsCount)),
-    }));
-  }
 }
 
 // Invariants: suggestedCreatorRail formatFilters ExploreTrendRadar smartDiscovery radarCards topicBridges jumpLoop zigo-cta zigo-quick-action-primary text-white

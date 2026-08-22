@@ -63,7 +63,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         : params.tab === "market" || params.tab === "lessons"
           ? "market"
           : "posts";
-  const profile = await getProfileData(activeTab as any);
+  const profile = await getProfileData(activeTab);
 
   // Private lesson marketplace data
   let educationAreas: Awaited<ReturnType<typeof getEducationAreas>> = [];

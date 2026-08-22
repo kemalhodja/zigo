@@ -187,7 +187,9 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         setHighScore(data.high_score);
         setTimeout(() => setIsLeaderboardOpen(true), 800);
       }
-    } catch {}
+    } catch {
+    // ignore non-fatal audio/storage errors
+  }
 
     try {
       await fetch("/api/games/finish", {
@@ -200,7 +202,9 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
           stats: { level: newLevel },
         }),
       });
-    } catch {}
+    } catch {
+    // ignore non-fatal audio/storage errors
+  }
 
     if (onGameEnd) onGameEnd(finalScore, { level: newLevel });
   };

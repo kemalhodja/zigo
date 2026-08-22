@@ -128,7 +128,7 @@ export function useUploadPipeline() {
 
     let mediaUrl = "";
     let mediaType: "image" | "video" | "carousel" = "image";
-    let uploadedObjectPaths: string[] = [];
+    const uploadedObjectPaths: string[] = [];
 
     if (input.files && input.files.length > 0) {
       const isCarousel = input.files.length > 1;

@@ -1,8 +1,8 @@
 "use client";
 
+import { BookmarkIcon,HomeIcon, MedalIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, UsersIcon, MedalIcon, BookmarkIcon } from "lucide-react";
 
 const navItems = [
   { name: "Anasayfa", href: "/", icon: HomeIcon },

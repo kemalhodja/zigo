@@ -17,7 +17,6 @@ import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import { getRoleAccentLabel, getRoleThemeClass, getRoleThemeColor, type ViewerRole } from "@/lib/domain/role-theme";
 import { getUnreadNotificationCount } from "@/lib/domain/social";
 import { getTeacherInboxCount } from "@/lib/domain/teacher-inbox";
-import { getHtmlLang } from "@/lib/i18n";
 import { LocaleProvider } from "@/lib/i18n/locale-context";
 import { getServerMessages } from "@/lib/i18n/server";
 import { getServerLocale } from "@/lib/i18n/server-locale";

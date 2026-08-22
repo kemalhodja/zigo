@@ -154,14 +154,16 @@ export async function POST(request: Request) {
 
     safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
     safeRevalidateTag(socialFeedCacheTag(profile.id));
-    
+
     try {
-      const { revalidatePath } = require("next/cache");
+      const { revalidatePath } = await import("next/cache");
       revalidatePath("/");
       revalidatePath("/feed");
       revalidatePath("/profile");
       revalidatePath("/teacher");
-    } catch (e) {}
+    } catch {
+      // Revalidate is best-effort; post creation must not fail here.
+    }
 
     return NextResponse.json({ data: post, meta: { action: "create-post", areaId } }, { status: 201 });
   } catch (error) {

@@ -18,8 +18,11 @@ export function useStreakTracker() {
         const { data: session } = await supabase.auth.getSession();
         if (!session?.session) return;
 
-        // Call the RPC function
-        const { data, error } = await supabase.rpc("update_user_streak" as any);
+        // Call the RPC function (update_user_streak henüz üretilmiş tiplerde yok)
+        const rpc = supabase.rpc as unknown as (
+          fn: "update_user_streak",
+        ) => Promise<{ data: unknown; error: { message: string } | null }>;
+        const { data, error } = await rpc("update_user_streak");
 
         if (error) {
           console.error("Streak tracking error:", error);

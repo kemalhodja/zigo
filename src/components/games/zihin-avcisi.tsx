@@ -120,7 +120,6 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     if (userId !== "guest" && startLevel === null) return; // Henüz yüklenmedi
     initLevel(currentLevel);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLevel, startLevel]);
 
   const handleCardClick = (id: string) => {
@@ -202,7 +201,6 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     playSound("success");
 
     saveProgress(newTotal, currentLevel);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards]);
 
   const saveProgress = async (score: number, level: number) => {
@@ -218,7 +216,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
         setHighScore(data.high_score);
         setTimeout(() => setIsLeaderboardOpen(true), 800);
       }
-    } catch {}
+    } catch {
+    // ignore non-fatal audio/storage errors
+  }
 
     try {
       await fetch("/api/games/finish", {
@@ -231,7 +231,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
           stats: { time: timeElapsed, moves },
         }),
       });
-    } catch {}
+    } catch {
+    // ignore non-fatal audio/storage errors
+  }
 
     if (onGameEnd) onGameEnd(score, { time: timeElapsed, moves });
   };

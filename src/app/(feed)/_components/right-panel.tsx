@@ -1,4 +1,4 @@
-import { TrophyIcon, CalendarIcon, ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon,CalendarIcon, TrophyIcon } from "lucide-react";
 
 export function LeaderboardWidget() {
   const ranks = [

@@ -1,27 +1,22 @@
 import Link from "next/link";
 
-import { FollowButton } from "@/components/follow-button";
 import { PostOptionsButton } from "@/components/post-options-button";
 import { SocialAvatar } from "@/components/social-primitives";
-import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 
 import type { DisplayPost } from "./data";
 
 export function FeedPostHeader({
   post,
   postKey,
-  teacherBadges,
   theme = "dark",
 }: {
   post: DisplayPost;
   postKey: string;
-  teacherBadges: { verifiedTeacher: string; moreAreas: string };
+  teacherBadges?: { verifiedTeacher: string; moreAreas: string };
   theme?: "dark" | "light";
 }) {
   const isDark = theme === "dark";
   const textColorClass = isDark ? "text-white shadow-black/20 text-shadow-sm" : "text-night";
-  const subTextColorClass = isDark ? "text-white/80 shadow-black/20 text-shadow-sm" : "text-slate-600";
-  const badgeBgClass = isDark ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700 border border-slate-200";
 
   return (
     <div className="flex items-center justify-between px-4 py-3">

@@ -44,7 +44,7 @@ export function ParentChart({ data }: ParentChartProps) {
           <Tooltip 
             cursor={{ fill: "#f8fafc" }}
             contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)", fontWeight: "bold", fontSize: "12px", color: "#334155" }}
-            formatter={(value: any, name: any) => {
+            formatter={(value, name) => {
               if (name === "minutes") return [`${value} dk`, "Çalışma Süresi"];
               if (name === "quizzes") return [`${value} Sınav`, "Çözülen Sınav"];
               return [value, name];

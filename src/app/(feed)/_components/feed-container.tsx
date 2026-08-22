@@ -1,10 +1,12 @@
 "use client";
 
+import { SparklesIcon } from "lucide-react";
 import { useState } from "react";
+
 import type { DisplayPost } from "@/app/_components/home/data";
+
 import { FeedCard } from "./feed-card";
 import { FeedModeToggle } from "./feed-mode-toggle";
-import { SparklesIcon } from "lucide-react";
 
 /**
  * Props for the FeedContainer component.
@@ -19,11 +21,10 @@ interface FeedContainerProps {
 /**
  * FeedContainer manages the display of the post feed and mode toggling.
  */
-export function FeedContainer({ posts, viewerRole }: FeedContainerProps) {
+export function FeedContainer({ posts }: FeedContainerProps) {
   const [mode, setMode] = useState<"summary" | "infinite">("summary");
 
-  const displayedPosts = mode === "summary" ? posts.slice(0, 10) : posts; 
-  const safeRole = (viewerRole === "teacher" || viewerRole === "student" || viewerRole === "institution" || viewerRole === "publisher" || viewerRole === "parent" || viewerRole === "guest") ? viewerRole : "guest";
+  const displayedPosts = mode === "summary" ? posts.slice(0, 10) : posts;
 
   return (
     <div className="flex flex-col gap-2">

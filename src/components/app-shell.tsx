@@ -85,19 +85,21 @@ export function AppShell({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    type MinimalAppPlugin = {
+      addListener: (
+        event: string,
+        fn: (data: { canGoBack: boolean }) => void
+      ) => Promise<{ remove: () => void }>;
+      exitApp: () => Promise<void>;
+    };
+
     let cleanup: (() => void) | undefined;
     const setupHardwareBack = async () => {
       try {
         const win = window as unknown as {
           Capacitor?: {
             Plugins?: {
-              App?: {
-                addListener: (
-                  event: string,
-                  fn: (data: { canGoBack: boolean }) => void
-                ) => Promise<{ remove: () => void }>;
-                exitApp: () => Promise<void>;
-              };
+              App?: MinimalAppPlugin;
             };
           };
         };
@@ -107,7 +109,7 @@ export function AppShell({
         if (!appPlugin) {
           try {
             const appModule = await import("@capacitor/app");
-            appPlugin = appModule.App as any;
+            appPlugin = appModule.App as unknown as MinimalAppPlugin;
           } catch {
             // Native back listener fallback
           }
@@ -115,7 +117,7 @@ export function AppShell({
 
         if (!appPlugin) return;
 
-        const handle = await appPlugin.addListener("backButton", ({ canGoBack }: { canGoBack: boolean }) => {
+        const handle = await appPlugin.addListener("backButton", () => {
           const currentPath = window.location.pathname;
           
           // Ana ekranlarda geriye basılınca uygulamadan çıkılsın

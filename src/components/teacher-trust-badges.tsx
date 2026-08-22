@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import { branchAccentForArea, uniqueBranches } from "@/lib/domain/teacher-badges";
 
 type TeacherTrustBadgesProps = {
@@ -18,10 +16,7 @@ export function TeacherTrustBadges({
   branches = [],
   maxVisible = 3,
   moreLabel,
-  showVerified = true,
   size = "sm",
-  verified = false,
-  verifiedLabel = "Verified teacher",
 }: TeacherTrustBadgesProps) {
   const normalized = uniqueBranches(branches);
   const visible = normalized.slice(0, maxVisible);

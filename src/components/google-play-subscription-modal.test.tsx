@@ -18,8 +18,24 @@ describe("GooglePlaySubscriptionModal", () => {
     expect(html).toContain("Abonelik Özeti");
     expect(html).toContain("Zigo Plus (Aylık)");
     expect(html).toContain("98");
-    expect(html).toContain("Promosyon Kodu");
+    expect(html).not.toContain("Promosyon Kodu");
     expect(html).toContain("Başlangıç Tarihi:");
     expect(html).toContain("Bitiş Tarihi:");
+  });
+
+  it("applies the trial window discount badge", () => {
+    const html = renderToStaticMarkup(
+      <GooglePlaySubscriptionModal
+        basePriceTry={98}
+        isWithinTrialWindow
+        isOpen
+        onClose={() => undefined}
+        onConfirm={() => undefined}
+        selectedInterval="monthly"
+      />,
+    );
+
+    expect(html).toContain("%50 indirim");
+    expect(html).toContain("196");
   });
 });

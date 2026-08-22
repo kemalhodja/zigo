@@ -122,7 +122,7 @@ export default async function TagPage({ params }: TagPageProps) {
                   if (Array.isArray(urls) && urls.length > 0) {
                     parsedMediaUrl = urls[0];
                   }
-                } catch (e) {
+                } catch {
                   // Fallback
                 }
               }

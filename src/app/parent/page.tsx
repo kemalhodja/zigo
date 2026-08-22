@@ -188,13 +188,6 @@ async function getParentData(): Promise<{
   userCreatedAt?: string;
 }> {
   const m = await getServerMessages();
-  const previewOverview = {
-    matchedStudyMoments: 6,
-    focusMinutesInAreas: 150,
-    latestTopic: m.studyWithMeRail.demoTopicFractions,
-    latestStudentName: "Elif",
-    latestCreatedAt: new Date(Date.now() - 1000 * 60 * 40).toISOString(),
-  };
 
   if (!hasSupabaseEnv()) {
     return {

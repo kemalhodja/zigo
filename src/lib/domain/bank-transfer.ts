@@ -39,14 +39,8 @@ function readBankAccountFromEnv(slot: 1 | 2): BankTransferConfig | null {
   const env = (key: string) => process.env[key]?.trim() || null;
   const ibanKey = slot === 1 ? "ZIGO_BANK_IBAN" : "ZIGO_BANK_2_IBAN";
   const nameKey = slot === 1 ? "ZIGO_BANK_ACCOUNT_NAME" : "ZIGO_BANK_2_ACCOUNT_NAME";
-  let iban = env(ibanKey);
-  let accountName = env(nameKey);
-  
-  // Fallback for immediate Go-To-Market testing if .env is missing
-  if (slot === 1 && !iban) {
-    iban = "TR12 3456 7890 1234 5678 90";
-    accountName = "Zigo Eğitim Teknolojileri A.Ş.";
-  }
+  const iban = env(ibanKey);
+  const accountName = env(nameKey);
 
   if (!iban || !accountName) return null;
 

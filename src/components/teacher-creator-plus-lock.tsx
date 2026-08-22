@@ -17,7 +17,6 @@ export function TeacherCreatorPlusLock({
   description,
   isUnlocked,
   title,
-  allowDevActivate = false,
 }: TeacherCreatorPlusLockProps) {
   if (isUnlocked) {
     return (

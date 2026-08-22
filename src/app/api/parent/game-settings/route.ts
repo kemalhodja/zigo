@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { untypedFrom } from "@/lib/supabase/untyped-tables";
 
 const settingsSchema = z.object({
   childProfileId: z.string().uuid(),
@@ -31,8 +32,7 @@ export async function GET(request: Request) {
     }
 
     const admin = createAdminClient() ?? supabase;
-    const { data } = await (admin as any)
-      .from("parent_game_settings")
+    const { data } = await untypedFrom(admin, "parent_game_settings")
       .select("*")
       .eq("parent_user_id", authData.user.id)
       .eq("child_profile_id", childProfileId)
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
         night_ban_end: "08:00",
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Sunucu hatası" }, { status: 500 });
   }
 }
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bu çocuğa erişim yetkiniz yok" }, { status: 403 });
     }
 
-    const { error } = await (admin as any).from("parent_game_settings").upsert(
+    const { error } = await untypedFrom(admin, "parent_game_settings").upsert(
       {
         parent_user_id: authData.user.id,
         child_profile_id: body.childProfileId,

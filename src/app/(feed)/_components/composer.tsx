@@ -1,6 +1,6 @@
 "use client";
 
-import { FlameIcon, UserIcon, ImageIcon, VideoIcon, LinkIcon } from "lucide-react";
+import { FlameIcon, ImageIcon, LinkIcon,UserIcon, VideoIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 

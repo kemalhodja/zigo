@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
+import { SocialAvatar } from "@/components/social-primitives";
 import type {
-  PrivateLessonBidWithTeacher,
   PrivateLessonPostWithDetails,
 } from "@/lib/domain/private-lessons";
 
@@ -25,7 +24,7 @@ export function TeacherLessonMarketplaceTab({
 
   // Filtre State'leri
   const [selectedMode, setSelectedMode] = useState<string>("all");
-  const [selectedGrade, setSelectedGrade] = useState<string>("all");
+  const [selectedGrade] = useState<string>("all");
   const [searchCity, setSearchCity] = useState<string>("");
   const [sortBy, setSortBy] = useState<"newest" | "bids_asc">("newest");
 
@@ -89,8 +88,8 @@ export function TeacherLessonMarketplaceTab({
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } catch (err: any) {
-      setError(err.message || "Bir hata oluştu.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bir hata oluştu.");
     } finally {
       setIsSubmitting(false);
     }
@@ -150,7 +149,7 @@ export function TeacherLessonMarketplaceTab({
             <div>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value === "bids_asc" ? "bids_asc" : "newest")}
                 className="w-full rounded-xl border border-teal-200 bg-white px-2.5 py-1.5 text-xs font-bold text-night focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="newest">En Yeni İlanlar ⏱️</option>
@@ -186,12 +185,12 @@ export function TeacherLessonMarketplaceTab({
           <p className="mt-1 text-xs font-bold text-amber-700 max-w-xs mx-auto leading-relaxed">
             Özel ders ilanlarını görebilmek ve teklif verebilmek için profilinizden en az bir <strong>branş</strong> seçmeniz gerekiyor.
           </p>
-          <a
+          <Link
             href="/profile"
             className="mt-3 inline-block rounded-xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-md shadow-amber-500/30 hover:bg-amber-600"
           >
             Profili Düzenle → Branş Seç
-          </a>
+          </Link>
         </div>
       ) : filteredPosts.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-night">

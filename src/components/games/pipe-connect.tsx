@@ -2516,7 +2516,6 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
       return;
     }
     loadLevel(currentLevel);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLevel, startLevel]);
 
   const calculateFlow = useCallback((currentGrid: CellData[][]) => {
@@ -2634,7 +2633,9 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
         setHighScore(data.high_score);
         setTimeout(() => setIsLeaderboardOpen(true), 800);
       }
-    } catch {}
+    } catch {
+    // ignore non-fatal audio/storage errors
+  }
 
     try {
       await fetch("/api/games/finish", {
@@ -2647,7 +2648,9 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
           stats: { levels: level + 1, moves: totalMoves },
         }),
       });
-    } catch {}
+    } catch {
+    // ignore non-fatal audio/storage errors
+  }
 
     if (onGameEnd) onGameEnd(score, { levels: level + 1, moves: totalMoves });
   };

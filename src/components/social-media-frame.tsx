@@ -167,7 +167,7 @@ export function SocialMediaFrame({
                       const v = e.currentTarget.parentElement?.querySelector("video");
                       if (v) {
                         if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
-                        else if ((v as any).webkitRequestFullscreen) (v as any).webkitRequestFullscreen();
+                        else if ("webkitRequestFullscreen" in v) (v as HTMLVideoElement & { webkitRequestFullscreen: () => void }).webkitRequestFullscreen();
                       }
                     }}
                     type="button"
@@ -236,7 +236,7 @@ export function SocialMediaFrame({
                 const v = videoRef.current;
                 if (v) {
                   if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
-                  else if ((v as any).webkitRequestFullscreen) (v as any).webkitRequestFullscreen();
+                  else if ("webkitRequestFullscreen" in v) (v as HTMLVideoElement & { webkitRequestFullscreen: () => void }).webkitRequestFullscreen();
                 }
               }}
               type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheckIcon, MessageCircleQuestionIcon, CheckCircle2Icon } from "lucide-react";
+import { BadgeCheckIcon, CheckCircle2Icon,MessageCircleQuestionIcon } from "lucide-react";
 import Image from "next/image";
 
 /**

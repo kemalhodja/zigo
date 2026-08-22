@@ -6,7 +6,6 @@ const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod)
 const ParentActivityBreakdown = dynamic(() => import("@/components/parent-activity-breakdown").then((mod) => mod.ParentActivityBreakdown));
 import { LimitSettingsCard } from "@/components/limit-settings-card";
 import { hasSupabaseEnv } from "@/lib/config";
-import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
@@ -22,7 +21,6 @@ export default async function ChildReportPage({ params }: ChildReportPageProps) 
   let childPoints = 340;
   let childAge = "8-10";
   let isPremium = false;
-  let activityList: any[] = [];
 
   if (hasSupabaseEnv()) {
     const supabase = await createClient();
@@ -44,8 +42,6 @@ export default async function ChildReportPage({ params }: ChildReportPageProps) 
       childPoints = child.total_points || 0;
       childAge = child.age_group || "8-10";
     }
-
-    activityList = await getChildActivity(supabase, childId, 20).catch(() => []);
   }
 
   // Calculate detailed stats

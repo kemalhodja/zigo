@@ -5,6 +5,7 @@ import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import type { Database } from "@/lib/supabase/database.types";
+import { looseFrom } from "@/lib/supabase/untyped-tables";
 
 import type {
   CreatePrivateLessonBidInput,
@@ -13,6 +14,14 @@ import type {
   PrivateLessonPostWithDetails,
 } from "./schemas";
 import { createPrivateLessonBidSchema, createPrivateLessonPostSchema } from "./schemas";
+
+type LessonPostStatusRow = {
+  id: string;
+  area_id: number;
+  status: string;
+  bids_count: number;
+  parent_id: string | null;
+};
 
 /**
  * Veli için özel ders ilanı oluşturur.
@@ -59,8 +68,10 @@ export async function createPrivateLessonPost(
   }
 
   // 4. Veritabanına kayıt
-  const { data: inserted, error: insertError } = await (supabase as any)
-    .from("private_lesson_posts")
+  const { data: inserted, error: insertError } = await looseFrom<PrivateLessonPostWithDetails>(
+    supabase,
+    "private_lesson_posts",
+  )
     .insert({
       parent_id: parentId,
       child_profile_id: input.childProfileId || null,
@@ -94,8 +105,10 @@ export async function getParentPrivateLessonPosts(
   supabase: SupabaseClient<Database>,
   parentId: string,
 ): Promise<PrivateLessonPostWithDetails[]> {
-  const { data, error } = await (supabase as any)
-    .from("private_lesson_posts")
+  const { data, error } = await looseFrom<PrivateLessonPostWithDetails>(
+    supabase,
+    "private_lesson_posts",
+  )
     .select(
       `
       *,
@@ -117,10 +130,12 @@ export async function getParentPrivateLessonPosts(
 export async function getBidsForLessonPost(
   supabase: SupabaseClient<Database>,
   postId: string,
-  viewerId: string,
+  _viewerId: string,
 ): Promise<PrivateLessonBidWithTeacher[]> {
-  const { data, error } = await (supabase as any)
-    .from("private_lesson_bids")
+  const { data, error } = await looseFrom<PrivateLessonBidWithTeacher>(
+    supabase,
+    "private_lesson_bids",
+  )
     .select(
       `
       *,
@@ -177,21 +192,19 @@ export async function getMatchedLessonPostsForTeacher(
   // 4. Öğretmenin branşlarının jenerik isimlerini (Örn: "Matematik") bul,
   // ve veritabanındaki aynı jenerik isme sahip TÜM area_id'leri topla.
   // Bu sayede "LGS Matematik" öğreten öğretmen, "Matematik" olarak açılmış veli ilanını da görür.
-  const { data: allAreas } = await (supabase as any)
-    .from("education_areas")
-    .select("id, area_name");
+  const { data: allAreas } = await supabase.from("education_areas").select("id, area_name");
 
   let matchingAreaIds = teacherAreaIds;
   if (allAreas && allAreas.length > 0) {
     const teacherGenericBranches = new Set(
       allAreas
-        .filter((a: any) => teacherAreaIds.includes(a.id))
-        .map((a: any) => displayEducationAreaName(a.area_name))
+        .filter((a) => teacherAreaIds.includes(a.id))
+        .map((a) => displayEducationAreaName(a.area_name))
     );
 
     matchingAreaIds = allAreas
-      .filter((a: any) => teacherGenericBranches.has(displayEducationAreaName(a.area_name)))
-      .map((a: any) => a.id);
+      .filter((a) => teacherGenericBranches.has(displayEducationAreaName(a.area_name)))
+      .map((a) => a.id);
   }
 
   if (matchingAreaIds.length === 0) {
@@ -199,8 +212,10 @@ export async function getMatchedLessonPostsForTeacher(
   }
 
   // 5. Eşleşen ilanları getir
-  const { data: posts, error: postsError } = await (supabase as any)
-    .from("private_lesson_posts")
+  const { data: posts, error: postsError } = await looseFrom<PrivateLessonPostWithDetails>(
+    supabase,
+    "private_lesson_posts",
+  )
     .select(
       `
       *,
@@ -217,11 +232,10 @@ export async function getMatchedLessonPostsForTeacher(
   if (postsError) throw postsError;
 
   // 5. Öğretmenin bu ilanlara daha önce verdiği teklifleri bağla
-  const postIds = (posts || []).map((p: any) => p.id);
-  let myBids: any[] = [];
+  const postIds = (posts || []).map((p) => p.id);
+  let myBids: Array<{ post_id: string }> = [];
   if (postIds.length > 0) {
-    const { data: bids } = await (supabase as any)
-      .from("private_lesson_bids")
+    const { data: bids } = await looseFrom<{ post_id: string }>(supabase, "private_lesson_bids")
       .select("*")
       .eq("teacher_id", teacherId)
       .in("post_id", postIds);
@@ -230,10 +244,10 @@ export async function getMatchedLessonPostsForTeacher(
 
   const myBidsMap = new Map(myBids.map((b) => [b.post_id, b]));
 
-  return (posts || []).map((p: any) => ({
+  return ((posts || []).map((p) => ({
     ...p,
     my_bid: myBidsMap.get(p.id) || null,
-  })) as PrivateLessonPostWithDetails[];
+  }))) as PrivateLessonPostWithDetails[];
 }
 
 /**
@@ -270,8 +284,10 @@ export async function createPrivateLessonBid(
   }
 
   // 2. İlan durumu kontrolü
-  const { data: post, error: postError } = await (supabase as any)
-    .from("private_lesson_posts")
+  const { data: post, error: postError } = await looseFrom<LessonPostStatusRow>(
+    supabase,
+    "private_lesson_posts",
+  )
     .select("id, area_id, status, bids_count, parent_id")
     .eq("id", input.postId)
     .single();
@@ -291,8 +307,10 @@ export async function createPrivateLessonBid(
   }
 
   // 4. Teklif ekle
-  const { data: bid, error: insertError } = await (supabase as any)
-    .from("private_lesson_bids")
+  const { data: bid, error: insertError } = await looseFrom<PrivateLessonBidWithTeacher>(
+    supabase,
+    "private_lesson_bids",
+  )
     .insert({
       post_id: input.postId,
       teacher_id: teacherId,
@@ -328,8 +346,10 @@ export async function createPrivateLessonBid(
       await supabase.from("notifications").insert({
         user_id: post.parent_id,
         actor_id: teacherId,
-        type: "lesson_bid",
-      } as any);
+        kind: "lesson_bid",
+        message: `${teacher?.full_name || "Bir öğretmen"} özel ders talebinize ${input.pricePerHourTry} ₺/saat teklif verdi.`,
+        post_id: input.postId,
+      });
 
       // OneSignal Web Push bildirimi gönder
       const { sendPushToUser } = await import("@/lib/server/onesignal");

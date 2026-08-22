@@ -2,17 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
 
 import type { DisplayPost } from "@/app/_components/home/data";
 import { FollowButton } from "@/components/follow-button";
 import { ReelActionRail } from "@/components/reel-action-rail";
 import { ReelVideoPlayer } from "@/components/reel-video-player";
-import { SocialMediaScene } from "@/components/social-media-scenes";
 import { SocialMediaFrame } from "@/components/social-media-frame";
+import { SocialMediaScene } from "@/components/social-media-scenes";
 import { VerifiedBadge } from "@/components/social-primitives";
 import type { Messages } from "@/lib/i18n/server";
-import { CommentSheet } from "@/components/social-actions/comment-sheet";
 
 type ExploreFeedViewerProps = {
   posts: DisplayPost[];
@@ -64,7 +62,6 @@ export function ExploreFeedViewer({ posts, messages }: ExploreFeedViewerProps) {
 
 function ExploreReelSection({
   index,
-  messages: m,
   post,
 }: {
   index: number;

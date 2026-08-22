@@ -46,10 +46,11 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (err: any) {
-    console.error("Error processing webhook:", err);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Error processing webhook:", message);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: message }),
       {
         headers: { "Content-Type": "application/json" },
         status: 400,

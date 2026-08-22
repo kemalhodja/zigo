@@ -16,7 +16,18 @@ const nodeGlobals = {
 
 const eslintConfig = [
   {
-    ignores: [".next/**", "android/**/build/**", "node_modules/**", "next-env.d.ts"],
+    ignores: [
+      ".next/**",
+      "android/**",
+      "node_modules/**",
+      "next-env.d.ts",
+      "coverage/**",
+      "test-results/**",
+      ".playwright-godaddy/**",
+      "meta-webhook-service/**",
+      "*.js",
+      "public/OneSignalSDKWorker.js",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

@@ -168,7 +168,6 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       // Use refs to get fresh values — avoids stale closure
       handleGameFinish(scoreRef.current, linesClearedRef.current, levelRef.current);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board, options, isGameOver]);
 
   const handleGameFinish = async (finalScore: number, lines: number, finalLevel?: number) => {
@@ -186,7 +185,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
           // Auto-open leaderboard so user sees their rank
           setTimeout(() => setIsLeaderboardOpen(true), 800);
         }
-      } catch {}
+      } catch {
+    // ignore non-fatal audio/storage errors
+  }
 
       try {
         await fetch("/api/games/finish", {
@@ -199,7 +200,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
             stats: { lines },
           }),
         });
-      } catch {}
+      } catch {
+    // ignore non-fatal audio/storage errors
+  }
     }
     if (onGameEnd) onGameEnd(finalScore, { lines });
   };
@@ -359,7 +362,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       });
     };
 
-    const handlePointerUp = (e: PointerEvent) => {
+    const handlePointerUp = () => {
       if (!dragState.isDragging || dragState.shape === null || dragState.shapeIdx === null) return;
       
       setDragState((prev) => {
@@ -385,7 +388,6 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerCancel);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dragState.isDragging, dragState.shape, board]);
 
   const onPointerDownBlock = (e: React.PointerEvent, shape: ShapeType, idx: number) => {

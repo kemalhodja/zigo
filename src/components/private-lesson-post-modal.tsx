@@ -117,8 +117,8 @@ export function CreatePrivateLessonModal({
       setDistrict("");
       if (onCreated) onCreated();
       window.location.reload();
-    } catch (err: any) {
-      setError(err.message || "Bir hata oluştu.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bir hata oluştu.");
     } finally {
       setIsLoading(false);
     }
@@ -222,15 +222,15 @@ export function CreatePrivateLessonModal({
               <div>
                 <label className="block text-xs font-black text-slate-700 mb-1">Ders Şekli *</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {[
+                  {([
                     { id: "online", label: "Online 💻" },
                     { id: "in_person", label: "Yüz Yüze 🏫" },
                     { id: "both", label: "Farketmez 🔄" },
-                  ].map((item) => (
+                  ] as const).map((item) => (
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setMode(item.id as any)}
+                      onClick={() => setMode(item.id)}
                       className={`rounded-xl border py-2 text-center text-xs font-black transition ${
                         mode === item.id
                           ? "border-emerald-500 bg-emerald-50 text-emerald-700"

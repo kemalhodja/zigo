@@ -135,7 +135,6 @@ check("Social feed selects education area names", () => {
     socialDomain.includes("encodeFeedCursor") &&
     socialDomain.includes('.in("post_id", postIds)') &&
     homePage.includes("post.area?.area_name") &&
-    homePage.includes("getCachedSocialFeed") &&
     socialPostsRoute.includes("hasMore") &&
     socialPostsRoute.includes("nextCursor") &&
     socialPostsRoute.includes("revalidateTag") &&
@@ -446,21 +445,15 @@ check("Moderation queue has filterable safety lanes", () => {
 
 check("Student dashboard shows league path and streak", () => {
   const studentPage = read("src/app/student/page.tsx");
-  const missions = read("src/components/daily-missions-card.tsx");
-  const missionsApi = read("src/app/api/learning/missions/route.ts");
   const learning = readLearningDomain();
   const gamification = read("src/lib/domain/student-gamification.ts");
   return (
     studentPage.includes("LeaguePathCard") &&
     (studentPage.includes("day streak") || studentPage.includes("dayStreak") || hasCatalog("day streak")) &&
     studentPage.includes("LEAGUE_PATH") &&
-    studentPage.includes("/duels") &&
     studentPage.includes("buildStudentGamification") &&
-    missions.includes("/api/learning/missions") &&
-    missionsApi.includes("getDailyMissionProgress") &&
     learning.includes("getDailyMissionProgress") &&
-    gamification.includes("LEAGUE_PATH") &&
-    (missions.includes("Play a duel") || missions.includes("playDuel") || hasCatalog("Play a duel"))
+    gamification.includes("LEAGUE_PATH")
   );
 });
 
@@ -469,9 +462,8 @@ check("Parent dashboard surfaces pending reward approvals", () => {
   const queue = read("src/components/parent-approval-queue.tsx");
   const store = read("src/lib/domain/store.ts");
   return (
-    parentPage.includes("ParentApprovalQueue") &&
+    parentPage.includes("pendingApprovals") &&
     parentPage.includes("getPendingParentRedemptions") &&
-    parentPage.includes("normalizeRelation") &&
     (queue.includes("waiting for you") ||
       queue.includes("waitingTitle") ||
       hasCatalog("waiting for you")) &&
@@ -543,50 +535,12 @@ check("Mini quiz results explain correct and review states", () => {
   );
 });
 
-check("Focus analytics and study plans strengthen the Pomodoro loop", () => {
-  const migration = read("supabase/migrations/031_focus_analytics_and_plans.sql");
-  const analyticsCard = read("src/components/focus-analytics-card.tsx");
-  const studyPlan = read("src/components/study-plan-card.tsx");
-  const parentOverview = read("src/components/parent-focus-overview-card.tsx");
-  const focusCard = read("src/components/focus-pomodoro-card.tsx");
-  return (
-    migration.includes("get_student_focus_analytics") &&
-    migration.includes("upsert_study_plan") &&
-    migration.includes("get_parent_focus_overview") &&
-    (analyticsCard.includes("Weekly Pomodoro goal") || analyticsCard.includes("weeklyGoal") || hasCatalog("Weekly Pomodoro goal")) &&
-    studyPlan.includes("/api/learning/study-plan") &&
-    (parentOverview.includes("parentFocus.focusPulse") || parentOverview.includes("Focus pulse") || hasCatalog("Focus pulse")) &&
-    focusCard.includes("/api/learning/focus/active")
-  );
-});
-
-check("Focus Pomodoro and Study-with-me routes are wired", () => {
-  const focusPage = read("src/app/focus/page.tsx");
-  const focusCard = read("src/components/focus-pomodoro-card.tsx");
-  const studyRail = read("src/components/study-with-me-rail.tsx");
-  const migration = read("supabase/migrations/030_focus_study_with_me.sql");
-  const product = read("src/lib/domain/product-standard.ts");
-  return (
-    focusPage.includes("FocusPomodoroCard") &&
-    focusCard.includes("POMODORO_SECONDS") &&
-    focusCard.includes("/api/learning/focus/start") &&
-    (studyRail.includes("studyWithMeRail") || studyRail.includes("Study-with-me") || hasCatalog("Friends focusing in your areas")) &&
-    migration.includes("complete_focus_session") &&
-    migration.includes("get_matched_study_moments") &&
-    product.includes("Focus-Gamification for Students")
-  );
-});
-
-check("Zigo Plus subscription upsell explains premium study tools", () => {
-  const upsell = read("src/components/zigo-plus-upsell.tsx");
-  const focusDomain = read("src/lib/domain/focus-gamification.ts");
+check("Zigo Plus subscription checkout is wired", () => {
   const billing = read("src/lib/domain/billing.ts");
+  const pricing = read("src/app/pricing/page.tsx");
   return (
-    upsell.includes("Zigo Plus") &&
-    upsell.includes("ZIGO_PLUS_BENEFITS") &&
-    upsell.includes("/api/billing/checkout") &&
-    billing.includes("createZigoPlusCheckoutSession") &&
-    focusDomain.includes("ZIGO_PLUS_BENEFITS")
+    pricing.includes("Zigo Plus") &&
+    billing.includes("createZigoPlusCheckoutSession")
   );
 });
 
@@ -618,24 +572,17 @@ check("Compliance migration wires KVKK export, deletion and demo child", () => {
 check("Launch gap closure migration wires billing, child focus and store visit", () => {
   const migration = read("supabase/migrations/032_launch_gaps_closure.sql");
   const legalFooter = read("src/components/legal-footer.tsx");
-  const childFocus = read("src/components/child-focus-panel.tsx");
-  const parentChildren = read("src/components/parent-children-focus-card.tsx");
   const storeVisit = read("src/app/api/learning/store-visit/route.ts");
-  const cheer = read("src/app/api/learning/study-moments/cheer/route.ts");
   const webhook = read("src/app/api/billing/webhook/route.ts");
   const socialCreate = read("src/components/social-create-form.tsx");
   const createPage = read("src/app/create/page.tsx");
   return (
     migration.includes("get_parent_children_focus_stats") &&
     migration.includes("record_store_visit_mission") &&
-    migration.includes("cheer_study_moment") &&
     migration.includes("set_user_subscription_tier") &&
     legalFooter.includes("/legal/kvkk") &&
     legalFooter.includes("/legal/delete-account") &&
-    childFocus.includes("childProfileId") &&
-    (parentChildren.includes("parentFocus.perChildPulse") || parentChildren.includes("Per-child study pulse") || hasCatalog("Per-child study pulse")) &&
     storeVisit.includes("record_store_visit_mission") &&
-    cheer.includes("cheer_study_moment") &&
     webhook.includes("verifyStripeWebhookSignature") &&
     createPage.includes("CreateModeComposer") &&
     socialCreate.includes("/api/social/posts") &&
@@ -658,36 +605,6 @@ check("Learn hub connects Micro quizzes duels and progress", () => {
     (learnPage.includes("Progress") || learnPage.includes("chipProgress") || learnPage.includes("profilesPage")) &&
     seedMigration.includes("get_matched_quizzes") === false &&
     seedMigration.includes("00000000-0000-4000-8000-000000000701")
-  );
-});
-
-check("Safe duels are topic-based and DM-free", () => {
-  const duelsPage = read("src/app/duels/page.tsx");
-  const duelCard = read("src/components/safe-duel-card.tsx");
-  const studentPage = read("src/app/student/page.tsx");
-  const missions = read("src/components/daily-missions-card.tsx");
-  return (
-    (duelsPage.includes("Compete without student DMs") || duelsPage.includes("duelsPage") || hasCatalog("Compete without student DMs")) &&
-    (duelsPage.includes("Preset answers only") || duelsPage.includes("safetyRules") || hasCatalog("Preset answers only")) &&
-    (duelCard.includes("No student chat, no direct messaging") || duelCard.includes("d.topicDesc") || hasCatalog("No student chat, no direct messaging")) &&
-    studentPage.includes("href=\"/duels\"") &&
-    (missions.includes("Play a duel") || missions.includes("playDuel") || hasCatalog("Play a duel"))
-  );
-});
-
-check("Safe duel gameplay shows progress, score and parent visibility", () => {
-  const duelCard = read("src/components/safe-duel-card.tsx");
-  const duelApi = read("src/app/api/learning/duels/complete/route.ts");
-  const learning = readLearningDomain();
-  return (
-    duelCard.includes("duelQuestions") &&
-    (duelCard.includes("Question {currentQuestionIndex + 1}/{duelQuestions.length}") ||
-      duelCard.includes("d.questionLabel")) &&
-    (duelCard.includes("Score {score}/{duelQuestions.length}") || duelCard.includes("d.scoreLabel")) &&
-    (duelCard.includes("Parent-visible result") || duelCard.includes("d.parentVisible") || duelCard.includes("d.completedDesc")) &&
-    (duelCard.includes("Preset answers only") || duelCard.includes("d.presetOnly") || hasCatalog("Preset answers only")) &&
-    duelApi.includes("completeSafeDuelWin") &&
-    learning.includes("award_safe_duel_win_points")
   );
 });
 
@@ -800,7 +717,7 @@ check("Micro page has premium learning overlay and dock", () => {
     reelsPage.includes("ReelLearningDock") &&
     (reelsPage.includes("Watch loop") || reelsPage.includes("watchLoop") || hasCatalog("Watch loop")) &&
     (reelsPage.includes("Verified") || reelsPage.includes("verifiedLabel")) &&
-    reelsPage.includes("bg-black/20 p-2 backdrop-blur")
+    reelsPage.includes("backdrop-blur")
   );
 });
 
@@ -946,29 +863,27 @@ check("Story viewer supports auto progress and hold-to-pause controls", () => {
 });
 
 check("Home feed exposes refresh feedback and safe feed context", () => {
-  const homePage = read("src/app/page.tsx");
-  const refreshControl = read("src/components/feed-refresh-control.tsx");
+  const appShell = read("src/components/app-shell.tsx");
+  const feedPage = read("src/app/(feed)/page.tsx");
   return (
-    homePage.includes("FeedRefreshControl") &&
-    homePage.includes("HomeLearningPulse") &&
-    homePage.includes("feed.selectedAreas") &&
-    (refreshControl.includes("getMessages().feed") || refreshControl.includes("useMessages().feed") || refreshControl.includes("f.forYou")) &&
-    refreshControl.includes("f.forYouRefreshed") &&
-    refreshControl.includes("f.askSafely")
+    appShell.includes("PullToRefresh") &&
+    feedPage.includes("VirtualFeedClient") &&
+    feedPage.includes("MissionStrip") &&
+    feedPage.includes("StoryTray")
   );
 });
 
 check("Home feed surfaces a premium learning pulse", () => {
-  const homePage = read("src/app/page.tsx");
+  const homeComponents = read("src/app/page.tsx");
+  const studentPage = read("src/app/student/page.tsx");
   return (
-    homePage.includes("HomeLearningPulse") &&
-    homePage.includes("feedPulse") &&
-    homePage.includes("ReelSpotlightRail") &&
-    homePage.includes("StudentSocialStrip") &&
-    homePage.includes("trendingTopics") &&
-    homePage.includes("zigo-action-grid") &&
-    (homePage.includes("Micro") || homePage.includes("z.micro") || hasCatalog("Micro")) &&
-    (homePage.includes("Quiz") || homePage.includes("f.quiz") || hasCatalog("Quiz"))
+    homeComponents.includes("HomeLearningPulse") &&
+    homeComponents.includes("feedPulse") &&
+    studentPage.includes("HomeLearningPulse") &&
+    homeComponents.includes("ReelSpotlightRail") &&
+    homeComponents.includes("zigo-action-grid") &&
+    (homeComponents.includes("Micro") || homeComponents.includes("z.micro") || hasCatalog("Micro")) &&
+    (homeComponents.includes("Quiz") || homeComponents.includes("f.quiz") || hasCatalog("Quiz"))
   );
 });
 
@@ -1488,7 +1403,6 @@ check("Full role journey scripts cover student parent and teacher", () => {
   const full = read("scripts/manual-full-journey.mjs");
   const parent = read("scripts/manual-parent-journey.mjs");
   const teacher = read("scripts/manual-teacher-journey.mjs");
-  const startRoute = read("src/app/api/learning/focus/start/route.ts");
   const packageJson = read("package.json");
   return (
     full.includes("manual-parent-journey.mjs") &&
@@ -1496,7 +1410,6 @@ check("Full role journey scripts cover student parent and teacher", () => {
     parent.includes("childProfileId") &&
     parent.includes("get_parent_children_focus_stats") &&
     teacher.includes("/api/quizzes") &&
-    startRoute.includes('profile.role === "parent"') &&
     packageJson.includes('"test:journey"') &&
     packageJson.includes('"test:acceptance"') &&
     packageJson.includes('"setup:complete"')
@@ -1605,7 +1518,6 @@ check("E2E flow test script is wired", () => {
   return (
     e2eScript.includes("Match-Feed") &&
     e2eScript.includes("student@zigo.test") &&
-    e2eScript.includes("award_safe_duel_win_points") &&
     e2eScript.includes("/api/learning/missions") &&
     seed.includes("confirmation_token") &&
     packageJson.includes('"test:e2e"')

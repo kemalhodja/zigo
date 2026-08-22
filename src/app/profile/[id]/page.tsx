@@ -32,7 +32,7 @@ type PublicProfilePageProps = {
 
 export async function generateMetadata(
   { params }: PublicProfilePageProps,
-  parent: ResolvingMetadata
+  _parent: ResolvingMetadata
 ): Promise<Metadata> {
   const { id } = await params;
   

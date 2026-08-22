@@ -4,11 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { DismissibleFeedPost } from "@/components/dismissible-feed-post";
-import { FeedEducationBadges } from "@/components/feed-education-badges";
 import { FollowButton } from "@/components/follow-button";
 import { SocialPostActions } from "@/components/social-post-actions";
 import { SocialAvatar } from "@/components/social-primitives";
-import { SponsoredAdLink } from "@/components/sponsored-ad-link";
 import { useFeedPostState } from "@/hooks/use-feed-post-state";
 import { formatFeedTimestamp } from "@/lib/format-time";
 import type { Messages } from "@/lib/i18n/server";
@@ -21,34 +19,27 @@ import { FeedPostHeader } from "./feed-post-header";
 export function FeedPostCard({
   post,
   teacherBadges,
-  feedExtras,
-  feedEnhancements,
   priorityMedia = false,
-  viewerRole = null,
   enterDelayMs = 0,
-  fullHeight = false,
 }: {
   post: DisplayPost;
   teacherBadges: { verifiedTeacher: string; moreAreas: string };
-  feedExtras: Messages["feedExtras"];
-  feedEnhancements: Messages["feedEnhancements"];
+  feedExtras?: Messages["feedExtras"];
+  feedEnhancements?: Messages["feedEnhancements"];
   priorityMedia?: boolean;
   viewerRole?: UserRole | "guest" | null;
   enterDelayMs?: number;
   fullHeight?: boolean;
 }) {
   const postKey = post.postId ?? post.handle;
-  const isMicro = post.badge === "Micro" || post.mediaType === "video";
   const { containerStyle } = useFeedPostState(enterDelayMs);
-
-  const heightClass = fullHeight ? "h-[100dvh] md:h-[100dvh]" : "h-[calc(100dvh-70px)] md:h-[700px]";
 
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 bg-white pb-4 border-b border-slate-200" style={containerStyle}>
         <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="light" />
         <div className="relative aspect-square w-full bg-slate-50 border-y border-slate-100">
-          <FeedMediaViewer post={post} priorityMedia={priorityMedia} isMicro={false} oneMinLessonLabel={feedEnhancements.oneMinLesson} />
+          <FeedMediaViewer post={post} priorityMedia={priorityMedia} />
         </div>
         <div className="px-4 mt-3 space-y-2">
           <SocialPostActions initialComments={post.comments} initialLiked={post.isLiked} initialLikes={post.likes} initialSaved={post.isSaved} postId={post.postId} variant="compact" theme="light" />

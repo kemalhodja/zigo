@@ -150,11 +150,9 @@ import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import {
   type ActiveStory,
   getActiveStories,
-  getCachedSocialFeed,
-  getFollowingFeed,
   getExplorePosts,
+  getFollowingFeed,
   getSuggestedCreators,
-  isFollowing,
   type SocialFeedPost,
 } from "@/lib/domain/social";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+
 import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {

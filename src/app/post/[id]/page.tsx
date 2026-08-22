@@ -18,7 +18,7 @@ type PostDetailPageProps = {
 
 export async function generateMetadata(
   { params }: PostDetailPageProps,
-  parent: ResolvingMetadata
+  _parent: ResolvingMetadata
 ): Promise<Metadata> {
   const { id } = await params;
   
@@ -43,7 +43,7 @@ export async function generateMetadata(
     if (post.media_type === "carousel") {
       try {
         mediaUrl = JSON.parse(post.media_url);
-      } catch (e) {
+      } catch {
         mediaUrl = [post.media_url];
       }
     } else {
