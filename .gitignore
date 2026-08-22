@@ -51,4 +51,20 @@ zigo.tar.gz
 *.tar.gz
 scripts/_tmp-*.mjs
 
+# one-off local DB diagnostic scripts (contain credentials, never commit)
+/diagnose2.js
+/diagnose3.js
+/diagnose_story_rls.js
+/fix_select_policy.js
+/query_areas.js
+/query_func.js
+/query_has_area.js
+/query_interests.js
+/query_policies.js
+/query_schema.js
+/query_triggers.js
+/relax_policy.js
+/restore_policy.js
+/update_func.js
+
 .continue/

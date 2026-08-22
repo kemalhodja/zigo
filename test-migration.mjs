@@ -1,7 +1,13 @@
 import { Client } from 'pg';
 import fs from 'fs';
+
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is required (postgres connection string)');
+  process.exit(1);
+}
+
 const client = new Client({
-  connectionString: 'postgres://postgres.fuqnjxcoxopomzgbifve:ac5n3HPYxUdY00F0@aws-1-eu-central-1.pooler.supabase.com:5432/postgres',
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 async function run() {
