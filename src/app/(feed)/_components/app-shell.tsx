@@ -14,7 +14,7 @@ export function AppShell({
   rightPanel: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-white md:bg-slate-100 dark:bg-black dark:md:bg-slate-950">
+    <div className="min-h-screen bg-white md:bg-slate-100 dark:md:bg-slate-950">
       <div className="mx-auto max-w-7xl px-0 md:px-4 lg:px-8">
         <div className="flex justify-center md:grid md:grid-cols-[240px_minmax(0,640px)] lg:grid-cols-[240px_minmax(0,640px)_280px] md:gap-6 lg:gap-8 pt-0 md:pt-8 pb-20 md:pb-8">
           
