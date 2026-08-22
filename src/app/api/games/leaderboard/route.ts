@@ -10,6 +10,8 @@ type LeaderboardRow = {
   users?: { id: string; full_name: string | null; avatar_url: string | null } | null;
 };
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const supabase = createAdminClient() || await createClient();
   const gameType = req.nextUrl.searchParams.get("game_type");
