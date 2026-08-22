@@ -17,7 +17,7 @@ export function StoryTray({
   if (stories.length === 0) return null;
 
   return (
-    <section className="border-b border-slate-100 bg-white px-4 pb-3 pt-1 md:rounded-xl md:border md:border-slate-200 md:border-b">
+    <section className="border-b border-slate-100 bg-white px-4 pb-3 pt-4 md:rounded-xl md:border md:border-slate-200 md:border-b">
       <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
         {stories.map((story) => (
           <StoryTrayItem feedExtras={feedExtras} feedEnhancements={feedEnhancements} key={story.id} story={story} />
@@ -77,11 +77,15 @@ function StoryTrayItem({
             +
           </span>
         ) : story.showLiveBadge ? (
-          <span className="zigo-badge-count absolute -right-0.5 top-0 rounded-full bg-rose-500 px-1.5 py-0.5 text-white">
+          <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-white" style={{fontSize: '9px', fontWeight: 800, lineHeight: 1, letterSpacing: '0.04em'}}>
+            <span className="relative flex size-1.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex rounded-full size-1.5 bg-white" />
+            </span>
             {fe.liveLesson}
           </span>
         ) : story.showNewBadge ? (
-          <span className="zigo-badge-count absolute -right-0.5 top-0 rounded-full bg-crystal px-1.5 py-0.5 text-white">
+          <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 rounded-full bg-crystal px-1.5 py-0.5 text-white" style={{fontSize: '9px', fontWeight: 800, lineHeight: 1}}>
             {fe.newLesson}
           </span>
         ) : story.storyKind === "daily-mission" ? (
