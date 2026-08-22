@@ -55,3 +55,56 @@ export function untypedFrom(
   const fromUntyped = client.from as unknown as (relation: string) => UntypedTableBuilder;
   return fromUntyped(relation);
 }
+
+type DbError = { message: string; code?: string } | null;
+
+type Exec<T> = PromiseLike<{ data: T; error: DbError }>;
+
+/**
+ * Chainable filter node: awaitable at any point and supports
+ * eq / in / order / limit like the real Postgrest builder.
+ */
+export type LooseChain<T> = Exec<T> & {
+  eq: (column: string, value: unknown) => LooseChain<T>;
+  in: (column: string, values: readonly unknown[]) => LooseChain<T>;
+  order: (column: string, options?: { ascending?: boolean }) => LooseChain<T>;
+  limit: (count: number) => LooseChain<T>;
+};
+
+export type LooseSelect<T> = Exec<T[]> & {
+  eq: (column: string, value: unknown) => LooseSelect<T>;
+  in: (column: string, values: readonly unknown[]) => LooseSelect<T>;
+  order: (column: string, options?: { ascending?: boolean }) => LooseSelect<T>;
+  limit: (count: number) => LooseSelect<T>;
+  single: () => Exec<T | null>;
+  maybeSingle: () => Exec<T | null>;
+};
+
+/**
+ * Full query-builder subset for tables missing from generated Database types
+ * (e.g. private_lesson_posts, private_lesson_bids).
+ */
+export type LooseTableBuilder<T = Record<string, unknown>> = {
+  select: (columns?: string) => LooseSelect<T>;
+  insert: (
+    values: Record<string, unknown> | Array<Record<string, unknown>>,
+  ) => {
+    select: (columns?: string) => {
+      single: () => Exec<T | null>;
+    };
+    then: Exec<null>["then"];
+  };
+  update: (values: Record<string, unknown>) => LooseChain<null>;
+  upsert: (
+    values: Record<string, unknown>,
+    options?: { onConflict?: string },
+  ) => Exec<null>;
+};
+
+export function looseFrom<T = Record<string, unknown>>(
+  client: SupabaseClient<Database>,
+  relation: string,
+): LooseTableBuilder<T> {
+  const fromLoose = client.from as unknown as (relation: string) => LooseTableBuilder<T>;
+  return fromLoose(relation);
+}
