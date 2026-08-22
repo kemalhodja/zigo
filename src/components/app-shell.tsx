@@ -348,7 +348,7 @@ function Header({
       isDarkPage 
         ? "bg-slate-950/80 border-slate-800/50" 
         : "bg-white/80 border-slate-200/50"
-    }`}>
+    } ${isHomePage ? "hidden md:block" : "block"}`}>
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {!isHomePage ? <BackButton fallbackHref="/" /> : null}

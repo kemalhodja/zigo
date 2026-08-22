@@ -130,7 +130,7 @@ export default async function HomePage() {
 
       {showStudentHomeModules && posts.length > 0 ? <ReelSpotlightRail messages={m} spotlights={reelSpotlights} /> : null}
 
-      <section className="space-y-0">
+      <section className="space-y-0 -mx-4 md:mx-0">
         <VirtualFeedClient
           messages={m}
           posts={posts}
