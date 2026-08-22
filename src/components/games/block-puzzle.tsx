@@ -62,6 +62,11 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const [justCleared, setJustCleared] = useState<{ rows: number[]; cols: number[] } | null>(null);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
+  // Refs to avoid stale closures in useEffect callbacks
+  const scoreRef = useRef(0);
+  const levelRef = useRef(1);
+  const linesClearedRef = useRef(0);
+
   const { playSound } = useAudio();
 
   // Sürükle-Bırak state
@@ -113,6 +118,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     setLevel(1);
     setIsGameOver(false);
     setJustCleared(null);
+    scoreRef.current = 0;
+    levelRef.current = 1;
+    linesClearedRef.current = 0;
   }, []);
 
   useEffect(() => {
@@ -157,21 +165,27 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
         origin: { y: 0.5 },
         colors: ["#f43f5e", "#fb923c", "#fbbf24"],
       });
-      handleGameFinish(score, linesClearedTotal);
+      // Use refs to get fresh values — avoids stale closure
+      handleGameFinish(scoreRef.current, linesClearedRef.current, levelRef.current);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board, options, isGameOver]);
 
-  const handleGameFinish = async (finalScore: number, lines: number) => {
+  const handleGameFinish = async (finalScore: number, lines: number, finalLevel?: number) => {
+    const lvl = finalLevel ?? levelRef.current;
     if (userId !== "guest") {
       try {
         const res = await fetch("/api/games/progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ game_type: "block_puzzle", score: finalScore, level: level }),
+          body: JSON.stringify({ game_type: "block_puzzle", score: finalScore, level: lvl }),
         });
         const data = await res.json();
-        if (data.high_score) setHighScore(data.high_score);
+        if (data.high_score != null) {
+          setHighScore(data.high_score);
+          // Auto-open leaderboard so user sees their rank
+          setTimeout(() => setIsLeaderboardOpen(true), 800);
+        }
       } catch {}
 
       try {
@@ -280,6 +294,10 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
     setScore(newScore);
     setBoard(newBoard);
+    // Keep refs in sync for fresh values in callbacks
+    scoreRef.current = newScore;
+    levelRef.current = currentLevel;
+    linesClearedRef.current = linesCleared > 0 ? linesClearedTotal + linesCleared : linesClearedTotal;
   };
 
   // Drag and Drop global listeners
@@ -433,7 +451,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
                 <button 
                   onClick={() => {
                     setIsGameOver(true);
-                    handleGameFinish(score, linesClearedTotal);
+                    handleGameFinish(scoreRef.current, linesClearedRef.current, levelRef.current);
                   }}
                   className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
                 >
@@ -566,11 +584,13 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       </div>
 
       {/* Leaderboard Modal */}
-      <LeaderboardModal 
-        isOpen={isLeaderboardOpen} 
-        onClose={() => setIsLeaderboardOpen(false)} 
-        gameType="block_puzzle" 
-        gameTitle="Blok Zeka" 
+      <LeaderboardModal
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
+        gameType="block_puzzle"
+        gameTitle="Blok Zeka"
+        currentUserId={userId !== "guest" ? userId : undefined}
+        currentScore={score > 0 ? score : highScore}
       />
     </div>
   );
