@@ -24,7 +24,7 @@ export function AppShell({
           </aside>
           
           {/* Main Feed Content */}
-          <main className="w-full max-w-[640px] flex-shrink-0">
+          <main className="w-full max-w-full md:max-w-[640px] flex-shrink-0">
             {children}
           </main>
           
