@@ -9,6 +9,7 @@ import { FollowButton } from "@/components/follow-button";
 import { ReelActionRail } from "@/components/reel-action-rail";
 import { ReelVideoPlayer } from "@/components/reel-video-player";
 import { SocialMediaScene } from "@/components/social-media-scenes";
+import { SocialMediaFrame } from "@/components/social-media-frame";
 import { VerifiedBadge } from "@/components/social-primitives";
 import type { Messages } from "@/lib/i18n/server";
 import { CommentSheet } from "@/components/social-actions/comment-sheet";
@@ -75,6 +76,21 @@ function ExploreReelSection({
       {/* Video Background */}
       {post.mediaUrl && post.mediaType === "video" ? (
         <ReelVideoPlayer mediaUrl={post.mediaUrl} reelId={post.postId ?? `reel-${index}`} />
+      ) : post.mediaUrl ? (
+        <div className={`absolute inset-0 bg-gradient-to-br ${post.gradient}`}>
+          <SocialMediaFrame
+            alt={post.caption.slice(0, 80)}
+            className="size-full"
+            gradient={post.gradient}
+            mediaType={post.mediaType}
+            mediaUrl={post.mediaType !== "carousel" ? post.mediaUrl : undefined}
+            mediaUrls={post.mediaType === "carousel" ? (() => {
+              try { return JSON.parse(post.mediaUrl); } catch { return [post.mediaUrl]; }
+            })() : undefined}
+            scene={post.scene ?? "math"}
+            objectFit="contain"
+          />
+        </div>
       ) : (
         <div className={`absolute inset-0 bg-gradient-to-br ${post.gradient}`}>
           <SocialMediaScene scene={post.scene ?? "math"} />

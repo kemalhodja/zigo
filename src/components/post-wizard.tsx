@@ -60,8 +60,8 @@ export function PostWizard({
   const [step, setStep] = useState<1 | 2>(1);
 
   // ── Media state ──────────────────────────────────────────────────────
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<{ url: string; type: "image" | "video" } | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<{ url: string; type: "image" | "video" }[]>([]);
   const [isValidatingMedia, setIsValidatingMedia] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
 
@@ -95,40 +95,62 @@ export function PostWizard({
   // ── Media helpers ────────────────────────────────────────────────────
 
   function clearPreview() {
-    if (preview?.url.startsWith("blob:")) URL.revokeObjectURL(preview.url);
-    setPreview(null);
-    setSelectedFile(null);
+    previews.forEach(p => {
+      if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
+    });
+    setPreviews([]);
+    setSelectedFiles([]);
     setMediaError(null);
   }
 
-  async function handleFileSelect(file: File | undefined) {
-    if (!file) return;
+  async function handleFilesSelect(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    
+    // Limits
+    if (files.length > 10) {
+      setMediaError("En fazla 10 medya seçebilirsiniz.");
+      return;
+    }
+    
+    // Only allow videos for single item reels for now (or multiple photos)
+    const hasVideo = Array.from(files).some(f => f.type.startsWith("video/"));
+    if (files.length > 1 && hasVideo) {
+      setMediaError("Çoklu seçim (carousel) sadece fotoğraflar için desteklenmektedir. Lütfen sadece fotoğraf seçin veya tek bir video yükleyin.");
+      return;
+    }
+
     clearPreview();
     setMediaError(null);
 
-    if (!ALLOWED_TYPES.has(file.type)) {
-      setMediaError(
-        "Desteklenmeyen dosya türü. JPG, PNG, WEBP, GIF, MP4 veya WEBM seçin.",
-      );
-      return;
-    }
+    const validFiles: File[] = [];
+    const newPreviews: { url: string; type: "image" | "video" }[] = [];
 
-    if (file.type.startsWith("video/")) {
-      setIsValidatingMedia(true);
-      const result = await validateVideoLimits(file);
-      setIsValidatingMedia(false);
-      if (!result.valid) {
-        setMediaError(result.error ?? "Video geçersiz.");
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!ALLOWED_TYPES.has(file.type)) {
+        setMediaError("Desteklenmeyen dosya türü tespit edildi. Lütfen sadece JPG, PNG, WEBP, GIF, MP4 veya WEBM seçin.");
         return;
       }
-    } else if (file.size > MAX_IMAGE_BYTES) {
-      setMediaError("Görsel 100 MB sınırını aşıyor.");
-      return;
+
+      if (file.type.startsWith("video/")) {
+        setIsValidatingMedia(true);
+        const result = await validateVideoLimits(file);
+        setIsValidatingMedia(false);
+        if (!result.valid) {
+          setMediaError(result.error ?? "Video geçersiz.");
+          return;
+        }
+      } else if (file.size > MAX_IMAGE_BYTES) {
+        setMediaError("Seçilen bir görsel 100 MB sınırını aşıyor.");
+        return;
+      }
+
+      validFiles.push(file);
+      newPreviews.push({ url: URL.createObjectURL(file), type: file.type.startsWith("video/") ? "video" : "image" });
     }
 
-    const url = URL.createObjectURL(file);
-    setSelectedFile(file);
-    setPreview({ url, type: file.type.startsWith("video/") ? "video" : "image" });
+    setSelectedFiles(validFiles);
+    setPreviews(newPreviews);
   }
 
   // ── Publish ──────────────────────────────────────────────────────────
@@ -139,8 +161,8 @@ export function PostWizard({
       caption: caption.trim(),
       areaId: selectedAreaId,
       targetGrade,
-      isReel: forceReel || preview?.type === "video",
-      file: selectedFile,
+      isReel: forceReel || (previews.length === 1 && previews[0].type === "video"),
+      files: selectedFiles,
       teacherCreatorPlus,
     });
   }
@@ -174,10 +196,10 @@ export function PostWizard({
         {step === 1 ? (
           <MediaPickerStep
             forceReel={forceReel}
-            preview={preview}
+            previews={previews}
             isValidating={isValidatingMedia}
             mediaError={mediaError}
-            onFileSelect={handleFileSelect}
+            onFilesSelect={handleFilesSelect}
             onClearMedia={clearPreview}
             onNext={() => setStep(2)}
           />
@@ -207,20 +229,20 @@ export function PostWizard({
 
 type MediaPickerStepProps = {
   forceReel: boolean;
-  preview: { url: string; type: "image" | "video" } | null;
+  previews: { url: string; type: "image" | "video" }[];
   isValidating: boolean;
   mediaError: string | null;
-  onFileSelect: (file: File | undefined) => void;
+  onFilesSelect: (files: FileList | null) => void;
   onClearMedia: () => void;
   onNext: () => void;
 };
 
 function MediaPickerStep({
   forceReel,
-  preview,
+  previews,
   isValidating,
   mediaError,
-  onFileSelect,
+  onFilesSelect,
   onClearMedia,
   onNext,
 }: MediaPickerStepProps) {
@@ -229,25 +251,39 @@ function MediaPickerStep({
     ? "video/mp4,video/webm"
     : "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm";
 
+  const hasMedia = previews.length > 0;
+  const isVideo = hasMedia && previews[0].type === "video";
+
   return (
     <div className="flex flex-col">
       {/* Media area */}
-      {preview ? (
+      {hasMedia ? (
         <div className="relative bg-black">
-          {preview.type === "video" ? (
+          {isVideo ? (
             <video
               className="max-h-[22rem] w-full object-contain"
-              src={preview.url}
+              src={previews[0].url}
               controls
               playsInline
             />
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className="max-h-[22rem] w-full object-contain"
-              src={preview.url}
-              alt="Medya önizlemesi"
-            />
+            <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+              {previews.map((p, idx) => (
+                <div key={p.url} className="w-full shrink-0 snap-center relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="max-h-[22rem] w-full object-contain"
+                    src={p.url}
+                    alt={`Medya önizlemesi ${idx + 1}`}
+                  />
+                  {previews.length > 1 && (
+                    <div className="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-md font-bold backdrop-blur-sm">
+                      {idx + 1} / {previews.length}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
 
           {/* Overlay buttons */}
@@ -265,7 +301,8 @@ function MediaPickerStep({
                 type="file"
                 className="sr-only"
                 accept={accept}
-                onChange={(e) => onFileSelect(e.target.files?.[0])}
+                multiple={!forceReel}
+                onChange={(e) => onFilesSelect(e.target.files)}
               />
             </label>
           </div>
@@ -288,7 +325,7 @@ function MediaPickerStep({
               </span>
               <div className="text-center">
                 <p className="text-base font-black">
-                  {forceReel ? "Video Seç" : "Fotoğraf veya Video Seç"}
+                  {forceReel ? "Video Seç" : "Fotoğraf (Çoklu eklenebilir) veya Video Seç"}
                 </p>
                 <p className="mt-1 text-xs font-bold text-white/70">
                   {forceReel
@@ -303,7 +340,8 @@ function MediaPickerStep({
             type="file"
             className="sr-only"
             accept={accept}
-            onChange={(e) => onFileSelect(e.target.files?.[0])}
+            multiple={!forceReel}
+            onChange={(e) => onFilesSelect(e.target.files)}
           />
         </label>
       )}
@@ -321,17 +359,17 @@ function MediaPickerStep({
           type="button"
           id="wizard-step1-next"
           onClick={onNext}
-          disabled={(forceReel && !preview) || isValidating}
+          disabled={(forceReel && !hasMedia) || isValidating}
           className="w-full rounded-xl bg-night py-4 text-sm font-black text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-40"
         >
-          {preview
+          {hasMedia
             ? "Devam Et →"
             : forceReel
             ? "Önce video seçin"
             : "Medya olmadan devam et →"}
         </button>
 
-        {!preview && !forceReel && (
+        {!hasMedia && !forceReel && (
           <p className="mt-2 text-center text-xs font-semibold text-slate-400">
             Medya seçimi zorunlu değil
           </p>

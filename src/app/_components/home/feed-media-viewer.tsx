@@ -14,6 +14,18 @@ export function FeedMediaViewer({
   isMicro?: boolean;
   oneMinLessonLabel: string;
 }) {
+  let parsedMediaUrls: string[] | undefined = undefined;
+  let singleMediaUrl: string | null | undefined = post.mediaUrl;
+
+  if (post.mediaType === "carousel" && post.mediaUrl) {
+    try {
+      parsedMediaUrls = JSON.parse(post.mediaUrl);
+      singleMediaUrl = undefined;
+    } catch (e) {
+      console.warn("Failed to parse carousel mediaUrl", post.mediaUrl);
+    }
+  }
+
   return (
     <DoubleTapLikeLink
       className="flex h-full w-full items-center justify-center"
@@ -26,7 +38,8 @@ export function FeedMediaViewer({
         className="zigo-media h-full w-full"
         gradient={post.gradient}
         mediaType={post.mediaType}
-        mediaUrl={post.mediaUrl}
+        mediaUrl={singleMediaUrl}
+        mediaUrls={parsedMediaUrls}
         priority={priorityMedia}
         scene={post.scene}
         objectFit="cover"

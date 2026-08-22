@@ -860,13 +860,26 @@ function toProfileData(
     stats,
     posts:
       posts.length > 0
-        ? posts.map((post) => ({
-            id: post.id,
-            label: post.caption.slice(0, 28) || "Post",
-            href: post.media_type === "video" ? `/micro?reelId=${post.id}` : `/post/${post.id}`,
-            mediaUrl: post.media_url,
-            mediaType: post.media_type,
-          }))
+        ? posts.map((post) => {
+            let parsedMediaUrl = post.media_url;
+            if (post.media_type === "carousel" && post.media_url) {
+              try {
+                const urls = JSON.parse(post.media_url);
+                if (Array.isArray(urls) && urls.length > 0) {
+                  parsedMediaUrl = urls[0]; // Just use the first image for profile grid
+                }
+              } catch (e) {
+                // fallback to unparsed
+              }
+            }
+            return {
+              id: post.id,
+              label: post.caption.slice(0, 28) || "Post",
+              href: post.media_type === "video" ? `/micro?reelId=${post.id}` : `/post/${post.id}`,
+              mediaUrl: parsedMediaUrl,
+              mediaType: post.media_type,
+            };
+          })
         : [],
     isPreview: false,
     isSignedOut: false,

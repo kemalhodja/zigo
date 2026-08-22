@@ -114,32 +114,45 @@ export default async function TagPage({ params }: TagPageProps) {
             <h2 className="mt-1 text-base font-black text-night">#{decodedTag} ile paylaşılanlar</h2>
           </div>
           <div className="grid auto-rows-[8rem] grid-cols-3 gap-px">
-            {posts.map((post, index) => (
-              <Link
-                className="group relative block overflow-hidden"
-                href={`/post/${post.id}`}
-                key={post.id}
-              >
-                <SocialMediaFrame
-                  alt={post.caption.slice(0, 60)}
-                  className="h-full"
-                  gradient={GRADIENT_CYCLE[index % GRADIENT_CYCLE.length]}
-                  mediaType={post.media_type}
-                  mediaUrl={post.media_url}
-                  scene={index % 3 === 0 ? "math" : index % 3 === 1 ? "science" : "coding"}
+            {posts.map((post, index) => {
+              let parsedMediaUrl = post.media_url;
+              if (post.media_type === "carousel" && post.media_url) {
+                try {
+                  const urls = JSON.parse(post.media_url);
+                  if (Array.isArray(urls) && urls.length > 0) {
+                    parsedMediaUrl = urls[0];
+                  }
+                } catch (e) {
+                  // Fallback
+                }
+              }
+
+              return (
+                <Link
+                  className="group relative block overflow-hidden"
+                  href={`/post/${post.id}`}
+                  key={post.id}
                 >
-                  <div className="flex items-start justify-between">
-                    {post.is_reel || post.media_type === "video" ? (
-                      <span className="flex size-6 items-center justify-center rounded-md bg-black/30 backdrop-blur">
-                        <svg aria-hidden="true" className="ml-0.5 size-2.5 fill-white" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </span>
-                    ) : <span />}
-                  </div>
-                  <div />
-                </SocialMediaFrame>
-                {/* hover overlay */}
+                  <SocialMediaFrame
+                    alt={post.caption.slice(0, 60)}
+                    className="h-full"
+                    gradient={GRADIENT_CYCLE[index % GRADIENT_CYCLE.length]}
+                    mediaType={post.media_type}
+                    mediaUrl={parsedMediaUrl}
+                    scene={index % 3 === 0 ? "math" : index % 3 === 1 ? "science" : "coding"}
+                  >
+                    <div className="flex items-start justify-between">
+                      {post.is_reel || post.media_type === "video" ? (
+                        <span className="flex size-6 items-center justify-center rounded-md bg-black/30 backdrop-blur">
+                          <svg aria-hidden="true" className="ml-0.5 size-2.5 fill-white" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </span>
+                      ) : <span />}
+                    </div>
+                    <div />
+                  </SocialMediaFrame>
+                  {/* hover overlay */}
                 <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100">
                   <span className="flex items-center gap-1 text-xs font-black text-white">
                     <svg aria-hidden="true" className="size-3.5 fill-white" viewBox="0 0 24 24">
@@ -155,7 +168,8 @@ export default async function TagPage({ params }: TagPageProps) {
                   </span>
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

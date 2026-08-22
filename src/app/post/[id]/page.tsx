@@ -37,7 +37,19 @@ export async function generateMetadata(
 
   const authorName = post.author?.full_name || "Zigo Öğretmeni";
   const caption = post.caption || `${authorName} tarafından paylaşıldı.`;
-  const mediaUrl = post.media_url ? [post.media_url] : [];
+  
+  let mediaUrl: string[] = [];
+  if (post.media_url) {
+    if (post.media_type === "carousel") {
+      try {
+        mediaUrl = JSON.parse(post.media_url);
+      } catch (e) {
+        mediaUrl = [post.media_url];
+      }
+    } else {
+      mediaUrl = [post.media_url];
+    }
+  }
   
   return {
     title: `${authorName} | Zigo`,
