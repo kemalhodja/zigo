@@ -45,7 +45,7 @@ export function FeedPostCard({
 
   return (
     <DismissibleFeedPost postKey={postKey}>
-      <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 bg-white pb-4 border-b border-slate-100" style={containerStyle}>
+      <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 md:mb-6 bg-white pb-4 border-b border-slate-100 md:border-b-0 md:border md:border-slate-200 md:rounded-xl md:shadow-sm" style={containerStyle}>
         <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="light" />
         <div className="relative aspect-square w-full bg-slate-50 border-y border-slate-100">
           <FeedMediaViewer post={post} priorityMedia={priorityMedia} isMicro={false} oneMinLessonLabel={feedEnhancements.oneMinLesson} />

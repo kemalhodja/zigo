@@ -46,7 +46,7 @@ export default async function HomePage() {
   const showTeacherHome = viewer.role === "teacher";
 
   return (
-    <div className="flex flex-col pb-4 bg-white md:bg-transparent">
+    <div className="flex flex-col pb-4 bg-white md:bg-transparent md:gap-6">
       {/* Mobile Feed Header */}
       <div className="md:hidden sticky top-0 z-50 flex items-center justify-between bg-white px-4 py-3">
         <Link href="/create" className="text-night">
@@ -75,7 +75,7 @@ export default async function HomePage() {
         />
       ) : null}
 
-      <div className="mb-0">
+      <div className="mb-0 md:mb-0">
         <Composer userRole={viewer.role} streakDays={viewer.streakDays} />
       </div>
 
