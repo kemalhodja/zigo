@@ -82,11 +82,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   };
 
   const isValidWord = (guess: string, lang: Lang) => {
-    const upperGuess = lang === "TR" ? guess.toLocaleUpperCase("tr-TR") : guess.toUpperCase();
-    if (upperGuess === targetWord) return true;
-    if (lang === "TR") {
-      return TURKISH_WORDS.has(upperGuess);
-    }
+    // Because the hardcoded TURKISH_WORDS dictionary is too small, 
+    // we allow any character combination to prevent "not in dictionary" errors for valid words.
     return true;
   };
 
