@@ -214,7 +214,10 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
         body: JSON.stringify({ game_type: "memory_card", score, level }),
       });
       const data = await res.json();
-      if (data.high_score) setHighScore(data.high_score);
+      if (data.high_score != null) {
+        setHighScore(data.high_score);
+        setTimeout(() => setIsLeaderboardOpen(true), 800);
+      }
     } catch {}
 
     try {
@@ -392,11 +395,13 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       )}
 
       {/* Leaderboard Modal */}
-      <LeaderboardModal 
-        isOpen={isLeaderboardOpen} 
-        onClose={() => setIsLeaderboardOpen(false)} 
-        gameType="memory_card" 
-        gameTitle="Zihin Avcısı" 
+      <LeaderboardModal
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
+        gameType="memory_card"
+        gameTitle="Zihin Avcısı"
+        currentUserId={userId !== "guest" ? userId : undefined}
+        currentScore={totalScore > 0 ? totalScore : highScore}
       />
     </div>
   );

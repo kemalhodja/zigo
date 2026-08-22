@@ -2630,7 +2630,10 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
         body: JSON.stringify({ game_type: "pipe_connect", score, level }),
       });
       const data = await res.json();
-      if (data.high_score) setHighScore(data.high_score);
+      if (data.high_score != null) {
+        setHighScore(data.high_score);
+        setTimeout(() => setIsLeaderboardOpen(true), 800);
+      }
     } catch {}
 
     try {
@@ -2802,11 +2805,13 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
       </p>
 
       {/* Leaderboard Modal */}
-      <LeaderboardModal 
-        isOpen={isLeaderboardOpen} 
-        onClose={() => setIsLeaderboardOpen(false)} 
-        gameType="pipe_connect" 
-        gameTitle="Akış Yolu" 
+      <LeaderboardModal
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
+        gameType="pipe_connect"
+        gameTitle="Akış Yolu"
+        currentUserId={userId !== "guest" ? userId : undefined}
+        currentScore={totalScore > 0 ? totalScore : highScore}
       />
     </div>
   );

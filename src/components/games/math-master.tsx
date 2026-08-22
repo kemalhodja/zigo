@@ -38,6 +38,10 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const { playSound } = useAudio();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previousQuestions = useRef<Set<string>>(new Set());
+  // Refs for stale-closure-safe game end
+  const scoreRef = useRef(0);
+  const levelRef = useRef(1);
+  const correctRef = useRef(0);
 
   // Load High Score
   useEffect(() => {
@@ -118,6 +122,9 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     previousQuestions.current.clear();
     setQuestion(generateQuestion(1));
     setTimeLeft(100);
+    scoreRef.current = 0;
+    levelRef.current = 1;
+    correctRef.current = 0;
   }, [generateQuestion]);
 
   useEffect(() => {
@@ -187,13 +194,17 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
         }, 800);
       }
 
-      setScore((prev) => prev + points);
+      const newScore = score + points;
+      setScore(newScore);
+      scoreRef.current = newScore;
       setStreak((prev) => prev + 1);
       const newCorrect = correctAnswers + 1;
       setCorrectAnswers(newCorrect);
+      correctRef.current = newCorrect;
+      const newLevel = Math.floor(newCorrect / 5) + 1;
+      levelRef.current = newLevel;
 
       setTimeout(() => {
-        const newLevel = Math.floor(newCorrect / 5) + 1;
         if (newLevel > currentLevel) {
           playSound("success");
           setCurrentLevel(newLevel);
@@ -207,7 +218,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
         setQuestion(generateQuestion(newLevel));
         setTimeLeft(100);
         setSelectedAnswer(null);
-      }, 250); // Doğru cevabı kısa süre göster
+      }, 250);
     } else {
       playSound("error");
       setTimeout(() => {
@@ -222,15 +233,22 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     playSound("error");
     if (timerRef.current) clearInterval(timerRef.current);
 
+    const finalScore = scoreRef.current;
+    const finalLevel = levelRef.current;
+    const finalCorrect = correctRef.current;
+
     if (userId !== "guest") {
       try {
         const res = await fetch("/api/games/progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ game_type: "math_master", score, level: currentLevel }),
+          body: JSON.stringify({ game_type: "math_master", score: finalScore, level: finalLevel }),
         });
         const data = await res.json();
-        if (data.high_score) setHighScore(data.high_score);
+        if (data.high_score != null) {
+          setHighScore(data.high_score);
+          setTimeout(() => setIsLeaderboardOpen(true), 800);
+        }
       } catch {}
 
       try {
@@ -240,14 +258,14 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
           body: JSON.stringify({
             game_type: "math_master",
             user_id: userId,
-            score,
-            stats: { level: currentLevel, correct: correctAnswers },
+            score: finalScore,
+            stats: { level: finalLevel, correct: finalCorrect },
           }),
         });
       } catch {}
     }
 
-    if (onGameEnd) onGameEnd(score, { level: currentLevel, correct: correctAnswers });
+    if (onGameEnd) onGameEnd(finalScore, { level: finalLevel, correct: finalCorrect });
   };
 
   return (
@@ -401,11 +419,13 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
         )}
       </div>
 
-      <LeaderboardModal 
-        isOpen={isLeaderboardOpen} 
-        onClose={() => setIsLeaderboardOpen(false)} 
-        gameType="math_master" 
-        gameTitle="Matematik Ustası" 
+      <LeaderboardModal
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
+        gameType="math_master"
+        gameTitle="Matematik Ustası"
+        currentUserId={userId !== "guest" ? userId : undefined}
+        currentScore={score > 0 ? score : highScore}
       />
     </div>
   );

@@ -177,10 +177,26 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         body: JSON.stringify({ game_type: "word_hunt", score: finalScore, level: newLevel }),
       });
       const data = await res.json();
-      if (data.high_score) setHighScore(data.high_score);
+      if (data.high_score != null) {
+        setHighScore(data.high_score);
+        setTimeout(() => setIsLeaderboardOpen(true), 800);
+      }
     } catch {}
 
-    if (onGameEnd && isGameOver) onGameEnd(finalScore, { level: currentLevel });
+    try {
+      await fetch("/api/games/finish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          game_type: "word_hunt",
+          user_id: userId,
+          score: finalScore,
+          stats: { level: newLevel },
+        }),
+      });
+    } catch {}
+
+    if (onGameEnd) onGameEnd(finalScore, { level: newLevel });
   };
 
   const getLetterState = (guess: string, index: number): LetterState => {
@@ -430,11 +446,13 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         </div>
       )}
 
-      <LeaderboardModal 
-        isOpen={isLeaderboardOpen} 
-        onClose={() => setIsLeaderboardOpen(false)} 
-        gameType="word_hunt" 
-        gameTitle={selectedLang === "TR" ? "Kelime Avı" : "Word Hunt"} 
+      <LeaderboardModal
+        isOpen={isLeaderboardOpen}
+        onClose={() => setIsLeaderboardOpen(false)}
+        gameType="word_hunt"
+        gameTitle={selectedLang === "TR" ? "Kelime Avı" : "Word Hunt"}
+        currentUserId={userId !== "guest" ? userId : undefined}
+        currentScore={score > 0 ? score : highScore}
       />
     </div>
   );
