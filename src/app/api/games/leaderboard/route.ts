@@ -2,15 +2,21 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { untypedFrom } from "@/lib/supabase/untyped-tables";
-
-type LeaderboardRow = {
-  high_score: number;
-  last_level: number;
-  users?: { id: string; full_name: string | null; avatar_url: string | null } | null;
-};
+import { looseFrom } from "@/lib/supabase/untyped-tables";
 
 export const dynamic = "force-dynamic";
+
+type ProgressRow = {
+  user_id: string;
+  high_score: number;
+  last_level: number;
+};
+
+type UserRow = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
 
 export async function GET(req: NextRequest) {
   const supabase = createAdminClient() || await createClient();
@@ -20,29 +26,40 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "game_type parametresi gerekli" }, { status: 400 });
   }
 
-  // En yüksek skordan en düşüğe göre sırala, ilk 20 kişiyi getir.
-  const { data, error } = await untypedFrom(supabase, "game_progress")
-    .select(`
-      high_score,
-      last_level,
-      users ( id, full_name, avatar_url )
-    `)
+  // Step 1: Get top 20 scores
+  const { data: progressData, error: progressError } = await looseFrom(supabase, "game_progress")
+    .select("user_id, high_score, last_level")
     .eq("game_type", gameType)
     .order("high_score", { ascending: false })
     .limit(20);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (progressError) {
+    return NextResponse.json({ error: (progressError as { message?: string }).message ?? "DB error" }, { status: 500 });
   }
 
-  // users tablosundan inner join veya foreign key garantisi için veri temizliği
-  const leaderboard = ((data ?? []) as LeaderboardRow[]).map((row) => ({
-    user_id: row.users?.id || "anonim",
-    full_name: row.users?.full_name || "Gizli Oyuncu",
-    avatar_url: row.users?.avatar_url || null,
-    high_score: row.high_score,
-    last_level: row.last_level,
-  }));
+  const rows = (progressData ?? []) as ProgressRow[];
+  if (rows.length === 0) return NextResponse.json([]);
+
+  // Step 2: Fetch user profiles in a single query
+  const userIds = rows.map((r) => r.user_id);
+  const { data: usersData } = await looseFrom(supabase, "users")
+    .select("id, full_name, avatar_url")
+    .in("id", userIds);
+
+  const usersMap = new Map<string, UserRow>(
+    ((usersData ?? []) as UserRow[]).map((u) => [u.id, u])
+  );
+
+  const leaderboard = rows.map((row) => {
+    const user = usersMap.get(row.user_id);
+    return {
+      user_id: row.user_id,
+      full_name: user?.full_name ?? "Gizli Oyuncu",
+      avatar_url: user?.avatar_url ?? null,
+      high_score: row.high_score,
+      last_level: row.last_level,
+    };
+  });
 
   return NextResponse.json(leaderboard);
 }
