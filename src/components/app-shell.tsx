@@ -178,8 +178,10 @@ export function AppShell({
 
   return (
     <div
-      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 max-w-md flex-col overflow-x-hidden md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${getRoleThemeClass(viewerRole)} ${
-        isImmersive ? "relative bg-night" : ""
+      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 flex-col overflow-x-hidden ${getRoleThemeClass(viewerRole)} ${
+        pathname === "/" 
+          ? "max-w-full" 
+          : `max-w-md md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${isImmersive ? "relative bg-night" : ""}`
       }`}
     >
       {isPreviewMode ? <PreviewModeBanner /> : null}
