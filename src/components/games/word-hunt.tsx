@@ -82,7 +82,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   };
 
   const isValidWord = (guess: string, lang: Lang) => {
-    const upperGuess = guess.toUpperCase();
+    const upperGuess = lang === "TR" ? guess.toLocaleUpperCase("tr-TR") : guess.toUpperCase();
+    if (upperGuess === targetWord) return true;
     if (lang === "TR") {
       return TURKISH_WORDS.has(upperGuess);
     }
@@ -158,7 +159,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || !selectedLang) return;
       
-      const key = e.key.toUpperCase();
+      const key = selectedLang === "TR" ? e.key.toLocaleUpperCase("tr-TR") : e.key.toUpperCase();
       if (key === "ENTER") {
         e.preventDefault();
         onKeyPress("ENTER");
