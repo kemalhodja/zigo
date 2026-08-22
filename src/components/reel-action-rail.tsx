@@ -233,7 +233,7 @@ export function ReelActionRail({
         </button>
 
         {/* Comment — opens inline sheet */}
-        <RailButton ariaLabel={r.openComments} label={commentLabel} onClick={loadComments}>
+        <RailButton id={`comment-btn-${postId ?? "preview"}`} ariaLabel={r.openComments} label={commentLabel} onClick={loadComments}>
           <svg aria-hidden="true" className="size-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M21 11.5a8.5 8.5 0 0 1-9 8.5 9.5 9.5 0 0 1-4-.9L3 20l1.3-4A8.5 8.5 0 1 1 21 11.5z" />
           </svg>
@@ -323,10 +323,11 @@ function RailButton({
   children: ReactNode;
   disabled?: boolean;
   label: string;
+  id?: string;
   onClick?: () => void;
 }) {
   return (
-    <button aria-label={ariaLabel} className={`tap-scale block disabled:opacity-60 ${active ? "text-rose-400" : "text-white"}`} disabled={disabled} onClick={onClick} type="button">
+    <button id={id} aria-label={ariaLabel} className={`tap-scale block disabled:opacity-60 ${active ? "text-rose-400" : "text-white"}`} disabled={disabled} onClick={onClick} type="button">
       <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-black/20">
         {children}
       </span>

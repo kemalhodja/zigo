@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { toDisplayPost } from "@/app/_components/home/data";
 import { FeedPostCard } from "@/app/_components/home/match-feed";
+import { ExploreFeedViewer } from "@/components/explore-feed-viewer";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getSocialPostById, isFollowing,searchSocialPosts } from "@/lib/domain/social";
@@ -117,6 +118,10 @@ export default async function PostDetailPage({ params, searchParams }: PostDetai
       viewerId: profile?.id ?? null,
     })
   );
+
+  if (feedType === "explore") {
+    return <ExploreFeedViewer posts={displayPosts} messages={m} />;
+  }
 
   return (
     <div className="h-dvh w-full overflow-x-hidden snap-y snap-mandatory overflow-y-auto bg-slate-50 pb-[env(safe-area-inset-bottom)]">

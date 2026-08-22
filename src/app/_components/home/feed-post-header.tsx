@@ -60,13 +60,6 @@ export function FeedPostHeader({
         </div>
       </Link>
       <div className="flex shrink-0 items-center gap-3">
-        {post.canFollowCreator && post.authorId && !post.isOwner ? (
-          <FollowButton
-            followingId={post.authorId}
-            initialFollowing={post.isFollowingCreator}
-            variant="compact"
-          />
-        ) : null}
         <PostOptionsButton
           initialAreaId={post.areaId}
           initialCaption={post.caption}

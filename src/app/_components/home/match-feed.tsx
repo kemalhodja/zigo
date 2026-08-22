@@ -57,7 +57,7 @@ export function FeedPostCard({
             <SocialPostActions initialComments={post.comments} initialLiked={post.isLiked} initialLikes={post.likes} initialSaved={post.isSaved} postId={post.postId} variant="compact" theme="light" />
           </div>
           <div className="mt-2">
-            <ExpandableCaption caption={post.caption} theme="light" />
+            <ExpandableCaption caption={post.caption} handle={post.handle} theme="light" />
           </div>
           <div className="px-4 mt-1">
             <p className="text-zigo-meta font-semibold uppercase tracking-wide text-slate-500">
@@ -106,7 +106,7 @@ export function FeedPostCard({
           </div>
 
           <div className="mt-2">
-            <ExpandableCaption caption={post.caption} theme="dark" />
+            <ExpandableCaption caption={post.caption} handle={post.handle} theme="dark" />
           </div>
 
           <div className="pointer-events-auto px-4 mt-0.5">
@@ -120,13 +120,13 @@ export function FeedPostCard({
   );
 }
 
-function ExpandableCaption({ caption, theme = "dark" }: { caption?: string | null; theme?: "dark" | "light" }) {
+function ExpandableCaption({ caption, handle, theme = "dark" }: { caption?: string | null; handle?: string; theme?: "dark" | "light" }) {
   const [expanded, setExpanded] = useState(false);
   
   if (!caption) return null;
 
   const isDark = theme === "dark";
-  const bgClass = isDark ? "bg-black/60 text-white shadow-lg" : "bg-slate-50 text-night shadow-sm border border-slate-100";
+  const bgClass = isDark ? "bg-black/60 text-white shadow-lg" : "bg-white text-night";
   const clampedTextClass = isDark ? "text-white/90" : "text-slate-800";
   const readMoreClass = isDark ? "text-white/60 hover:text-white" : "text-slate-500 hover:text-slate-800";
 
@@ -137,14 +137,15 @@ function ExpandableCaption({ caption, theme = "dark" }: { caption?: string | nul
     >
       <div className={`cursor-pointer text-[0.85rem] transition-all duration-200 ${
         expanded 
-          ? `max-h-[50vh] overflow-y-auto rounded-xl p-3.5 backdrop-blur-md ${bgClass}` 
-          : `line-clamp-1 ${clampedTextClass} ${isDark ? 'drop-shadow-md' : ''}`
+          ? `max-h-[50vh] overflow-y-auto ${isDark ? 'rounded-xl p-3.5 backdrop-blur-md' : ''} ${bgClass}` 
+          : `line-clamp-2 ${clampedTextClass} ${isDark ? 'drop-shadow-md' : ''}`
       }`}>
+        {handle && <span className="font-bold mr-1.5">{handle}</span>}
         {caption}
       </div>
       {!expanded && caption.length > 50 ? (
         <span className={`mt-0.5 cursor-pointer text-xs font-bold drop-shadow-sm transition-colors ${readMoreClass}`}>
-          devamını oku
+          ... devamı
         </span>
       ) : null}
     </div>

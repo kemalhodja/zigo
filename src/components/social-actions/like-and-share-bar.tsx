@@ -126,25 +126,35 @@ export function LikeAndShareBar({
           </button>
 
           <button
+            aria-label="Yeniden Paylaş"
+            className={`tap-scale active:scale-95 flex h-9 items-center gap-1.5 transition hover:text-crystal ${iconColor}`}
+            type="button"
+          >
+            <div className="flex size-9 items-center justify-center">
+              <ActionIcon name="repost" />
+            </div>
+            <span className={`pr-2 text-[0.82rem] font-bold ${iconColor} ${isDark ? "shadow-black/20 text-shadow-sm" : ""}`}>
+              3
+            </span>
+          </button>
+
+          <button
             aria-label={labels.share}
-            className={`tap-scale active:scale-95 flex size-9 items-center justify-center transition hover:text-crystal ${iconColor}`}
+            className={`tap-scale active:scale-95 flex h-9 items-center gap-1.5 transition hover:text-crystal ${iconColor}`}
             onClick={onSharePost}
             type="button"
           >
-            <ActionIcon name="share" />
+            <div className="flex size-9 items-center justify-center">
+              <ActionIcon name="send" />
+            </div>
+            <span className={`pr-2 text-[0.82rem] font-bold ${iconColor} ${isDark ? "shadow-black/20 text-shadow-sm" : ""}`}>
+              16
+            </span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            aria-label={labels.understood}
-            className={`tap-scale active:scale-95 flex size-9 items-center justify-center transition ${isUnderstood ? "text-emerald-400" : iconColor}`}
-            onClick={onToggleUnderstood}
-            title={labels.understood}
-            type="button"
-          >
-            <ActionIcon name="check" filled={isUnderstood} />
-          </button>
+        <div className="flex items-center">
+
 
           <button
             aria-label={isSaved ? labels.unsave : labels.save}
