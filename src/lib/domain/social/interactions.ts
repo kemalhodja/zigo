@@ -258,22 +258,25 @@ export async function createStory(
       text: parsed.caption,
     },
     async (safeCaption) => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("stories")
         .insert({
           author_id: input.authorId,
           area_id: parsed.areaId,
           caption: safeCaption,
           media_url: parsed.mediaUrl || null,
-        })
-        .select("*")
-        .single();
+        });
 
       if (error) throw error;
-      return data;
+
+      // Do not SELECT after INSERT — the stories SELECT RLS policy may block
+      // reading back the newly created row even for the author in some edge cases.
+      // The caller only needs confirmation that creation succeeded.
+      return { author_id: input.authorId, area_id: parsed.areaId, caption: safeCaption };
     },
   );
 }
+
 
 export async function createStoryReply(
   supabase: SupabaseClient<Database>,

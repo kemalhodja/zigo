@@ -22,6 +22,19 @@ with check (
   )
 );
 
+-- Fix SELECT policy: authors can always read their own stories
+drop policy if exists "Users can read matched active stories" on public.stories;
+
+create policy "Users can read matched active stories"
+on public.stories
+for select
+to authenticated
+using (
+  author_id = auth.uid()
+  or story_matches_current_user(id)
+);
+
+-- Fix story_matches_current_user to be VOLATILE so it sees newly inserted rows
 CREATE OR REPLACE FUNCTION public.story_matches_current_user(p_story_id uuid)
  RETURNS boolean
  LANGUAGE sql
