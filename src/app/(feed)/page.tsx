@@ -67,17 +67,6 @@ export default async function HomePage() {
         </Link>
       </div>
 
-      {showTeacherHome && teacherInsights ? (
-        <TeacherHomeInsights
-          copy={m.feedEnhancements}
-          inboxCount={teacherInsights.inboxCount}
-          postCount={teacherInsights.postCount}
-        />
-      ) : null}
-
-      <div className="mb-0 md:mb-0">
-        <Composer userRole={viewer.role} streakDays={viewer.streakDays} />
-      </div>
 
       <StoryTray stories={stories} feedExtras={m.feedExtras} feedEnhancements={m.feedEnhancements} />
 
