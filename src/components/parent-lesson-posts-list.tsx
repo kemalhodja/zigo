@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import type {
   PrivateLessonBidWithTeacher,
   PrivateLessonPostWithDetails,
 } from "@/lib/domain/private-lessons";
+
+type DmModalTeacher = {
+  id: string;
+  full_name: string | null;
+  avatar_url?: string | null;
+};
 
 export function ParentLessonPostsList({
   posts = [],
@@ -17,7 +23,7 @@ export function ParentLessonPostsList({
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [bids, setBids] = useState<PrivateLessonBidWithTeacher[]>([]);
   const [loadingBids, setLoadingBids] = useState(false);
-  const [dmModalTeacher, setDmModalTeacher] = useState<any | null>(null);
+  const [dmModalTeacher, setDmModalTeacher] = useState<DmModalTeacher | null>(null);
   const [dmMessage, setDmMessage] = useState("");
   const [isSendingDm, setIsSendingDm] = useState(false);
   const [dmStatus, setDmStatus] = useState<string | null>(null);
@@ -71,8 +77,8 @@ export function ParentLessonPostsList({
         setDmMessage("");
         setDmStatus(null);
       }, 1500);
-    } catch (err: any) {
-      setDmStatus(err.message || "Mesaj gönderilemedi.");
+    } catch (err) {
+      setDmStatus(err instanceof Error ? err.message : "Mesaj gönderilemedi.");
     } finally {
       setIsSendingDm(false);
     }
@@ -193,7 +199,7 @@ export function ParentLessonPostsList({
                             <button
                               type="button"
                               onClick={() => {
-                                setDmModalTeacher(bid.teacher);
+                                setDmModalTeacher(bid.teacher ?? null);
                                 setDmMessage(`Merhaba Sayın ${bid.teacher?.full_name}, ${post.area?.area_name} özel ders ilanımıza verdiğiniz ${bid.price_per_hour_try} ₺/saat teklifiniz için görüşmek isteriz.`);
                                 setDmStatus(null);
                               }}
