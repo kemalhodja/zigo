@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import React, { useRef,useState } from "react";
+import React, { useRef, useState } from "react";
 
 import { SocialMediaScene, type SocialMediaSceneName } from "@/components/social-media-scenes";
 import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
@@ -49,6 +49,7 @@ export function SocialMediaFrame({
   filterPreset = "normal",
 }: SocialMediaFrameProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [videoReady, setVideoReady] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -125,12 +126,24 @@ export function SocialMediaFrame({
             <div key={url + idx} className="group relative size-full flex-none snap-center">
               {isVideo ? (
                 <>
+                  {/* Video loading skeleton */}
+                  <div
+                    className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500 ${videoReady ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                  >
+                    <div className="relative flex size-16 items-center justify-center rounded-full bg-white/10 ring-2 ring-white/20">
+                      <svg className="size-7 translate-x-0.5 text-white/80" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                    <div className="mt-3 h-1.5 w-20 animate-pulse rounded-full bg-white/20" />
+                  </div>
                   <video
                     aria-label={alt || `Video ${idx + 1}`}
-                    className={`size-full transition-all duration-200 ${fitClass}`}
+                    className={`size-full transition-all duration-500 ${fitClass} ${videoReady ? 'opacity-100' : 'opacity-0'}`}
                     controls={controls}
                     loop={!controls}
                     muted={!controls}
+                    onLoadedMetadata={() => setVideoReady(true)}
                     onClick={(e) => {
                       e.stopPropagation();
                       const video = e.currentTarget;
@@ -141,7 +154,7 @@ export function SocialMediaFrame({
                       }
                     }}
                     playsInline
-                    preload={controls ? "metadata" : "none"}
+                    preload="metadata"
                     src={url}
                     style={combinedStyle}
                   />
@@ -181,13 +194,25 @@ export function SocialMediaFrame({
       ) : hasMedia ? (
         isVideo ? (
           <div className="group relative flex size-full items-center justify-center">
+            {/* Video loading skeleton */}
+            <div
+              className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500 ${videoReady ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+            >
+              <div className="relative flex size-16 items-center justify-center rounded-full bg-white/10 ring-2 ring-white/20">
+                <svg className="size-7 translate-x-0.5 text-white/80" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+              <div className="mt-3 h-1.5 w-20 animate-pulse rounded-full bg-white/20" />
+            </div>
             <video
               ref={videoRef}
               aria-label={alt || "Video preview"}
-              className={`size-full transition-all duration-200 ${fitClass}`}
+              className={`size-full transition-all duration-500 ${fitClass} ${videoReady ? 'opacity-100' : 'opacity-0'}`}
               controls={controls}
               loop={!controls}
               muted={!controls}
+              onLoadedMetadata={() => setVideoReady(true)}
               onClick={(e) => {
                 e.stopPropagation();
                 const video = e.currentTarget;
@@ -198,7 +223,7 @@ export function SocialMediaFrame({
                 }
               }}
               playsInline
-              preload={controls ? "metadata" : "none"}
+              preload="metadata"
               src={items[0]}
               style={combinedStyle}
             />
