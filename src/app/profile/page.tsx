@@ -66,10 +66,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const profile = await getProfileData(activeTab as any);
 
   // Private lesson marketplace data
-  let educationAreas: any[] = [];
-  let parentLessonPosts: any[] = [];
+  let educationAreas: Awaited<ReturnType<typeof getEducationAreas>> = [];
+  let parentLessonPosts: Awaited<ReturnType<typeof getParentPrivateLessonPosts>> = [];
   let parentChildProfiles: { id: string; name: string }[] = [];
-  let teacherMatchedPosts: any[] = [];
+  let teacherMatchedPosts: Awaited<ReturnType<typeof getMatchedLessonPostsForTeacher>> = [];
 
   if (hasSupabaseEnv() && !profile.isSignedOut) {
     const supabase = await createClient();
@@ -81,7 +81,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       ]);
       educationAreas = areas;
       parentLessonPosts = posts;
-      parentChildProfiles = (children || []).map((c: any) => ({ id: c.id, name: c.display_name || c.name || "Çocuk" }));
+      parentChildProfiles = (children ?? []).map((c) => ({ id: c.id, name: c.display_name || "Çocuk" }));
     } else if (profile.role === "teacher") {
       teacherMatchedPosts = await getMatchedLessonPostsForTeacher(supabase, profile.id).catch(() => []);
     }
@@ -346,7 +346,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       ) : (
         <>
           <ProfileGridModeStrip
-            activeTab={activeTab as any}
+            activeTab={activeTab}
             isSignedOut={profile.isSignedOut}
             messages={m}
             tileCount={profile.posts.length}
@@ -477,7 +477,7 @@ function ProfileGridModeStrip({
   messages,
   tileCount,
 }: {
-  activeTab: "posts" | "reels" | "saved";
+  activeTab: "posts" | "reels" | "saved" | "market";
   isSignedOut: boolean;
   messages: Messages;
   tileCount: number;
@@ -672,7 +672,7 @@ type ProfileSuggestedCreator = {
   isFollowing?: boolean;
 };
 
-async function getProfileData(activeTab: "posts" | "reels" | "saved"): Promise<{
+async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market"): Promise<{
   id: string;
   name: string;
   handle: string;
@@ -868,7 +868,7 @@ function toProfileData(
                 if (Array.isArray(urls) && urls.length > 0) {
                   parsedMediaUrl = urls[0]; // Just use the first image for profile grid
                 }
-              } catch (e) {
+              } catch {
                 // fallback to unparsed
               }
             }
