@@ -17,7 +17,7 @@ export function StoryTray({
   if (stories.length === 0) return null;
 
   return (
-    <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-3 pt-1">
+    <section className="border-b border-slate-100 bg-white px-4 pb-3 pt-1">
       <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
         {stories.map((story) => (
           <StoryTrayItem feedExtras={feedExtras} feedEnhancements={feedEnhancements} key={story.id} story={story} />

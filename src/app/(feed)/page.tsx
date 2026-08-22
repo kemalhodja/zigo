@@ -46,15 +46,15 @@ export default async function HomePage() {
   const showTeacherHome = viewer.role === "teacher";
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="flex flex-col pb-4 bg-white md:bg-transparent">
       {/* Mobile Feed Header */}
-      <div className="md:hidden sticky top-0 z-50 flex items-center justify-between bg-white px-4 py-3 border-b border-slate-100">
+      <div className="md:hidden sticky top-0 z-50 flex items-center justify-between bg-white px-4 py-3">
         <Link href="/create" className="text-night">
           <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
         </Link>
-        <button className="flex items-center gap-1 font-bold text-[1.1rem] text-night">
+        <button className="flex items-center gap-1 font-bold text-xl text-night">
           Senin için
           <svg aria-hidden="true" className="size-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -75,7 +75,9 @@ export default async function HomePage() {
         />
       ) : null}
 
-      <Composer userRole={viewer.role} streakDays={viewer.streakDays} />
+      <div className="mb-0">
+        <Composer userRole={viewer.role} streakDays={viewer.streakDays} />
+      </div>
 
       <StoryTray stories={stories} feedExtras={m.feedExtras} feedEnhancements={m.feedEnhancements} />
 

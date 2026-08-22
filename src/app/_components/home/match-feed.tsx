@@ -46,7 +46,7 @@ export function FeedPostCard({
   if (!isMicro) {
     return (
       <DismissibleFeedPost postKey={postKey}>
-        <article className="zigo-feed-card zigo-feed-card-enter relative -mx-4 mb-[2px] bg-white pb-4 border-b border-slate-100" style={containerStyle}>
+        <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 bg-white pb-4 border-b border-slate-100" style={containerStyle}>
           <div className="px-4 py-3">
             <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="light" />
           </div>
@@ -72,7 +72,7 @@ export function FeedPostCard({
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article
-        className={`zigo-feed-card zigo-feed-card-enter relative -mx-4 overflow-hidden bg-black ${heightClass}`}
+        className={`zigo-feed-card zigo-feed-card-enter relative overflow-hidden bg-black ${heightClass}`}
         style={containerStyle}
       >
         <div className="absolute inset-0">
@@ -162,7 +162,7 @@ export function CreatorRail({
   seeAll: string;
 }) {
   return (
-    <section className="-mx-4 px-4 py-4 bg-white border-b border-slate-100">
+    <section className="px-4 py-4 bg-white border-b border-slate-100">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-zigo-body font-bold text-slate-900">{label}</p>
         <Link className="text-zigo-caption font-bold text-crystal" href="/explore?format=teachers">
@@ -200,7 +200,7 @@ export function FollowingStarter({
 }) {
   const f = messages.feedExtras;
   return (
-    <section className="zigo-empty-hero -mx-4 px-6 py-12 text-center bg-white border-b border-slate-100">
+    <section className="zigo-empty-hero px-6 py-12 text-center bg-white border-b border-slate-100">
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-slate-50 text-2xl font-black text-slate-400 shadow-lg shadow-slate-100 border border-slate-100">
         +
       </span>
@@ -231,7 +231,7 @@ export function ForYouStarter({ messages }: { messages: Messages }) {
   const f = messages.feedExtras;
   const o = messages.onboarding;
   return (
-    <section className="zigo-empty-hero -mx-4 px-6 py-12 text-center">
+    <section className="zigo-empty-hero px-6 py-12 text-center">
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry text-2xl font-black text-white shadow-lg shadow-crystal/25">
         Z
       </span>

@@ -244,10 +244,8 @@ export function PostOptionsButton({
         onClick={() => setIsOpen(true)}
         type="button"
       >
-        <svg aria-hidden="true" className="size-5" fill="currentColor" viewBox="0 0 24 24">
-          <circle cx="5" cy="12" r="1.8" />
-          <circle cx="12" cy="12" r="1.8" />
-          <circle cx="19" cy="12" r="1.8" />
+        <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
         </svg>
       </button>
       {message ? (

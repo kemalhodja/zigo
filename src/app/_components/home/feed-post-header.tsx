@@ -27,37 +27,17 @@ export function FeedPostHeader({
     <div className="flex items-center justify-between px-4 py-3">
       <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
         <SocialAvatar className="size-9" label={post.authorName} imageUrl={post.avatarUrl} />
-        <div className="min-w-0">
-          <p className={`truncate text-[0.95rem] font-bold ${textColorClass}`}>
-            {post.handle}
-            {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
-          </p>
-          {post.verified ? (
-            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-              <TeacherTrustBadges
-                branches={post.area ? [post.area] : []}
-                moreLabel={teacherBadges.moreAreas}
-                showVerified
-                verified={post.verified}
-                verifiedLabel={teacherBadges.verifiedTeacher}
-              />
-              {post.locationName || post.city ? (
-                <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[0.62rem] font-bold shadow-sm backdrop-blur ${badgeBgClass}`}>
-                  📍 {post.locationName || post.city}
-                </span>
-              ) : null}
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <p className={`truncate text-[0.75rem] font-semibold ${subTextColorClass}`}>{post.area}</p>
-              {post.locationName || post.city ? (
-                <span className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[0.62rem] font-bold shadow-sm backdrop-blur ${badgeBgClass}`}>
-                  📍 {post.locationName || post.city}
-                </span>
-              ) : null}
-            </div>
-          )}
-        </div>
+          <div className="flex items-center gap-1">
+            <p className={`truncate text-[0.95rem] font-bold ${textColorClass}`}>
+              {post.handle}
+              {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
+            </p>
+            {post.verified && (
+              <svg aria-hidden="true" className="size-4 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.1 14.8l-4.2-4.2 1.4-1.4 2.8 2.8 6.4-6.4 1.4 1.4-7.8 7.8z" />
+              </svg>
+            )}
+          </div>
       </Link>
       <div className="flex shrink-0 items-center gap-3">
         <PostOptionsButton
