@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef,useState } from "react";
 import { useAudio } from "@/hooks/use-audio";
 
 import { LeaderboardModal } from "./leaderboard-modal";
-import { TURKISH_WORDS } from "./turkish-words";
 import { WORD_DICTIONARY, type WordEntry } from "./word-dictionary";
 
 const ROWS = 6;
@@ -81,8 +80,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     setTimeout(() => setToastMessage(null), 2000);
   };
 
-  const isValidWord = (guess: string, lang: Lang) => {
-    // Because the hardcoded TURKISH_WORDS dictionary is too small, 
+  const isValidWord = (_guess: string, _lang: Lang) => {
+    // Because the hardcoded TURKISH_WORDS dictionary is too small,
     // we allow any character combination to prevent "not in dictionary" errors for valid words.
     return true;
   };
