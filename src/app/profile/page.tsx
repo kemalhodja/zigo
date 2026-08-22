@@ -798,7 +798,8 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
 
   const [stats, posts, suggested, branches] = await Promise.all([
     getProfileSocialStats(supabase, profile.id),
-    getProfileGridPosts(supabase, profile.id, activeTab),
+    // "market" sekmesinde grid varsayılan gönderileri gösterir; ilanlar ayrı bileşenlerde listelenir.
+    getProfileGridPosts(supabase, profile.id, activeTab === "market" ? "posts" : activeTab),
     getProfileSuggestedCreators(supabase, profile.id),
     profile.role === "teacher" ? getUserInterestAreaNames(supabase, profile.id) : Promise.resolve([]),
   ]);
