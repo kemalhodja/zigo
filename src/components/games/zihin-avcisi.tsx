@@ -200,7 +200,8 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
 
     playSound("success");
 
-    saveProgress(newTotal, currentLevel);
+    // Sonraki açılışta bir sonraki seviyeden devam etsin
+    saveProgress(newTotal, currentLevel + 1);
   }, [cards]);
 
   const saveProgress = async (score: number, level: number) => {
@@ -239,9 +240,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   };
 
   const handleNextLevel = () => {
-    const next = currentLevel + 1;
-    saveProgress(totalScore, next);
-    setCurrentLevel(next);
+    setCurrentLevel(currentLevel + 1);
   };
 
   const handleRestart = () => {
@@ -359,10 +358,12 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               {isGameFinished ? "🏆" : "⭐"}
             </div>
             <h3 className="text-2xl font-black text-white mb-1">
-              Seviye {currentLevel + 1} Tamamlandı!
+              {isGameFinished ? "Oyun Bitti!" : `Seviye ${currentLevel + 1} Tamamlandı!`}
             </h3>
             <p className="text-sm text-slate-400 font-medium mb-5">
-              Bu seviyede {levelScore} puan kazandın!
+              {isGameFinished
+                ? `Toplam puanın: ${totalScore}`
+                : `Bu seviyede ${levelScore} puan kazandın!`}
             </p>
 
             <div className="grid grid-cols-3 gap-2 mb-5">
@@ -380,15 +381,17 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               </div>
             </div>
 
-            <button
-              onClick={handleNextLevel}
-              className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
-            >
-              Sonraki Seviye → Seviye {currentLevel + 2} 🚀
-            </button>
+            {!isGameFinished && (
+              <button
+                onClick={handleNextLevel}
+                className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
+              >
+                Sonraki Seviye → Seviye {currentLevel + 2} 🚀
+              </button>
+            )}
             <button
               onClick={handleRestart}
-              className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2.5 rounded-2xl hover:bg-white/10 transition text-xs border border-white/10"
+              className={`tap-scale w-full bg-white/5 text-slate-400 font-bold py-2.5 rounded-2xl hover:bg-white/10 transition text-xs border border-white/10 ${!isGameFinished ? "mt-2" : ""}`}
             >
               Baştan Başla
             </button>

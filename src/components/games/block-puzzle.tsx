@@ -304,78 +304,83 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   };
 
   // Drag and Drop global listeners
+  const dragStateRef = useRef(dragState);
+
   useEffect(() => {
+    const applyDragState = (next: typeof dragState) => {
+      dragStateRef.current = next;
+      setDragState(next);
+    };
+
     const handlePointerMove = (e: PointerEvent) => {
-      if (!dragState.isDragging) return;
-      e.preventDefault(); 
-      
-      setDragState((prev) => {
-        let targetRow: null | number = null;
-        let targetCol: null | number = null;
-        let isValidDrop = false;
+      const prev = dragStateRef.current;
+      if (!prev.isDragging) return;
+      e.preventDefault();
 
-        // Y-offset so the finger doesn't hide the piece on mobile
-        const isTouch = e.pointerType === "touch";
-        const touchOffsetY = isTouch ? 60 : 0;
-        
-        const ghostX = e.clientX - prev.offsetX;
-        const ghostY = e.clientY - prev.offsetY - touchOffsetY;
+      let targetRow: null | number = null;
+      let targetCol: null | number = null;
+      let isValidDrop = false;
 
-        if (boardRef.current) {
-          const boardRect = boardRef.current.getBoundingClientRect();
-          const cellWidth = boardRect.width / GRID_SIZE;
-          const cellHeight = boardRect.height / GRID_SIZE;
+      // Y-offset so the finger doesn't hide the piece on mobile
+      const isTouch = e.pointerType === "touch";
+      const touchOffsetY = isTouch ? 60 : 0;
 
-          // Calculate which column/row the center of the top-left block of the shape falls into
-          const relativeX = ghostX - boardRect.left + (cellWidth / 2);
-          const relativeY = ghostY - boardRect.top + (cellHeight / 2);
+      const ghostX = e.clientX - prev.offsetX;
+      const ghostY = e.clientY - prev.offsetY - touchOffsetY;
 
-          const col = Math.floor(relativeX / cellWidth);
-          const row = Math.floor(relativeY / cellHeight);
+      if (boardRef.current) {
+        const boardRect = boardRef.current.getBoundingClientRect();
+        const cellWidth = boardRect.width / GRID_SIZE;
+        const cellHeight = boardRect.height / GRID_SIZE;
 
-          if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
-            targetRow = row;
-            targetCol = col;
-            
-            if (prev.shape) {
-              let canFit = true;
-              const matrix = prev.shape.matrix;
-              if (targetRow + matrix.length > GRID_SIZE || targetCol + matrix[0].length > GRID_SIZE) {
-                 canFit = false;
-              } else {
-                for (let r = 0; r < matrix.length; r++) {
-                  for (let c = 0; c < matrix[0].length; c++) {
-                    if (matrix[r][c] === 1 && board[targetRow + r][targetCol + c] !== EMPTY_CELL) {
-                      canFit = false;
-                      break;
-                    }
+        // Calculate which column/row the center of the top-left block of the shape falls into
+        const relativeX = ghostX - boardRect.left + (cellWidth / 2);
+        const relativeY = ghostY - boardRect.top + (cellHeight / 2);
+
+        const col = Math.floor(relativeX / cellWidth);
+        const row = Math.floor(relativeY / cellHeight);
+
+        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+          targetRow = row;
+          targetCol = col;
+
+          if (prev.shape) {
+            let canFit = true;
+            const matrix = prev.shape.matrix;
+            if (targetRow + matrix.length > GRID_SIZE || targetCol + matrix[0].length > GRID_SIZE) {
+               canFit = false;
+            } else {
+              for (let r = 0; r < matrix.length; r++) {
+                for (let c = 0; c < matrix[0].length; c++) {
+                  if (matrix[r][c] === 1 && board[targetRow + r][targetCol + c] !== EMPTY_CELL) {
+                    canFit = false;
+                    break;
                   }
-                  if (!canFit) break;
                 }
+                if (!canFit) break;
               }
-              isValidDrop = canFit;
             }
+            isValidDrop = canFit;
           }
         }
+      }
 
-        return { ...prev, x: e.clientX, y: e.clientY, targetRow, targetCol, isValidDrop };
-      });
+      applyDragState({ ...prev, x: e.clientX, y: e.clientY, targetRow, targetCol, isValidDrop });
     };
 
     const handlePointerUp = () => {
-      if (!dragState.isDragging || dragState.shape === null || dragState.shapeIdx === null) return;
-      
-      setDragState((prev) => {
-        if (prev.isValidDrop && prev.targetRow !== null && prev.targetCol !== null) {
-          handleDrop(prev.targetRow, prev.targetCol, prev.shape!, prev.shapeIdx!);
-        } else {
-          playSound("error"); // Geçersiz bırakma durumunda hata sesi çal
-        }
-        return { isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, touchOffsetY: 0, targetRow: null, targetCol: null, isValidDrop: false };
-      });
+      const prev = dragStateRef.current;
+      if (!prev.isDragging || prev.shape === null || prev.shapeIdx === null) return;
+
+      if (prev.isValidDrop && prev.targetRow !== null && prev.targetCol !== null) {
+        handleDrop(prev.targetRow, prev.targetCol, prev.shape, prev.shapeIdx);
+      } else {
+        playSound("error"); // Geçersiz bırakma durumunda hata sesi çal
+      }
+      applyDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, touchOffsetY: 0, targetRow: null, targetCol: null, isValidDrop: false });
     };
     const handlePointerCancel = () => {
-      setDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, touchOffsetY: 0, targetRow: null, targetCol: null, isValidDrop: false });
+      applyDragState({ isDragging: false, shapeIdx: null, shape: null, x: 0, y: 0, offsetX: 0, offsetY: 0, touchOffsetY: 0, targetRow: null, targetCol: null, isValidDrop: false });
     };
 
     if (dragState.isDragging) {
@@ -400,7 +405,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     const touchOffsetY = isTouch ? 50 : 0; // Biraz azaltıldı ki parmaktan çok kopmasın
     
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setDragState({
+    const nextDragState = {
       isDragging: true,
       shapeIdx: idx,
       shape: shape,
@@ -412,7 +417,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       targetRow: null,
       targetCol: null,
       isValidDrop: false,
-    });
+    };
+    dragStateRef.current = nextDragState;
+    setDragState(nextDragState);
   };
 
   const disabled = isGameOver;
@@ -536,7 +543,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
             </div>
             <h3 className="text-xl font-black text-white mb-1">Hamle Kalmadı!</h3>
             <p className="text-sm text-slate-400 font-bold mb-2">Final Skor: <span className="text-white">{score}</span></p>
-            {highScore > 0 && score >= highScore && (
+            {highScore > 0 && score > highScore && (
               <p className="text-xs font-black text-yellow-400 mb-4">🏆 Yeni Rekor!</p>
             )}
             <button

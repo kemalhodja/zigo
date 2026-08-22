@@ -2656,9 +2656,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
   };
 
   const handleNextLevel = () => {
-    const next = currentLevel + 1;
-    saveProgress(totalScore, next);
-    setCurrentLevel(next);
+    // İlerleme seviye tamamlanırken zaten kaydedildi; burada yalnızca geçiş yapılır
+    setCurrentLevel(currentLevel + 1);
   };
 
   const handleRestart = () => {

@@ -206,26 +206,49 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     if (onGameEnd) onGameEnd(finalScore, { level: newLevel });
   };
 
+  // İki aşamalı değerlendirme: önce tam isabetler, sonra kalan harflerle "içerir" durumları.
+  // Yinelenen harflerde hedefteki adet kadar sarı verir (klasik Wordle kuralı).
+  const getLetterStates = (guess: string): LetterState[] => {
+    const states: LetterState[] = Array.from(guess, () => "absent" as LetterState);
+    const remaining: Record<string, number> = {};
+
+    for (let i = 0; i < targetWord.length; i++) {
+      if (guess[i] === targetWord[i]) {
+        states[i] = "correct";
+      } else {
+        remaining[targetWord[i]] = (remaining[targetWord[i]] ?? 0) + 1;
+      }
+    }
+
+    for (let i = 0; i < guess.length; i++) {
+      if (states[i] === "correct") continue;
+      const ch = guess[i];
+      if ((remaining[ch] ?? 0) > 0) {
+        states[i] = "present";
+        remaining[ch] -= 1;
+      }
+    }
+
+    return states;
+  };
+
   const getLetterState = (guess: string, index: number): LetterState => {
     if (!guess) return "empty";
-    const letter = guess[index];
-    if (targetWord[index] === letter) return "correct";
-    if (targetWord.includes(letter)) {
-      return "present";
-    }
-    return "absent";
+    return getLetterStates(guess)[index];
   };
+
+  const STATE_RANK: Record<LetterState, number> = { empty: 0, absent: 1, present: 2, correct: 3 };
 
   const getKeyColor = (key: string) => {
     let state: LetterState = "empty";
-    for (let i = 0; i < currentRow; i++) {
+    for (let i = 0; i < ROWS; i++) {
       const guess = guesses[i];
+      if (!guess || guess.length !== cols) continue; // tamamlanmamış satırı atla
       for (let j = 0; j < cols; j++) {
         if (guess[j] === key) {
           const s = getLetterState(guess, j);
           if (s === "correct") return "bg-emerald-500 border-emerald-600 text-white";
-          if (s === "present") state = "present";
-          if (s === "absent" && state === "empty") state = "absent";
+          if (STATE_RANK[s] > STATE_RANK[state]) state = s;
         }
       }
     }

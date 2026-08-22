@@ -42,6 +42,8 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const scoreRef = useRef(0);
   const levelRef = useRef(1);
   const correctRef = useRef(0);
+  const livesRef = useRef(3);
+  const zeroHandledRef = useRef(false);
 
   // Load High Score
   useEffect(() => {
@@ -116,12 +118,14 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     setScore(0);
     setCurrentLevel(1);
     setLives(3);
+    livesRef.current = 3;
     setCorrectAnswers(0);
     setStreak(0);
     setIsGameOver(false);
     previousQuestions.current.clear();
     setQuestion(generateQuestion(1));
     setTimeLeft(100);
+    zeroHandledRef.current = false;
     scoreRef.current = 0;
     levelRef.current = 1;
     correctRef.current = 0;
@@ -131,19 +135,12 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     initGame();
   }, [initGame]);
 
-  // Timer
+  // Timer — yalnızca süreyi azaltır, yan etki içermez
   useEffect(() => {
     if (isGameOver || !question) return;
 
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleWrongAnswer();
-          return 100; // Reset time after taking a life
-        }
-        // Hız seviyeye göre artar
-        return prev - (0.5 + currentLevel * 0.1); 
-      });
+      setTimeLeft((prev) => Math.max(0, prev - (0.5 + currentLevel * 0.1)));
     }, 50);
 
     return () => {
@@ -151,19 +148,28 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     };
   }, [isGameOver, question, currentLevel]);
 
+  // Süre bitince can kaybı (updater dışında, tek seferlik)
+  useEffect(() => {
+    if (isGameOver || !question) return;
+    if (timeLeft <= 0 && !zeroHandledRef.current) {
+      zeroHandledRef.current = true;
+      handleWrongAnswer();
+    }
+  }, [timeLeft, isGameOver, question, currentLevel]);
+
   const handleWrongAnswer = () => {
     playSound("error");
     setStreak(0);
-    setLives((prev) => {
-      const newLives = prev - 1;
-      if (newLives <= 0) {
-        endGame();
-      } else {
-        setQuestion(generateQuestion(currentLevel));
-        setTimeLeft(100);
-      }
-      return newLives;
-    });
+    const newLives = livesRef.current - 1;
+    livesRef.current = newLives;
+    setLives(newLives);
+    if (newLives <= 0) {
+      endGame();
+    } else {
+      setQuestion(generateQuestion(currentLevel));
+      setTimeLeft(100);
+      zeroHandledRef.current = false;
+    }
   };
 
   const handleAnswer = (selected: number) => {
@@ -216,6 +222,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
         }
         setQuestion(generateQuestion(newLevel));
         setTimeLeft(100);
+        zeroHandledRef.current = false;
         setSelectedAnswer(null);
       }, 250);
     } else {
@@ -406,7 +413,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
             <div className="bg-white/5 rounded-2xl p-4 w-full mb-4 border border-white/10">
               <p className="text-[0.65rem] text-slate-400 font-bold uppercase mb-1">Final Skor</p>
               <p className="text-3xl font-black text-white">{score}</p>
-              {highScore > 0 && score >= highScore && (
+              {highScore > 0 && score > highScore && (
                 <p className="text-xs font-black text-yellow-400 mt-1 animate-pulse">🏆 Yeni Rekor!</p>
               )}
             </div>
