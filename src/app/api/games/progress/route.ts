@@ -3,8 +3,15 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { looseFrom } from "@/lib/supabase/untyped-tables";
 
 type GameType = "memory_card" | "block_puzzle" | "pipe_connect" | "word_hunt" | "zihin_avcisi" | "math_master";
+
+type GameProgressRecord = {
+  high_score: number;
+  last_level: number;
+  total_plays: number;
+};
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -14,23 +21,24 @@ export async function GET(req: NextRequest) {
   const gameType = req.nextUrl.searchParams.get("game_type") as GameType | null;
 
   if (gameType) {
-    const { data } = await supabase
-      .from("game_progress" as any)
+    const { data } = await looseFrom(supabase, "game_progress")
       .select("high_score, last_level, total_plays")
       .eq("user_id", profile.id)
       .eq("game_type", gameType)
       .maybeSingle();
 
-    return NextResponse.json(data ?? { high_score: 0, last_level: 0, total_plays: 0 });
+    const progress = data as Partial<GameProgressRecord> | null;
+    return NextResponse.json(
+      progress ?? { high_score: 0, last_level: 0, total_plays: 0 },
+    );
   }
 
   // Return all game progress
-  const { data } = await supabase
-    .from("game_progress" as any)
+  const { data } = await looseFrom(supabase, "game_progress")
     .select("game_type, high_score, last_level, total_plays")
     .eq("user_id", profile.id);
 
-  return NextResponse.json(data ?? []);
+  return NextResponse.json((data ?? []) as GameProgressRecord[]);
 }
 
 export async function POST(req: NextRequest) {
@@ -46,23 +54,23 @@ export async function POST(req: NextRequest) {
   }
 
   // Mevcut en yüksek skoru kontrol et
-  const { data: existing } = await supabase
-    .from("game_progress" as any)
+  const { data: existingData } = await looseFrom(supabase, "game_progress")
     .select("high_score, last_level, total_plays")
     .eq("user_id", profile.id)
     .eq("game_type", game_type)
     .maybeSingle();
 
-  const newHighScore = Math.max(score, (existing as any)?.high_score ?? 0);
-  const newLastLevel = Math.max(level, (existing as any)?.last_level ?? 0);
-  const newTotalPlays = ((existing as any)?.total_plays ?? 0) + 1;
+  const existing = existingData as Partial<GameProgressRecord> | null;
+
+  const newHighScore = Math.max(score, existing?.high_score ?? 0);
+  const newLastLevel = Math.max(level, existing?.last_level ?? 0);
+  const newTotalPlays = (existing?.total_plays ?? 0) + 1;
 
   const adminClient = createAdminClient() || supabase;
 
   let error;
   if (existing) {
-    const { error: updateError } = await adminClient
-      .from("game_progress" as any)
+    const { error: updateError } = await looseFrom(adminClient, "game_progress")
       .update({
         high_score: newHighScore,
         last_level: newLastLevel,
@@ -73,8 +81,7 @@ export async function POST(req: NextRequest) {
       .eq("game_type", game_type);
     error = updateError;
   } else {
-    const { error: insertError } = await adminClient
-      .from("game_progress" as any)
+    const { error: insertError } = await looseFrom(adminClient, "game_progress")
       .insert({
         user_id: profile.id,
         game_type,
