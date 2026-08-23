@@ -85,11 +85,9 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     setTimeout(() => setToastMessage(null), 2000);
   };
 
-  // Sözlük genişletildiği için tekrar etkin: tahmin sözlükte olmalı
-  const isValidWord = (guess: string, lang: Lang) => {
-    const list = WORD_DICTIONARY[lang][guess.length] ?? [];
-    return list.some((entry) => entry.word === guess);
-  };
+  // Sözlük yalnızca hedef kelime seçiminde kullanılır; oyuncunun tahmini serbesttir
+  // (derli toplu bir TDK listesi pakete sığmayacağı için geçerli kelimeler reddedilmesin)
+  const isValidWord = (_guess: string, _lang: Lang) => true;
 
   const onKeyPress = useCallback((key: string) => {
     if (isGameOver || !selectedLang || !targetWord) return;
