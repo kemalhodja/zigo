@@ -68,3 +68,6 @@ scripts/_tmp-*.mjs
 /update_func.js
 
 .continue/
+
+# build artifact
+tsconfig.tsbuildinfo

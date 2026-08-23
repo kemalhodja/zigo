@@ -21,7 +21,7 @@ export function ParentActivityBreakdown({ data }: ParentActivityBreakdownProps) 
 
   return (
     <div className="mt-4 rounded-xl bg-slate-50 p-4">
-      <h3 className="mb-3 text-xs font-black text-slate-700">Ders Dağılımı (Haftalık)</h3>
+      <h3 className="mb-3 text-xs font-black text-slate-700">Puan Dağılımı</h3>
       <div className="flex items-center gap-4">
         <div className="relative h-24 w-24 shrink-0">
           <ResponsiveContainer width="100%" height="100%">
@@ -42,13 +42,13 @@ export function ParentActivityBreakdown({ data }: ParentActivityBreakdownProps) 
               </Pie>
               <Tooltip
                 contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px rgba(0,0,0,0.1)", fontSize: "11px", fontWeight: "bold" }}
-                formatter={(value) => [`${value} dk`, "Süre"]}
+                formatter={(value) => [`${value} XP`, "Kazanılan Puan"]}
               />
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-[0.65rem] font-black text-slate-800">{totalMinutes}</span>
-            <span className="text-[0.5rem] font-bold text-slate-500">dk</span>
+            <span className="text-[0.5rem] font-bold text-slate-500">XP</span>
           </div>
         </div>
         

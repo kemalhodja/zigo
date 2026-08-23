@@ -6,6 +6,8 @@ const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod)
 const ParentActivityBreakdown = dynamic(() => import("@/components/parent-activity-breakdown").then((mod) => mod.ParentActivityBreakdown));
 import { LimitSettingsCard } from "@/components/limit-settings-card";
 import { hasSupabaseEnv } from "@/lib/config";
+import { buildParentActivityStats } from "@/lib/domain/parent-activity-stats";
+import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
@@ -18,9 +20,11 @@ export default async function ChildReportPage({ params }: ChildReportPageProps) 
   const { id: childId } = await params;
 
   let childName = "Öğrenci";
-  let childPoints = 340;
+  let childPoints = 0;
   let childAge = "8-10";
   let isPremium = false;
+  let chartData: ReturnType<typeof buildParentActivityStats>["chartData"] = [];
+  let breakdownData: ReturnType<typeof buildParentActivityStats>["breakdownData"] = [];
 
   if (hasSupabaseEnv()) {
     const supabase = await createClient();
@@ -42,25 +46,11 @@ export default async function ChildReportPage({ params }: ChildReportPageProps) 
       childPoints = child.total_points || 0;
       childAge = child.age_group || "8-10";
     }
+
+    // Gerçek aktivite verisinden haftalık grafik ve kategori kırılımı
+    const activities = await getChildActivity(supabase, childId, 50).catch(() => []);
+    ({ chartData, breakdownData } = buildParentActivityStats(activities));
   }
-
-  // Calculate detailed stats
-  const chartData = [
-    { day: "Pzt", minutes: 30, quizzes: 1 },
-    { day: "Sal", minutes: 45, quizzes: 2 },
-    { day: "Çar", minutes: 60, quizzes: 3 },
-    { day: "Per", minutes: 50, quizzes: 2 },
-    { day: "Cum", minutes: 40, quizzes: 2 },
-    { day: "Cts", minutes: 90, quizzes: 4 },
-    { day: "Paz", minutes: 75, quizzes: 3 },
-  ];
-
-  const breakdownData = [
-    { subject: "Matematik", minutes: 160, color: "#8b5cf6" },
-    { subject: "Fen Bilimleri", minutes: 95, color: "#f59e0b" },
-    { subject: "Türkçe", minutes: 80, color: "#10b981" },
-    { subject: "İngilizce", minutes: 55, color: "#3b82f6" },
-  ];
 
   const totalStudyMinutes = breakdownData.reduce((acc, curr) => acc + curr.minutes, 0);
 

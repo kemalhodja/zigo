@@ -4,6 +4,7 @@ import confetti from "canvas-confetti";
 import { useCallback, useEffect, useRef,useState } from "react";
 
 import { useAudio } from "@/hooks/use-audio";
+import { useGameProgress } from "@/hooks/use-game-progress";
 
 import { LeaderboardModal } from "./leaderboard-modal";
 
@@ -21,19 +22,12 @@ type Question = {
 export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const [currentLevel, setCurrentLevel] = useState(1);
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [isGameOver, setIsGameOver] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
   const [timeLeft, setTimeLeft] = useState(100);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-  
-  // UI States for Polish
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [floatingText, setFloatingText] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
-  const floatIdRef = useRef(0);
 
   const { playSound } = useAudio();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -45,16 +39,17 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const livesRef = useRef(3);
   const zeroHandledRef = useRef(false);
 
-  // Load High Score
-  useEffect(() => {
-    if (userId === "guest") return;
-    fetch("/api/games/progress?game_type=math_master")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.high_score) setHighScore(data.high_score);
-      })
-      .catch(() => {});
-  }, [userId]);
+  const {
+    highScore,
+    isLeaderboardOpen,
+    setIsLeaderboardOpen,
+    saveProgress,
+  } = useGameProgress({ gameType: "math_master", userId });
+
+  // UI States for Polish
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [floatingText, setFloatingText] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
+  const floatIdRef = useRef(0);
 
   const generateQuestion = useCallback((level: number): Question => {
     let qText = "";
@@ -243,37 +238,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     const finalLevel = levelRef.current;
     const finalCorrect = correctRef.current;
 
-    if (userId !== "guest") {
-      try {
-        const res = await fetch("/api/games/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ game_type: "math_master", score: finalScore, level: finalLevel }),
-        });
-        const data = await res.json();
-        if (data.high_score != null) {
-          setHighScore(data.high_score);
-          setTimeout(() => setIsLeaderboardOpen(true), 800);
-        }
-      } catch {
-    // ignore non-fatal audio/storage errors
-  }
-
-      try {
-        await fetch("/api/games/finish", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            game_type: "math_master",
-            user_id: userId,
-            score: finalScore,
-            stats: { level: finalLevel, correct: finalCorrect },
-          }),
-        });
-      } catch {
-    // ignore non-fatal audio/storage errors
-  }
-    }
+    await saveProgress(finalScore, finalLevel, { level: finalLevel, correct: finalCorrect });
 
     if (onGameEnd) onGameEnd(finalScore, { level: finalLevel, correct: finalCorrect });
   };

@@ -5,12 +5,14 @@ const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod)
 const ParentActivityBreakdown = dynamic(() => import("@/components/parent-activity-breakdown").then((mod) => mod.ParentActivityBreakdown));
 import { LimitSettingsCard } from "@/components/limit-settings-card";
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
+import { ParentApprovalQueue } from "@/components/parent-approval-queue";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { StateCard } from "@/components/state-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
+import { buildParentActivityStats } from "@/lib/domain/parent-activity-stats";
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";
@@ -26,50 +28,32 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, userCreatedAt } =
+  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, pendingApprovals, userCreatedAt } =
     await getParentData();
   const d = messages.dashboard;
 
-  // Generate chart data based on childActivityById for all children combined (or per child)
+  // Tüm çocukların aktivitelerinden gerçek 7 günlük grafik ve kategori kırılımı
   const allActivities = Object.values(childActivityById).flat();
-  
-  // Group by day (simplified for MVP: mock the last 7 days of XP based on activity)
-  const chartData = [
-    { day: "Pzt", minutes: 0, quizzes: 0 },
-    { day: "Sal", minutes: 0, quizzes: 0 },
-    { day: "Çar", minutes: 0, quizzes: 0 },
-    { day: "Per", minutes: 0, quizzes: 0 },
-    { day: "Cum", minutes: 0, quizzes: 0 },
-    { day: "Cts", minutes: 0, quizzes: 0 },
-    { day: "Paz", minutes: 0, quizzes: 0 },
-  ];
-  
-  // Add some realistic random data if there's any activity to make the chart look alive
-  if (allActivities.length > 0 || children.length > 0) {
-    chartData[2] = { day: "Çar", minutes: 45, quizzes: 2 };
-    chartData[3] = { day: "Per", minutes: 60, quizzes: 3 };
-    chartData[4] = { day: "Cum", minutes: 30, quizzes: 1 };
-    chartData[5] = { day: "Cts", minutes: 120, quizzes: 5 };
-    chartData[6] = { day: "Paz", minutes: 90, quizzes: 4 };
-  }
-
-  const breakdownData = [
-    { subject: "Matematik", minutes: 180, color: "#8b5cf6" },
-    { subject: "Fen Bilimleri", minutes: 90, color: "#f59e0b" },
-    { subject: "Türkçe", minutes: 75, color: "#10b981" },
-  ];
+  const { chartData, breakdownData } = buildParentActivityStats(allActivities);
 
   return (
     <div className="space-y-4 pb-3">
       <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{d.parent.mode}</p>
         <h1 className="mt-1 text-2xl font-black leading-tight text-night">{d.parent.title}</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-500">Zigo Öğrenci ve Öğretmen odaklı test (MVP) sürümündedir. Veli arayüzü çok yakında kullanıma açılacaktır.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">Çocuklarının öğrenme yolculuğunu takip et, ödülleri onayla.</p>
       </section>
 
       <div className="px-4">
         <PushNotificationPrompt />
       </div>
+
+      {mode === "parent" && pendingApprovals.length > 0 ? (
+        <section className="-mx-4 border-y border-amber-100 bg-amber-50 p-4">
+          <h2 className="text-sm font-black text-amber-900 mb-3">⏳ Onay Bekleyen Ödüller ({pendingApprovals.length})</h2>
+          <ParentApprovalQueue items={pendingApprovals} />
+        </section>
+      ) : null}
 
       {mode === "signed-out" ? (
         <StateCard

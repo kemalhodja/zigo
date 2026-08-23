@@ -4,12 +4,13 @@ import confetti from "canvas-confetti";
 import { useCallback, useEffect, useRef,useState } from "react";
 
 import { useAudio } from "@/hooks/use-audio";
+import { useGameProgress } from "@/hooks/use-game-progress";
 
 import { LeaderboardModal } from "./leaderboard-modal";
 import { WORD_DICTIONARY, type WordEntry } from "./word-dictionary";
+import { bestKeyState, evaluateGuess, type LetterState } from "./wordle-logic";
 
 const ROWS = 6;
-type LetterState = "correct" | "present" | "absent" | "empty";
 type Lang = "TR" | "EN";
 
 type WordHuntProps = {
@@ -27,8 +28,6 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const [isGameOver, setIsGameOver] = useState(false);
   const [hasWon, setHasWon] = useState(false);
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   
   const [shakeRow, setShakeRow] = useState(-1);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -36,16 +35,22 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const { playSound } = useAudio();
   const keyboardRef = useRef<HTMLDivElement>(null);
 
+  const {
+    highScore,
+    isLeaderboardOpen,
+    setIsLeaderboardOpen,
+    saveProgress,
+  } = useGameProgress({ gameType: "word_hunt", userId });
+
   const targetWord = targetWordObj?.word || "";
   const targetMeaning = targetWordObj?.meaning || "";
   const cols = targetWord.length || 5;
 
   useEffect(() => {
     if (userId === "guest") return;
-    fetch("/api/games/progress?game_type=word_hunt")
+    fetch(`/api/games/progress?game_type=word_hunt`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.high_score) setHighScore(data.high_score);
         if (data.last_level) setCurrentLevel(data.last_level);
       })
       .catch(() => {});
@@ -80,10 +85,10 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     setTimeout(() => setToastMessage(null), 2000);
   };
 
-  const isValidWord = (_guess: string, _lang: Lang) => {
-    // Because the hardcoded TURKISH_WORDS dictionary is too small,
-    // we allow any character combination to prevent "not in dictionary" errors for valid words.
-    return true;
+  // Sözlük genişletildiği için tekrar etkin: tahmin sözlükte olmalı
+  const isValidWord = (guess: string, lang: Lang) => {
+    const list = WORD_DICTIONARY[lang][guess.length] ?? [];
+    return list.some((entry) => entry.word === guess);
   };
 
   const onKeyPress = useCallback((key: string) => {
@@ -123,13 +128,13 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
           colors: ["#10b981", "#34d399", "#f59e0b"],
         });
 
-        saveProgress(newScore, currentLevel + 1);
+        saveGameProgress(newScore, currentLevel + 1);
       } else {
         if (currentRow === ROWS - 1) {
           setIsGameOver(true);
           playSound("error");
           showToast(targetWord);
-          saveProgress(score, currentLevel);
+          saveGameProgress(score, currentLevel);
         } else {
           setCurrentRow(prev => prev + 1);
         }
@@ -171,87 +176,32 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onKeyPress, selectedLang]);
 
-  const saveProgress = async (finalScore: number, newLevel: number) => {
-    if (userId === "guest") return;
-    try {
-      const res = await fetch("/api/games/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ game_type: "word_hunt", score: finalScore, level: newLevel }),
-      });
-      const data = await res.json();
-      if (data.high_score != null) {
-        setHighScore(data.high_score);
-        setTimeout(() => setIsLeaderboardOpen(true), 800);
-      }
-    } catch {
-    // ignore non-fatal audio/storage errors
-  }
-
-    try {
-      await fetch("/api/games/finish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          game_type: "word_hunt",
-          user_id: userId,
-          score: finalScore,
-          stats: { level: newLevel },
-        }),
-      });
-    } catch {
-    // ignore non-fatal audio/storage errors
-  }
-
+  const saveGameProgress = (finalScore: number, newLevel: number) => {
+    void saveProgress(finalScore, newLevel, { level: newLevel });
     if (onGameEnd) onGameEnd(finalScore, { level: newLevel });
   };
 
-  // İki aşamalı değerlendirme: önce tam isabetler, sonra kalan harflerle "içerir" durumları.
-  // Yinelenen harflerde hedefteki adet kadar sarı verir (klasik Wordle kuralı).
-  const getLetterStates = (guess: string): LetterState[] => {
-    const states: LetterState[] = Array.from(guess, () => "absent" as LetterState);
-    const remaining: Record<string, number> = {};
-
-    for (let i = 0; i < targetWord.length; i++) {
-      if (guess[i] === targetWord[i]) {
-        states[i] = "correct";
-      } else {
-        remaining[targetWord[i]] = (remaining[targetWord[i]] ?? 0) + 1;
-      }
-    }
-
-    for (let i = 0; i < guess.length; i++) {
-      if (states[i] === "correct") continue;
-      const ch = guess[i];
-      if ((remaining[ch] ?? 0) > 0) {
-        states[i] = "present";
-        remaining[ch] -= 1;
-      }
-    }
-
-    return states;
-  };
+  // İki aşamalı değerlendirme wordle-logic.ts'te test edilir
+  const getLetterStates = (guess: string): LetterState[] => evaluateGuess(targetWord, guess);
 
   const getLetterState = (guess: string, index: number): LetterState => {
     if (!guess) return "empty";
     return getLetterStates(guess)[index];
   };
 
-  const STATE_RANK: Record<LetterState, number> = { empty: 0, absent: 1, present: 2, correct: 3 };
-
   const getKeyColor = (key: string) => {
-    let state: LetterState = "empty";
+    const collected: LetterState[] = [];
     for (let i = 0; i < ROWS; i++) {
       const guess = guesses[i];
       if (!guess || guess.length !== cols) continue; // tamamlanmamış satırı atla
       for (let j = 0; j < cols; j++) {
         if (guess[j] === key) {
-          const s = getLetterState(guess, j);
-          if (s === "correct") return "bg-emerald-500 border-emerald-600 text-white";
-          if (STATE_RANK[s] > STATE_RANK[state]) state = s;
+          collected.push(getLetterState(guess, j));
         }
       }
     }
+    if (collected.includes("correct")) return "bg-emerald-500 border-emerald-600 text-white";
+    const state = bestKeyState(collected);
     if (state === "present") return "bg-amber-500 border-amber-600 text-white";
     if (state === "absent") return "bg-slate-700 border-slate-800 text-slate-400";
     return "bg-slate-800 border-slate-700 text-white hover:bg-slate-700 active:bg-slate-600";
@@ -338,7 +288,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
                   onClick={() => {
                     setIsGameOver(true);
                     setHasWon(false);
-                    saveProgress(score, currentLevel);
+                    saveGameProgress(score, currentLevel);
                   }}
                   className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
                 >

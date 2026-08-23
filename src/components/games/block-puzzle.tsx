@@ -4,8 +4,11 @@ import confetti from "canvas-confetti";
 import { useCallback, useEffect, useRef,useState } from "react";
 
 import { useAudio } from "@/hooks/use-audio";
+import { useGameProgress } from "@/hooks/use-game-progress";
 
 import { BlockPiece, type ShapeType } from "./block-piece";
+
+export type { ShapeType };
 import { LeaderboardModal } from "./leaderboard-modal";
 
 // Vibrant renk paleti - Tailwind gradient classes
@@ -50,24 +53,49 @@ type BlockPuzzleProps = {
   onGameEnd?: (score: number, stats: { lines: number }) => void;
 };
 
+/** Parçanın tahtada en az bir yere sığıp sığmadığını kontrol eder. */
+export function canFitAnywhere(shape: ShapeType, currentBoard: string[][]): boolean {
+  const { matrix } = shape;
+  for (let r = 0; r <= GRID_SIZE - matrix.length; r++) {
+    for (let c = 0; c <= GRID_SIZE - matrix[0].length; c++) {
+      let canFit = true;
+      for (let sr = 0; sr < matrix.length; sr++) {
+        for (let sc = 0; sc < matrix[0].length; sc++) {
+          if (matrix[sr][sc] === 1 && currentBoard[r + sr][c + sc] !== EMPTY_CELL) {
+            canFit = false;
+            break;
+          }
+        }
+        if (!canFit) break;
+      }
+      if (canFit) return true;
+    }
+  }
+  return false;
+}
+
 export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const [board, setBoard] = useState<string[][]>([]);
   const [options, setOptions] = useState<(ShapeType | null)[]>([]);
   
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
   const [linesClearedTotal, setLinesClearedTotal] = useState(0);
   const [level, setLevel] = useState(1);
   const [isGameOver, setIsGameOver] = useState(false);
   const [justCleared, setJustCleared] = useState<{ rows: number[]; cols: number[] } | null>(null);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
+
+  const { playSound } = useAudio();
+  const {
+    highScore,
+    isLeaderboardOpen,
+    setIsLeaderboardOpen,
+    saveProgress,
+  } = useGameProgress({ gameType: "block_puzzle", userId });
 
   // Refs to avoid stale closures in useEffect callbacks
   const scoreRef = useRef(0);
   const levelRef = useRef(1);
   const linesClearedRef = useRef(0);
-
-  const { playSound } = useAudio();
 
   // Sürükle-Bırak state
   const [dragState, setDragState] = useState<{
@@ -98,15 +126,6 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
   const boardRef = useRef<HTMLDivElement>(null);
 
-  // Kaydedilen en yüksek skoru yükle
-  useEffect(() => {
-    if (userId === "guest") return;
-    fetch("/api/games/progress?game_type=block_puzzle")
-      .then((r) => r.json())
-      .then((data) => { if (data.high_score) setHighScore(data.high_score); })
-      .catch(() => {});
-  }, [userId]);
-
   const initGame = useCallback(() => {
     const emptyBoard = Array.from({ length: GRID_SIZE }, () =>
       Array(GRID_SIZE).fill(EMPTY_CELL)
@@ -126,26 +145,6 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   useEffect(() => {
     initGame();
   }, [initGame]);
-
-  const canFitAnywhere = useCallback((shape: ShapeType, currentBoard: string[][]) => {
-    const { matrix } = shape;
-    for (let r = 0; r <= GRID_SIZE - matrix.length; r++) {
-      for (let c = 0; c <= GRID_SIZE - matrix[0].length; c++) {
-        let canFit = true;
-        for (let sr = 0; sr < matrix.length; sr++) {
-          for (let sc = 0; sc < matrix[0].length; sc++) {
-            if (matrix[sr][sc] === 1 && currentBoard[r + sr][c + sc] !== EMPTY_CELL) {
-              canFit = false;
-              break;
-            }
-          }
-          if (!canFit) break;
-        }
-        if (canFit) return true;
-      }
-    }
-    return false;
-  }, []);
 
   useEffect(() => {
     if (isGameOver || options.length === 0 || board.length === 0) return;
@@ -172,38 +171,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
   const handleGameFinish = async (finalScore: number, lines: number, finalLevel?: number) => {
     const lvl = finalLevel ?? levelRef.current;
-    if (userId !== "guest") {
-      try {
-        const res = await fetch("/api/games/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ game_type: "block_puzzle", score: finalScore, level: lvl }),
-        });
-        const data = await res.json();
-        if (data.high_score != null) {
-          setHighScore(data.high_score);
-          // Auto-open leaderboard so user sees their rank
-          setTimeout(() => setIsLeaderboardOpen(true), 800);
-        }
-      } catch {
-    // ignore non-fatal audio/storage errors
-  }
-
-      try {
-        await fetch("/api/games/finish", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            game_type: "block_puzzle",
-            user_id: userId,
-            score: finalScore,
-            stats: { lines },
-          }),
-        });
-      } catch {
-    // ignore non-fatal audio/storage errors
-  }
-    }
+    await saveProgress(finalScore, lvl, { lines });
     if (onGameEnd) onGameEnd(finalScore, { lines });
   };
 

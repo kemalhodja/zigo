@@ -4,6 +4,7 @@ import confetti from "canvas-confetti";
 import { useCallback, useEffect, useRef,useState } from "react";
 
 import { useAudio } from "@/hooks/use-audio";
+import { useGameProgress } from "@/hooks/use-game-progress";
 
 import { LeaderboardModal } from "./leaderboard-modal";
 import { MemoryCard } from "./memory-card";
@@ -51,15 +52,19 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [isLevelComplete, setIsLevelComplete] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
   const [levelScore, setLevelScore] = useState(0);
 
   const [firstChoice, setFirstChoice] = useState<Card | null>(null);
   const [secondChoice, setSecondChoice] = useState<Card | null>(null);
   const [isLocked, setIsLocked] = useState(false);
-  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
-  
+
   const { playSound } = useAudio();
+  const {
+    highScore,
+    isLeaderboardOpen,
+    setIsLeaderboardOpen,
+    saveProgress,
+  } = useGameProgress({ gameType: "memory_card", userId });
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -70,7 +75,6 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     fetch("/api/games/progress?game_type=memory_card")
       .then((r) => r.json())
       .then((data) => {
-        if (data.high_score) setHighScore(data.high_score);
         if (data.last_level !== undefined && data.last_level !== null) {
           setStartLevel(data.last_level);
           setCurrentLevel(data.last_level);
@@ -201,43 +205,16 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     playSound("success");
 
     // Sonraki açılışta bir sonraki seviyeden devam etsin
-    saveProgress(newTotal, currentLevel + 1);
+    saveLevelProgress(newTotal, currentLevel + 1);
   }, [cards]);
 
-  const saveProgress = async (score: number, level: number) => {
-    if (userId === "guest") return;
-    try {
-      const res = await fetch("/api/games/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ game_type: "memory_card", score, level }),
-      });
-      const data = await res.json();
-      if (data.high_score != null) {
-        setHighScore(data.high_score);
-        setTimeout(() => setIsLeaderboardOpen(true), 800);
-      }
-    } catch {
-    // ignore non-fatal audio/storage errors
-  }
-
-    try {
-      await fetch("/api/games/finish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          game_type: "memory_card",
-          user_id: userId,
-          score,
-          stats: { time: timeElapsed, moves },
-        }),
-      });
-    } catch {
-    // ignore non-fatal audio/storage errors
-  }
-
-    if (onGameEnd) onGameEnd(score, { time: timeElapsed, moves });
-  };
+  const saveLevelProgress = useCallback(
+    (score: number, level: number) => {
+      void saveProgress(score, level, { time: timeElapsed, moves });
+      if (onGameEnd) onGameEnd(score, { time: timeElapsed, moves });
+    },
+    [saveProgress, timeElapsed, moves, onGameEnd],
+  );
 
   const handleNextLevel = () => {
     setCurrentLevel(currentLevel + 1);
@@ -299,7 +276,8 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
                 onClick={() => {
                   setIsLevelComplete(true);
                   setIsGameFinished(true);
-                  saveProgress(totalScore, currentLevel);
+                  if (timerRef.current) clearInterval(timerRef.current);
+                  saveLevelProgress(totalScore, currentLevel);
                 }}
                 className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
               >
