@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { looseFrom } from "@/lib/supabase/untyped-tables";
 
-type GameType = "memory_card" | "block_puzzle" | "pipe_connect" | "word_hunt" | "zihin_avcisi" | "math_master";
+type GameType = "memory_card" | "block_puzzle" | "pipe_connect" | "word_hunt" | "math_master";
 
 type GameProgressRecord = {
   high_score: number;

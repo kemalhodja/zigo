@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -10,6 +11,11 @@ import { ROLE_BACK } from "@/lib/domain/role-navigation";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import type { UserRole } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Zihin Avcısı · Zigo Oyun",
+  description: "Kart eşleştirme oyunuyla görsel hafızanı seviye seviye geliştir.",
+};
 
 
 

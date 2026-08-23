@@ -41,7 +41,7 @@ export function GameSubscriptionPaywall({
       <p className="text-xs text-slate-600 font-semibold leading-relaxed mb-3">
         {isStudent ? (
           <>
-            Zigo Plus ile 3 zeka oyununa eriş. Öğrenciler için{" "}
+            Zigo Plus ile 5 zeka oyununa eriş. Öğrenciler için{" "}
             <strong className="text-slate-900">günde 1 saat</strong> ve{" "}
             <strong className="text-slate-900">08:00–22:00</strong> oyun saatleri geçerlidir.
           </>

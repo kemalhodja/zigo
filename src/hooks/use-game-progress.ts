@@ -7,7 +7,6 @@ export type GameType =
   | "block_puzzle"
   | "pipe_connect"
   | "word_hunt"
-  | "zihin_avcisi"
   | "math_master";
 
 type UseGameProgressOptions = {

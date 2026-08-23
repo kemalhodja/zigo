@@ -6,6 +6,7 @@ import { useCallback,useEffect, useState } from "react";
 import { useAudio } from "@/hooks/use-audio";
 import { useGameProgress } from "@/hooks/use-game-progress";
 
+import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
 import { PipeCell, type PipeType } from "./pipe-cell";
 import { BASE_DIRECTIONS, rotateDirections } from "./pipe-logic";
@@ -249,13 +250,16 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
                     setIsGameFinished(true);
                     saveLevelProgress(totalScore, currentLevel);
                   }}
+                  aria-label="Oyunu bitir"
                   className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
                 >
                   🛑 Bitir
                 </button>
               )}
+              <GameSoundToggle />
               <button 
                 onClick={() => setIsLeaderboardOpen(true)}
+                aria-label="Liderlik tablosunu aç"
                 className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
               >
                 🏅 Tablo

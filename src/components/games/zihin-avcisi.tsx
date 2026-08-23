@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef,useState } from "react";
 import { useAudio } from "@/hooks/use-audio";
 import { useGameProgress } from "@/hooks/use-game-progress";
 
+import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
 import { MemoryCard } from "./memory-card";
 
@@ -53,6 +54,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const [isLevelComplete, setIsLevelComplete] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
   const [levelScore, setLevelScore] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const [firstChoice, setFirstChoice] = useState<Card | null>(null);
   const [secondChoice, setSecondChoice] = useState<Card | null>(null);
@@ -68,6 +70,16 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  const pausedElapsedRef = useRef(0);
+
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      if (startTimeRef.current) {
+        setTimeElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }
+    }, 1000);
+  }, []);
 
   // Kaydedilen ilerlemeyi yükle
   useEffect(() => {
@@ -108,26 +120,44 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     setIsLocked(false);
     setIsLevelComplete(false);
     setIsGameFinished(false);
+    setIsPaused(false);
     setTimeElapsed(0);
+    pausedElapsedRef.current = 0;
 
-    if (timerRef.current) clearInterval(timerRef.current);
     startTimeRef.current = Date.now();
-    timerRef.current = setInterval(() => {
-      if (startTimeRef.current) {
-        setTimeElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
-      }
-    }, 1000);
-  }, []);
+    startTimer();
+  }, [startTimer]);
 
   // İlerleme yüklenmeden önce bekle
   useEffect(() => {
     if (userId !== "guest" && startLevel === null) return; // Henüz yüklenmedi
     initLevel(currentLevel);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [currentLevel, startLevel]);
+  }, [currentLevel, startLevel, initLevel]);
+
+  const handlePause = useCallback(() => {
+    if (isPaused || isLevelComplete || isGameFinished) return;
+    pausedElapsedRef.current = timeElapsed;
+    if (timerRef.current) clearInterval(timerRef.current);
+    setIsPaused(true);
+  }, [isPaused, isLevelComplete, isGameFinished, timeElapsed]);
+
+  const handleResume = useCallback(() => {
+    startTimeRef.current = Date.now() - pausedElapsedRef.current * 1000;
+    startTimer();
+    setIsPaused(false);
+  }, [startTimer]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) handlePause();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [handlePause]);
 
   const handleCardClick = (id: string) => {
-    if (isLocked || isLevelComplete) return;
+    if (isLocked || isLevelComplete || isPaused) return;
 
     const clickedCard = cards.find((c) => c.id === id);
     if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched) return;
@@ -272,22 +302,35 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               </div>
             )}
             <div className="flex gap-1">
-              <button 
+              {!isPaused && !isLevelComplete && (
+                <button
+                  onClick={handlePause}
+                  aria-label="Oyunu duraklat"
+                  title="Duraklat"
+                  className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors"
+                >
+                  ⏸️
+                </button>
+              )}
+              <GameSoundToggle />
+              <button
+                onClick={() => setIsLeaderboardOpen(true)}
+                aria-label="Liderlik tablosunu aç"
+                className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+              >
+                🏅 Tablo
+              </button>
+              <button
                 onClick={() => {
                   setIsLevelComplete(true);
                   setIsGameFinished(true);
                   if (timerRef.current) clearInterval(timerRef.current);
                   saveLevelProgress(totalScore, currentLevel);
                 }}
+                aria-label="Oyunu bitir"
                 className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
               >
                 🛑 Bitir
-              </button>
-              <button 
-                onClick={() => setIsLeaderboardOpen(true)}
-                className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
-              >
-                🏅 Tablo
               </button>
             </div>
           </div>
@@ -327,6 +370,33 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
           ))}
         </div>
       </div>
+
+      {/* Pause Overlay */}
+      {isPaused && !isLevelComplete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 rounded-3xl p-7 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-violet-500/40 text-4xl">
+              ⏸
+            </div>
+            <h3 className="text-2xl font-black text-white mb-1">Oyun Duraklatıldı</h3>
+            <p className="text-sm text-slate-400 font-medium mb-5">
+              Süre durduruldu. Hazır olduğunda devam et!
+            </p>
+            <button
+              onClick={handleResume}
+              className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3.5 rounded-2xl shadow-lg hover:brightness-110 transition text-sm"
+            >
+              ▶ Devam Et
+            </button>
+            <button
+              onClick={handleRestart}
+              className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2.5 rounded-2xl hover:bg-white/10 transition text-xs border border-white/10"
+            >
+              Baştan Başla
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Level Complete Overlay */}
       {isLevelComplete && (

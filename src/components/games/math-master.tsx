@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef,useState } from "react";
 import { useAudio } from "@/hooks/use-audio";
 import { useGameProgress } from "@/hooks/use-game-progress";
 
+import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
 
 type MathMasterProps = {
@@ -28,6 +29,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const [timeLeft, setTimeLeft] = useState(100);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   const { playSound } = useAudio();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -117,6 +119,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     setCorrectAnswers(0);
     setStreak(0);
     setIsGameOver(false);
+    setIsPaused(false);
     previousQuestions.current.clear();
     setQuestion(generateQuestion(1));
     setTimeLeft(100);
@@ -132,7 +135,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
 
   // Timer — yalnızca süreyi azaltır, yan etki içermez
   useEffect(() => {
-    if (isGameOver || !question) return;
+    if (isGameOver || isPaused || !question) return;
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => Math.max(0, prev - (0.5 + currentLevel * 0.1)));
@@ -141,16 +144,16 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isGameOver, question, currentLevel]);
+  }, [isGameOver, isPaused, question, currentLevel]);
 
   // Süre bitince can kaybı (updater dışında, tek seferlik)
   useEffect(() => {
-    if (isGameOver || !question) return;
+    if (isGameOver || isPaused || !question) return;
     if (timeLeft <= 0 && !zeroHandledRef.current) {
       zeroHandledRef.current = true;
       handleWrongAnswer();
     }
-  }, [timeLeft, isGameOver, question, currentLevel]);
+  }, [timeLeft, isGameOver, isPaused, question, currentLevel]);
 
   const handleWrongAnswer = () => {
     playSound("error");
@@ -168,7 +171,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   };
 
   const handleAnswer = (selected: number) => {
-    if (isGameOver || !question || selectedAnswer !== null) return;
+    if (isGameOver || isPaused || !question || selectedAnswer !== null) return;
 
     setSelectedAnswer(selected);
 
@@ -243,6 +246,14 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     if (onGameEnd) onGameEnd(finalScore, { level: finalLevel, correct: finalCorrect });
   };
 
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden && !isGameOver) setIsPaused(true);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [isGameOver]);
+
   return (
     <div className="w-full max-w-sm mx-auto select-none">
       {/* Header */}
@@ -264,9 +275,21 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
               </div>
             )}
             <div className="flex gap-1">
+              {!isGameOver && !isPaused && (
+                <button
+                  onClick={() => setIsPaused(true)}
+                  aria-label="Oyunu duraklat"
+                  title="Duraklat"
+                  className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors"
+                >
+                  ⏸️
+                </button>
+              )}
+              <GameSoundToggle />
               {!isGameOver && (
                 <button 
                   onClick={endGame}
+                  aria-label="Oyunu bitir"
                   className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
                 >
                   🛑 Bitir
@@ -274,6 +297,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
               )}
               <button 
                 onClick={() => setIsLeaderboardOpen(true)}
+                aria-label="Liderlik tablosunu aç"
                 className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
               >
                 🏅 Tablo
@@ -362,6 +386,35 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
             {ft.text}
           </div>
         ))}
+
+        {/* Pause Overlay */}
+        {isPaused && !isGameOver && (
+          <div className="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-in zoom-in-95 duration-200 rounded-3xl">
+            <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-3xl flex items-center justify-center mb-3 shadow-2xl shadow-violet-500/40 text-3xl">
+              ⏸
+            </div>
+            <h3 className="text-xl font-black text-white mb-1">
+              Oyun Duraklatıldı
+            </h3>
+            <p className="text-xs text-slate-400 font-bold mb-4">
+              Süre durduruldu. Hazır olduğunda devam et!
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsPaused(false)}
+              className="tap-scale w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black py-3 rounded-xl shadow-lg hover:brightness-110 transition text-sm"
+            >
+              ▶ Devam Et
+            </button>
+            <button
+              type="button"
+              onClick={initGame}
+              className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2.5 rounded-xl hover:bg-white/10 transition text-xs border border-white/10"
+            >
+              Baştan Başla
+            </button>
+          </div>
+        )}
 
         {/* Game Over Overlay */}
         {isGameOver && (
