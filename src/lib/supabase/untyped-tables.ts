@@ -52,8 +52,11 @@ export function untypedFrom(
   client: SupabaseClient<Database>,
   relation: string,
 ): UntypedTableBuilder {
-  const fromUntyped = client.from as unknown as (relation: string) => UntypedTableBuilder;
-  return fromUntyped(relation);
+  // NOT: from metodu objeden koparılırsa `this` kaybolur ve supabase-js
+  // "Cannot read properties of undefined (reading 'rest')" ile patlar.
+  // Bu yüzden .call(client, ...) ile receiver korunur.
+  const fromFn = client.from as unknown as (rel: string) => UntypedTableBuilder;
+  return fromFn.call(client, relation);
 }
 
 type DbError = { message: string; code?: string } | null;
@@ -105,6 +108,9 @@ export function looseFrom<T = Record<string, unknown>>(
   client: SupabaseClient<Database>,
   relation: string,
 ): LooseTableBuilder<T> {
-  const fromLoose = client.from as unknown as (relation: string) => LooseTableBuilder<T>;
-  return fromLoose(relation);
+  // NOT: from metodu objeden koparılırsa `this` kaybolur ve supabase-js
+  // "Cannot read properties of undefined (reading 'rest')" ile patlar.
+  // Bu yüzden .call(client, ...) ile receiver korunur.
+  const fromFn = client.from as unknown as (rel: string) => LooseTableBuilder<T>;
+  return fromFn.call(client, relation);
 }

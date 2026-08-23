@@ -19,6 +19,15 @@ type UserRow = {
 };
 
 export async function GET(req: NextRequest) {
+  try {
+    return await handleLeaderboard(req);
+  } catch (err) {
+    console.error("[leaderboard] crash:", err instanceof Error ? err.stack : err);
+    return NextResponse.json({ error: "leaderboard_failed" }, { status: 500 });
+  }
+}
+
+async function handleLeaderboard(req: NextRequest) {
   const supabase = createAdminClient() || await createClient();
   const gameType = req.nextUrl.searchParams.get("game_type");
 

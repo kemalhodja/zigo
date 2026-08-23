@@ -30,13 +30,19 @@ export function LeaderboardModal({
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [myRank, setMyRank] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
 
     setLoading(true);
+    setLoadError(false);
     fetch(`/api/games/leaderboard?game_type=${gameType}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`leaderboard HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         if (Array.isArray(d)) {
           setData(d);
@@ -44,11 +50,16 @@ export function LeaderboardModal({
             const rank = d.findIndex((e: LeaderboardEntry) => e.user_id === currentUserId);
             setMyRank(rank >= 0 ? rank + 1 : null);
           }
+        } else {
+          setLoadError(true);
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [isOpen, gameType, currentUserId]);
+      .catch(() => {
+        setLoadError(true);
+        setLoading(false);
+      });
+  }, [isOpen, gameType, currentUserId, retryNonce]);
 
   if (!isOpen) return null;
 
@@ -101,6 +112,19 @@ export function LeaderboardModal({
           {loading ? (
             <div className="text-center py-6 text-slate-400 animate-pulse text-sm font-medium">
               Yükleniyor...
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-6 space-y-3">
+              <p className="text-slate-400 text-sm font-medium">
+                Sıralama yüklenemedi. Bağlantını kontrol et.
+              </p>
+              <button
+                type="button"
+                onClick={() => setRetryNonce((n) => n + 1)}
+                className="tap-scale bg-indigo-500/80 hover:bg-indigo-500 text-white text-xs font-black px-4 py-2 rounded-xl transition-colors"
+              >
+                🔄 Tekrar Dene
+              </button>
             </div>
           ) : data.length === 0 ? (
             <div className="text-center py-6 text-slate-500 text-sm font-medium">

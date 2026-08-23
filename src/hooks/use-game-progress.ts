@@ -29,11 +29,16 @@ export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressO
   useEffect(() => {
     if (isGuest) return;
     fetch(`/api/games/progress?game_type=${gameType}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`progress HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (data.high_score) setHighScore(data.high_score);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("[game-progress] Rekor yüklenemedi:", err);
+      });
   }, [gameType, isGuest]);
 
   const saveProgress = useCallback(

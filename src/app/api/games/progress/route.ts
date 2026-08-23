@@ -14,6 +14,15 @@ type GameProgressRecord = {
 };
 
 export async function GET(req: NextRequest) {
+  try {
+    return await handleGet(req);
+  } catch (err) {
+    console.error("[games/progress] GET crash:", err instanceof Error ? err.stack : err);
+    return NextResponse.json({ error: "progress_get_failed" }, { status: 500 });
+  }
+}
+
+async function handleGet(req: NextRequest) {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,6 +51,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  try {
+    return await handlePost(req);
+  } catch (err) {
+    console.error("[games/progress] POST crash:", err instanceof Error ? err.stack : err);
+    return NextResponse.json({ error: "progress_post_failed" }, { status: 500 });
+  }
+}
+
+async function handlePost(req: NextRequest) {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
   if (!profile) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
