@@ -275,17 +275,19 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   }, [mode, initGame]);
 
   // Timer — yalnızca süreyi azaltır, yan etki içermez
+  // 8. sınıf modu: MEB soruları daha uzun düşünmeyi gerektirdiği için süre 3 kat yavaş akar
   useEffect(() => {
     if (isGameOver || isPaused || !question) return;
 
+    const drainDivisor = mode === "grade8" ? 3 : 1;
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => Math.max(0, prev - (0.5 + currentLevel * 0.1)));
+      setTimeLeft((prev) => Math.max(0, prev - (0.5 + currentLevel * 0.1) / drainDivisor));
     }, 50);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isGameOver, isPaused, question, currentLevel]);
+  }, [isGameOver, isPaused, question, currentLevel, mode]);
 
   // Süre bitince can kaybı (updater dışında, tek seferlik)
   useEffect(() => {
