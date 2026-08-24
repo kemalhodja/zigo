@@ -65,7 +65,7 @@ async function main() {
     health.body?.data ? `gates ${health.body.data.readyCount}/${health.body.data.totalCount}` : String(health.response.status),
   );
 
-  const havalePage = await fetch(`${BASE}/billing/havale?planId=student-monthly`);
+  const havalePage = await fetch(`${BASE}/billing/havale?planId=zigo-plus-student-monthly`);
   record("Havale", "Havale sayfası yükleniyor", havalePage.ok, `HTTP ${havalePage.status}`);
 
   const billingPlatform = await fetchJson("/api/billing/platform");
@@ -95,7 +95,7 @@ async function main() {
     const bankTransfer = await fetchJson("/api/billing/bank-transfer", {
       method: "POST",
       headers: { Cookie: signInResult.cookies },
-      body: JSON.stringify({ planId: "student-monthly" }),
+      body: JSON.stringify({ planId: "zigo-plus-student-monthly" }),
     });
     const request = bankTransfer.body?.data?.request;
     const bank = bankTransfer.body?.data?.bank;
@@ -121,16 +121,41 @@ async function main() {
       banks.length >= 2 ? `${banks.length} hesap · ${banks[1]?.bankName ?? "slot 2"}` : "ZIGO_BANK_2_* eksik",
     );
 
+    const stripeConfigured = billingPlatform.body?.data?.stripeConfigured === true;
     const checkout = await fetchJson("/api/billing/checkout", {
       method: "POST",
       headers: { Cookie: signInResult.cookies },
-      body: JSON.stringify({ planId: "student-monthly" }),
+      body: JSON.stringify({ planId: "zigo-plus-student-monthly" }),
+    });
+    const checkoutUrl = checkout.body?.data?.url;
+    if (stripeConfigured) {
+      record(
+        "Stripe",
+        "Checkout oturumu oluşuyor",
+        checkout.response.ok && typeof checkoutUrl === "string" && checkoutUrl.includes("checkout.stripe.com"),
+        checkout.response.ok ? `HTTP ${checkout.response.status} · Stripe URL alındı` : checkout.body?.error ?? `HTTP ${checkout.response.status}`,
+      );
+    } else {
+      record(
+        "Stripe",
+        "Checkout beklenen durum (Stripe yok)",
+        checkout.response.status === 503,
+        checkout.body?.error ?? `HTTP ${checkout.response.status}`,
+      );
+    }
+
+    const webhook = await fetchJson("/api/billing/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": "t=0,v1=probe" },
+      body: JSON.stringify({}),
     });
     record(
       "Stripe",
-      "Checkout beklenen durum (Stripe yok)",
-      checkout.response.status === 503,
-      checkout.body?.error ?? `HTTP ${checkout.response.status}`,
+      "Webhook yapılandırılmış (STRIPE_WEBHOOK_SECRET)",
+      webhook.response.status !== 503,
+      webhook.response.status === 503
+        ? "STRIPE_WEBHOOK_SECRET eksik — ödemeler üyeliği açamaz"
+        : `HTTP ${webhook.response.status} (imza doğrulama aşaması)`,
     );
 
     const profile = await fetch(`${BASE}/profile`, {

@@ -5,9 +5,10 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock", {
-  apiVersion: "2026-07-29.dahlia",
-});
+function getStripeClient(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  return key ? new Stripe(key, { apiVersion: "2026-07-29.dahlia" }) : null;
+}
 
 export async function POST(request: Request) {
   try {
@@ -106,6 +107,14 @@ export async function POST(request: Request) {
         .from("role_change_requests")
         .update({ fee_amount: feeAmount })
         .eq("id", requestId);
+
+      const stripe = getStripeClient();
+      if (!stripe) {
+        return NextResponse.json(
+          { error: "Stripe henüz yapılandırılmadı." },
+          { status: 503 },
+        );
+      }
 
       const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://zigo.app";
       const session = await stripe.checkout.sessions.create({
