@@ -55,6 +55,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const [totalScore, setTotalScore] = useState(0);
   const [levelScore, setLevelScore] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isPeeking, setIsPeeking] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [levelBonus, setLevelBonus] = useState(0);
 
   const [firstChoice, setFirstChoice] = useState<Card | null>(null);
   const [secondChoice, setSecondChoice] = useState<Card | null>(null);
@@ -71,6 +74,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const pausedElapsedRef = useRef(0);
+  const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const streakRef = useRef(0);
+  const maxStreakRef = useRef(0);
 
   const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -121,8 +127,17 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     setIsLevelComplete(false);
     setIsGameFinished(false);
     setIsPaused(false);
+    setIsPeeking(true);
     setTimeElapsed(0);
     pausedElapsedRef.current = 0;
+    streakRef.current = 0;
+    maxStreakRef.current = 0;
+    setCurrentStreak(0);
+    setLevelBonus(0);
+
+    if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
+    // Klasik hafıza oyunu "peek" mekaniği: seviye başında kartlar kısa süre açık gösterilir
+    peekTimerRef.current = setTimeout(() => setIsPeeking(false), Math.min(1400 + pairCount * 120, 2600));
 
     startTimeRef.current = Date.now();
     startTimer();
@@ -132,7 +147,10 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   useEffect(() => {
     if (userId !== "guest" && startLevel === null) return; // Henüz yüklenmedi
     initLevel(currentLevel);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
+    };
   }, [currentLevel, startLevel, initLevel]);
 
   const handlePause = useCallback(() => {
@@ -157,7 +175,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   }, [handlePause]);
 
   const handleCardClick = (id: string) => {
-    if (isLocked || isLevelComplete || isPaused) return;
+    if (isLocked || isLevelComplete || isPaused || isPeeking) return;
 
     const clickedCard = cards.find((c) => c.id === id);
     if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched) return;
@@ -180,6 +198,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
 
     if (firstChoice.icon === secondChoice.icon) {
       playSound("click");
+      streakRef.current += 1;
+      maxStreakRef.current = Math.max(maxStreakRef.current, streakRef.current);
+      setCurrentStreak(streakRef.current);
       setCards((prev) =>
         prev.map((c) => (c.icon === firstChoice.icon ? { ...c, isMatched: true } : c))
       );
@@ -187,6 +208,8 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       setSecondChoice(null);
       setIsLocked(false);
     } else {
+      streakRef.current = 0;
+      setCurrentStreak(0);
       setCards((prev) =>
         prev.map((c) =>
           c.id === firstChoice.id || c.id === secondChoice.id
@@ -220,7 +243,11 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsLevelComplete(true);
 
-    const earned = Math.max(10, Math.floor(1000 / Math.max(1, timeElapsed)) - moves * 5);
+    // Seri bonusu: hatasız eşleştirme serisi 3 ve üzerinde ödüllendirilir
+    const streakBonus = maxStreakRef.current >= 3 ? (maxStreakRef.current - 2) * 15 : 0;
+    setLevelBonus(streakBonus);
+    const earned =
+      Math.max(10, Math.floor(1000 / Math.max(1, timeElapsed)) - moves * 5) + streakBonus;
     const newTotal = totalScore + earned;
     setLevelScore(earned);
     setTotalScore(newTotal);
@@ -342,7 +369,10 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
           </div>
           <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm">
             <span className="text-[0.6rem] font-black text-violet-200 block uppercase">Hamle</span>
-            <span className="text-sm font-black text-white">{moves}</span>
+            <span className="text-sm font-black text-white">
+              {moves}
+              {currentStreak >= 2 && <span className="ml-1 text-amber-300">🔥{currentStreak}</span>}
+            </span>
           </div>
           <div className="bg-white/20 rounded-xl p-2 text-center backdrop-blur-sm border border-white/20">
             <span className="text-[0.6rem] font-black text-violet-200 block uppercase">Puan</span>
@@ -362,7 +392,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
               key={card.id}
               id={card.id}
               icon={card.icon}
-              isFlipped={card.isFlipped}
+              isFlipped={card.isFlipped || isPeeking}
               isMatched={card.isMatched}
               isError={card.isError}
               onClick={handleCardClick}
@@ -428,6 +458,12 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
                 <p className="text-base font-black text-emerald-400">+{levelScore}</p>
               </div>
             </div>
+
+            {levelBonus > 0 && (
+              <p className="text-xs font-black text-amber-400 mb-3">
+                🔥 Seri Bonusu +{levelBonus} ({maxStreakRef.current} seri)
+              </p>
+            )}
 
             {!isGameFinished && (
               <button

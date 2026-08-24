@@ -9,6 +9,7 @@ import { useGameProgress } from "@/hooks/use-game-progress";
 import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
 import { PipeCell, type PipeType } from "./pipe-cell";
+import { generatePipeLevel } from "./pipe-generator";
 import { BASE_DIRECTIONS, rotateDirections } from "./pipe-logic";
 
 type CellData = {
@@ -71,7 +72,11 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
   }, [userId]);
 
   const loadLevel = useCallback((lvlIndex: number) => {
-    const template = PRESET_LEVELS[lvlIndex % PRESET_LEVELS.length];
+    // Preset bölümler bitince sonsuz prosedürel bölümler başlar (gittikçe zorlaşır)
+    const template =
+      lvlIndex < PRESET_LEVELS.length
+        ? PRESET_LEVELS[lvlIndex]
+        : generatePipeLevel(lvlIndex, PRESET_LEVELS.length);
     const newGrid: CellData[][] = template.map((row) =>
       row.map((cell) => {
         if (cell.type === "source" || cell.type === "target" || cell.type === "empty") {
@@ -233,6 +238,14 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
             </h2>
             <p className="text-xs font-bold text-slate-400">
               Seviye {currentLevel + 1}
+              {currentLevel >= PRESET_LEVELS.length && (
+                <span className="ml-2 text-[0.58rem] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 px-1.5 py-0.5 rounded-md align-middle">
+                  ∞ SONSUZ MOD
+                </span>
+              )}
+              {grid.length > 0 && (
+                <span className="ml-2 text-slate-500">{grid.length}×{grid.length}</span>
+              )}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -269,20 +282,24 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
         </div>
 
         {/* Seviye İlerleme Çubuğu */}
-        <div className="flex gap-1 mb-3">
-          {PRESET_LEVELS.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-1.5 flex-1 rounded-full transition-all ${
-                idx < (currentLevel % PRESET_LEVELS.length)
-                  ? "bg-cyan-400"
-                  : idx === (currentLevel % PRESET_LEVELS.length)
-                  ? "bg-cyan-400/50"
-                  : "bg-white/10"
-              }`}
-            />
-          ))}
-        </div>
+        {currentLevel < PRESET_LEVELS.length ? (
+          <div className="flex gap-1 mb-3">
+            {PRESET_LEVELS.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 flex-1 rounded-full transition-all ${
+                  idx < (currentLevel % PRESET_LEVELS.length)
+                    ? "bg-cyan-400"
+                    : idx === (currentLevel % PRESET_LEVELS.length)
+                    ? "bg-cyan-400/50"
+                    : "bg-white/10"
+                }`}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="h-1.5 rounded-full mb-3 bg-gradient-to-r from-cyan-400/30 via-cyan-400 to-blue-400/30 animate-pulse" />
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-white/5 rounded-xl p-2 text-center border border-white/10">

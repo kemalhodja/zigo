@@ -73,8 +73,7 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/student/games/blocks"
-              className="tap-scale shrink-0 bg-white text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-emerald-50 transition-colors"
+              href="/student/games/blocks"              className="tap-scale shrink-0 bg-white text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-emerald-50 transition-colors"
             >
               Oyna
             </Link>
@@ -94,7 +93,7 @@ export function MiniGamesArcadeSection({
               <p className="text-cyan-100 text-[0.62rem] font-bold mt-0.5">Mantık & Akış</p>
               <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
                 <span aria-hidden="true">🗺️</span>
-                15 özel tasarım bölüm
+                15 bölüm + ∞ sonsuz mod
               </div>
             </div>
             <Link
@@ -119,7 +118,7 @@ export function MiniGamesArcadeSection({
               <p className="text-rose-100 text-[0.62rem] font-bold mt-0.5">Analitik Düşünce</p>
               <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
                 <span aria-hidden="true">🧠</span>
-                4 işlem · Kombo bonusu
+                Klasik + 8. Sınıf müfredatı
               </div>
             </div>
             <Link

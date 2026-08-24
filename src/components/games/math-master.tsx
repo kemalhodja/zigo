@@ -14,13 +14,149 @@ type MathMasterProps = {
   onGameEnd?: (score: number, stats: { level: number; correct: number }) => void;
 };
 
+type Mode = "classic" | "grade8";
+
 type Question = {
   text: string;
   answer: number;
   options: number[];
+  topic?: string;
 };
 
+const SUPERSCRIPT: Record<string, string> = {
+  "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+  "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
+};
+
+function sup(n: number): string {
+  return String(n).split("").map((ch) => SUPERSCRIPT[ch] ?? ch).join("");
+}
+
+function gcd(a: number, b: number): number {
+  while (b !== 0) {
+    [a, b] = [b, a % b];
+  }
+  return a;
+}
+
+// MEB 8. sınıf kazanımları (M.8.1.x) için Pisagor üçlüleri
+const PISAGOR_TRIPLES: [number, number, number][] = [
+  [3, 4, 5], [6, 8, 10], [5, 12, 13], [9, 12, 15], [8, 15, 17],
+];
+
+type Grade8Topic =
+  | "uslu" | "uslukural" | "ebob" | "ekok"
+  | "karekok" | "kokdis" | "denklem" | "pisagor";
+
+const TOPIC_LABEL: Record<Grade8Topic, string> = {
+  uslu: "Üslü İfadeler",
+  uslukural: "Üslü Kurallar",
+  ebob: "EBOB",
+  ekok: "EKOK",
+  karekok: "Kareköklü İfadeler",
+  kokdis: "Kök Dışı Alma",
+  denklem: "Doğrusal Denklem",
+  pisagor: "Pisagor (Üçgenler)",
+};
+
+function randInt(min: number, max: number, rng: () => number = Math.random): number {
+  return min + Math.floor(rng() * (max - min + 1));
+}
+
+function makeOptions(ans: number): number[] {
+  const set = new Set<number>([ans]);
+  const spread = Math.max(3, Math.round(Math.abs(ans) * 0.2));
+  let guard = 0;
+  while (set.size < 4 && guard++ < 100) {
+    const off = randInt(-spread, spread);
+    const v = off === 0 ? ans + spread : ans + off;
+    if (v >= 0 && v !== ans) set.add(v);
+  }
+  let pad = 1;
+  while (set.size < 4) {
+    const v = ans + spread + pad++;
+    if (v !== ans && v >= 0) set.add(v);
+  }
+  return Array.from(set).sort(() => Math.random() - 0.5);
+}
+
+type Grade8Question = { text: string; answer: number; topic: Grade8Topic };
+
+function genGrade8Question(level: number): Grade8Question {
+  const pool: Grade8Topic[] = ["uslu", "ebob"];
+  if (level >= 2) pool.push("ekok");
+  if (level >= 3) pool.push("karekok");
+  if (level >= 4) pool.push("denklem");
+  if (level >= 5) pool.push("pisagor");
+  if (level >= 6) pool.push("uslukural");
+  if (level >= 7) pool.push("kokdis");
+  const topic = pool[Math.floor(Math.random() * pool.length)];
+
+  switch (topic) {
+    case "uslu": {
+      const base = randInt(2, level > 3 ? 9 : 6);
+      const exp = randInt(2, level > 4 ? 4 : 3);
+      return { text: `${base}${sup(exp)} = ?`, answer: Math.pow(base, exp), topic };
+    }
+    case "uslukural": {
+      const base = [2, 3, 5][randInt(0, 2)];
+      const m = randInt(2, 5);
+      const n = randInt(2, 5);
+      if (Math.random() < 0.5) {
+        return {
+          text: `${base}${sup(m)} · ${base}${sup(n)} = ${base}ᵏ , k = ?`,
+          answer: m + n,
+          topic,
+        };
+      }
+      return {
+        text: `(${base}${sup(m)})${sup(n)} = ${base}ᵏ , k = ?`,
+        answer: m * n,
+        topic,
+      };
+    }
+    case "ebob":
+    case "ekok": {
+      const a = randInt(8, 36);
+      const b = randInt(8, 36);
+      const g = gcd(a, b);
+      return topic === "ebob"
+        ? { text: `EBOB(${a}, ${b}) = ?`, answer: g, topic }
+        : { text: `EKOK(${a}, ${b}) = ?`, answer: (a * b) / g, topic };
+    }
+    case "karekok": {
+      const k = randInt(4, 15);
+      return { text: `√${k * k} = ?`, answer: k, topic };
+    }
+    case "kokdis": {
+      const r = [2, 3, 5][randInt(0, 2)];
+      const k = randInt(2, 9);
+      return { text: `√${k * k * r} = k√${r} ise k = ?`, answer: k, topic };
+    }
+    case "denklem": {
+      const x = randInt(2, 12);
+      const a = randInt(2, 9);
+      if (Math.random() < 0.6) {
+        const b = randInt(1, 20);
+        return { text: `${a}x + ${b} = ${a * x + b} , x = ?`, answer: x, topic };
+      }
+      const b = a * x - randInt(1, a * x - 1);
+      return { text: `${a}x - ${b} = ${a * x - b} , x = ?`, answer: x, topic };
+    }
+    case "pisagor": {
+      const [a0, b0, c0] = PISAGOR_TRIPLES[randInt(0, PISAGOR_TRIPLES.length - 1)];
+      const scale = Math.random() < 0.5 ? 1 : 2;
+      return {
+        text: `Dik kenarları ${a0 * scale} ve ${b0 * scale} olan üçgenin hipotenüsü ?`,
+        answer: c0 * scale,
+        topic,
+      };
+    }
+  }
+}
+
 export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
+  const [mode, setMode] = useState<Mode | null>(null);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
@@ -53,7 +189,12 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const [floatingText, setFloatingText] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
   const floatIdRef = useRef(0);
 
-  const generateQuestion = useCallback((level: number): Question => {
+  const generateQuestion = useCallback((level: number, activeMode: Mode): Question => {
+    if (activeMode === "grade8") {
+      const g8 = genGrade8Question(level);
+      return { text: g8.text, answer: g8.answer, topic: TOPIC_LABEL[g8.topic], options: makeOptions(g8.answer) };
+    }
+
     let qText = "";
     let ans = 0;
     
@@ -111,7 +252,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     return { text: qText, answer: ans, options };
   }, []);
 
-  const initGame = useCallback(() => {
+  const initGame = useCallback((activeMode: Mode) => {
     setScore(0);
     setCurrentLevel(1);
     setLives(3);
@@ -121,7 +262,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     setIsGameOver(false);
     setIsPaused(false);
     previousQuestions.current.clear();
-    setQuestion(generateQuestion(1));
+    setQuestion(generateQuestion(1, activeMode));
     setTimeLeft(100);
     zeroHandledRef.current = false;
     scoreRef.current = 0;
@@ -130,8 +271,8 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   }, [generateQuestion]);
 
   useEffect(() => {
-    initGame();
-  }, [initGame]);
+    if (mode) initGame(mode);
+  }, [mode, initGame]);
 
   // Timer — yalnızca süreyi azaltır, yan etki içermez
   useEffect(() => {
@@ -164,7 +305,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     if (newLives <= 0) {
       endGame();
     } else {
-      setQuestion(generateQuestion(currentLevel));
+      setQuestion(generateQuestion(currentLevel, mode ?? "classic"));
       setTimeLeft(100);
       zeroHandledRef.current = false;
     }
@@ -218,7 +359,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
             colors: ["#f43f5e", "#3b82f6", "#10b981"],
           });
         }
-        setQuestion(generateQuestion(newLevel));
+        setQuestion(generateQuestion(newLevel, mode ?? "classic"));
         setTimeLeft(100);
         zeroHandledRef.current = false;
         setSelectedAnswer(null);
@@ -241,7 +382,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     const finalLevel = levelRef.current;
     const finalCorrect = correctRef.current;
 
-    await saveProgress(finalScore, finalLevel, { level: finalLevel, correct: finalCorrect });
+    await saveProgress(finalScore, finalLevel, { level: finalLevel, correct: finalCorrect, mode });
 
     if (onGameEnd) onGameEnd(finalScore, { level: finalLevel, correct: finalCorrect });
   };
@@ -254,6 +395,37 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [isGameOver]);
 
+  if (mode === null) {
+    return (
+      <div className="w-full max-w-sm mx-auto p-6 bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl text-center select-none">
+        <h2 className="text-2xl font-black text-white mb-1">🧮 Matematik Ustası</h2>
+        <p className="text-sm font-bold text-slate-400 mb-6">Hangi modda oynamak istersin?</p>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={() => setMode("classic")}
+            className="tap-scale w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition"
+          >
+            ♾️ Klasik Mod
+            <span className="block text-[0.62rem] font-bold text-white/80 mt-0.5">
+              Hızlanan dört işlem maratonu
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("grade8")}
+            className="tap-scale w-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition"
+          >
+            🎓 8. Sınıf Modu
+            <span className="block text-[0.62rem] font-bold text-white/80 mt-0.5">
+              MEB müfredatı: Üslü · Karekök · EBOB-EKOK · Denklem · Pisagor
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-sm mx-auto select-none">
       {/* Header */}
@@ -264,7 +436,9 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
               🧮 Matematik Ustası
             </h2>
             <p className="text-xs font-bold text-rose-200">
-              Seviye {currentLevel} · {streak > 1 ? `🔥 ${streak} Kombo!` : "Hızlı ol!"}
+              {mode === "grade8"
+                ? `🎓 8. Sınıf · Seviye ${currentLevel}`
+                : `Seviye ${currentLevel} · ${streak > 1 ? `🔥 ${streak} Kombo!` : "Hızlı ol!"}`}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -344,8 +518,13 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
           <div className="text-[0.65rem] font-black text-slate-500 uppercase tracking-widest mb-1">
             Soru {correctAnswers + 1}
           </div>
+          {question?.topic && (
+            <div className="inline-block mb-2 text-[0.58rem] font-black uppercase tracking-wider bg-white/10 border border-white/10 text-slate-300 px-2 py-0.5 rounded-md">
+              📚 {question.topic}
+            </div>
+          )}
           <div className="text-4xl sm:text-5xl font-black text-white tracking-wider">
-            {question?.text} <span className="text-rose-500">= ?</span>
+            {question?.text} {!question?.topic && <span className="text-rose-500">= ?</span>}
           </div>
         </div>
 
@@ -408,7 +587,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
             </button>
             <button
               type="button"
-              onClick={initGame}
+              onClick={() => initGame(mode ?? "classic")}
               className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2.5 rounded-xl hover:bg-white/10 transition text-xs border border-white/10"
             >
               Baştan Başla
@@ -438,10 +617,17 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
 
             <button
               type="button"
-              onClick={initGame}
+              onClick={() => initGame(mode ?? "classic")}
               className="tap-scale w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white font-black py-3 rounded-xl shadow-lg hover:brightness-110 transition text-sm"
             >
               Tekrar Oyna 🔄
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode(null)}
+              className="tap-scale w-full mt-2 bg-white/5 text-slate-400 font-bold py-2.5 rounded-xl hover:bg-white/10 transition text-xs border border-white/10"
+            >
+              🎓 Mod Değiştir
             </button>
           </div>
         )}
