@@ -6,6 +6,7 @@ import { RateLimitExceededError } from "@/lib/domain/api-errors";
 import { isEmailConfirmationEnforced, requiresEmailConfirmation } from "@/lib/domain/auth-gates";
 import { getSiteUrl } from "@/lib/domain/deploy-config";
 import { validateInviteCodeFormat } from "@/lib/domain/invite-codes";
+import { createParentalConsentRequest, isMinorBirthYear } from "@/lib/domain/parental-consent";
 import { REGISTRATION_ACCOUNT_KIND_VALUES,resolveRegistrationAccount } from "@/lib/domain/registration-account";
 import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
 import {
@@ -48,6 +49,8 @@ const authSchema = z.object({
     .nullish(),
   inviteCode: z.string().trim().min(4).max(32).optional(),
   recaptchaToken: z.string().trim().min(1).optional(),
+  birthYear: z.number().int().optional(),
+  parentEmail: z.string().trim().max(200).optional(),
 }).refine((value) => Boolean(value.role || value.accountKind), {
   message: "Hesap türü seçin.",
 });
@@ -128,6 +131,15 @@ export async function POST(request: Request) {
       }
 
       await persistRememberMePreference(true);
+      const isMinor = Boolean(body.birthYear && isMinorBirthYear(body.birthYear));
+      if (signInData.user?.id && isMinor && body.parentEmail) {
+        // Best-effort: a pending consent record is created for minors whose
+        // parent email was supplied during signup.
+        const adminForConsent = createAdminClient();
+        if (adminForConsent) {
+          await createParentalConsentRequest(adminForConsent, signInData.user.id, body.parentEmail);
+        }
+      }
       if (signInData.user?.id) {
         await tryRedeemInvite(supabase, signInData.user.id, body.inviteCode);
       }
@@ -138,6 +150,7 @@ export async function POST(request: Request) {
         },
         profileCreated: Boolean(created.user),
         needsEmailConfirmation: false,
+        parentalConsentRequired: isMinor && !body.parentEmail,
         message: getSignUpSuccessMessage(false),
       });
     }

@@ -7,9 +7,10 @@ import type { Database, UserRole } from "@/lib/supabase/database.types";
 export type AuthGate = "email" | "onboarding" | "student-document" | "ready";
 
 export function isEmailConfirmationEnforced() {
-  // if (isLocalDemoSupabase()) return false;
-  // return process.env.ZIGO_REQUIRE_EMAIL_CONFIRM !== "false";
-  return false;
+  if (isLocalDemoSupabase()) return false;
+  // Explicit opt-in: enable only after Supabase Auth email delivery (SMTP +
+  // templates) is verified working in the target environment.
+  return process.env.ZIGO_REQUIRE_EMAIL_CONFIRM === "true";
 }
 
 export function isStudentDocumentGateEnforced() {

@@ -50,6 +50,7 @@ launch-status.json
 zigo.tar.gz
 *.tar.gz
 scripts/_tmp-*.mjs
+.env.bank
 
 # one-off local DB diagnostic scripts (contain credentials, never commit)
 /diagnose2.js
@@ -66,6 +67,20 @@ scripts/_tmp-*.mjs
 /relax_policy.js
 /restore_policy.js
 /update_func.js
+/fix-db.js
+/fix-db2.js
+/fix-db-remote.js
+/search.txt
+/user_messages.txt
+/user_messages_utf8.txt
+
+# python service virtualenv + local artifacts
+meta-webhook-service/venv/
+
+# app binaries / throwaway screenshots
+Zigo-*-release.aab
+/zigo-emulator-test*.png
+/test-screens/
 
 .continue/
 

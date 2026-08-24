@@ -1223,6 +1223,47 @@ export type Database = {
           },
         ]
       }
+      parental_consents: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          id: string
+          parent_email: string
+          requested_at: string
+          status: string
+          student_user_id: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          parent_email: string
+          requested_at?: string
+          status?: string
+          student_user_id: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          parent_email?: string
+          requested_at?: string
+          status?: string
+          student_user_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parental_consents_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_shares: {
         Row: {
           created_at: string

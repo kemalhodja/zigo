@@ -64,7 +64,9 @@ const nextConfig: NextConfig = {
     ],
   },
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
+    // Keep error/warn logs in production — they feed Sentry breadcrumbs
+    // and server-side diagnostics ([SERVER_*] tags).
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },
 };
 
@@ -92,7 +94,10 @@ export default withSentryConfig(
     widenClientFileUpload: true,
     tunnelRoute: "/monitoring",
     sourcemaps: {
-      disable: true,
-    }
+      // Generate + upload sourcemaps to Sentry when SENTRY_AUTH_TOKEN is set;
+      // @sentry/nextjs hides them from the browser by default (hideSourceMaps).
+      disable: false,
+    },
+    authToken: process.env.SENTRY_AUTH_TOKEN,
   }
 );

@@ -79,6 +79,12 @@ export function respondWithDomainError(error: unknown, fallbackMessage: string, 
     return NextResponse.json(mapped.body, { status: mapped.status });
   }
 
+  // Expected domain faults were already mapped above; anything reaching this
+  // line is an unexpected fault worth tracking in Sentry.
+  void import("@sentry/nextjs").then((Sentry) => {
+    Sentry.captureException(error, { tags: { handler: "respondWithDomainError" } });
+  });
+
   const message = extractErrorMessage(error, fallbackMessage);
   return NextResponse.json({ error: message }, { status: fallbackStatus });
 }
