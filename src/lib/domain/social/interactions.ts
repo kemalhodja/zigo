@@ -14,6 +14,7 @@ import {
   countFollowing,
   countPostLikes,
   countPostSaves,
+  countPostShares,
   hasFollow,
   hasRow,
   notifyPostAuthor,
@@ -692,4 +693,24 @@ export async function deleteSocialPost(
   }
 
   return { success: true };
+}
+
+export async function sharePost(
+  supabase: SupabaseClient<Database>,
+  input: { postId: string; userId: string },
+) {
+  const parsed = socialPostActionSchema.parse(input);
+
+  const { error } = await supabase
+    .from("post_shares")
+    .upsert(
+      {
+        post_id: parsed.postId,
+        user_id: input.userId,
+      },
+      { onConflict: "post_id,user_id", ignoreDuplicates: true },
+    );
+  if (error) throw error;
+
+  return { shares_count: await countPostShares(supabase, parsed.postId) };
 }

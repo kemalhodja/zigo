@@ -89,10 +89,11 @@ export async function hydrateSocialPosts(
   if (allowedPosts.length === 0) return [];
 
   const postIds = allowedPosts.map((post) => post.id);
-  const [likesByPost, commentsByPost, savesByPost, likedPostIds, savedPostIds] = await Promise.all([
+  const [likesByPost, commentsByPost, savesByPost, sharesByPost, likedPostIds, savedPostIds] = await Promise.all([
     batchCountRowsByPostId(supabase, "post_likes", postIds),
     batchCountApprovedCommentsByPostId(supabase, postIds),
     batchCountRowsByPostId(supabase, "saved_posts", postIds),
+    batchCountRowsByPostId(supabase, "post_shares", postIds),
     viewerId ? batchViewerPostIds(supabase, "post_likes", postIds, viewerId) : Promise.resolve(new Set<string>()),
     viewerId ? batchViewerPostIds(supabase, "saved_posts", postIds, viewerId) : Promise.resolve(new Set<string>()),
   ]);
@@ -101,6 +102,7 @@ export async function hydrateSocialPosts(
     const likes = likesByPost.get(post.id) ?? 0;
     const comments = commentsByPost.get(post.id) ?? 0;
     const saves = savesByPost.get(post.id) ?? 0;
+    const shares = sharesByPost.get(post.id) ?? 0;
     const hasPremiumPrep = Boolean(post.premium_prep_label && post.premium_prep_url);
     const hasSponsored = isSponsoredAdConfigured(post);
     const sponsoredActive = isSponsoredAdActive(post);
@@ -121,6 +123,7 @@ export async function hydrateSocialPosts(
       likes_count: likes,
       comments_count: comments,
       saves_count: saves,
+      shares_count: shares,
       ranking_score: scoreSocialPost(post, likes, comments, saves, viewerContext),
       is_liked: likedPostIds.has(post.id),
       is_saved: savedPostIds.has(post.id),
@@ -130,7 +133,7 @@ export async function hydrateSocialPosts(
 
 async function batchCountRowsByPostId(
   supabase: SupabaseClient<Database>,
-  table: "post_likes" | "saved_posts",
+  table: "post_likes" | "saved_posts" | "post_shares",
   postIds: string[],
 ) {
   const counts = new Map<string, number>();
@@ -294,6 +297,16 @@ export async function countApprovedComments(supabase: SupabaseClient<Database>, 
 export async function countPostSaves(supabase: SupabaseClient<Database>, postId: string) {
   const { count, error } = await supabase
     .from("saved_posts")
+    .select("*", { count: "exact", head: true })
+    .eq("post_id", postId);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function countPostShares(supabase: SupabaseClient<Database>, postId: string) {
+  const { count, error } = await supabase
+    .from("post_shares")
     .select("*", { count: "exact", head: true })
     .eq("post_id", postId);
 

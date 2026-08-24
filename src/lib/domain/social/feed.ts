@@ -366,7 +366,7 @@ export async function getUserSocialPosts(
 ): Promise<SocialFeedPost[]> {
   const { data, error } = await supabase
     .from("social_posts")
-    .select("*, likes_agg:post_likes(count), comments_agg:post_comments(count)")
+    .select("*, likes_agg:post_likes(count), comments_agg:post_comments(count), shares_agg:post_shares(count)")
     .eq("author_id", userId)
     .order("created_at", { ascending: false })
     .limit(30);
@@ -387,6 +387,7 @@ export async function getUserSocialPosts(
       likes_count: 0,
       comments_count: 0,
       saves_count: 0,
+      shares_count: 0,
       ranking_score: 0,
       is_liked: false,
       is_saved: false,
@@ -401,8 +402,10 @@ export async function getUserSocialPosts(
   return (data ?? []).map((p) => {
     const likesAgg = p.likes_agg as unknown;
     const commentsAgg = p.comments_agg as unknown;
+    const sharesAgg = p.shares_agg as unknown;
     const likesCount = Array.isArray(likesAgg) && likesAgg[0] ? Number((likesAgg[0] as Record<string, unknown>).count ?? 0) : 0;
     const commentsCount = Array.isArray(commentsAgg) && commentsAgg[0] ? Number((commentsAgg[0] as Record<string, unknown>).count ?? 0) : 0;
+    const sharesCount = Array.isArray(sharesAgg) && sharesAgg[0] ? Number((sharesAgg[0] as Record<string, unknown>).count ?? 0) : 0;
     return {
       ...p,
       author: null,
@@ -410,6 +413,7 @@ export async function getUserSocialPosts(
       likes_count: likesCount,
       comments_count: commentsCount,
       saves_count: 0,
+      shares_count: sharesCount,
       ranking_score: 0,
       is_liked: false,
       is_saved: false,
@@ -428,7 +432,7 @@ export async function getUserSocialReels(
 ): Promise<SocialFeedPost[]> {
   const { data, error } = await supabase
     .from("social_posts")
-    .select("*, likes_agg:post_likes(count), comments_agg:post_comments(count)")
+    .select("*, likes_agg:post_likes(count), comments_agg:post_comments(count), shares_agg:post_shares(count)")
     .eq("author_id", userId)
     .or("is_reel.eq.true,media_type.eq.video")
     .order("created_at", { ascending: false })
@@ -450,6 +454,7 @@ export async function getUserSocialReels(
       likes_count: 0,
       comments_count: 0,
       saves_count: 0,
+      shares_count: 0,
       ranking_score: 0,
       is_liked: false,
       is_saved: false,
@@ -464,8 +469,10 @@ export async function getUserSocialReels(
   return (data ?? []).map((p) => {
     const likesAgg = p.likes_agg as unknown;
     const commentsAgg = p.comments_agg as unknown;
+    const sharesAgg = p.shares_agg as unknown;
     const likesCount = Array.isArray(likesAgg) && likesAgg[0] ? Number((likesAgg[0] as Record<string, unknown>).count ?? 0) : 0;
     const commentsCount = Array.isArray(commentsAgg) && commentsAgg[0] ? Number((commentsAgg[0] as Record<string, unknown>).count ?? 0) : 0;
+    const sharesCount = Array.isArray(sharesAgg) && sharesAgg[0] ? Number((sharesAgg[0] as Record<string, unknown>).count ?? 0) : 0;
     return {
       ...p,
       author: null,
@@ -473,6 +480,7 @@ export async function getUserSocialReels(
       likes_count: likesCount,
       comments_count: commentsCount,
       saves_count: 0,
+      shares_count: sharesCount,
       ranking_score: 0,
       is_liked: false,
       is_saved: false,

@@ -31,6 +31,7 @@ export type DisplayPost = {
   gradient: string;
   likes: number;
   comments: number;
+  shares?: number;
   badge: string;
   area: string;
   mediaUrl: string | null;
@@ -366,6 +367,7 @@ export function toDisplayPost(
           : "from-amber-400 via-orange-500 to-rose-500",
     likes: post.likes_count,
     comments: post.comments_count,
+    shares: post.shares_count,
     badge: post.is_reel ? "Micro" : "Post",
     area: displayEducationAreaName(post.area?.area_name) || "Eşleşen öğrenme",
     areaId: post.area_id ?? undefined,

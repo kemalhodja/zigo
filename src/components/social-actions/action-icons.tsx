@@ -19,14 +19,6 @@ export function ActionIcon({ filled = false, name }: { filled?: boolean; name: s
     );
   }
 
-  if (name === "repost") {
-    return (
-      <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-4 4m0 0l-4-4m4 4V7a2 2 0 00-2-2H5m0 0l4-4m-4 4l4 4" />
-      </svg>
-    );
-  }
-
   if (name === "send") {
     return (
       <svg aria-hidden="true" className="size-6 -rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

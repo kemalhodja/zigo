@@ -12,6 +12,7 @@ export type SocialFeedPost = Omit<SocialPostRow, "premium_prep_url" | "sponsored
   likes_count: number;
   comments_count: number;
   saves_count: number;
+  shares_count: number;
   ranking_score: number;
   is_liked: boolean;
   is_saved: boolean;

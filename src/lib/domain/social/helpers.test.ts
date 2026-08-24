@@ -64,14 +64,16 @@ describe("hydrateSocialPosts", () => {
           error: null,
         },
         saved_posts: { data: [], error: null },
+        post_shares: { data: [], error: null },
       },
     });
 
     const hydrated = await hydrateSocialPosts(supabase, [samplePostRow, secondPost]);
     expect(hydrated[0]?.likes_count).toBe(2);
     expect(hydrated[0]?.comments_count).toBe(0);
+    expect(hydrated[0]?.shares_count).toBe(0);
     expect(hydrated[1]?.comments_count).toBe(1);
-    expect(supabase.from).toHaveBeenCalledTimes(3);
+    expect(supabase.from).toHaveBeenCalledTimes(4);
   });
 });
 

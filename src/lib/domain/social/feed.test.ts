@@ -35,6 +35,7 @@ describe("social feed", () => {
         },
         post_comments: { data: [{ post_id: samplePostRow.id }], error: null },
         saved_posts: { data: [], error: null },
+        post_shares: { data: [], error: null },
         user_blocks: { data: [], error: null },
       },
     });
@@ -67,6 +68,7 @@ describe("social feed", () => {
         post_likes: { data: [], error: null },
         post_comments: { data: [], error: null },
         saved_posts: { data: [], error: null },
+        post_shares: { data: [], error: null },
       },
     });
 

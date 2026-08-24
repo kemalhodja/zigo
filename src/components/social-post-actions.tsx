@@ -29,6 +29,7 @@ type SocialPostActionsProps = {
   postId?: string;
   initialLikes: number;
   initialComments: number;
+  initialShares?: number;
   initialLiked?: boolean;
   initialSaved?: boolean;
   variant?: "full" | "compact";
@@ -38,6 +39,7 @@ export function SocialPostActions({
   postId,
   initialLikes,
   initialComments,
+  initialShares = 0,
   initialLiked = false,
   initialSaved = false,
   variant = "full",
@@ -50,6 +52,7 @@ export function SocialPostActions({
   const router = useRouter();
   const [likes, setLikes] = useState(initialLikes);
   const [comments, setComments] = useState(initialComments);
+  const [shares, setShares] = useState(initialShares);
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [isSaved, setIsSaved] = useState(initialSaved);
   const [comment, setComment] = useState("");
@@ -317,6 +320,26 @@ export function SocialPostActions({
     }
   }
 
+  async function recordShare() {
+    if (!postId) return;
+    try {
+      const response = await fetch("/api/social/shares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+      if (!response.ok) return;
+      const payload = (await response.json()) as { data?: { shares_count?: number } };
+      if (payload.data?.shares_count !== undefined) {
+        setShares(payload.data.shares_count);
+      } else {
+        setShares((current) => current + 1);
+      }
+    } catch {
+      // Share already succeeded on device; count sync is best-effort.
+    }
+  }
+
   async function sharePost() {
     const shareUrl = postId ? `${window.location.origin}/post/${postId}` : window.location.href;
 
@@ -327,12 +350,16 @@ export function SocialPostActions({
           text: a.shareText,
           url: shareUrl,
         }).then(() => true).catch(() => false);
-        if (didShare) setMessage(a.shareDevice);
+        if (didShare) {
+          setMessage(a.shareDevice);
+          void recordShare();
+        }
         return;
       }
 
       await navigator.clipboard?.writeText(shareUrl);
       setMessage(a.shareCopied);
+      void recordShare();
     } catch {
       setMessage(a.shareFailed);
     }
@@ -363,6 +390,7 @@ export function SocialPostActions({
           viewComments: a.viewComments,
         }}
         likes={likes}
+        shares={shares}
         numberFormatter={numberFormatter}
         onLoadComments={loadComments}
         onSetComment={setComment}

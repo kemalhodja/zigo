@@ -42,7 +42,7 @@ export function FeedPostCard({
           <FeedMediaViewer post={post} priorityMedia={priorityMedia} />
         </div>
         <div className="px-4 mt-3 space-y-2">
-          <SocialPostActions initialComments={post.comments} initialLiked={post.isLiked} initialLikes={post.likes} initialSaved={post.isSaved} postId={post.postId} variant="compact" theme="light" />
+          <SocialPostActions initialComments={post.comments} initialLikes={post.likes} initialShares={post.shares} initialLiked={post.isLiked} initialSaved={post.isSaved} postId={post.postId} variant="compact" theme="light" />
         </div>
         <div className="mt-2">
           <ExpandableCaption caption={post.caption} handle={post.handle} theme="light" />

@@ -10,6 +10,7 @@ type LikeAndShareBarProps = {
   isSaved: boolean;
   likes: number;
   comments: number;
+  shares: number;
   variant: "full" | "compact";
   pendingAction: "likes" | "saves" | null;
   safeQuickReplies: string[];
@@ -45,6 +46,7 @@ export function LikeAndShareBar({
   isSaved,
   likes,
   comments,
+  shares,
   variant,
   pendingAction,
   safeQuickReplies,
@@ -124,19 +126,6 @@ export function LikeAndShareBar({
           </button>
 
           <button
-            aria-label="Yeniden Paylaş"
-            className={`tap-scale active:scale-95 flex h-9 items-center gap-1.5 transition hover:text-crystal ${iconColor}`}
-            type="button"
-          >
-            <div className="flex size-9 items-center justify-center">
-              <ActionIcon name="repost" />
-            </div>
-            <span className={`pr-2 text-[0.82rem] font-bold ${iconColor} ${isDark ? "shadow-black/20 text-shadow-sm" : ""}`}>
-              3
-            </span>
-          </button>
-
-          <button
             aria-label={labels.share}
             className={`tap-scale active:scale-95 flex h-9 items-center gap-1.5 transition hover:text-crystal ${iconColor}`}
             onClick={onSharePost}
@@ -145,9 +134,11 @@ export function LikeAndShareBar({
             <div className="flex size-9 items-center justify-center">
               <ActionIcon name="send" />
             </div>
-            <span className={`pr-2 text-[0.82rem] font-bold ${iconColor} ${isDark ? "shadow-black/20 text-shadow-sm" : ""}`}>
-              16
-            </span>
+            {shares > 0 ? (
+              <span className={`pr-2 text-[0.82rem] font-bold ${iconColor} ${isDark ? "shadow-black/20 text-shadow-sm" : ""}`}>
+                {numberFormatter.format(shares)}
+              </span>
+            ) : null}
           </button>
         </div>
 
