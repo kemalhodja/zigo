@@ -8,6 +8,7 @@ import { cache } from "react";
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
 import { OfflineIndicator } from "@/components/offline-indicator";
+import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { OneSignalProvider } from "@/components/providers/onesignal-provider";
 import { ToastProvider } from "@/components/ui/toast-system";
 import { hasSupabaseEnv } from "@/lib/config";
@@ -134,6 +135,7 @@ export default async function RootLayout({
         <LocaleProvider initialLocale={locale}>
           <ToastProvider>
             <OfflineIndicator />
+            <AnalyticsProvider />
             <AuthSessionKeepAlive />
             <OneSignalProvider userId={shellState.userId} userRole={shellState.viewerRole} />
             <AppShell

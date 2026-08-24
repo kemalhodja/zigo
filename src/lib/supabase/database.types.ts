@@ -3049,6 +3049,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_weekly_focus_minutes: {
+        Args: Record<string, never>
+        Returns: {
+          day: string
+          focus_minutes: number
+          sessions: number
+        }[]
+      }
       record_google_play_purchase: {
         Args: {
           p_expiry_time?: string

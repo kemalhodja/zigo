@@ -7,6 +7,7 @@ import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { findPlanGroup } from "@/lib/domain/subscription-plans";
 import { getServerLocale } from "@/lib/i18n/server";
+import { captureServerEvent } from "@/lib/server/analytics";
 import { createClient } from "@/lib/supabase/server";
 
 const checkoutSchema = z.object({
@@ -60,13 +61,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await createZigoPlusCheckoutSession(
-      profile.id,
-      profile.email,
-      planId,
-      profile.created_at,
-    );
-    return NextResponse.json({ data: { url: session.url, planId } });
+  const session = await createZigoPlusCheckoutSession(
+    profile.id,
+    profile.email,
+    planId,
+    profile.created_at,
+  );
+
+  void captureServerEvent(profile.id, "checkout_started", { plan_id: planId });
+
+  return NextResponse.json({ data: { url: session.url, planId } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Geçersiz checkout isteği." }, { status: 400 });

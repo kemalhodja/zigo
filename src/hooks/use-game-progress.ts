@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { trackEvent } from "@/lib/client/analytics";
+
 export type GameType =
   | "memory_card"
   | "block_puzzle"
@@ -81,6 +83,7 @@ export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressO
             stats,
           }),
         });
+        trackEvent("game_completed", { game_type: gameType, score, level });
       } catch {
         // ignore
       }

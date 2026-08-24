@@ -9,6 +9,7 @@ import { validateInviteCodeFormat } from "@/lib/domain/invite-codes";
 import { createParentalConsentRequest, isMinorBirthYear } from "@/lib/domain/parental-consent";
 import { REGISTRATION_ACCOUNT_KIND_VALUES,resolveRegistrationAccount } from "@/lib/domain/registration-account";
 import { isSubscriptionCampaignActive } from "@/lib/domain/subscription-campaign";
+import { captureServerEvent } from "@/lib/server/analytics";
 import {
   authEmailSchema,
   enforceAuthRateLimit,
@@ -143,6 +144,13 @@ export async function POST(request: Request) {
       if (signInData.user?.id) {
         await tryRedeemInvite(supabase, signInData.user.id, body.inviteCode);
       }
+
+      void captureServerEvent(signInData.user?.id ?? body.email, "signed_up", {
+        role: account.role,
+        account_kind: body.accountKind ?? null,
+        has_invite: Boolean(body.inviteCode),
+        is_minor: isMinor,
+      });
 
       return NextResponse.json({
         data: {

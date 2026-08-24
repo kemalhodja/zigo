@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { captureServerEvent } from "@/lib/server/analytics";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,8 +28,10 @@ export async function POST() {
       user_id: profile.id,
       action_type: "pomodoro_completed",
       points_awarded: 50,
-      target_id: profile.id // dummy target
+      target_id: crypto.randomUUID() // unique per session so daily repeats record
     });
+
+    void captureServerEvent(profile.id, "pomodoro_completed", { minutes: 25 });
     
     if (insertError) {
       console.error("[Zigo API Error] Failed to log learning activity:", JSON.stringify(insertError));
