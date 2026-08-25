@@ -2,9 +2,11 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 
 const AiMentorCard = dynamic(() => import("@/components/ai-mentor-card").then(mod => mod.AiMentorCard));
+import { PublicPreviewFeed } from "@/components/public-preview-feed";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { buildDemoPosts } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
+import { createClient } from "@/lib/supabase/server";
 
 import {
   buildReelSpotlights,
@@ -21,6 +23,15 @@ import { VirtualFeedClient } from "../_components/home/virtual-feed-client";
 export default async function HomePage() {
   const m = await getServerMessages();
   const viewer = await getHomeViewerContext();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return <PublicPreviewFeed />;
+  }
+
   const [posts, stories, suggestedCreators] = await Promise.all([
     getHomePosts(),
     getHomeStories(viewer),

@@ -148,6 +148,12 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // Anonymous visitors get the public preview feed on "/" instead of a hard
+  // bounce to /auth (roadmap #6). Every other protected page still redirects.
+  if (pathname === "/") {
+    return response;
+  }
+
   if (!user) {
     const authUrl = new URL("/auth", request.url);
     authUrl.searchParams.set("next", pathname);
