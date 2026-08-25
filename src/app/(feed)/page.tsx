@@ -2,8 +2,10 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 
 const AiMentorCard = dynamic(() => import("@/components/ai-mentor-card").then(mod => mod.AiMentorCard));
+import { DesktopFocusRail } from "@/components/home/desktop-focus-rail";
 import { PublicPreviewFeed } from "@/components/public-preview-feed";
 import { allowDemoContent } from "@/lib/domain/demo-env";
+import { featureFlags } from "@/lib/domain/feature-flags";
 import { buildDemoPosts } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
@@ -50,9 +52,15 @@ export default async function HomePage() {
     : [];
   const reelSpotlights = buildReelSpotlights(posts, reelDemoFallback);
   const showStudentHomeModules = viewer.role === "student";
+  const showDesktopRail = featureFlags.desktopLayout();
 
   return (
-    <div className="flex flex-col pb-4 bg-white md:bg-transparent md:gap-6">
+    <div
+      className={`flex flex-col ${
+        showDesktopRail ? "justify-center gap-0 lg:flex-row lg:gap-8 lg:px-8" : "bg-white md:bg-transparent md:gap-6"
+      }`}
+    >
+      <div className={`flex flex-col pb-4 bg-white md:bg-transparent md:gap-6 ${showDesktopRail ? "w-full max-w-xl" : ""}`}>
       {/* Mobile Feed Header */}
       <div className="md:hidden sticky top-0 z-50 flex items-center justify-between bg-white px-4 pb-3" style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 12px))' }}>
         <Link href="/create" className="text-night">
@@ -134,6 +142,9 @@ export default async function HomePage() {
           viewerRole={viewer.role}
         />
       </section>
+      </div>
+
+      {showDesktopRail ? <DesktopFocusRail /> : null}
     </div>
   );
 }
