@@ -56,6 +56,11 @@ export function DesktopFocusRail() {
         <p className="text-xs font-black uppercase tracking-widest text-slate-400">Bugün</p>
         <ul className="mt-3 space-y-2.5 text-sm font-bold text-slate-600">
           <li>
+            <Link href="/plan" className="flex items-center gap-2 transition hover:text-indigo-600">
+              🤖 AI koçundan bugünün planı
+            </Link>
+          </li>
+          <li>
             <Link href="/student/games/math" className="flex items-center gap-2 transition hover:text-indigo-600">
               🧮 Matematik Ustası&apos;nda turnuvaya katıl
             </Link>
