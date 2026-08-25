@@ -1,223 +1,228 @@
 /**
- * Yapboz Düşüşü (jigsaw_drop) — pure game logic.
+ * Yapboz Düşüşü v2 — picture solitaire (matches the real Jigsaw Drop).
  *
- * Difficulty scales through BOARD GROWTH: level 1 starts at 8×8 and the board
- * expands 9×9 → 10×10 → 11×11 as the player levels up (capped at 11).
- * Fragments are deliberately LARGE (3-6 cells) per design: "mümkün olan
- * maksimum kare".
- *
- * Clear rules:
- *  - any fully-occupied row or column clears
- *  - a 2×2 square of one uniform color pops for bonus points
+ * Core loop (verified from gameplay screenshots):
+ *  - Portrait board of C columns × R rows; fragments DROP into a chosen column.
+ *  - Every fragment is a vertical slice (height 1-3) of a specific photo.
+ *  - When a fragment lands directly on top of (or below) another slice of the
+ *    SAME photo, they MERGE into a taller piece.
+ *  - When a merged piece reaches the photo's full height → the picture is
+ *    complete → it clears, score + combo increment.
+ *  - Face-down mystery tiles reveal their photo when placed.
+ *  - Game over: the chosen column would overflow.
  */
 
-export const MIN_BOARD = 8;
-export const MAX_BOARD = 11;
+export const START_ROWS = 8;
+export const MAX_ROWS = 11;
+export const START_COLS = 4;
+export const MAX_COLS = 6;
 
-export type Cell = {
-  color: number;
-} | null;
+export type PhotoDef = {
+  id: number;
+  /** Emoji stack rendered top-to-bottom inside the photo. */
+  emojis: string[];
+  /** Tailwind gradient classes for the scene background. */
+  gradient: string;
+  /** Total height in cells (2 or 3). */
+  totalHeight: 2 | 3;
+};
+
+export const PHOTO_LIBRARY: Omit<PhotoDef, "id">[] = [
+  { emojis: ["🌬️", "🏰", "🌾"], gradient: "from-sky-300 to-emerald-300", totalHeight: 3 },
+  { emojis: ["🐄", "🌿"], gradient: "from-lime-300 to-green-500", totalHeight: 2 },
+  { emojis: ["🌊", "⛵"], gradient: "from-cyan-300 to-blue-500", totalHeight: 2 },
+  { emojis: ["🌻", "🪟", "🏛️"], gradient: "from-amber-200 to-orange-400", totalHeight: 3 },
+  { emojis: ["🚲", "🌉"], gradient: "from-orange-300 to-rose-400", totalHeight: 2 },
+  { emojis: ["📻", "🧀"], gradient: "from-yellow-200 to-amber-500", totalHeight: 2 },
+  { emojis: ["☕", "🍎"], gradient: "from-rose-200 to-pink-400", totalHeight: 2 },
+  { emojis: ["🗼", "🕊️", "🌆"], gradient: "from-indigo-300 to-purple-400", totalHeight: 3 },
+  { emojis: ["🍋", "🫙"], gradient: "from-yellow-300 to-lime-400", totalHeight: 2 },
+  { emojis: ["🐦", "☁️", "🌇"], gradient: "from-slate-300 to-sky-400", totalHeight: 3 },
+];
+
+export function photosForLevel(level: number): PhotoDef[] {
+  const count = Math.min(4 + Math.floor((level - 1) / 2), PHOTO_LIBRARY.length);
+  const shuffled = [...PHOTO_LIBRARY]
+    .map((p) => ({ p, k: Math.random() }))
+    .sort((a, b) => a.k - b.k)
+    .map(({ p }) => p);
+  return shuffled.slice(0, count).map((p, i) => ({ ...p, id: i + 1 }));
+}
+
+export function rowsForLevel(level: number): number {
+  return Math.min(START_ROWS + Math.max(0, level - 1), MAX_ROWS);
+}
+
+export function colsForLevel(level: number): number {
+  return Math.min(START_COLS + Math.floor(Math.max(0, level - 1) / 2), MAX_COLS);
+}
+
+/** A placed or queued piece: one vertical slice of a photo. */
+export type Fragment = {
+  uid: number;
+  photoId: number;
+  /** Which slice of the photo (0-based from top). */
+  slice: number;
+  /** Cell height of this slice. */
+  height: 1 | 2 | 3;
+  /** Mystery card: face-down until placed. */
+  hidden: boolean;
+};
+
+/** A merged stack sitting in a column: one or more contiguous slices. */
+export type PlacedPiece = {
+  photoId: number;
+  /** Sorted slice indices currently held, e.g. [0,1] of a 3-tall photo. */
+  slices: number[];
+  height: number;
+  hidden: boolean;
+};
 
 export type Board = {
-  size: number;
-  cells: Cell[]; // row-major, size*size
+  cols: number;
+  rows: number;
+  /** Each column is a bottom-up stack of placed pieces. */
+  columns: PlacedPiece[][];
 };
 
-export type Fragment = {
-  id: number;
-  /** Relative cell offsets within the fragment's bounding box. */
-  cells: Array<{ r: number; c: number; color: number }>;
-};
-
-export function boardSizeForLevel(level: number): number {
-  return Math.min(MIN_BOARD + Math.max(0, level - 1), MAX_BOARD);
+export function emptyBoard(cols: number, rows: number): Board {
+  return { cols, rows, columns: Array.from({ length: cols }, () => []) };
 }
 
-export function paletteSizeForLevel(level: number): number {
-  return Math.min(4 + Math.floor((level - 1) / 2), 7);
+let uidSeq = 1;
+export function resetUids(): void {
+  uidSeq = 1;
 }
 
-function idx(size: number, r: number, c: number): number {
-  return r * size + c;
+function nextUid(): number {
+  return uidSeq++;
 }
 
-export function emptyBoard(size: number): Board {
-  return { size, cells: new Array<Cell>(size * size).fill(null) };
+/** Builds the fragment deck for a set of photos (every slice becomes a piece). */
+export function buildDeck(photos: PhotoDef[], rng: () => number = Math.random): Fragment[] {
+  const fragments: Fragment[] = [];
+  for (const photo of photos) {
+    let slice = 0;
+    let remaining = photo.totalHeight;
+    while (remaining > 0) {
+      const h = remaining >= 2 && rng() < 0.45 ? 2 : 1;
+      const height = Math.min(h, remaining) as 1 | 2 | 3;
+      fragments.push({
+        uid: nextUid(),
+        photoId: photo.id,
+        slice,
+        height,
+        hidden: rng() < 0.18, // ~18% arrive face-down
+      });
+      slice += 1;
+      remaining -= height;
+    }
+  }
+  // Shuffle
+  for (let i = fragments.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [fragments[i], fragments[j]] = [fragments[j], fragments[i]];
+  }
+  return fragments;
 }
 
-let fragmentIdSeq = 1;
-export function resetFragmentIds(): void {
-  fragmentIdSeq = 1;
+export function columnHeight(column: PlacedPiece[]): number {
+  return column.reduce((sum, piece) => sum + piece.height, 0);
+}
+
+export function canDrop(board: Board, col: number, fragment: Fragment): boolean {
+  if (col < 0 || col >= board.cols) return false;
+  return columnHeight(board.columns[col]) + fragment.height <= board.rows;
 }
 
 /**
- * Generates a large connected fragment (3..6 cells) with uniform or
- * dual-tone colors. Growth is random-walk from a seed cell so shapes stay
- * chunky ("maksimum kare") rather than snake-thin.
+ * Drops the fragment onto a column, then resolves merges + completions.
+ * Pure: returns new board plus scoring info.
  */
-export function generateFragment(
-  colors: number,
-  rng: () => number = Math.random,
-): Fragment {
-  const targetSize = 3 + Math.floor(rng() * 4); // 3..6
-  const picked = new Map<string, { r: number; c: number; color: number }>();
-  const baseColor = Math.floor(rng() * colors);
-  picked.set("0,0", { r: 0, c: 0, color: baseColor });
+export function dropFragment(
+  board: Board,
+  col: number,
+  fragment: Fragment,
+): {
+  board: Board;
+  merged: boolean;
+} {
+  const columns = board.columns.map((c) => [...c]);
+  const column = columns[col];
 
-  let guard = 0;
-  while (picked.size < targetSize && guard++ < 200) {
-    const existing = [...picked.values()];
-    const anchor = existing[Math.floor(rng() * existing.length)];
-    const dir = [
-      [-1, 0],
-      [1, 0],
-      [0, -1],
-      [0, 1],
-    ][Math.floor(rng() * 4)];
-    const nr = anchor.r + dir[0];
-    const nc = anchor.c + dir[1];
-    if (nr < 0 || nc < 0 || nr > 2 || nc > 2) continue; // keep bounding box ≤3×3
-    if (picked.has(`${nr},${nc}`)) continue;
+  let piece: PlacedPiece = {
+    photoId: fragment.photoId,
+    slices: [fragment.slice],
+    height: fragment.height,
+    hidden: fragment.hidden,
+  };
 
-    // Mostly uniform, sometimes an accent color — makes color-pops strategic.
-    const color = rng() < 0.78 ? baseColor : Math.floor(rng() * colors);
-    picked.set(`${nr},${nc}`, { r: nr, c: nc, color });
+  // Merge with the piece directly below if it is the same photo AND this
+  // fragment is exactly the next slice up (keeps the picture contiguous).
+  const below = column[column.length - 1];
+  if (
+    below &&
+    below.photoId === fragment.photoId &&
+    !below.hidden &&
+    !fragment.hidden &&
+    fragment.slice === Math.min(...below.slices) - 1
+  ) {
+    const mergedSlices = [...new Set([...below.slices, fragment.slice])].sort((a, b) => a - b);
+    piece = {
+      photoId: fragment.photoId,
+      slices: mergedSlices,
+      height: below.height + fragment.height,
+      hidden: false,
+    };
+    column.pop();
   }
 
-  // Normalize offsets so bounding box starts at 0,0
-  const minR = Math.min(...[...picked.values()].map((p) => p.r));
-  const minC = Math.min(...[...picked.values()].map((p) => p.c));
-  const cells = [...picked.values()].map((p) => ({
-    r: p.r - minR,
-    c: p.c - minC,
-    color: p.color,
-  }));
+  column.push(piece);
 
-  return { id: fragmentIdSeq++, cells };
+  return { board: { cols: board.cols, rows: board.rows, columns }, merged: piece.slices.length > 1 };
 }
 
-/** Checks whether the fragment fits at (row,col) as its top-left anchor. */
-export function canPlace(board: Board, fragment: Fragment, row: number, col: number): boolean {
-  for (const cell of fragment.cells) {
-    const r = row + cell.r;
-    const c = col + cell.c;
-    if (r < 0 || c < 0 || r >= board.size || c >= board.size) return false;
-    if (board.cells[idx(board.size, r, c)] !== null) return false;
+/** Whether a placed piece now contains every slice of its photo. */
+export function isPhotoComplete(piece: PlacedPiece, photo: PhotoDef): boolean {
+  if (piece.hidden) return false;
+  if (piece.slices.length !== photo.totalHeight) return false;
+  for (let s = 0; s < photo.totalHeight; s++) {
+    if (!piece.slices.includes(s)) return false;
   }
   return true;
 }
 
-export function placeFragment(
-  board: Board,
-  fragment: Fragment,
-  row: number,
-  col: number,
-): Board {
-  const cells = [...board.cells];
-  for (const cell of fragment.cells) {
-    cells[idx(board.size, row + cell.r, col + cell.c)] = { color: cell.color };
-  }
-  return { size: board.size, cells };
-}
-
-export type ClearResult = {
+export type DropResolution = {
   board: Board;
-  clearedRows: number[];
-  clearedCols: number[];
-  clearedSquares: number;
-  gainedPoints: number;
+  completed: boolean;
+  merged: boolean;
+  points: number;
 };
 
-const BASE_LINE_POINTS = 40;
-const SQUARE_POINTS = 60;
-const COMBO_MULTIPLIER = 1.5;
-
-/** Applies all clear rules and scores the move. */
-export function resolveClears(
+export function resolveDrop(
   board: Board,
-  comboLevel: number = 0,
-  rng: () => number = Math.random,
-): ClearResult {
-  const size = board.size;
-  const cells = [...board.cells];
+  col: number,
+  fragment: Fragment,
+  photo: PhotoDef,
+  combo: number,
+): DropResolution {
+  const { board: nextBoard, merged } = dropFragment(board, col, fragment);
+  const column = nextBoard.columns[col];
+  const top = column[column.length - 1];
 
-  const fullRows: number[] = [];
-  const fullCols: number[] = [];
-  for (let r = 0; r < size; r++) {
-    if (cells.slice(idx(size, r, 0), idx(size, r, 0) + size).every((c) => c !== null)) {
-      fullRows.push(r);
-    }
-  }
-  for (let c = 0; c < size; c++) {
-    let full = true;
-    for (let r = 0; r < size; r++) {
-      if (cells[idx(size, r, c)] === null) {
-        full = false;
-        break;
-      }
-    }
-    if (full) fullCols.push(c);
+  if (top && isPhotoComplete(top, photo)) {
+    column.pop();
+    const base = 100 * photo.totalHeight;
+    const points = Math.round(base * Math.pow(1.5, Math.min(combo, 5)));
+    return { board: nextBoard, completed: true, merged, points };
   }
 
-  // Uniform 2×2 squares pop regardless of line clears.
-  const squareCells = new Set<number>();
-  for (let r = 0; r < size - 1; r++) {
-    for (let c = 0; c < size - 1; c++) {
-      const a = cells[idx(size, r, c)];
-      const b = cells[idx(size, r, c + 1)];
-      const d = cells[idx(size, r + 1, c)];
-      const e = cells[idx(size, r + 1, c + 1)];
-      if (a && b && d && e && a.color === b.color && b.color === d.color && d.color === e.color) {
-        squareCells.add(idx(size, r, c));
-        squareCells.add(idx(size, r, c + 1));
-        squareCells.add(idx(size, r + 1, c));
-        squareCells.add(idx(size, r + 1, c + 1));
-      }
-    }
-  }
-
-  const multiplier = Math.pow(COMBO_MULTIPLIER, comboLevel);
-  const gainedPoints = Math.round(
-    (fullRows.length + fullCols.length) * BASE_LINE_POINTS * size * 0.5 +
-      (squareCells.size / 4) * SQUARE_POINTS * multiplier,
-  );
-
-  for (const r of fullRows) {
-    for (let c = 0; c < size; c++) cells[idx(size, r, c)] = null;
-  }
-  for (const c of fullCols) {
-    for (let r = 0; r < size; r++) cells[idx(size, r, c)] = null;
-  }
-  for (const i of squareCells) cells[i] = null;
-
-  void rng; // reserved for future sparkle variance
-
-  return {
-    board: { size, cells },
-    clearedRows: fullRows,
-    clearedCols: fullCols,
-    clearedSquares: squareCells.size / 4,
-    gainedPoints,
-  };
+  return { board: nextBoard, completed: false, merged, points: merged ? 10 : 0 };
 }
 
-/** True when none of the remaining fragments fit anywhere on the board. */
-export function isGameOver(board: Board, fragments: Fragment[]): boolean {
-  return !fragments.some((f) => canPlaceAnywhere(board, f));
-}
-
-export function canPlaceAnywhere(board: Board, fragment: Fragment): boolean {
-  for (let r = 0; r <= board.size - maxRowExtent(fragment); r++) {
-    for (let c = 0; c <= board.size - maxColExtent(fragment); c++) {
-      if (canPlace(board, fragment, r, c)) return true;
-    }
+export function isGameOver(board: Board, fragment: Fragment): boolean {
+  for (let c = 0; c < board.cols; c++) {
+    if (canDrop(board, c, fragment)) return false;
   }
-  return false;
-}
-
-function maxRowExtent(fragment: Fragment): number {
-  return Math.max(...fragment.cells.map((p) => p.r)) + 1;
-}
-function maxColExtent(fragment: Fragment): number {
-  return Math.max(...fragment.cells.map((p) => p.c)) + 1;
+  return true;
 }
