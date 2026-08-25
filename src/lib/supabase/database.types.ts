@@ -1264,6 +1264,53 @@ export type Database = {
           },
         ]
       }
+      user_quizzes: {
+        Row: {
+          area_id: number | null
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          play_count: number
+          questions: Json
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area_id?: number | null
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          play_count?: number
+          questions: Json
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area_id?: number | null
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          play_count?: number
+          questions?: Json
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_quizzes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_shares: {
         Row: {
           created_at: string
@@ -3056,6 +3103,10 @@ export type Database = {
           focus_minutes: number
           sessions: number
         }[]
+      }
+      increment_user_quiz_play_count: {
+        Args: { p_quiz_id: string }
+        Returns: undefined
       }
       record_google_play_purchase: {
         Args: {
