@@ -157,6 +157,31 @@ export function MiniGamesArcadeSection({
             🔤
           </div>
         </div>
+
+        {/* Oyun 6: Yapboz Düşüşü (Görsel-Mekânsal Zeka) */}
+        <div className="bg-gradient-to-r from-teal-500 to-cyan-600 px-3.5 py-3.5 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-white flex items-center gap-1.5">
+                <span>🧩</span> Yapboz Düşüşü
+              </h3>
+              <p className="text-teal-100 text-[0.62rem] font-bold mt-0.5">Görsel-Mekânsal Zeka</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span aria-hidden="true">📈</span>
+                Tahta büyür: 8×8 → 11×11
+              </div>
+            </div>
+            <Link
+              href="/student/games/jigsaw"
+              className="tap-scale shrink-0 bg-white text-teal-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-teal-50 transition-colors"
+            >
+              Oyna
+            </Link>
+          </div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform -rotate-6 transition-transform group-hover:scale-110 pointer-events-none">
+            🧩
+          </div>
+        </div>
       </div>
     </section>
   );

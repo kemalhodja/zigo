@@ -1,4 +1,4 @@
-/* global self, caches, URL, fetch, Request, Response */
+/* global self, caches, URL, fetch, Response */
 
 const CACHE_NAME = "zigo-shell-v3";
 const SHELL_ASSETS = ["/manifest.json", "/icon.svg", "/icon-maskable.svg", "/offline.html"];

@@ -9,7 +9,8 @@ export type GameType =
   | "block_puzzle"
   | "pipe_connect"
   | "word_hunt"
-  | "math_master";
+  | "math_master"
+  | "jigsaw_drop";
 
 type UseGameProgressOptions = {
   gameType: GameType;
