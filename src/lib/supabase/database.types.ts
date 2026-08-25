@@ -1264,6 +1264,62 @@ export type Database = {
           },
         ]
       }
+      review_items: {
+        Row: {
+          correct_index: number
+          created_at: string
+          due_at: string
+          ease_factor: number
+          id: string
+          interval_days: number
+          last_reviewed_at: string | null
+          options: Json
+          question_text: string
+          repetitions: number
+          source: string
+          source_ref: string
+          user_id: string
+        }
+        Insert: {
+          correct_index: number
+          created_at?: string
+          due_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          options: Json
+          question_text: string
+          repetitions?: number
+          source: string
+          source_ref: string
+          user_id: string
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          due_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          options?: Json
+          question_text?: string
+          repetitions?: number
+          source?: string
+          source_ref?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_quizzes: {
         Row: {
           area_id: number | null
