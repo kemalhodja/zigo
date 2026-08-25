@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Jigsaw Drop — Prototip</title>
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --panel: #131a2b;
+    --panel-2: #1a2338;
+    --border: #26324d;
+    --text: #e7ecf7;
+    --muted: #8b98b8;
+    --accent: #4f8cff;
+    --good: #2ee6a8;
+    --bad: #ff5470;
+    --gold: #ffd166;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(1200px 600px at 70% -10%, #16203a 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 16px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .game-shell { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  canvas#game {
+    background: #0d1322;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.03);
+    max-width: 100%;
+    height: auto;
+    touch-action: none;
+  }
+  .touch-row { display: none; gap: 10px; }
+  .touch-row button {
+    width: 64px; height: 52px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .touch-row button:active { background: #223052; }
+  @media (pointer: coarse) { .touch-row { display: flex; } }
+
+  .panel {
+    width: 240px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel h1 {
+    font-size: 18px;
+    letter-spacing: .3px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel h1 .logo {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), #9b5cff);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .stat {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .stat .label { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  .stat .value { font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  #lives { letter-spacing: 3px; font-size: 16px; }
+  .ref {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 8px; align-items: center;
+  }
+  .ref .label { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; align-self: flex-start; }
+  canvas.mini { border-radius: 8px; border: 1px solid var(--border); image-rendering: auto; }
+  #restartBtn {
+    margin-top: 2px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 0;
+    background: linear-gradient(135deg, var(--accent), #7c5cff);
+    color: white;
+    font-weight: 900;
+    font-size: 14px;
+    letter-spacing: .04em;
+    cursor: pointer;
+    transition: filter .15s ease, transform .05s ease;
+  }
+  #restartBtn:hover { filter: brightness(1.1); }
+  #restartBtn:active { transform: scale(.98); }
+  .keys { font-size: 11.5px; color: var(--muted); line-height: 1.9; }
+  .keys b {
+    display: inline-block; min-width: 26px; text-align: center;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 1px 5px; margin-right: 6px;
+    color: var(--text); font-size: 10.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="game-shell">
+  <canvas id="game" width="400" height="600"></canvas>
+  <div class="touch-row">
+    <button id="tLeft"  aria-label="Sol">◀</button>
+    <button id="tDown"  aria-label="Hızlı">▼</button>
+    <button id="tRight" aria-label="Sağ">▶</button>
+    <button id="tHard"  aria-label="Anında indir">⤓</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h1><span class="logo">🧩</span> Jigsaw Drop</h1>
+
+  <div class="stat"><span class="label">Skor</span><span class="value" id="score">0</span></div>
+  <div class="stat"><span class="label">Can</span><span id="lives">❤️❤️❤️</span></div>
+
+  <div class="ref">
+    <span class="label">Hedef Resim</span>
+    <canvas id="refCanvas" class="mini" width="160" height="160"></canvas>
+  </div>
+
+  <div class="ref">
+    <span class="label">Sıradaki Parça</span>
+    <canvas id="nextCanvas" class="mini" width="96" height="96"></canvas>
+  </div>
+
+  <button id="restartBtn">↻ Yeniden Başlat</button>
+
+  <div class="keys">
+    <b>◀</b><b>▶</b> / <b>A</b><b>D</b> sütun kaydır<br>
+    <b>▼</b> / <b>S</b> hızlı düşür<br>
+    <b>Space</b> anında indir<br>
+    Doğru slot <span style="color:var(--good)">+100</span> · Yanlış <span style="color:var(--bad)">−50</span> ve can
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   JIGSAW DROP — tek dosya, saf Canvas + vanilla JS
+   400x600 canvas · 4x4 hedef grid (alt 400px) · 200px düşüş bölgesi
+   ============================================================ */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const refCanvas   = document.getElementById("refCanvas");
+const nextCanvas  = document.getElementById("nextCanvas");
+const scoreEl     = document.getElementById("score");
+const livesEl     = document.getElementById("lives");
+
+const W = 400, H = 600;
+const CELL = 100;                 // parça boyutu (100x100)
+const GRID_TOP = 200;             // slot gridinin üst kenarı (y)
+const COLS = 4, ROWS = 4;
+const BASE_SPEED = 1.5;           // px / frame (60fps referansı)
+const FAST_MULT = 7;              // ↓ tuşu çarpanı
+const SPAWN_DELAY = 420;          // kilitleme sonrası bekleme (ms)
+const GLOW_MS = 550;              // kilitlenme / hata efekti süresi
+
+/* ---------- Hedef resim: programatik sahne (400x400 offscreen) ---------- */
+const srcCanvas = document.createElement("canvas");
+srcCanvas.width = 400; srcCanvas.height = 400;
+const sctx = srcCanvas.getContext("2d");
+
+function paintTargetScene(g) {
+  // Gökyüzü
+  const sky = g.createLinearGradient(0, 0, 0, 400);
+  sky.addColorStop(0, "#0e1b4d");
+  sky.addColorStop(0.45, "#3b4d9e");
+  sky.addColorStop(0.72, "#e2637a");
+  sky.addColorStop(1, "#ffb457");
+  g.fillStyle = sky; g.fillRect(0, 0, 400, 400);
+
+  // Yıldızlar
+  g.fillStyle = "rgba(255,255,255,.85)";
+  const starSpots = [[30,30],[90,18],[150,44],[210,24],[268,52],[330,30],[372,64],[60,70],[250,80],[120,88]];
+  starSpots.forEach(([x,y],i)=>{ g.globalAlpha = i%3===0?0.9:0.5; g.beginPath(); g.arc(x,y,i%2?1.4:2.1,0,7); g.fill(); });
+  g.globalAlpha = 1;
+
+  // Ay
+  g.fillStyle = "#fff3d6";
+  g.beginPath(); g.arc(316, 84, 30, 0, Math.PI*2); g.fill();
+  g.fillStyle = "rgba(255,243,214,.25)";
+  g.beginPath(); g.arc(316, 84, 42, 0, Math.PI*2); g.fill();
+
+  // Uzak dağ silüeti
+  g.fillStyle = "#2a2f63";
+  g.beginPath();
+  g.moveTo(0, 250);
+  g.lineTo(70, 190); g.lineTo(130, 236); g.lineTo(196, 168);
+  g.lineTo(258, 232); g.lineTo(322, 188); g.lineTo(400, 244);
+  g.lineTo(400, 400); g.lineTo(0, 400); g.closePath(); g.fill();
+
+  // Yakın tepe
+  g.fillStyle = "#1b2148";
+  g.beginPath();
+  g.moveTo(0, 292);
+  g.quadraticCurveTo(120, 246, 232, 292);
+  g.quadraticCurveTo(330, 322, 400, 296);
+  g.lineTo(400, 400); g.lineTo(0, 400); g.closePath(); g.fill();
+
+  // Deniz
+  const sea = g.createLinearGradient(0, 300, 0, 400);
+  sea.addColorStop(0, "#20306b");
+  sea.addColorStop(1, "#0c1330");
+  g.fillStyle = sea; g.fillRect(0, 300, 400, 100);
+
+  // Ay yansıması
+  g.fillStyle = "rgba(255,236,180,.35)";
+  for (let i = 0; i < 6; i++) {
+    const w = 46 - i * 6;
+    g.fillRect(316 - w/2 + Math.sin(i*2.2)*4, 308 + i*14, w, 3);
+  }
+
+  // Yelkenli
+  g.fillStyle = "#101736";
+  g.beginPath(); g.moveTo(150, 330); g.lineTo(206, 330); g.lineTo(194, 348); g.lineTo(162, 348); g.closePath(); g.fill();
+  g.strokeStyle = "#101736"; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(178, 330); g.lineTo(178, 268); g.stroke();
+  g.fillStyle = "#f6f2e8";
+  g.beginPath(); g.moveTo(178, 268); g.lineTo(178, 326); g.lineTo(140, 326); g.closePath(); g.fill();
+  g.fillStyle = "#e2637a";
+  g.beginPath(); g.moveTo(182, 274); g.lineTo(182, 326); g.lineTo(216, 326); g.closePath(); g.fill();
+
+  // Martılar
+  g.strokeStyle = "#e9edff"; g.lineWidth = 2;
+  [[86,140],[112,128],[258,120]].forEach(([x,y])=>{
+    g.beginPath(); g.arc(x, y, 7, Math.PI*1.15, Math.PI*1.85); g.stroke();
+    g.beginPath(); g.arc(x+8, y, 7, Math.PI*1.15, Math.PI*1.85); g.stroke();
+  });
+
+  // Balıkçı iskelesi (sağ alt detay)
+  g.fillStyle = "#141b3f";
+  g.fillRect(348, 336, 52, 6);
+  g.strokeStyle = "#141b3f"; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(368, 336); g.lineTo(368, 316); g.stroke();
+  g.beginPath(); g.moveTo(368, 316); g.lineTo(388, 322); g.stroke();
+}
+paintTargetScene(sctx);
+
+/* ---------- Oyun durumu ---------- */
+let state;                 // 'playing' | 'won' | 'lost'
+let grid;                  // grid[r][c] = true (doğru yerleşmiş)
+let order;                 // düşecek parçaların sırası [{r,c},...]
+let orderIdx;
+let current;               // {r, c, col, y}
+let nextPiece;
+let score, lives, comboCount;
+let speedPxPerFrame;
+let effects;               // {type:'good'|'bad', r, c, t0}
+let confetti;
+let lastTime;
+let spawnAt;               // timestamp: yeni parça ne zaman doğacak
+let hardDropped;
+
+const el = {
+  score: document.getElementById("score"),
+  lives: document.getElementById("lives"),
+};
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function filledCount(col) {
+  let n = 0;
+  for (let r = 0; r < ROWS; r++) if (grid[r][col]) n++;
+  return n;
+}
+
+/* Her adımda en az bir geçerli hamle olacak şekilde "çözülebilir" rastgele sıra.
+   Parça (r,c), hedef sütundaki doluluk tam r'ye eşitse doğru yere oturur. */
+function generateSolvableOrder() {
+  const cells = [];
+  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) cells.push({ r, c });
+  shuffle(cells);
+
+  const counts = [0, 0, 0, 0]; // sütun dolulukları (alta doğru büyür)
+  const placeable = (cell) => counts[cell.c] === ROWS - 1 - cell.r;
+
+  for (let i = 0; i < cells.length; i++) {
+    if (!placeable(cells[i])) {
+      let j = i + 1;
+      while (j < cells.length && !placeable(cells[j])) j++;
+      if (j < cells.length) [cells[i], cells[j]] = [cells[j], cells[i]];
+    }
+    counts[cells[i].c]++;
+  }
+  return cells;
+}
+
+function drawTile(g, r, c, x, y, size) {
+  g.drawImage(srcCanvas, c * CELL, r * CELL, CELL, CELL, x, y, size, size);
+}
+
+function updateHUD() {
+  el.score.textContent = String(score);
+  el.lives.textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 3 - lives));
+}
+
+function drawNextPreview() {
+  const g = nextCanvas.getContext("2d");
+  g.clearRect(0, 0, 96, 96);
+  if (!nextPiece) return;
+  g.drawImage(srcCanvas, nextPiece.c * CELL, nextPiece.r * CELL, CELL, CELL, 0, 0, 96, 96);
+  g.strokeStyle = "rgba(255,255,255,.25)";
+  g.strokeRect(0.5, 0.5, 95, 95);
+}
+
+function spawnPiece() {
+  if (orderIdx >= order.length) return;
+  current = {
+    ...order[orderIdx],
+    col: order[orderIdx].c,   // adalet: doğru sütundan başlar, oyuncu kaydırabilir
+    y: -CELL,
+  };
+  orderIdx++;
+  hardDropped = false;
+  nextPiece = orderIdx < order.length ? order[orderIdx] : null;
+  drawNextPreview();
+}
+
+function resetGame() {
+  grid = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  order = generateSolvableOrder();
+  orderIdx = 0;
+  score = 0;
+  lives = 3;
+  comboCount = 0;
+  speedPxPerFrame = BASE_SPEED;
+  effects = [];
+  confetti = [];
+  current = null;
+  nextPiece = null;
+  spawnAt = performance.now() + 300;
+  state = "playing";
+  updateHUD();
+  drawNextPreview();
+}
+
+/* ---------- Efektler ---------- */
+function addEffect(type, r, c) { effects.push({ type, r, c, t0: performance.now() }); }
+
+function burstConfetti() {
+  const colors = ["#4f8cff", "#2ee6a8", "#ffd166", "#ff5470", "#9b5cff", "#ffffff"];
+  for (let i = 0; i < 180; i++) {
+    confetti.push({
+      x: W / 2 + (Math.random() - 0.5) * 160,
+      y: 120 + Math.random() * 80,
+      vx: (Math.random() - 0.5) * 9,
+      vy: -Math.random() * 11 - 3,
+      size: 4 + Math.random() * 6,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1,
+    });
+  }
+}
+
+/* ---------- Girdi ---------- */
+function move(dir) {
+  if (state !== "playing" || !current) return;
+  const nc = current.col + dir;
+  if (nc >= 0 && nc < COLS) current.col = nc;
+}
+function setFast(on) {
+  if (state !== "playing") return;
+  speedPxPerFrame = on ? BASE_SPEED * FAST_MULT : BASE_SPEED;
+}
+function hardDrop() {
+  if (state !== "playing" || !current || hardDropped) return;
+  hardDropped = true;
+  const landingRow = ROWS - 1 - filledCount(current.col);
+  current.y = GRID_TOP + landingRow * CELL;
+  landPiece(); // anında değerlendir
+}
+
+document.addEventListener("keydown", (e) => {
+  const k = e.key.toLowerCase();
+  if (["arrowleft", "arrowright", "arrowdown", " ", "a", "d", "s"].includes(k)) e.preventDefault();
+  if (k === "arrowleft"  || k === "a") move(-1);
+  if (k === "arrowright" || k === "d") move(1);
+  if (k === "arrowdown"  || k === "s") setFast(true);
+  if (k === " ") hardDrop();
+});
+document.addEventListener("keyup", (e) => {
+  const k = e.key.toLowerCase();
+  if (k === "arrowdown" || k === "s") setFast(false);
+});
+
+document.getElementById("tLeft").addEventListener("pointerdown",  () => move(-1));
+document.getElementById("tRight").addEventListener("pointerdown", () => move(1));
+document.getElementById("tDown").addEventListener("pointerdown",  () => setFast(true));
+document.getElementById("tDown").addEventListener("pointerup",    () => setFast(false));
+document.getElementById("tDown").addEventListener("pointerleave", () => setFast(false));
+document.getElementById("tHard").addEventListener("pointerdown",  () => hardDrop());
+document.getElementById("restartBtn").addEventListener("click", resetGame);
+
+/* ---------- Yerleşme mantığı ---------- */
+function landPiece() {
+  const landingRow = ROWS - 1 - filledCount(current.col);
+  const correct = current.col === current.c && landingRow === current.r;
+
+  if (correct) {
+    grid[current.r][current.c] = true;
+    score += 100;
+    comboCount++;
+    addEffect("good", current.r, current.c);
+    current = null;
+    updateHUD();
+    if (orderIdx >= order.length) {
+      state = "won";
+      burstConfetti();
+    } else {
+      spawnAt = performance.now() + SPAWN_DELAY;
+    }
+  } else {
+    score = Math.max(0, score - 50);
+    lives--;
+    comboCount = 0;
+    addEffect("bad", landingRow, current.col);
+    current = null;
+    updateHUD();
+    if (lives <= 0) {
+      state = "lost";
+    } else {
+      spawnAt = performance.now() + SPAWN_DELAY;
+    }
+  }
+}
+
+/* ---------- Çizim ---------- */
+function drawBoard() {
+  // Düşüş bölgesi arka planı
+  const zone = ctx.createLinearGradient(0, 0, 0, GRID_TOP);
+  zone.addColorStop(0, "#0a1020");
+  zone.addColorStop(1, "#101830");
+  ctx.fillStyle = zone;
+  ctx.fillRect(0, 0, W, GRID_TOP);
+
+  // Bölge çizgisi
+  ctx.strokeStyle = "rgba(79,140,255,.35)";
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath(); ctx.moveTo(0, GRID_TOP + 0.5); ctx.lineTo(W, GRID_TOP + 0.5); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Slot ızgarası
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const x = c * CELL, y = GRID_TOP + r * CELL;
+      if (grid[r][c]) {
+        drawTile(ctx, r, c, x, y, CELL);
+        ctx.strokeStyle = "rgba(46,230,168,.35)";
+        ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
+      } else {
+        ctx.fillStyle = "#111a30";
+        ctx.fillRect(x, y, CELL, CELL);
+        ctx.strokeStyle = "rgba(139,152,184,.18)";
+        ctx.strokeRect(x + 3, y + 3, CELL - 6, CELL - 6);
+      }
+    }
+  }
+
+  // Sütun ayırıcıları
+  ctx.strokeStyle = "rgba(0,0,0,.35)";
+  for (let c = 1; c < COLS; c++) {
+    ctx.beginPath(); ctx.moveTo(c * CELL + .5, GRID_TOP); ctx.lineTo(c * CELL + .5, H); ctx.stroke();
+  }
+}
+
+function drawLandingGuide() {
+  if (!current || state !== "playing") return;
+  const landingRow = ROWS - 1 - filledCount(current.col);
+  const willBeCorrect = current.col === current.c && landingRow === current.r;
+  const x = current.col * CELL, y = GRID_TOP + landingRow * CELL;
+  ctx.save();
+  ctx.strokeStyle = willBeCorrect ? "rgba(46,230,168,.9)" : "rgba(255,84,112,.8)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([7, 5]);
+  ctx.strokeRect(x + 3, y + 3, CELL - 6, CELL - 6);
+  ctx.restore();
+}
+
+function drawCurrent() {
+  if (!current) return;
+  drawTile(ctx, current.r, current.c, current.col * CELL, current.y, CELL);
+  ctx.strokeStyle = "rgba(255,255,255,.5)";
+  ctx.strokeRect(current.col * CELL + 1, current.y + 1, CELL - 2, CELL - 2);
+}
+
+function drawEffects(now) {
+  effects = effects.filter((fx) => now - fx.t0 < GLOW_MS);
+  for (const fx of effects) {
+    const t = (now - fx.t0) / GLOW_MS;
+    const x = fx.c * CELL, y = GRID_TOP + fx.r * CELL;
+    ctx.save();
+    if (fx.type === "good") {
+      ctx.globalAlpha = 1 - t;
+      ctx.fillStyle = "rgba(46,230,168,.45)";
+      ctx.fillRect(x, y, CELL, CELL);
+      ctx.globalAlpha = 1 - t;
+      ctx.strokeStyle = "#2ee6a8";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x + 2, y + 2, CELL - 4, CELL - 4);
+    } else {
+      const blink = Math.floor(t * 8) % 2 === 0;
+      ctx.globalAlpha = blink ? 0.55 : 0.2;
+      ctx.fillStyle = "#ff5470";
+      ctx.fillRect(x, y, CELL, CELL);
+    }
+    ctx.restore();
+  }
+}
+
+function drawConfetti(dt) {
+  confetti = confetti.filter((p) => p.life > 0);
+  for (const p of confetti) {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.rot += p.vr; p.life -= dt * 0.00045;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.62);
+    ctx.restore();
+  }
+}
+
+function drawOverlay() {
+  if (state === "playing") return;
+  ctx.save();
+  ctx.fillStyle = "rgba(6,10,20,.82)";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = "center";
+  if (state === "won") {
+    ctx.fillStyle = "#2ee6a8";
+    ctx.font = "900 44px 'Segoe UI', sans-serif";
+    ctx.fillText("KAZANDIN! 🎉", W / 2, 250);
+    ctx.fillStyle = "#e7ecf7";
+    ctx.font = "700 18px 'Segoe UI', sans-serif";
+    ctx.fillText(`Tüm 16 parça yerleşti · Skor: ${score}`, W / 2, 296);
+  } else {
+    ctx.fillStyle = "#ff5470";
+    ctx.font = "900 44px 'Segoe UI', sans-serif";
+    ctx.fillText("GAME OVER", W / 2, 250);
+    ctx.fillStyle = "#e7ecf7";
+    ctx.font = "700 18px 'Segoe UI', sans-serif";
+    ctx.fillText(`Skor: ${score} · ${orderIdx - 1}/16 parça`, W / 2, 296);
+  }
+  ctx.fillStyle = "#8b98b8";
+  ctx.font = "600 14px 'Segoe UI', sans-serif";
+  ctx.fillText("Yeniden başlatmak için panelden ↻ butonuna bas", W / 2, 340);
+  ctx.restore();
+}
+
+/* ---------- Ana döngü (60 FPS requestAnimationFrame) ---------- */
+function loop(now) {
+  const dt = Math.min(50, now - (lastTime || now));
+  lastTime = now;
+
+  if (state === "playing") {
+    if (!current && now >= spawnAt && orderIdx < order.length) spawnPiece();
+
+    if (current) {
+      current.y += speedPxPerFrame * (dt / (1000 / 60));
+      const landingRow = ROWS - 1 - filledCount(current.col);
+      const targetY = GRID_TOP + landingRow * CELL;
+      if (current.y >= targetY) {
+        current.y = targetY;
+        landPiece();
+      }
+    }
+  }
+
+  // Çizim
+  ctx.clearRect(0, 0, W, H);
+  drawBoard();
+  drawLandingGuide();
+  drawCurrent();
+  drawEffects(now);
+  if (state === "won") drawConfetti(dt);
+  drawOverlay();
+
+  requestAnimationFrame(loop);
+}
+
+/* ---------- Başlat ---------- */
+(function init() {
+  // Hedef referansı (yan panel)
+  const rg = refCanvas.getContext("2d");
+  rg.drawImage(srcCanvas, 0, 0, 160, 160);
+  rg.strokeStyle = "rgba(255,255,255,.22)";
+  for (let i = 1; i < 4; i++) {
+    rg.beginPath(); rg.moveTo(i * 40, 0); rg.lineTo(i * 40, 160); rg.stroke();
+    rg.beginPath(); rg.moveTo(0, i * 40); rg.lineTo(160, i * 40); rg.stroke();
+  }
+
+  resetGame();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
