@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#7C3AED" />
-    <title>Zigo offline</title>
+    <title>Zigo — Çevrimdışı</title>
     <style>
       body {
         min-height: 100vh;
@@ -44,13 +44,36 @@
         color: #667085;
         line-height: 1.6;
       }
+      .hint {
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.9rem;
+        background: #ffffffcc;
+        border: 1px solid #eef0f4;
+        font-size: 0.85rem;
+      }
+      button {
+        margin-top: 1.25rem;
+        padding: 0.8rem 2.2rem;
+        border: 0;
+        border-radius: 0.9rem;
+        background: linear-gradient(135deg, #7c3aed, #ec4899);
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 800;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
     <main>
       <div class="logo">Z</div>
-      <h1>You are offline</h1>
-      <p>Zigo needs a connection for fresh posts, comments and safety checks. Reconnect and refresh to continue.</p>
+      <h1>Şu anda çevrimdışısın 📴</h1>
+      <p>Son yüklediğin akış ve oyunlar kayıtlı — onlara erişmeye devam edebilirsin.</p>
+      <div class="hint">
+        Bağlantın döndüğünde akış otomatik güncellenir. Oyunlar tamamen çevrimdışı çalışır!
+      </div>
+      <button onclick="location.reload()">Yeniden Dene</button>
     </main>
   </body>
 </html>
