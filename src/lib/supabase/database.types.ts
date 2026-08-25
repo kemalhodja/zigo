@@ -3164,6 +3164,15 @@ export type Database = {
         Args: { p_quiz_id: string }
         Returns: undefined
       }
+      get_weekly_league: {
+        Args: { p_limit?: number }
+        Returns: {
+          user_id: string
+          full_name: string | null
+          avatar_url: string | null
+          weekly_points: number
+        }[]
+      }
       record_google_play_purchase: {
         Args: {
           p_expiry_time?: string

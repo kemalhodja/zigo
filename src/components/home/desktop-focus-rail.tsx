@@ -66,6 +66,11 @@ export function DesktopFocusRail() {
             </Link>
           </li>
           <li>
+            <Link href="/exams" className="flex items-center gap-2 transition hover:text-indigo-600">
+              🏁 Sınav geri sayımına bak
+            </Link>
+          </li>
+          <li>
             <Link href="/questions" className="flex items-center gap-2 transition hover:text-indigo-600">
               ❓ Takıldığın soruyu sor
             </Link>

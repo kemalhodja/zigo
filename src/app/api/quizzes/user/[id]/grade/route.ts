@@ -50,14 +50,14 @@ export async function POST(
 
     // Spaced-repetition ingest (#12): wrong answers become review cards.
     const wrongRows = results
-      .map((r, i) => ({ result: r, index: i }))
-      .filter(({ result }) => !result.isCorrect)
-      .map(({ result, index }) => {
-        const q = questions[index];
+      .map((r, i) => ({ isCorrect: r.isCorrect, index: i }))
+      .filter((entry) => !entry.isCorrect)
+      .map((entry) => {
+        const q = questions[entry.index];
         return {
           user_id: profile.id,
           source: "ugc_quiz",
-          source_ref: `${id}:${index}`,
+          source_ref: `${id}:${entry.index}`,
           question_text: q.text,
           options: q.options,
           correct_index: q.correctIndex,
