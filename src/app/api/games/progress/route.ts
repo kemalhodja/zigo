@@ -5,7 +5,36 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { looseFrom } from "@/lib/supabase/untyped-tables";
 
-type GameType = "memory_card" | "block_puzzle" | "pipe_connect" | "word_hunt" | "math_master";
+type GameType =
+  | "memory_card"
+  | "block_puzzle"
+  | "pipe_connect"
+  | "word_hunt"
+  | "zihin_avcisi"
+  | "math_master"
+  | "jigsaw_drop";
+
+const VALID_GAME_TYPES = new Set<string>([
+  "memory_card",
+  "block_puzzle",
+  "pipe_connect",
+  "word_hunt",
+  "zihin_avcisi",
+  "math_master",
+  "jigsaw_drop",
+]);
+
+/** Generous anti-cheat ceilings — legit play never approaches these. */
+const MAX_SCORE = 250_000;
+const MAX_LEVEL = 500;
+
+function sanitizeScore(raw: unknown): number | null {
+  const n = typeof raw === "string" ? Number(raw) : (raw as number);
+  if (!Number.isFinite(n)) return null;
+  const int = Math.floor(n);
+  if (int < 0 || int > MAX_SCORE) return null;
+  return int;
+}
 
 type GameProgressRecord = {
   high_score: number;
@@ -65,10 +94,17 @@ async function handlePost(req: NextRequest) {
   if (!profile) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json() as { game_type: GameType; score: number; level?: number };
-  const { game_type, score, level = 0 } = body;
+  const { game_type } = body;
 
-  if (!game_type || score == null) {
-    return NextResponse.json({ error: "game_type ve score gerekli" }, { status: 400 });
+  const score = sanitizeScore(body.score);
+  const levelRaw = typeof body.level === "string" ? Number(body.level) : body.level;
+  const level = Number.isFinite(levelRaw) ? Math.max(0, Math.min(Math.floor(levelRaw as number), MAX_LEVEL)) : 0;
+
+  if (!game_type || !VALID_GAME_TYPES.has(game_type)) {
+    return NextResponse.json({ error: "geçersiz game_type" }, { status: 400 });
+  }
+  if (score === null) {
+    return NextResponse.json({ error: "geçersiz score" }, { status: 400 });
   }
 
   // Mevcut en yüksek skoru kontrol et

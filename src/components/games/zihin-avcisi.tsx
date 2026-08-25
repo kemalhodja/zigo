@@ -340,24 +340,26 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
                 </button>
               )}
               <GameSoundToggle />
+              {!isGameFinished && (
+                <button
+                  onClick={() => {
+                    setIsLevelComplete(true);
+                    setIsGameFinished(true);
+                    if (timerRef.current) clearInterval(timerRef.current);
+                    saveLevelProgress(totalScore, currentLevel);
+                  }}
+                  aria-label="Oyunu bitir"
+                  className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+                >
+                  🛑 Bitir
+                </button>
+              )}
               <button
                 onClick={() => setIsLeaderboardOpen(true)}
                 aria-label="Liderlik tablosunu aç"
                 className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
               >
                 🏅 Tablo
-              </button>
-              <button
-                onClick={() => {
-                  setIsLevelComplete(true);
-                  setIsGameFinished(true);
-                  if (timerRef.current) clearInterval(timerRef.current);
-                  saveLevelProgress(totalScore, currentLevel);
-                }}
-                aria-label="Oyunu bitir"
-                className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
-              >
-                🛑 Bitir
               </button>
             </div>
           </div>

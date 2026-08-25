@@ -8,7 +8,8 @@ export type GameType =
   | "pipe_connect"
   | "word_hunt"
   | "zihin_avcisi"
-  | "math_master";
+  | "math_master"
+  | "jigsaw_drop";
 
 export type GameProgressRow = {
   user_id: string;

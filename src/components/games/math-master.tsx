@@ -176,6 +176,8 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const correctRef = useRef(0);
   const livesRef = useRef(3);
   const zeroHandledRef = useRef(false);
+  const answeringRef = useRef(false);
+  const endedRef = useRef(false);
 
   const {
     highScore,
@@ -314,7 +316,8 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   };
 
   const handleAnswer = (selected: number) => {
-    if (isGameOver || isPaused || !question || selectedAnswer !== null) return;
+    if (answeringRef.current || isGameOver || isPaused || !question || selectedAnswer !== null) return;
+    answeringRef.current = true;
 
     setSelectedAnswer(selected);
 
@@ -365,17 +368,21 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
         setTimeLeft(100);
         zeroHandledRef.current = false;
         setSelectedAnswer(null);
+        answeringRef.current = false;
       }, 250);
     } else {
       playSound("error");
       setTimeout(() => {
         setSelectedAnswer(null);
+        answeringRef.current = false;
         handleWrongAnswer();
       }, 300);
     }
   };
 
   const endGame = async () => {
+    if (endedRef.current) return;
+    endedRef.current = true;
     setIsGameOver(true);
     playSound("error");
     if (timerRef.current) clearInterval(timerRef.current);
@@ -646,3 +653,5 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     </div>
   );
 }
+
+

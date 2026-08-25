@@ -35,6 +35,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
   const { playSound } = useAudio();
   const keyboardRef = useRef<HTMLDivElement>(null);
+const winLatchRef = useRef(false);
 
   const {
     highScore,
@@ -112,6 +113,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
       }
 
       if (guess === targetWord) {
+        if (winLatchRef.current || isGameOver) return;
+        winLatchRef.current = true;
         setHasWon(true);
         setIsGameOver(true);
         playSound("success");
@@ -157,6 +160,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isLeaderboardOpen || isGameOver) return;
       if (e.ctrlKey || e.metaKey || e.altKey || !selectedLang) return;
       
       const key = selectedLang === "TR" ? e.key.toLocaleUpperCase("tr-TR") : e.key.toUpperCase();
@@ -173,7 +177,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onKeyPress, selectedLang]);
+  }, [onKeyPress, selectedLang, isLeaderboardOpen, isGameOver]);
 
   const saveGameProgress = (finalScore: number, newLevel: number) => {
     void saveProgress(finalScore, newLevel, { level: newLevel });

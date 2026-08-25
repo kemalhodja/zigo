@@ -2416,10 +2416,13 @@ export type Database = {
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
           is_premium: boolean | null
           is_verified: boolean
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -2447,10 +2450,13 @@ export type Database = {
           district?: string | null
           email: string
           full_name: string
+          game_xp_day?: string | null
+          game_xp_today?: number
           grade_level?: string | null
           id: string
           is_premium?: boolean | null
           is_verified?: boolean
+          last_game_xp_at?: string | null
           level?: number
           organization_type?: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -2478,10 +2484,13 @@ export type Database = {
           district?: string | null
           email?: string
           full_name?: string
+          game_xp_day?: string | null
+          game_xp_today?: number
           grade_level?: string | null
           id?: string
           is_premium?: boolean | null
           is_verified?: boolean
+          last_game_xp_at?: string | null
           level?: number
           organization_type?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -4255,4 +4264,6 @@ export type SponsoredTeacherCampaignSummary = {
   expires_at?: string | null;
   [key: string]: unknown;
 };
+
+
 

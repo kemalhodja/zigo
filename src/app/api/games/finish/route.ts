@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (user_id && user_id !== "guest") {
       try {
         const supabase = await createClient();
-        
+
         // 🔒 Güvenlik: İsteği gönderen kişinin gerçekten user_id ile aynı kişi olup olmadığını kontrol et
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError || !authData.user || authData.user.id !== user_id) {
@@ -22,31 +22,57 @@ export async function POST(request: Request) {
           );
         }
 
-        // 🔒 Güvenlik: Hile (manipülasyon) koruması için XP'yi tavan değere sabitle (Max 100 XP)
-        const calculatedPoints = Math.max(5, Math.floor((score || 0) / 10));
-        const awardedPoints = Math.min(100, calculatedPoints);
-        
+        // 🔒 Anti-farm: skor sanitizasyonu — NaN/negatif/aşırı değerler 0'a iner.
+        const rawScore = typeof score === "number" ? score : Number(score);
+        const safeScore = Number.isFinite(rawScore) && rawScore > 0 ? Math.min(Math.floor(rawScore), 250_000) : 0;
+
+        const calculatedPoints = Math.floor(safeScore / 10);
+        const requestedPoints = Math.min(100, calculatedPoints);
+
         const admin = (await import("@/lib/supabase/admin")).createAdminClient();
         const dbClient = admin ?? supabase;
 
-        // Puanı kullanıcının total_points alanına ekle
+        // 🔒 Anti-farm: günlük XP tavanı + bitişler arası cooldown.
+        const DAILY_XP_CAP = 300;
+        const FINISH_COOLDOWN_MS = 15_000;
+        const todayTR = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().split("T")[0];
+
         const { data: user } = await dbClient
           .from("users")
-          .select("total_points")
+          .select("total_points, game_xp_day, game_xp_today, last_game_xp_at")
           .eq("id", user_id)
           .single();
-        
+
+        let awardedPoints = 0;
         if (user) {
-          await dbClient
-            .from("users")
-            .update({ total_points: (user.total_points || 0) + awardedPoints })
-            .eq("id", user_id);
+          const xpToday = user.game_xp_day === todayTR ? (user.game_xp_today ?? 0) : 0;
+          const lastAt = user.last_game_xp_at ? new Date(user.last_game_xp_at).getTime() : 0;
+          const cooling = Date.now() - lastAt < FINISH_COOLDOWN_MS;
+
+          if (!cooling && xpToday < DAILY_XP_CAP) {
+            awardedPoints = Math.max(0, Math.min(requestedPoints, DAILY_XP_CAP - xpToday));
+          }
+
+          if (awardedPoints > 0 || !cooling) {
+            await dbClient
+              .from("users")
+              .update({
+                total_points: (user.total_points || 0) + awardedPoints,
+                game_xp_day: todayTR,
+                game_xp_today: xpToday + awardedPoints,
+                last_game_xp_at: new Date().toISOString(),
+              })
+              .eq("id", user_id);
+          }
+        }
+
+        if (awardedPoints === 0 && requestedPoints > 0) {
+          console.log(`[Mini Game Finish] XP throttled for ${user_id} (cap/cooldown)`);
         }
 
         // 🕹️ Günlük oyun süresi takibi (oturum sonu — useGameSessionTimer ana kaynak)
         if (played_seconds && typeof played_seconds === "number" && played_seconds > 0) {
           const safeSeconds = Math.min(Math.floor(played_seconds), 7200);
-          const todayTR = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().split("T")[0];
           const admin = (await import("@/lib/supabase/admin")).createAdminClient();
           const dbClient = admin ?? supabase;
 
@@ -61,13 +87,18 @@ export async function POST(request: Request) {
             p_seconds: safeSeconds,
           });
         }
+
+        return NextResponse.json(
+          { success: true, message: "Skor kaydedildi.", score: safeScore, xp_awarded: awardedPoints },
+          { status: 200 }
+        );
       } catch (dbErr) {
         console.warn("[Mini Game Finish] Veritabanı puan güncelleme atlandı:", dbErr);
       }
     }
 
     return NextResponse.json(
-      { success: true, message: "Skor başarıyla kaydedildi.", score },
+      { success: true, message: "Skor başarıyla kaydedildi.", score: typeof score === "number" ? score : 0 },
       { status: 200 }
     );
   } catch (error) {

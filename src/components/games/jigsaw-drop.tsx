@@ -48,6 +48,20 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
   const { highScore, isLeaderboardOpen, setIsLeaderboardOpen, saveProgress } =
     useGameProgress({ gameType: "jigsaw_drop", userId });
   const savedRef = useRef(false);
+  // Refs mirror live values so quit/unmount saves never read stale closures.
+  const scoreRef = useRef(0);
+  const levelRef = useRef(1);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showToast(message: string) {
+    setToast(message);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2200);
+  }
+
+  useEffect(() => () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+  }, []);
 
   const refillQueue = useCallback(
     (colors: number) => {
@@ -58,6 +72,8 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
 
   const initGame = useCallback(() => {
     savedRef.current = false;
+    scoreRef.current = 0;
+    levelRef.current = 1;
     setLevel(1);
     setBoard(emptyBoard(boardSizeForLevel(1)));
     setQueue(Array.from({ length: QUEUE_SIZE }, () => generateFragment(paletteSizeForLevel(1))));
@@ -72,19 +88,38 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
     initGame();
   }, [initGame]);
 
-  // Level up → board grows (8→9→10→11) and palette widens.
-  const levelUp = useCallback(() => {
-    setLevel((prev) => {
-      const nextLevel = prev + 1;
-      const size = boardSizeForLevel(nextLevel);
-      setBoard(emptyBoard(size));
-      refillQueue(paletteSizeForLevel(nextLevel));
-      setSelected(null);
-      setToast(`Seviye ${nextLevel}! Tahta ${size}×${size} oldu 🎉`);
-      setTimeout(() => setToast(null), 2200);
-      return nextLevel;
-    });
-  }, [refillQueue]);
+  // Level up → board grows (8→9→10→11) and palette widens. Kept pure:
+  // all state updates happen outside any setState updater.
+  function levelUp(currentLevel: number) {
+    const nextLevel = currentLevel + 1;
+    const size = boardSizeForLevel(nextLevel);
+    levelRef.current = nextLevel;
+    setLevel(nextLevel);
+    setBoard(emptyBoard(size));
+    refillQueue(paletteSizeForLevel(nextLevel));
+    setSelected(null);
+    showToast(`Seviye ${nextLevel}! Tahta ${size}×${size} oldu 🎉`);
+  }
+
+  /** Saves the run once; safe to call from 🛑, unmount or natural game over. */
+  const endGame = useCallback(() => {
+    if (savedRef.current) return;
+    savedRef.current = true;
+    setIsGameOver(true);
+    void saveProgress(scoreRef.current, levelRef.current, { level: levelRef.current });
+  }, [saveProgress]);
+
+  // Quitting or backgrounding mid-run still banks the score.
+  useEffect(() => {
+    const onHidden = () => {
+      if (document.hidden && !savedRef.current && scoreRef.current > 0) endGame();
+    };
+    document.addEventListener("visibilitychange", onHidden);
+    return () => {
+      document.removeEventListener("visibilitychange", onHidden);
+      if (!savedRef.current && scoreRef.current > 0) endGame();
+    };
+  }, [endGame]);
 
   function handleCellTap(row: number, col: number) {
     if (!selected || isGameOver) return;
@@ -109,7 +144,10 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
     setCombo(newCombo);
     if (hadClear) {
       playSound("success");
-      setScore((prev) => prev + gained);
+      setScore((prev) => {
+        scoreRef.current = prev + gained;
+        return prev + gained;
+      });
       confetti({
         particleCount: 45 + newCombo * 15,
         spread: 65,
@@ -129,23 +167,17 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
     setQueue(nextQueue);
     setSelected(null);
 
-    // Level up every 150 points
-    if (score + gained >= level * 150) {
-      levelUp();
+    // Level up every 150 points (prospective total)
+    if (scoreRef.current + gained >= level * 150) {
+      scoreRef.current += gained;
+      levelUp(level);
       return;
     }
 
     if (checkGameOver(result.board, nextQueue)) {
-      setIsGameOver(true);
+      endGame();
     }
   }
-
-  useEffect(() => {
-    if (isGameOver && !savedRef.current) {
-      savedRef.current = true;
-      void saveProgress(score, level, { level });
-    }
-  }, [isGameOver, score, level, saveProgress]);
 
   const size = board.size;
 
@@ -170,6 +202,15 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
             )}
             <div className="flex gap-1">
               <GameSoundToggle />
+              {!isGameOver ? (
+                <button
+                  onClick={endGame}
+                  aria-label="Oyunu bitir"
+                  className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors"
+                >
+                  🛑
+                </button>
+              ) : null}
               <button
                 onClick={() => setIsLeaderboardOpen(true)}
                 aria-label="Liderlik tablosunu aç"

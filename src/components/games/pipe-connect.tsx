@@ -48,8 +48,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
 
   const saveLevelProgress = useCallback(
     (score: number, level: number) => {
-      void saveProgress(score, level, { levels: level + 1, moves: totalMoves });
-      if (onGameEnd) onGameEnd(score, { levels: level + 1, moves: totalMoves });
+  void saveProgress(score, level, { levels: level, moves: totalMoves });
+  if (onGameEnd) onGameEnd(score, { levels: level, moves: totalMoves });
     },
     [saveProgress, totalMoves, onGameEnd],
   );

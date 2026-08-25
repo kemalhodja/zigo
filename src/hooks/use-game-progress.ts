@@ -28,6 +28,7 @@ export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressO
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const isGuest = userId === "guest";
   const isSavingRef = useRef(false);
+  const pendingSaveRef = useRef<{ score: number; level: number; stats: Record<string, unknown> } | null>(null);
 
   useEffect(() => {
     if (isGuest) return;
@@ -51,7 +52,11 @@ export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressO
       stats: Record<string, unknown> = {},
     ): Promise<boolean> => {
       if (isGuest) return false;
-      if (isSavingRef.current) return false;
+      if (isSavingRef.current) {
+        // A legit save raced an in-flight one — remember it instead of dropping.
+        pendingSaveRef.current = { score, level, stats };
+        return false;
+      }
       isSavingRef.current = true;
 
       let isNewRecord = false;
@@ -68,9 +73,11 @@ export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressO
           if (isNewRecord) {
             setTimeout(() => setIsLeaderboardOpen(true), 800);
           }
+        } else if (!res.ok) {
+          console.error("[game-progress] Kayıt reddedildi:", data);
         }
-      } catch {
-        // Kayıt başarısız olsa da oyun devam eder
+      } catch (err) {
+        console.error("[game-progress] Skor kaydedilemedi:", err);
       }
 
       try {
@@ -85,11 +92,19 @@ export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressO
           }),
         });
         trackEvent("game_completed", { game_type: gameType, score, level });
-      } catch {
-        // ignore
+      } catch (err) {
+        console.error("[game-progress] finish çağrısı başarısız:", err);
       }
 
       isSavingRef.current = false;
+
+      // Flush a save that arrived while this one was in flight.
+      const pending = pendingSaveRef.current;
+      if (pending) {
+        pendingSaveRef.current = null;
+        void saveProgress(pending.score, pending.level, pending.stats);
+      }
+
       return isNewRecord;
     },
     [gameType, isGuest, userId, highScore],

@@ -170,7 +170,11 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     }
   }, [board, options, isGameOver]);
 
+  const finishLatchRef = useRef(false);
+
   const handleGameFinish = async (finalScore: number, lines: number, finalLevel?: number) => {
+    if (finishLatchRef.current) return;
+    finishLatchRef.current = true;
     const lvl = finalLevel ?? levelRef.current;
     await saveProgress(finalScore, lvl, { lines });
     if (onGameEnd) onGameEnd(finalScore, { lines });
