@@ -16,7 +16,6 @@
 
 export const BOARD_COLS = 5;
 export const BOARD_ROWS = 4;
-export const EMPTY_SLOTS = 4;
 
 export type Shape = { w: number; h: number };
 
@@ -136,7 +135,7 @@ export type LevelSetup = {
   stacks: Tile[][];
 };
 
-/** Seviyeyi kurar: kartlar tahtaya dağıtılır (EMPTY_SLOTS boş kalır), kalan destelere gider. */
+/** Seviyeyi kurar: üst sıra boş kalır, kartlar alt sıralara dağıtılır; kalan kartlar destelere gider. */
 export function buildLevel(level: number, rng: () => number = Math.random): LevelSetup {
   const photos = photosForLevel(level, rng);
   const cols = colsForLevel(level);
@@ -151,19 +150,17 @@ export function buildLevel(level: number, rng: () => number = Math.random): Leve
   }
   const shuffled = shuffle(cards, rng);
 
-  const board = emptyBoard(cols, rows);
+  let board = emptyBoard(cols, rows);
   const cellCount = cols * rows;
-  const emptyCells = shuffle(
-    Array.from({ length: cellCount }, (_, i) => i),
-    rng,
-  ).slice(0, EMPTY_SLOTS);
-  const emptySet = new Set(emptyCells);
 
+  // Üst sıra boş kalır (nefes alanı); kalan tüm gözeler kartla dolu başlar
   let cardIdx = 0;
-  for (let i = 0; i < cellCount && cardIdx < shuffled.length; i++) {
-    if (emptySet.has(i)) continue;
+  for (let i = cols; i < cellCount && cardIdx < shuffled.length; i++) {
     board.cells[i] = shuffled[cardIdx++];
   }
+
+  // Yerçekimi: kartlar sütunlarda aşağı çöker (üst sıra boş kalır)
+  board = applyGravity(board);
 
   // Kalan kartlar 5 desteye dağıtılır
   const stacks: Tile[][] = Array.from({ length: cols }, () => []);
@@ -249,39 +246,80 @@ export function moveTile(
   if (!tile || from === to) return { board, swapped: false };
   cells[from] = target ?? null;
   cells[to] = tile;
-  return { board: { ...board, cells }, swapped: target !== null };
+  return { board: applyGravity({ ...board, cells }), swapped: target !== null };
 }
 
-/** Boş gözeleri destelerden doldurur (en yüklü deste önce). */
+/** Yerçekimi: Sütunlardaki boşlukları doldurmak için taşları aşağı kaydırır. */
+export function applyGravity(board: Board): Board {
+  const cells = [...board.cells];
+  for (let c = 0; c < board.cols; c++) {
+    // Sütundaki taşları al (aşağıdan yukarıya değil, yukarıdan aşağıya sırayla)
+    const columnTiles = [];
+    for (let r = 0; r < board.rows; r++) {
+      const idx = r * board.cols + c;
+      if (cells[idx] !== null) {
+        columnTiles.push(cells[idx]);
+        cells[idx] = null; // Önce boşalt
+      }
+    }
+    // Aşağıdan (BOARD_ROWS - 1) başlayarak yerleştir
+    let destRow = board.rows - 1;
+    while (columnTiles.length > 0) {
+      cells[destRow * board.cols + c] = columnTiles.pop()!;
+      destRow--;
+    }
+  }
+  return { ...board, cells };
+}
+
+/**
+ * Boş gözeleri KENDİ sütunundaki desteden doldurur (kartlar üstten yağar).
+ * Üst sıra her zaman boş bırakılır: desteler tahtayı asla tamamen doldurmaz.
+ */
 export function refillFromStacks(
   board: Board,
   stacks: Tile[][],
 ): { board: Board; stacks: Tile[][]; placed: Tile[] } {
+  // Önce mevcut yerçekimini uygula
+  const b = applyGravity(board);
   const nextStacks = stacks.map((s) => [...s]);
-  const cells = [...board.cells];
+  const cells = [...b.cells];
   const placed: Tile[] = [];
-  for (let i = 0; i < cells.length; i++) {
-    if (cells[i] !== null) continue;
-    let best = -1;
-    let bestLen = 0;
-    nextStacks.forEach((s, si) => {
-      if (s.length > bestLen) {
-        bestLen = s.length;
-        best = si;
-      }
-    });
-    if (best < 0) break;
-    const tile = nextStacks[best].pop()!;
-    cells[i] = tile;
-    placed.push(tile);
+
+  for (let c = 0; c < b.cols; c++) {
+    // Sütundaki boş hücre sayısı (yerçekimi sonrası üstte toplanır)
+    let emptyCount = 0;
+    for (let r = 0; r < b.rows; r++) {
+      if (cells[r * b.cols + c] === null) emptyCount++;
+    }
+
+    // Üst sıra boş kalır: en fazla (emptyCount - 1) kart düşer
+    const stack = nextStacks[c];
+    const toDrop = Math.max(0, Math.min(emptyCount - 1, stack.length));
+
+    for (let i = 0; i < toDrop; i++) {
+      const tile = stack.pop()!;
+      const targetRow = emptyCount - 1 - i;
+      cells[targetRow * b.cols + c] = tile;
+      placed.push(tile);
+    }
   }
-  return { board: { ...board, cells }, stacks: nextStacks, placed };
+
+  return { board: { ...b, cells }, stacks: nextStacks, placed };
 }
 
 /** Seviye bitti mi: tahta ve desteler boş. */
 export function isLevelCleared(board: Board, stacks: Tile[][]): boolean {
   if (board.cells.some((c) => c !== null)) return false;
   return stacks.every((s) => s.length === 0);
+}
+
+/** Sütun tamamen dolu mu (taşma riski olan sütun — üst sıra dahil). */
+export function isColumnFull(board: Board, col: number): boolean {
+  for (let r = 0; r < board.rows; r++) {
+    if (board.cells[r * board.cols + col] === null) return false;
+  }
+  return true;
 }
 
 export function pointsForPhoto(photo: PhotoDef, combo: number): number {

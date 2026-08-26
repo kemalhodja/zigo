@@ -385,12 +385,17 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
               const isSibling =
                 activePhotoId !== undefined && tile?.photoId === activePhotoId && !isActive;
               const isEmpty = tile === null;
+              const isBottomTile = Math.floor(idx / board.cols) === board.rows - 1 || board.cells[idx + board.cols] === null;
+              
               return (
                 <button
                   key={idx}
                   type="button"
                   onPointerDown={(e) => {
-                    if (isLevelComplete || isEnded || !tile) return;
+                    if (isLevelComplete || isEnded || !tile || !isBottomTile) {
+                       if (tile && !isBottomTile) showToast("Sadece en alt sıradaki kartları taşıyabilirsiniz!");
+                       return;
+                    }
                     e.preventDefault();
                     setDrag({ idx, x: e.clientX, y: e.clientY, moved: false });
                   }}
@@ -399,7 +404,7 @@ export function JigsawDrop({ userId = "guest" }: { userId?: string }) {
                     isEmpty ? "border-2 border-dashed border-white/30 bg-blue-400/20" : ""
                   } ${isHover ? "ring-2 ring-amber-300" : ""} ${
                     isActive ? "opacity-40" : ""
-                  }`}
+                  } ${tile && !isBottomTile ? "brightness-75 cursor-not-allowed" : ""}`}
                   style={{ height: CARD_H }}
                 >
                   {tile ? (
