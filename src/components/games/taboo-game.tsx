@@ -15,6 +15,9 @@ import {
 
 import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 const ROUND_TIME = 60;
 
@@ -33,6 +36,15 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
   const [selectedCategory, setSelectedCategory] = useState("Tümü");
   const [difficulty, setDifficulty] = useState<"kolay" | "zor">("kolay");
   const [isListening, setIsListening] = useState(false);
+  
+  const [deckCodeInput, setDeckCodeInput] = useState("");
+  const [customCards, setCustomCards] = useState<TabooCard[] | null>(null);
+  const [duelData, setDuelData] = useState<any>(null);
+  const [isGeneratingDuel, setIsGeneratingDuel] = useState(false);
+  const [duelLink, setDuelLink] = useState("");
+
+  const searchParams = useSearchParams();
+  const supabase = createClient();
   
   const categories = ["Tümü", ...getAvailableCategories()];
   
@@ -72,9 +84,58 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     }, 100);
   }, []);
 
+  // Fetch duel or deck on mount
+  useEffect(() => {
+    const duelId = searchParams.get("duel");
+    const deck = searchParams.get("deck");
+    
+    if (duelId) {
+       supabase.from("taboo_duels").select("*").eq("id", duelId).single().then(({data}) => {
+          if (data) {
+             setDuelData(data);
+             setSelectedCategory(data.category || "Tümü");
+             toast.success("Meydan okumaya katıldın! Hazırsan başla.");
+          }
+       });
+    }
+    if (deck) {
+       setDeckCodeInput(deck);
+       loadDeck(deck);
+    }
+  }, [searchParams]);
+
+  const loadDeck = async (code: string) => {
+     if (!code.trim()) return;
+     const { data: deck, error } = await supabase.from("taboo_custom_decks").select("*").eq("code", code.toUpperCase()).single();
+     if (deck) {
+        const { data: cards } = await supabase.from("taboo_custom_cards").select("*").eq("deck_id", deck.id);
+        if (cards && cards.length > 0) {
+           setCustomCards(cards.map((c: any) => ({
+              id: c.id,
+              word: c.word,
+              category: deck.category,
+              forbidden: c.forbidden_words
+           })));
+           setSelectedCategory(deck.title);
+           toast.success("Özel deste başarıyla yüklendi!");
+        } else {
+           toast.error("Bu destede hiç kart yok!");
+        }
+     } else {
+        toast.error("Geçersiz deste kodu.");
+     }
+  };
+
   // Move to next card
   const nextCard = useCallback(() => {
-    const card = getRandomTabooCard(playedIdsRef.current, selectedCategory);
+    let card: TabooCard;
+    if (customCards && customCards.length > 0) {
+       let available = customCards.filter(c => !playedIdsRef.current.includes(c.id));
+       if (available.length === 0) available = customCards; // reset if all played
+       card = available[Math.floor(Math.random() * available.length)];
+    } else {
+       card = getRandomTabooCard(playedIdsRef.current, selectedCategory);
+    }
     playedIdsRef.current.push(card.id);
     
     setCurrentCard(card);
@@ -83,7 +144,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     setShowHint(false);
     setIsError(false);
     inputRef.current?.focus();
-  }, [selectedCategory]);
+  }, [selectedCategory, customCards]);
 
   // End the game
   const endGame = useCallback(() => {
@@ -92,6 +153,29 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     if (timerRef.current) clearInterval(timerRef.current);
     void saveProgress(scoreRef.current, 1, { finalCombo: combo });
   }, [saveProgress, combo]);
+
+  const createDuel = async () => {
+    setIsGeneratingDuel(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data, error } = await supabase.from("taboo_duels").insert({
+        challenger_id: user?.id || userId,
+        challenger_score: score,
+        challenger_combo: combo,
+        category: selectedCategory,
+        seed: Date.now().toString()
+    }).select("id").single();
+    
+    if (data) {
+        const link = `${window.location.origin}/student/games/taboo?duel=${data.id}`;
+        setDuelLink(link);
+        navigator.clipboard.writeText(link);
+        toast.success("Düello linki kopyalandı! Arkadaşına gönder.");
+    } else {
+        toast.error("Düello oluşturulamadı.");
+    }
+    setIsGeneratingDuel(false);
+  };
 
   useEffect(() => {
     return () => {
@@ -255,7 +339,36 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
                   </button>
                 </div>
               </div>
+              
+              {!duelData && (
+                <div className="pt-2 border-t border-violet-100">
+                  <label className="block text-xs font-black text-violet-700 mb-1">Öğretmen Deste Kodu (Opsiyonel):</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={deckCodeInput} 
+                      onChange={e => setDeckCodeInput(e.target.value)}
+                      placeholder="Örn: FEN-1234"
+                      className="flex-1 bg-white border border-violet-200 rounded-xl p-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-violet-500 uppercase"
+                    />
+                    <button 
+                      onClick={() => loadDeck(deckCodeInput)}
+                      className="bg-violet-600 text-white px-4 rounded-xl text-xs font-black hover:bg-violet-700 transition-colors"
+                    >
+                      Yükle
+                    </button>
+                  </div>
+                  {customCards && <p className="text-[0.65rem] font-bold text-emerald-600 mt-1">✓ Özel deste aktif ({customCards.length} kart)</p>}
+                </div>
+              )}
             </div>
+
+            {duelData && (
+              <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-4">
+                <p className="text-xs font-black text-amber-600 uppercase mb-1">Meydan Okuma Modu ⚔️</p>
+                <p className="text-sm font-bold text-slate-700">Arkadaşın <strong>{duelData.challenger_score}</strong> puan yaptı. Onu geçebilir misin?</p>
+              </div>
+            )}
 
             <button
               onClick={startGame}
@@ -275,17 +388,43 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
             <div className="bg-violet-50 rounded-2xl p-4 w-full mb-6 border-2 border-violet-100">
               <p className="text-xs font-black text-violet-400 uppercase mb-1">Final Skor</p>
               <p className="text-4xl font-black text-violet-700">{score}</p>
-              {score > 0 && score >= highScore && (
+              {score > 0 && score >= highScore && !duelData && (
                 <p className="text-sm font-black text-amber-500 mt-2 animate-bounce">👑 YENİ REKOR!</p>
+              )}
+              {duelData && (
+                <div className="mt-4 pt-4 border-t border-violet-200">
+                   {score > duelData.challenger_score ? (
+                      <p className="text-emerald-500 font-black text-lg">🎉 KAZANDIN! Arkadaşını ({duelData.challenger_score}) geçtin!</p>
+                   ) : (
+                      <p className="text-rose-500 font-black text-lg">💀 KAYBETTİN! Arkadaşın ({duelData.challenger_score}) seni yendi.</p>
+                   )}
+                </div>
               )}
             </div>
             
-            <button
-              onClick={startGame}
-              className="tap-scale w-full py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-2xl font-black text-lg shadow-lg shadow-violet-500/30 hover:shadow-xl hover:scale-[1.02] transition-all"
-            >
-              Tekrar Oyna 🔄
-            </button>
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={startGame}
+                className="tap-scale flex-1 py-4 bg-slate-200 text-slate-700 rounded-2xl font-black text-lg shadow hover:bg-slate-300 transition-all"
+              >
+                Tekrar Oyna 🔄
+              </button>
+              
+              {!duelData && (
+                <button
+                  onClick={createDuel}
+                  disabled={isGeneratingDuel || score === 0}
+                  className="tap-scale flex-1 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50"
+                >
+                  {isGeneratingDuel ? "..." : "Meydan Oku ⚔️"}
+                </button>
+              )}
+            </div>
+            {duelLink && (
+              <p className="text-xs font-bold text-slate-500 mt-4 break-all">
+                Link Kopyalandı: {duelLink}
+              </p>
+            )}
           </div>
         )}
 
