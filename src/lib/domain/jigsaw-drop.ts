@@ -1,15 +1,18 @@
 /**
- * Yapboz Düşüşü v2 — picture solitaire (matches the real Jigsaw Drop).
+ * Yapboz Düşüşü v3 — birebir Jigsaw Drop: Solitaire Puzzle kopyası.
  *
- * Core loop (verified from gameplay screenshots):
- *  - Portrait board of C columns × R rows; fragments DROP into a chosen column.
- *  - Every fragment is a vertical slice (height 1-3) of a specific photo.
- *  - When a fragment lands directly on top of (or below) another slice of the
- *    SAME photo, they MERGE into a taller piece.
- *  - When a merged piece reaches the photo's full height → the picture is
- *    complete → it clears, score + combo increment.
- *  - Face-down mystery tiles reveal their photo when placed.
- *  - Game over: the chosen column would overflow.
+ * Gerçek oyunun doğrulanmış kuralları:
+ *  - ZAMANLAYICI YOK: parçalar kendiliğinden düşmez; oyuncu bir sütuna
+ *    dokunur ve sıradaki parça o sütuna anında düşer.
+ *  - Her parça belirli bir fotoğrafın dikey dilimidir (yükseklik 1-3).
+ *  - Aynı fotoğrafın üst üste gelen dilimleri BİRLEŞİR.
+ *  - Fotoğraf tamamlanınca temizlenir → puan + combo ve boşluğa YENİ
+ *    PARÇALAR YAĞAR (kaskad dolum) — oyunun imza mekaniği.
+ *  - Gizemli kapalı kartlar yerleşince açılır.
+ *  - Seviye hedefi: N resim tamamla → seviye biter, galeri gösterilir,
+ *    tahta büyür ve yeni bölüm başlar.
+ *  - Sihirli Değnek 🪄 boosterı en üst parçayı buğular.
+ *  - Oyun sadece tahta tamamen tıkandığında biter (sakin, stressiz).
  */
 
 export const START_ROWS = 8;
@@ -55,6 +58,11 @@ export function rowsForLevel(level: number): number {
 
 export function colsForLevel(level: number): number {
   return Math.min(START_COLS + Math.floor(Math.max(0, level - 1) / 2), MAX_COLS);
+}
+
+/** Seviyeyi bitirmek için tamamlanması gereken resim sayısı. */
+export function picturesGoalForLevel(level: number): number {
+  return Math.min(2 + Math.floor(Math.max(0, level - 1) / 2), 8);
 }
 
 /** A placed or queued piece: one vertical slice of a photo. */
@@ -220,9 +228,64 @@ export function resolveDrop(
   return { board: nextBoard, completed: false, merged, points: merged ? 10 : 0 };
 }
 
+/** Klasik kontrol: tek bir parça hiçbir yere sığmıyorsa oyun biter. */
 export function isGameOver(board: Board, fragment: Fragment): boolean {
   for (let c = 0; c < board.cols; c++) {
     if (canDrop(board, c, fragment)) return false;
   }
   return true;
+}
+
+/**
+ * Gerçek oyundaki tıkanma kuralı: sıradaki HİÇBİR parça hiçbir sütuna
+ * sığmıyorsa tahta kilitlenmiştir (değnek yoksa oyun biter).
+ */
+export function isBoardJammed(board: Board, fragments: Fragment[]): boolean {
+  if (fragments.length === 0) return false;
+  for (const f of fragments) {
+    for (let c = 0; c < board.cols; c++) {
+      if (canDrop(board, c, f)) return false;
+    }
+  }
+  return true;
+}
+
+/** En dolu sütunun indeksi (Sihirli Değnek hedefi). */
+export function tallestColumnIndex(board: Board): number {
+  let best = 0;
+  let bestH = -1;
+  for (let c = 0; c < board.cols; c++) {
+    const h = columnHeight(board.columns[c]);
+    if (h > bestH) {
+      bestH = h;
+      best = c;
+    }
+  }
+  return best;
+}
+
+/** Değnek etkisi: sütunun EN ÜSTTEKİ yerleşik parçasını buğular. Pure. */
+export function removeTopPiece(
+  board: Board,
+  col: number,
+): { board: Board; removed: PlacedPiece | null } {
+  const columns = board.columns.map((c) => [...c]);
+  const removed = columns[col].pop() ?? null;
+  return { board: { cols: board.cols, rows: board.rows, columns }, removed };
+}
+
+/**
+ * Kaskad dolum: temizlenen boşluğa düşen taze parçalar. Birleştirme ve
+ * tamamlama tetiklemez — tek başına yerleşir (zincir reaksiyon yok).
+ * Pure.
+ */
+export function placePlain(board: Board, col: number, fragment: Fragment): Board {
+  const columns = board.columns.map((c) => [...c]);
+  columns[col].push({
+    photoId: fragment.photoId,
+    slices: [fragment.slice],
+    height: fragment.height,
+    hidden: false,
+  });
+  return { cols: board.cols, rows: board.rows, columns };
 }

@@ -7,13 +7,18 @@ import {
   dropFragment,
   emptyBoard,
   type Fragment,
+  isBoardJammed,
   isGameOver,
   isPhotoComplete,
   type PhotoDef,
   photosForLevel,
+  picturesGoalForLevel,
   type PlacedPiece,
+  placePlain,
+  removeTopPiece,
   resolveDrop,
   rowsForLevel,
+  tallestColumnIndex,
 } from "@/lib/domain/jigsaw-drop";
 
 describe("level scaling", () => {
@@ -139,5 +144,52 @@ describe("overflow / game over", () => {
     board.columns[0] = [piece(1, [0], 7)];
     expect(canDrop(board, 0, frag(1, 0, 2))).toBe(false); // 7+2 > 8
     expect(canDrop(board, 0, frag(1, 0, 1))).toBe(true); // 7+1 = 8
+  });
+});
+
+describe("jigsaw drop v3 — gerçek oyun mekanikleri", () => {
+  it("seviye hedefi yavaş büyür ve 8'de kapaklanır", () => {
+    expect(picturesGoalForLevel(1)).toBe(2);
+    expect(picturesGoalForLevel(3)).toBe(3);
+    expect(picturesGoalForLevel(20)).toBe(8);
+  });
+
+  it("isBoardJammed: sıradaki hiçbir parça hiçbir sütuna sığmıyorsa true", () => {
+    let board = emptyBoard(2, 3);
+    const single = frag(1, 0);
+    for (let r = 0; r < 3; r++) {
+      board = dropFragment(board, 0, single).board;
+      board = dropFragment(board, 1, single).board;
+    }
+    expect(isBoardJammed(board, [single])).toBe(true);
+    // En az bir parça bir yere sığıyorsa tıkanma yoktur
+    const tall = frag(2, 0, 2);
+    expect(isBoardJammed(emptyBoard(2, 3), [tall])).toBe(false);
+    // Kuyruk boşsa asla tıkanma sayılmaz
+    expect(isBoardJammed(board, [])).toBe(false);
+  });
+
+  it("removeTopPiece: sadece en üstteki parçayı söker (pure)", () => {
+    const board = emptyBoard(2, 8);
+    board.columns[1] = [piece(1, [0], 1), piece(2, [0], 2)];
+    const { board: next, removed } = removeTopPiece(board, 1);
+    expect(removed?.photoId).toBe(2);
+    expect(next.columns[1]).toHaveLength(1);
+    expect(board.columns[1]).toHaveLength(2); // orijinal korunur
+  });
+
+  it("placePlain: birleştirme/tetikleme olmadan ham yerleşim yapar", () => {
+    const board = emptyBoard(2, 8);
+    board.columns[0] = [piece(photo3.id, [1, 2], 2)]; // üst dilimi eksik ama placePlain birleştirmez
+    const next = placePlain(board, 0, frag(photo3.id, 0));
+    expect(next.columns[0]).toHaveLength(2); // tek parça olarak durur
+    expect(next.columns[0][1].slices).toEqual([0]);
+  });
+
+  it("tallestColumnIndex: en dolu sütunu bulur", () => {
+    const board = emptyBoard(3, 8);
+    board.columns[0] = [piece(1, [0], 2)];
+    board.columns[2] = [piece(1, [0], 3), piece(2, [0], 2)];
+    expect(tallestColumnIndex(board)).toBe(2);
   });
 });
