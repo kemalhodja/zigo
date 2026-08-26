@@ -69,13 +69,17 @@ describe("seviye ölçekleme", () => {
 });
 
 describe("buildLevel", () => {
-  it("tahtaya kart dağıtır, 4 boş göz bırakır, kalanı destelere koyar", () => {
+  it("alt sıralar kartla dolu başlar, üst sıra boş kalır, kalan kartlar destelerde", () => {
     const setup = buildLevel(1);
     const boardTiles = setup.board.cells.filter((c) => c !== null).length;
     const stackTiles = setup.stacks.reduce((s, x) => s + x.length, 0);
     const total = setup.photos.reduce((s, p) => s + p.emojis.length, 0);
-    expect(boardTiles).toBe(5 * 4 - 4);
+    expect(boardTiles).toBe(5 * 3); // 4 satırın alt 3'ü dolu
     expect(boardTiles + stackTiles).toBe(total);
+    // Üst sıra boş
+    for (let c = 0; c < 5; c++) {
+      expect(setup.board.cells[c]).toBeNull();
+    }
   });
 
   it("başlangıç tahtasında tamamlanmış resim olmaz", () => {
@@ -131,13 +135,13 @@ describe("resim tamamlama", () => {
 });
 
 describe("taşıma ve takas", () => {
-  it("boş göze taşır", () => {
+  it("boş göze taşır, yerçekimi kartı sütun tabanına indirir", () => {
     const b = board5x4();
     b.cells[0] = { uid: 1, photoId: 1, part: 0, hidden: true };
-    const { board: next, swapped } = moveTile(b, 0, 5);
+    const { board: next, swapped } = moveTile(b, 0, 6); // hücre 6 = (1,1) kol 1
     expect(swapped).toBe(false);
     expect(next.cells[0]).toBeNull();
-    expect(next.cells[5]?.uid).toBe(1);
+    expect(next.cells[16]?.uid).toBe(1); // kol 1'in tabanı (3,1)
     expect(b.cells[0]?.uid).toBe(1); // pure
   });
 
@@ -147,22 +151,72 @@ describe("taşıma ve takas", () => {
     b.cells[1] = { uid: 2, photoId: 2, part: 0, hidden: false };
     const { board: next, swapped } = moveTile(b, 0, 1);
     expect(swapped).toBe(true);
-    expect(next.cells[0]?.uid).toBe(2);
-    expect(next.cells[1]?.uid).toBe(1);
+    expect(next.cells[15]?.uid).toBe(2); // kol 0 tabanı
+    expect(next.cells[16]?.uid).toBe(1); // kol 1 tabanı
   });
 });
 
-describe("deste dolumu ve seviye bitişi", () => {
-  it("refill boş gözeleri destelerden doldurur", () => {
+describe("yerçekimi, deste dolumu ve seviye bitişi", () => {
+  it("applyGravity taşları sütunlarda aşağı çöker", async () => {
+    const { applyGravity } = await import("@/lib/domain/jigsaw-drop");
     const b = board5x4();
-    b.cells[0] = null;
-    b.cells[1] = null;
-    const stacks: Tile[][] = [[], [{ uid: 9, photoId: 3, part: 0, hidden: false }], [], [], []];
+    b.cells[0] = { uid: 1, photoId: 1, part: 0, hidden: false }; // (0,0)
+    b.cells[10] = { uid: 2, photoId: 2, part: 0, hidden: false }; // (2,0)
+    const next = applyGravity(b);
+    // Görece sıra korunur: alttaki (uid2) en altta kalır
+    expect(next.cells[15]?.uid).toBe(2); // kol 0 tabanı
+    expect(next.cells[10]?.uid).toBe(1); // (2,0)
+    expect(next.cells[0]).toBeNull();
+  });
+
+  it("refill kendi sütunundaki desteden doldurur ve üst sırayı boş bırakır", () => {
+    const b = board5x4(); // tamamen boş tahta
+    const stacks: Tile[][] = [
+      [
+        { uid: 1, photoId: 1, part: 0, hidden: false },
+        { uid: 2, photoId: 1, part: 1, hidden: false },
+        { uid: 3, photoId: 2, part: 0, hidden: false },
+        { uid: 4, photoId: 2, part: 1, hidden: false },
+        { uid: 5, photoId: 3, part: 0, hidden: false },
+      ],
+      [],
+      [],
+      [],
+      [],
+    ];
     const { board: next, stacks: nextStacks, placed } = refillFromStacks(b, stacks);
-    expect(placed).toHaveLength(1);
-    expect(next.cells[0]?.uid).toBe(9);
-    expect(next.cells[1]).toBeNull();
-    expect(nextStacks[1]).toHaveLength(0);
+    // 4 boş göze var ama sadece 3 kart düşer (üst sıra boş kalır); deste SONDAN çekilir
+    expect(placed).toHaveLength(3);
+    expect(next.cells[15]?.uid).toBe(5); // (3,0)
+    expect(next.cells[10]?.uid).toBe(4); // (2,0)
+    expect(next.cells[5]?.uid).toBe(3); // (1,0)
+    expect(next.cells[0]).toBeNull();
+    expect(nextStacks[0]).toHaveLength(2);
+  });
+
+  it("refill dolu sütuna kart çekmez", () => {
+    const b = board5x4();
+    // Kol 0 tabanında bir kart, destesi boş
+    b.cells[15] = { uid: 9, photoId: 1, part: 0, hidden: false };
+    // Kol 1 tamamen dolu, destesinde kart var
+    for (let r = 0; r < 4; r++) {
+      b.cells[r * 5 + 1] = { uid: 100 + r, photoId: 2, part: 0, hidden: false };
+    }
+    const stacks: Tile[][] = [[], [{ uid: 8, photoId: 3, part: 0, hidden: false }], [], [], []];
+    const { board: next, stacks: nextStacks, placed } = refillFromStacks(b, stacks);
+    expect(placed).toHaveLength(0);
+    expect(next.cells[15]?.uid).toBe(9);
+    expect(nextStacks[1]).toHaveLength(1);
+  });
+
+  it("isColumnFull dolu sütunu bulur", async () => {
+    const { isColumnFull } = await import("@/lib/domain/jigsaw-drop");
+    const b = board5x4();
+    for (let r = 0; r < 4; r++) {
+      b.cells[r * 5] = { uid: r, photoId: 1, part: 0, hidden: false };
+    }
+    expect(isColumnFull(b, 0)).toBe(true);
+    expect(isColumnFull(b, 1)).toBe(false);
   });
 
   it("tahta ve desteler boşken seviye biter", () => {

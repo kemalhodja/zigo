@@ -10,6 +10,7 @@ import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { OneSignalProvider } from "@/components/providers/onesignal-provider";
+import { ScrollReset } from "@/components/scroll-reset";
 import { ToastProvider } from "@/components/ui/toast-system";
 import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
@@ -135,6 +136,7 @@ export default async function RootLayout({
         <LocaleProvider initialLocale={locale}>
           <ToastProvider>
             <OfflineIndicator />
+            <ScrollReset />
             <AnalyticsProvider />
             <AuthSessionKeepAlive />
             <OneSignalProvider userId={shellState.userId} userRole={shellState.viewerRole} />

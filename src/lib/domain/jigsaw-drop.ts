@@ -151,12 +151,27 @@ export function buildLevel(level: number, rng: () => number = Math.random): Leve
   const shuffled = shuffle(cards, rng);
 
   let board = emptyBoard(cols, rows);
-  const cellCount = cols * rows;
 
-  // Üst sıra boş kalır (nefes alanı); kalan tüm gözeler kartla dolu başlar
-  let cardIdx = 0;
-  for (let i = cols; i < cellCount && cardIdx < shuffled.length; i++) {
-    board.cells[i] = shuffled[cardIdx++];
+  // Üst sıra boş kalır; kartlar alt sıralara GREEDY dağıtılır: aynı resmin
+  // kartları asla komşu düşmez → başlangıçta tamamlanmış resim olamaz.
+  const used = new Array(shuffled.length).fill(false);
+  const photoIdAt = (r: number, c: number): number | undefined =>
+    r >= 0 && r < rows && c >= 0 && c < cols ? board.cells[r * cols + c]?.photoId : undefined;
+  for (let r = 1; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let pick = -1;
+      for (let i = 0; i < shuffled.length; i++) {
+        if (used[i]) continue;
+        const pid = shuffled[i].photoId;
+        if (photoIdAt(r - 1, c) === pid) continue;
+        if (photoIdAt(r, c - 1) === pid) continue;
+        pick = i;
+        break;
+      }
+      if (pick === -1) pick = used.findIndex((u) => !u);
+      used[pick] = true;
+      board.cells[r * cols + c] = shuffled[pick];
+    }
   }
 
   // Yerçekimi: kartlar sütunlarda aşağı çöker (üst sıra boş kalır)
@@ -165,9 +180,11 @@ export function buildLevel(level: number, rng: () => number = Math.random): Leve
   // Kalan kartlar 5 desteye dağıtılır
   const stacks: Tile[][] = Array.from({ length: cols }, () => []);
   let s = 0;
-  while (cardIdx < shuffled.length) {
-    stacks[s % cols].push(shuffled[cardIdx++]);
-    s += 1;
+  for (let i = 0; i < shuffled.length; i++) {
+    if (!used[i]) {
+      stacks[s % cols].push(shuffled[i]);
+      s += 1;
+    }
   }
 
   // Başlangıçta tamamlanmış resim olmasın
