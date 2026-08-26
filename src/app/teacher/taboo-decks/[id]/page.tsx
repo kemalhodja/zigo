@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/toast-system";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -17,14 +17,15 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const supabase = createClient();
+  const toast = useToast();
 
   useEffect(() => {
     fetchDeckAndCards();
   }, [params.id]);
 
   const fetchDeckAndCards = async () => {
-    const { data: deckData, error: deckError } = await supabase
-      .from("taboo_custom_decks")
+    const { data, error }: any = await supabase
+      .from("taboo_custom_decks" as any)
       .select("*")
       .eq("id", params.id)
       .single();
@@ -36,8 +37,8 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
     }
     setDeck(deckData);
 
-    const { data: cardsData, error: cardsError } = await supabase
-      .from("taboo_custom_cards")
+    const { data, error }: any = await supabase
+      .from("taboo_custom_cards" as any)
       .select("*")
       .eq("deck_id", params.id)
       .order("created_at", { ascending: false });
@@ -61,7 +62,7 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
     const forbiddenList = newForbidden.split(",").map(w => w.trim().toUpperCase()).filter(w => w);
 
     const { error } = await supabase
-      .from("taboo_custom_cards")
+      .from("taboo_custom_cards" as any)
       .insert({
         deck_id: params.id,
         word: newWord.trim().toUpperCase(),
@@ -86,7 +87,7 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
   const deleteCard = async (id: string) => {
     if (!confirm("Bu kartı silmek istediğinize emin misiniz?")) return;
     
-    const { error } = await supabase.from("taboo_custom_cards").delete().eq("id", id);
+    const { error } = await supabase.from("taboo_custom_cards" as any).delete().eq("id", id);
     if (error) {
       toast.error("Silme işlemi başarısız.");
     } else {

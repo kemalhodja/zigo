@@ -17,7 +17,7 @@ import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/toast-system";
 
 const ROUND_TIME = 60;
 
@@ -45,6 +45,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const toast = useToast();
   
   const categories = ["Tümü", ...getAvailableCategories()];
   
@@ -90,7 +91,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     const deck = searchParams.get("deck");
     
     if (duelId) {
-       supabase.from("taboo_duels").select("*").eq("id", duelId).single().then(({data}) => {
+       supabase.from("taboo_duels" as any).select("*").eq("id", duelId).single().then(({data}: any) => {
           if (data) {
              setDuelData(data);
              setSelectedCategory(data.category || "Tümü");
@@ -106,9 +107,9 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
   const loadDeck = async (code: string) => {
      if (!code.trim()) return;
-     const { data: deck, error } = await supabase.from("taboo_custom_decks").select("*").eq("code", code.toUpperCase()).single();
+     const { data, error }: any = await supabase.from("taboo_custom_decks" as any).select("*").eq("code", code.toUpperCase()).single();
      if (deck) {
-        const { data: cards } = await supabase.from("taboo_custom_cards").select("*").eq("deck_id", deck.id);
+        const { data: cards } = await supabase.from("taboo_custom_cards" as any).select("*").eq("deck_id", deck.id);
         if (cards && cards.length > 0) {
            setCustomCards(cards.map((c: any) => ({
               id: c.id,
@@ -158,7 +159,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     setIsGeneratingDuel(true);
     const { data: { user } } = await supabase.auth.getUser();
     
-    const { data, error } = await supabase.from("taboo_duels").insert({
+    const { data, error }: any = await supabase.from("taboo_duels" as any).insert({
         challenger_id: user?.id || userId,
         challenger_score: score,
         challenger_combo: combo,

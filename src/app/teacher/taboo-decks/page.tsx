@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/toast-system";
 import { Loader2 } from "lucide-react";
 
 export default function TeacherTabooDecks() {
@@ -12,6 +12,7 @@ export default function TeacherTabooDecks() {
   const [newCategory, setNewCategory] = useState("Fen Bilimleri");
   
   const supabase = createClient();
+  const toast = useToast();
 
   useEffect(() => {
     fetchDecks();
@@ -21,8 +22,8 @@ export default function TeacherTabooDecks() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("taboo_custom_decks")
+    const { data, error }: any = await supabase
+      .from("taboo_custom_decks" as any)
       .select("*")
       .eq("teacher_id", user.id)
       .order("created_at", { ascending: false });
@@ -47,7 +48,7 @@ export default function TeacherTabooDecks() {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const { error } = await supabase
-      .from("taboo_custom_decks")
+      .from("taboo_custom_decks" as any)
       .insert({
         teacher_id: user.id,
         title: newTitle,
