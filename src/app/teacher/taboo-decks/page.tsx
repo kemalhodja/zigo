@@ -142,12 +142,12 @@ export default function TeacherTabooDecks() {
                       <span className="block text-[0.65rem] font-black text-slate-400 uppercase">Öğrenci Kodu</span>
                       <span className="font-mono font-black text-lg text-slate-700">{deck.code}</span>
                     </div>
-                    <button 
+                    <a 
+                      href={`/teacher/taboo-decks/${deck.id}`}
                       className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-black text-sm transition-colors"
-                      onClick={() => toast.info("Kelime ekleme paneli çok yakında eklenecek!")}
                     >
                       Kelimeleri Yönet ➔
-                    </button>
+                    </a>
                   </div>
                 </div>
               ))}
