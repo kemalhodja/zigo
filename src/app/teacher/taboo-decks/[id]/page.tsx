@@ -24,7 +24,7 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
   }, [params.id]);
 
   const fetchDeckAndCards = async () => {
-    const { data, error }: any = await supabase
+    const { data: deckData, error: deckError }: any = await supabase
       .from("taboo_custom_decks" as any)
       .select("*")
       .eq("id", params.id)
@@ -37,7 +37,7 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
     }
     setDeck(deckData);
 
-    const { data, error }: any = await supabase
+    const { data: cardsData, error: cardsError }: any = await supabase
       .from("taboo_custom_cards" as any)
       .select("*")
       .eq("deck_id", params.id)
