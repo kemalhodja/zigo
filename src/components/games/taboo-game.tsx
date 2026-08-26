@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
 import confetti from "canvas-confetti";
+import { useCallback,useEffect, useRef, useState } from "react";
+
 import { useAudio } from "@/hooks/use-audio";
 import { useGameProgress } from "@/hooks/use-game-progress";
 import { 
-  TabooCard, 
-  getRandomTabooCard, 
-  getRandomDescription, 
   checkTabooGuess, 
-  pointsForTaboo 
-} from "@/lib/domain/taboo";
+  getRandomDescription, 
+  getRandomTabooCard, 
+  pointsForTaboo, 
+  getAvailableCategories,
+  type TabooCard} from "@/lib/domain/taboo";
+
 import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
 
@@ -28,6 +30,11 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
   const [guessInput, setGuessInput] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Tümü");
+  const [difficulty, setDifficulty] = useState<"kolay" | "zor">("kolay");
+  const [isListening, setIsListening] = useState(false);
+  
+  const categories = ["Tümü", ...getAvailableCategories()];
   
   const { playSound } = useAudio();
   const { highScore, isLeaderboardOpen, setIsLeaderboardOpen, saveProgress } =
@@ -67,7 +74,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
   // Move to next card
   const nextCard = useCallback(() => {
-    const card = getRandomTabooCard(playedIdsRef.current);
+    const card = getRandomTabooCard(playedIdsRef.current, selectedCategory);
     playedIdsRef.current.push(card.id);
     
     setCurrentCard(card);
@@ -76,7 +83,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     setShowHint(false);
     setIsError(false);
     inputRef.current?.focus();
-  }, []);
+  }, [selectedCategory]);
 
   // End the game
   const endGame = useCallback(() => {
@@ -126,6 +133,38 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
       setTimeout(() => setIsError(false), 400);
       // Briefly flash input red or just clear it
       // For a smoother experience, don't clear immediately, let user edit
+    }
+  };
+
+  const toggleListening = () => {
+    if (isListening) return; // Prevent multiple starts
+    
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Tarayıcınız sesli komutu desteklemiyor. (Chrome/Safari tavsiye edilir)");
+        return;
+      }
+      
+      const recognition = new SpeechRecognition();
+      recognition.lang = "tr-TR";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setGuessInput(transcript.replace(/\.$/, '')); // strip trailing dot
+        // Optionally auto-submit:
+        // setTimeout(() => inputRef.current?.form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })), 100);
+      };
+      
+      recognition.start();
+    } catch (e) {
+      console.error("Speech recognition error:", e);
     }
   };
 
@@ -184,11 +223,40 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
         
         {!isPlaying && !isGameOver && (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-            <div className="text-6xl mb-4">🤖</div>
-            <h3 className="text-lg font-black text-slate-800 mb-2">Zigo AI Seni Sınamaya Hazır!</h3>
-            <p className="text-sm font-bold text-slate-500 mb-6">
-              Sana bazı kelimeleri tarif edeceğim. Tabii ki yasaklı kelimeleri kullanmadan... Bakalım ne kadar hızlısın?
-            </p>
+            <div className="text-6xl mb-2">🤖</div>
+            <h3 className="text-lg font-black text-slate-800 mb-4">Zigo AI Seni Sınamaya Hazır!</h3>
+            
+            <div className="w-full text-left space-y-3 mb-6 bg-violet-50 p-4 rounded-2xl border border-violet-100">
+              <div>
+                <label className="block text-xs font-black text-violet-700 mb-1">Ders / Kategori Seçimi:</label>
+                <select 
+                  value={selectedCategory} 
+                  onChange={e => setSelectedCategory(e.target.value)}
+                  className="w-full bg-white border border-violet-200 rounded-xl p-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-violet-500"
+                >
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-black text-violet-700 mb-1">Zorluk Seviyesi:</label>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setDifficulty("kolay")}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black border ${difficulty === "kolay" ? "bg-violet-600 text-white border-violet-600" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"}`}
+                  >
+                    Kolay (Açık İpucu)
+                  </button>
+                  <button 
+                    onClick={() => setDifficulty("zor")}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black border ${difficulty === "zor" ? "bg-rose-500 text-white border-rose-500" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"}`}
+                  >
+                    Zor (Kapalı İpucu)
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <button
               onClick={startGame}
               className="tap-scale w-full py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-2xl font-black text-lg shadow-lg shadow-violet-500/30 hover:shadow-xl hover:scale-[1.02] transition-all"
@@ -236,13 +304,16 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
             {/* Hint Box (Forbidden Words) */}
             <div className="mb-6 flex-1 flex flex-col justify-end">
-              {!showHint ? (
+              {difficulty === "zor" && !showHint ? (
                 <button
                   type="button"
-                  onClick={() => setShowHint(true)}
+                  onClick={() => {
+                    setShowHint(true);
+                    setScore(prev => Math.max(0, prev - 10)); // Zor modda ipucu cezası
+                  }}
                   className="tap-scale mx-auto block text-xs font-black text-amber-500 bg-amber-50 px-4 py-2 rounded-xl border-2 border-amber-200 border-dashed hover:bg-amber-100 transition"
                 >
-                  💡 Yasaklı Kelimeleri Göster (İpucu)
+                  💡 Yasaklı Kelimeleri Göster (-10 Puan)
                 </button>
               ) : (
                 <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3 animate-in fade-in slide-in-from-bottom-2">
@@ -269,7 +340,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
                   if (isError) setIsError(false);
                 }}
                 placeholder="Kelimeyi tahmin et..."
-                className={`w-full border-2 rounded-2xl py-4 pl-4 pr-24 text-lg font-black text-slate-800 placeholder:text-slate-400 focus:outline-none transition-colors ${
+                className={`w-full border-2 rounded-2xl py-4 pl-4 pr-32 text-lg font-black text-slate-800 placeholder:text-slate-400 focus:outline-none transition-colors ${
                   isError 
                     ? "border-rose-500 bg-rose-50" 
                     : "border-slate-200 bg-slate-50 focus:border-violet-500 focus:bg-white"
@@ -279,13 +350,23 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
               />
               <button
                 type="button"
+                onClick={toggleListening}
+                title="Sesli Yanıt"
+                className={`absolute right-20 top-2 bottom-2 aspect-square rounded-xl flex items-center justify-center transition-colors tap-scale ${
+                  isListening ? "bg-rose-500 text-white animate-pulse" : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                }`}
+              >
+                🎙️
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   playSound("error");
                   setCombo(0);
                   nextCard();
                 }}
                 title="Pas Geç (Kombo sıfırlanır)"
-                className="absolute right-12 top-2 bottom-2 px-3 bg-slate-200 text-slate-600 rounded-xl font-black text-xs hover:bg-slate-300 transition-colors tap-scale flex items-center"
+                className="absolute right-12 top-2 bottom-2 px-2 bg-slate-200 text-slate-600 rounded-xl font-black text-[0.65rem] hover:bg-slate-300 transition-colors tap-scale flex items-center"
               >
                 PAS
               </button>

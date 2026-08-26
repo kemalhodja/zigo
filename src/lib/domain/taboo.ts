@@ -94,12 +94,30 @@ export function checkTabooGuess(guess: string, word: string): boolean {
   return distance <= maxTypos;
 }
 
-export function getRandomTabooCard(excludeIds: string[] = []): TabooCard {
+export function getAvailableCategories(): string[] {
+  const categories = new Set(TABOO_LIBRARY.map(c => c.category));
+  return Array.from(categories);
+}
+
+export function getRandomTabooCard(excludeIds: string[] = [], category?: string): TabooCard {
   let available = TABOO_LIBRARY.filter(c => !excludeIds.includes(c.id));
-  // Eğer tüm kartlar oynandıysa (veya exclude çok fazlaysa), desteyi sıfırla
+  
+  if (category && category !== "Tümü") {
+    available = available.filter(c => c.category === category);
+  }
+  
+  // Eğer seçili kategoride tüm kartlar oynandıysa desteyi o kategori için sıfırla
+  if (available.length === 0) {
+    available = category && category !== "Tümü" 
+      ? TABOO_LIBRARY.filter(c => c.category === category)
+      : TABOO_LIBRARY;
+  }
+  
+  // Hala boşsa (mesela geçersiz kategori) tümünü döndür
   if (available.length === 0) {
     available = TABOO_LIBRARY;
   }
+  
   const randomIndex = Math.floor(Math.random() * available.length);
   return available[randomIndex];
 }
