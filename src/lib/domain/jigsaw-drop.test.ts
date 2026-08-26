@@ -1,195 +1,200 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildDeck,
-  canDrop,
+  type Board,
+  buildLevel,
+  clearPhoto,
   colsForLevel,
-  dropFragment,
   emptyBoard,
-  type Fragment,
-  isBoardJammed,
-  isGameOver,
-  isPhotoComplete,
+  findCompletedPhotos,
+  hiddenRateForLevel,
+  hintChargesForLevel,
+  isLevelCleared,
+  maxPartsForLevel,
+  moveTile,
+  partOffset,
   type PhotoDef,
   photosForLevel,
-  picturesGoalForLevel,
-  type PlacedPiece,
-  placePlain,
-  removeTopPiece,
-  resolveDrop,
+  pointsForPhoto,
+  refillFromStacks,
   rowsForLevel,
-  tallestColumnIndex,
+  type Tile,
 } from "@/lib/domain/jigsaw-drop";
 
-describe("level scaling", () => {
-  it("rows grow 8→9→10→11 and cap", () => {
-    expect(rowsForLevel(1)).toBe(8);
-    expect(rowsForLevel(2)).toBe(9);
-    expect(rowsForLevel(3)).toBe(10);
-    expect(rowsForLevel(4)).toBe(11);
-    expect(rowsForLevel(10)).toBe(11);
-  });
-
-  it("columns grow every other level and cap", () => {
-    expect(colsForLevel(1)).toBe(4);
-    expect(colsForLevel(3)).toBe(5);
-    expect(colsForLevel(9)).toBe(6);
-  });
-
-  it("photo pool widens with level", () => {
-    expect(photosForLevel(1).length).toBe(4);
-    expect(photosForLevel(20).length).toBeLessThanOrEqual(10);
-  });
-});
-
-describe("buildDeck", () => {
-  it("covers every slice of every photo", () => {
-    const photos = photosForLevel(1);
-    const deck = buildDeck(photos);
-    for (const photo of photos) {
-      const covered = deck
-        .filter((f) => f.photoId === photo.id)
-        .reduce((sum, f) => sum + f.height, 0);
-      expect(covered).toBe(photo.totalHeight);
-    }
-  });
-
-  it("shuffles and includes some mystery tiles", () => {
-    const deck = buildDeck(photosForLevel(3), () => 0.1); // deterministic: all face-down
-    expect(deck.length).toBeGreaterThanOrEqual(6);
-    expect(deck.some((f) => f.hidden)).toBe(true);
-  });
-});
-
-const photo3: PhotoDef = { id: 1, emojis: ["🌻", "🪟", "🏛️"], gradient: "g", totalHeight: 3 };
-const photo2: PhotoDef = { id: 2, emojis: ["🐄", "🌿"], gradient: "g", totalHeight: 2 };
-
-function frag(photoId: number, slice: number, height: 1 | 2 | 3 = 1): Fragment {
-  return { uid: Math.random(), photoId, slice, height, hidden: false };
+function photo2v(id: number): PhotoDef {
+  return { id, emojis: ["🌤️", "🌊"], gradient: "g", shape: { w: 1, h: 2 } };
 }
 
-function piece(photoId: number, slices: number[], height: number): PlacedPiece {
-  return { photoId, slices, height, hidden: false };
+function photo2h(id: number): PhotoDef {
+  return { id, emojis: ["🍕", "🥤"], gradient: "g", shape: { w: 2, h: 1 } };
 }
 
-describe("merge rules", () => {
-  it("merges only when the fragment is exactly the next slice up", () => {
-    const board = emptyBoard(4, 8);
-    board.columns[0] = [piece(1, [1], 1)]; // middle slice sits at bottom
-    const result = dropFragment(board, 0, frag(1, 0)); // top slice lands on it
-    expect(result.merged).toBe(true);
-    expect(result.board.columns[0]).toHaveLength(1); // merged into one piece
-    expect(result.board.columns[0][0].slices).toEqual([0, 1]);
-    expect(board.columns[0]).toHaveLength(1); // original untouched (pure)
+function photo4(id: number): PhotoDef {
+  return { id, emojis: ["🏖️", "🐚", "☀️", "⛱️"], gradient: "g", shape: { w: 2, h: 2 } };
+}
+
+function board5x4(): Board {
+  return emptyBoard(5, 4);
+}
+
+describe("seviye ölçekleme", () => {
+  it("tahta 5 sütun sabit, satır 6. seviyede 5'e çıkar", () => {
+    expect(colsForLevel(1)).toBe(5);
+    expect(rowsForLevel(1)).toBe(4);
+    expect(rowsForLevel(6)).toBe(5);
   });
 
-  it("does not merge mismatched or non-adjacent slices", () => {
-    const board = emptyBoard(4, 8);
-    board.columns[0] = [piece(1, [2], 1)];
-    expect(dropFragment(board, 0, frag(1, 0)).merged).toBe(false); // skips slice 1
-    expect(dropFragment(board, 0, frag(2, 1)).merged).toBe(false); // other photo
+  it("parça limiti 2 → 4 → 6 büyür", () => {
+    expect(maxPartsForLevel(1)).toBe(2);
+    expect(maxPartsForLevel(3)).toBe(4);
+    expect(maxPartsForLevel(6)).toBe(6);
   });
 
-  it("hidden pieces never merge", () => {
-    const board = emptyBoard(4, 8);
-    board.columns[1] = [{ ...piece(2, [0], 1), hidden: true }];
-    expect(dropFragment(board, 1, frag(2, 1)).merged).toBe(false);
-  });
-});
-
-describe("completion + scoring", () => {
-  it("clears and scores when the photo is fully assembled", () => {
-    const board = emptyBoard(4, 8);
-    board.columns[0] = [piece(photo3.id, [1, 2], 2)];
-    const result = resolveDrop(board, 0, frag(photo3.id, 0), photo3, 0);
-    expect(result.completed).toBe(true);
-    expect(result.points).toBe(300); // 100 × totalHeight, combo 0
-    expect(result.board.columns[0]).toHaveLength(0);
+  it("resim havuzu seviyeyle büyür ve şekil kuralına uyar", () => {
+    const l1 = photosForLevel(1);
+    expect(l1.length).toBe(8);
+    expect(l1.every((p) => p.emojis.length <= 2)).toBe(true);
+    const l3 = photosForLevel(3);
+    expect(l3.length).toBe(12);
+    expect(l3.every((p) => p.emojis.length <= 4)).toBe(true);
+    expect(photosForLevel(20).length).toBe(16);
   });
 
-  it("applies combo multiplier on consecutive completions", () => {
-    const board = emptyBoard(4, 8);
-    board.columns[0] = [piece(photo2.id, [1], 1)]; // bottom slice placed
-    const result = resolveDrop(board, 0, frag(photo2.id, 0), photo2, 3); // top slice caps it
-    expect(result.completed).toBe(true);
-    expect(result.points).toBe(Math.round(200 * Math.pow(1.5, 3)));
-  });
-
-  it("incomplete assembly stays on the board with merge bonus", () => {
-    const board = emptyBoard(4, 8);
-    board.columns[0] = [piece(photo3.id, [2], 1)];
-    const result = resolveDrop(board, 0, frag(photo3.id, 1), photo3, 0);
-    expect(result.completed).toBe(false);
-    expect(result.merged).toBe(true);
-    expect(result.points).toBe(10);
-    expect(result.board.columns[0]).toHaveLength(1);
-    expect(isPhotoComplete(result.board.columns[0][0], photo3)).toBe(false);
+  it("kapalı kart oranı artar, ipucu hakları büyür", () => {
+    expect(hiddenRateForLevel(1)).toBeLessThan(hiddenRateForLevel(10));
+    expect(hiddenRateForLevel(50)).toBe(0.3);
+    expect(hintChargesForLevel(1)).toBe(2);
+    expect(hintChargesForLevel(3)).toBe(3);
   });
 });
 
-describe("overflow / game over", () => {
-  it("detects when no column can take the fragment", () => {
-    let board = emptyBoard(2, 8);
-    const single = frag(1, 0);
-    for (let r = 0; r < 8; r++) {
-      board = dropFragment(board, 0, single).board;
-      board = dropFragment(board, 1, single).board;
+describe("buildLevel", () => {
+  it("tahtaya kart dağıtır, 4 boş göz bırakır, kalanı destelere koyar", () => {
+    const setup = buildLevel(1);
+    const boardTiles = setup.board.cells.filter((c) => c !== null).length;
+    const stackTiles = setup.stacks.reduce((s, x) => s + x.length, 0);
+    const total = setup.photos.reduce((s, p) => s + p.emojis.length, 0);
+    expect(boardTiles).toBe(5 * 4 - 4);
+    expect(boardTiles + stackTiles).toBe(total);
+  });
+
+  it("başlangıç tahtasında tamamlanmış resim olmaz", () => {
+    for (let lvl = 1; lvl <= 4; lvl++) {
+      const setup = buildLevel(lvl);
+      const byId = new Map(setup.photos.map((p) => [p.id, p]));
+      expect(findCompletedPhotos(setup.board, byId)).toHaveLength(0);
     }
-    expect(isGameOver(board, single)).toBe(true);
-    expect(canDrop(board, 0, single)).toBe(false);
-  });
-
-  it("tall fragments need more headroom", () => {
-    const board = emptyBoard(2, 8);
-    board.columns[0] = [piece(1, [0], 7)];
-    expect(canDrop(board, 0, frag(1, 0, 2))).toBe(false); // 7+2 > 8
-    expect(canDrop(board, 0, frag(1, 0, 1))).toBe(true); // 7+1 = 8
   });
 });
 
-describe("jigsaw drop v3 — gerçek oyun mekanikleri", () => {
-  it("seviye hedefi yavaş büyür ve 8'de kapaklanır", () => {
-    expect(picturesGoalForLevel(1)).toBe(2);
-    expect(picturesGoalForLevel(3)).toBe(3);
-    expect(picturesGoalForLevel(20)).toBe(8);
+describe("resim tamamlama", () => {
+  it("1×2 resim doğru dizilince bulunur, yanlışta bulunmaz", () => {
+    const photo = photo2v(1);
+    const byId = new Map([[1, photo]]);
+    const b = board5x4();
+    b.cells[7] = { uid: 1, photoId: 1, part: 0, hidden: false }; // satır 1, kol 2
+    b.cells[12] = { uid: 2, photoId: 1, part: 1, hidden: false }; // satır 2, kol 2
+    expect(findCompletedPhotos(b, byId)).toEqual([photo]);
+
+    b.cells[12] = { uid: 2, photoId: 1, part: 1, hidden: false }; // aynı kol ama...
+    b.cells[12] = null;
+    b.cells[11] = { uid: 2, photoId: 1, part: 1, hidden: false }; // yanlış konum
+    expect(findCompletedPhotos(b, byId)).toHaveLength(0);
   });
 
-  it("isBoardJammed: sıradaki hiçbir parça hiçbir sütuna sığmıyorsa true", () => {
-    let board = emptyBoard(2, 3);
-    const single = frag(1, 0);
-    for (let r = 0; r < 3; r++) {
-      board = dropFragment(board, 0, single).board;
-      board = dropFragment(board, 1, single).board;
-    }
-    expect(isBoardJammed(board, [single])).toBe(true);
-    // En az bir parça bir yere sığıyorsa tıkanma yoktur
-    const tall = frag(2, 0, 2);
-    expect(isBoardJammed(emptyBoard(2, 3), [tall])).toBe(false);
-    // Kuyruk boşsa asla tıkanma sayılmaz
-    expect(isBoardJammed(board, [])).toBe(false);
+  it("2×1 yatay ve 2×2 resimler de doğrulanır", () => {
+    const h = photo2h(1);
+    const q = photo4(2);
+    const byId = new Map([
+      [1, h],
+      [2, q],
+    ]);
+    const b = board5x4();
+    b.cells[6] = { uid: 1, photoId: 1, part: 0, hidden: false }; // (1,1)
+    b.cells[7] = { uid: 2, photoId: 1, part: 1, hidden: false }; // (1,2)
+    b.cells[12] = { uid: 3, photoId: 2, part: 0, hidden: false }; // (2,2)
+    b.cells[13] = { uid: 4, photoId: 2, part: 1, hidden: false }; // (2,3)
+    b.cells[17] = { uid: 5, photoId: 2, part: 2, hidden: false }; // (3,2)
+    b.cells[18] = { uid: 6, photoId: 2, part: 3, hidden: false }; // (3,3)
+    expect(findCompletedPhotos(b, byId)).toEqual([h, q]);
   });
 
-  it("removeTopPiece: sadece en üstteki parçayı söker (pure)", () => {
-    const board = emptyBoard(2, 8);
-    board.columns[1] = [piece(1, [0], 1), piece(2, [0], 2)];
-    const { board: next, removed } = removeTopPiece(board, 1);
-    expect(removed?.photoId).toBe(2);
-    expect(next.columns[1]).toHaveLength(1);
-    expect(board.columns[1]).toHaveLength(2); // orijinal korunur
+  it("eksik parçayla tamamlanmaz", () => {
+    const q = photo4(1);
+    const byId = new Map([[1, q]]);
+    const b = board5x4();
+    b.cells[0] = { uid: 1, photoId: 1, part: 0, hidden: false };
+    b.cells[1] = { uid: 2, photoId: 1, part: 1, hidden: false };
+    b.cells[5] = { uid: 3, photoId: 1, part: 2, hidden: false };
+    expect(findCompletedPhotos(b, byId)).toHaveLength(0);
+  });
+});
+
+describe("taşıma ve takas", () => {
+  it("boş göze taşır", () => {
+    const b = board5x4();
+    b.cells[0] = { uid: 1, photoId: 1, part: 0, hidden: true };
+    const { board: next, swapped } = moveTile(b, 0, 5);
+    expect(swapped).toBe(false);
+    expect(next.cells[0]).toBeNull();
+    expect(next.cells[5]?.uid).toBe(1);
+    expect(b.cells[0]?.uid).toBe(1); // pure
   });
 
-  it("placePlain: birleştirme/tetikleme olmadan ham yerleşim yapar", () => {
-    const board = emptyBoard(2, 8);
-    board.columns[0] = [piece(photo3.id, [1, 2], 2)]; // üst dilimi eksik ama placePlain birleştirmez
-    const next = placePlain(board, 0, frag(photo3.id, 0));
-    expect(next.columns[0]).toHaveLength(2); // tek parça olarak durur
-    expect(next.columns[0][1].slices).toEqual([0]);
+  it("dolu gözle takas eder", () => {
+    const b = board5x4();
+    b.cells[0] = { uid: 1, photoId: 1, part: 0, hidden: false };
+    b.cells[1] = { uid: 2, photoId: 2, part: 0, hidden: false };
+    const { board: next, swapped } = moveTile(b, 0, 1);
+    expect(swapped).toBe(true);
+    expect(next.cells[0]?.uid).toBe(2);
+    expect(next.cells[1]?.uid).toBe(1);
+  });
+});
+
+describe("deste dolumu ve seviye bitişi", () => {
+  it("refill boş gözeleri destelerden doldurur", () => {
+    const b = board5x4();
+    b.cells[0] = null;
+    b.cells[1] = null;
+    const stacks: Tile[][] = [[], [{ uid: 9, photoId: 3, part: 0, hidden: false }], [], [], []];
+    const { board: next, stacks: nextStacks, placed } = refillFromStacks(b, stacks);
+    expect(placed).toHaveLength(1);
+    expect(next.cells[0]?.uid).toBe(9);
+    expect(next.cells[1]).toBeNull();
+    expect(nextStacks[1]).toHaveLength(0);
   });
 
-  it("tallestColumnIndex: en dolu sütunu bulur", () => {
-    const board = emptyBoard(3, 8);
-    board.columns[0] = [piece(1, [0], 2)];
-    board.columns[2] = [piece(1, [0], 3), piece(2, [0], 2)];
-    expect(tallestColumnIndex(board)).toBe(2);
+  it("tahta ve desteler boşken seviye biter", () => {
+    const b = board5x4();
+    expect(isLevelCleared(b, [[], []])).toBe(true);
+    b.cells[3] = { uid: 1, photoId: 1, part: 0, hidden: false };
+    expect(isLevelCleared(b, [[], []])).toBe(false);
+  });
+
+  it("clearPhoto yalnızca o resmin kartlarını kaldırır", () => {
+    const photo = photo2v(1);
+    const b = board5x4();
+    b.cells[0] = { uid: 1, photoId: 1, part: 0, hidden: false };
+    b.cells[5] = { uid: 2, photoId: 1, part: 1, hidden: false };
+    b.cells[6] = { uid: 3, photoId: 2, part: 0, hidden: false };
+    const next = clearPhoto(b, photo);
+    expect(next.cells[0]).toBeNull();
+    expect(next.cells[5]).toBeNull();
+    expect(next.cells[6]?.uid).toBe(3);
+  });
+});
+
+describe("yardımcılar", () => {
+  it("partOffset satır-major konum verir", () => {
+    expect(partOffset({ w: 2, h: 2 }, 0)).toEqual({ dr: 0, dc: 0 });
+    expect(partOffset({ w: 2, h: 2 }, 1)).toEqual({ dr: 0, dc: 1 });
+    expect(partOffset({ w: 2, h: 2 }, 2)).toEqual({ dr: 1, dc: 0 });
+    expect(partOffset({ w: 1, h: 2 }, 1)).toEqual({ dr: 1, dc: 0 });
+  });
+
+  it("puan combo ile katlanır", () => {
+    expect(pointsForPhoto(photo2v(1), 0)).toBe(200);
+    expect(pointsForPhoto(photo2v(1), 2)).toBe(Math.round(200 * 2.25));
   });
 });

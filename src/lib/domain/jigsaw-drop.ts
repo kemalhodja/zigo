@@ -1,291 +1,289 @@
 /**
- * Yapboz Düşüşü v3 — birebir Jigsaw Drop: Solitaire Puzzle kopyası.
+ * Yapboz Düşüşü v4 — gerçek Jigsaw Drop: Solitaire Puzzle klonu.
  *
- * Gerçek oyunun doğrulanmış kuralları:
- *  - ZAMANLAYICI YOK: parçalar kendiliğinden düşmez; oyuncu bir sütuna
- *    dokunur ve sıradaki parça o sütuna anında düşer.
- *  - Her parça belirli bir fotoğrafın dikey dilimidir (yükseklik 1-3).
- *  - Aynı fotoğrafın üst üste gelen dilimleri BİRLEŞİR.
- *  - Fotoğraf tamamlanınca temizlenir → puan + combo ve boşluğa YENİ
- *    PARÇALAR YAĞAR (kaskad dolum) — oyunun imza mekaniği.
- *  - Gizemli kapalı kartlar yerleşince açılır.
- *  - Seviye hedefi: N resim tamamla → seviye biter, galeri gösterilir,
- *    tahta büyür ve yeni bölüm başlar.
- *  - Sihirli Değnek 🪄 boosterı en üst parçayı buğular.
- *  - Oyun sadece tahta tamamen tıkandığında biter (sakin, stressiz).
+ * Doğrulanmış kurallar (mağaza ekran görüntülerinden):
+ *  - 5 sütunluk tahta; üstte her sütun için kapalı kart destesi.
+ *  - Her resim 2-6 karta bölünür (1×2, 2×1, 2×2, 2×3…). Kartlar tahtaya
+ *    dağınık başlar, kalanı destelerdedir.
+ *  - Oyuncu kartları sürükler: boş göze → taşır, dolu göze → TAKAS.
+ *  - Aynı resmin kartları doğru komşulukla dizilince resim TAMAMLANIR →
+ *    temizlenir, puan + combo; boşalan yerlere destelerden KART YAĞAR.
+ *  - Zincirleme tamamlanmalar "Combo Fever" verir.
+ *  - Kapalı (👑) kartlar oyuncu onu hareket ettirince açılır; 💡 ipucu
+ *      hepsini açar.
+ *  - Süre yok, kayıp yok: seviye tüm kartlar temizlenince biter.
  */
 
-export const START_ROWS = 8;
-export const MAX_ROWS = 11;
-export const START_COLS = 4;
-export const MAX_COLS = 6;
+export const BOARD_COLS = 5;
+export const BOARD_ROWS = 4;
+export const EMPTY_SLOTS = 4;
+
+export type Shape = { w: number; h: number };
 
 export type PhotoDef = {
   id: number;
-  /** Emoji stack rendered top-to-bottom inside the photo. */
+  /** shape.w × shape.h adet emoji, satır-major. */
   emojis: string[];
-  /** Tailwind gradient classes for the scene background. */
   gradient: string;
-  /** Total height in cells (2 or 3). */
-  totalHeight: 2 | 3;
+  shape: Shape;
 };
 
 export const PHOTO_LIBRARY: Omit<PhotoDef, "id">[] = [
-  { emojis: ["🌬️", "🏰", "🌾"], gradient: "from-sky-300 to-emerald-300", totalHeight: 3 },
-  { emojis: ["🐄", "🌿"], gradient: "from-lime-300 to-green-500", totalHeight: 2 },
-  { emojis: ["🌊", "⛵"], gradient: "from-cyan-300 to-blue-500", totalHeight: 2 },
-  { emojis: ["🌻", "🪟", "🏛️"], gradient: "from-amber-200 to-orange-400", totalHeight: 3 },
-  { emojis: ["🚲", "🌉"], gradient: "from-orange-300 to-rose-400", totalHeight: 2 },
-  { emojis: ["📻", "🧀"], gradient: "from-yellow-200 to-amber-500", totalHeight: 2 },
-  { emojis: ["☕", "🍎"], gradient: "from-rose-200 to-pink-400", totalHeight: 2 },
-  { emojis: ["🗼", "🕊️", "🌆"], gradient: "from-indigo-300 to-purple-400", totalHeight: 3 },
-  { emojis: ["🍋", "🫙"], gradient: "from-yellow-300 to-lime-400", totalHeight: 2 },
-  { emojis: ["🐦", "☁️", "🌇"], gradient: "from-slate-300 to-sky-400", totalHeight: 3 },
+  { emojis: ["🌤️", "🌊"], gradient: "from-sky-300 to-cyan-500", shape: { w: 1, h: 2 } },
+  { emojis: ["🌸", "🌿"], gradient: "from-pink-300 to-emerald-400", shape: { w: 1, h: 2 } },
+  { emojis: ["🚗", "🛣️"], gradient: "from-rose-300 to-slate-400", shape: { w: 1, h: 2 } },
+  { emojis: ["🏡", "🌳"], gradient: "from-amber-200 to-green-500", shape: { w: 1, h: 2 } },
+  { emojis: ["🐈", "🧶"], gradient: "from-orange-200 to-amber-400", shape: { w: 1, h: 2 } },
+  { emojis: ["🍕", "🥤"], gradient: "from-yellow-300 to-red-400", shape: { w: 2, h: 1 } },
+  { emojis: ["⛄", "🌲"], gradient: "from-sky-200 to-slate-400", shape: { w: 1, h: 2 } },
+  { emojis: ["🍓", "🍰"], gradient: "from-rose-300 to-pink-500", shape: { w: 2, h: 1 } },
+  { emojis: ["🚂", "🛤️"], gradient: "from-emerald-300 to-slate-500", shape: { w: 1, h: 2 } },
+  { emojis: ["🎨", "🖌️"], gradient: "from-violet-300 to-fuchsia-400", shape: { w: 2, h: 1 } },
+  { emojis: ["🎪", "🎠"], gradient: "from-purple-300 to-rose-400", shape: { w: 1, h: 2 } },
+  { emojis: ["🏖️", "🐚", "☀️", "⛱️"], gradient: "from-cyan-300 to-amber-300", shape: { w: 2, h: 2 } },
+  { emojis: ["🦁", "🌾", "☀️", "🌳"], gradient: "from-yellow-300 to-orange-500", shape: { w: 2, h: 2 } },
+  { emojis: ["🎈", "🎪", "🎡", "🎢"], gradient: "from-fuchsia-300 to-indigo-400", shape: { w: 2, h: 2 } },
+  { emojis: ["🍎", "🧺", "🐝", "🌼"], gradient: "from-lime-300 to-red-400", shape: { w: 2, h: 2 } },
+  { emojis: ["🚀", "🌙", "⭐", "🛸"], gradient: "from-indigo-400 to-slate-600", shape: { w: 2, h: 2 } },
+  { emojis: ["🐳", "💧", "🌊", "🐟"], gradient: "from-blue-300 to-cyan-500", shape: { w: 2, h: 2 } },
+  { emojis: ["🦋", "🌷", "🐝", "🌻"], gradient: "from-pink-300 to-yellow-300", shape: { w: 2, h: 2 } },
 ];
 
-export function photosForLevel(level: number): PhotoDef[] {
-  const count = Math.min(4 + Math.floor((level - 1) / 2), PHOTO_LIBRARY.length);
-  const shuffled = [...PHOTO_LIBRARY]
-    .map((p) => ({ p, k: Math.random() }))
-    .sort((a, b) => a.k - b.k)
-    .map(({ p }) => p);
-  return shuffled.slice(0, count).map((p, i) => ({ ...p, id: i + 1 }));
+function shuffle<T>(items: T[], rng: () => number): T[] {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/** Seviyenin resimlerinde izin verilen en fazla kart sayısı (2 → 4 → 6). */
+export function maxPartsForLevel(level: number): number {
+  if (level <= 2) return 2;
+  if (level <= 5) return 4;
+  return 6;
+}
+
+export function photosForLevel(level: number, rng: () => number = Math.random): PhotoDef[] {
+  const maxParts = maxPartsForLevel(level);
+  const count = Math.min(8 + (level - 1) * 2, 16);
+  const eligible = PHOTO_LIBRARY.filter((p) => p.emojis.length <= maxParts);
+  const picked: Omit<PhotoDef, "id">[] = [];
+  let pool = shuffle(eligible, rng);
+  while (picked.length < count) {
+    if (pool.length === 0) pool = shuffle(eligible, rng);
+    picked.push(pool.pop()!);
+  }
+  return picked.slice(0, count).map((p, i) => ({ ...p, id: i + 1 }));
+}
+
+export function colsForLevel(_level: number): number {
+  return BOARD_COLS;
 }
 
 export function rowsForLevel(level: number): number {
-  return Math.min(START_ROWS + Math.max(0, level - 1), MAX_ROWS);
+  return level < 6 ? BOARD_ROWS : BOARD_ROWS + 1;
 }
 
-export function colsForLevel(level: number): number {
-  return Math.min(START_COLS + Math.floor(Math.max(0, level - 1) / 2), MAX_COLS);
+/** Kapalı kart oranı seviyeyle artar. */
+export function hiddenRateForLevel(level: number): number {
+  return Math.min(0.12 + Math.max(0, level - 1) * 0.02, 0.3);
 }
 
-/** Seviyeyi bitirmek için tamamlanması gereken resim sayısı. */
-export function picturesGoalForLevel(level: number): number {
-  return Math.min(2 + Math.floor(Math.max(0, level - 1) / 2), 8);
+/** 💡 ipucu hakları. */
+export function hintChargesForLevel(level: number): number {
+  return 2 + Math.floor(Math.max(0, level - 1) / 2);
 }
 
-/** A placed or queued piece: one vertical slice of a photo. */
-export type Fragment = {
+export type Tile = {
   uid: number;
   photoId: number;
-  /** Which slice of the photo (0-based from top). */
-  slice: number;
-  /** Cell height of this slice. */
-  height: 1 | 2 | 3;
-  /** Mystery card: face-down until placed. */
-  hidden: boolean;
-};
-
-/** A merged stack sitting in a column: one or more contiguous slices. */
-export type PlacedPiece = {
-  photoId: number;
-  /** Sorted slice indices currently held, e.g. [0,1] of a 3-tall photo. */
-  slices: number[];
-  height: number;
+  part: number;
   hidden: boolean;
 };
 
 export type Board = {
   cols: number;
   rows: number;
-  /** Each column is a bottom-up stack of placed pieces. */
-  columns: PlacedPiece[][];
+  cells: (Tile | null)[];
 };
-
-export function emptyBoard(cols: number, rows: number): Board {
-  return { cols, rows, columns: Array.from({ length: cols }, () => []) };
-}
 
 let uidSeq = 1;
 export function resetUids(): void {
   uidSeq = 1;
 }
-
 function nextUid(): number {
   return uidSeq++;
 }
 
-/** Builds the fragment deck for a set of photos (every slice becomes a piece). */
-export function buildDeck(photos: PhotoDef[], rng: () => number = Math.random): Fragment[] {
-  const fragments: Fragment[] = [];
-  for (const photo of photos) {
-    let slice = 0;
-    let remaining = photo.totalHeight;
-    while (remaining > 0) {
-      const h = remaining >= 2 && rng() < 0.45 ? 2 : 1;
-      const height = Math.min(h, remaining) as 1 | 2 | 3;
-      fragments.push({
-        uid: nextUid(),
-        photoId: photo.id,
-        slice,
-        height,
-        hidden: rng() < 0.18, // ~18% arrive face-down
-      });
-      slice += 1;
-      remaining -= height;
-    }
-  }
-  // Shuffle
-  for (let i = fragments.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [fragments[i], fragments[j]] = [fragments[j], fragments[i]];
-  }
-  return fragments;
+export function emptyBoard(cols: number, rows: number): Board {
+  return { cols, rows, cells: Array.from({ length: cols * rows }, () => null) };
 }
 
-export function columnHeight(column: PlacedPiece[]): number {
-  return column.reduce((sum, piece) => sum + piece.height, 0);
+export function cellIndex(board: Board, row: number, col: number): number {
+  return row * board.cols + col;
 }
 
-export function canDrop(board: Board, col: number, fragment: Fragment): boolean {
-  if (col < 0 || col >= board.cols) return false;
-  return columnHeight(board.columns[col]) + fragment.height <= board.rows;
+/** Kartın resim içindeki göreli konumu (satır, sütun). */
+export function partOffset(shape: Shape, part: number): { dr: number; dc: number } {
+  return { dr: Math.floor(part / shape.w), dc: part % shape.w };
 }
 
-/**
- * Drops the fragment onto a column, then resolves merges + completions.
- * Pure: returns new board plus scoring info.
- */
-export function dropFragment(
-  board: Board,
-  col: number,
-  fragment: Fragment,
-): {
+export type LevelSetup = {
+  photos: PhotoDef[];
   board: Board;
-  merged: boolean;
-} {
-  const columns = board.columns.map((c) => [...c]);
-  const column = columns[col];
-
-  let piece: PlacedPiece = {
-    photoId: fragment.photoId,
-    slices: [fragment.slice],
-    height: fragment.height,
-    hidden: fragment.hidden,
-  };
-
-  // Merge with the piece directly below if it is the same photo AND this
-  // fragment is exactly the next slice up (keeps the picture contiguous).
-  const below = column[column.length - 1];
-  if (
-    below &&
-    below.photoId === fragment.photoId &&
-    !below.hidden &&
-    !fragment.hidden &&
-    fragment.slice === Math.min(...below.slices) - 1
-  ) {
-    const mergedSlices = [...new Set([...below.slices, fragment.slice])].sort((a, b) => a - b);
-    piece = {
-      photoId: fragment.photoId,
-      slices: mergedSlices,
-      height: below.height + fragment.height,
-      hidden: false,
-    };
-    column.pop();
-  }
-
-  column.push(piece);
-
-  return { board: { cols: board.cols, rows: board.rows, columns }, merged: piece.slices.length > 1 };
-}
-
-/** Whether a placed piece now contains every slice of its photo. */
-export function isPhotoComplete(piece: PlacedPiece, photo: PhotoDef): boolean {
-  if (piece.hidden) return false;
-  if (piece.slices.length !== photo.totalHeight) return false;
-  for (let s = 0; s < photo.totalHeight; s++) {
-    if (!piece.slices.includes(s)) return false;
-  }
-  return true;
-}
-
-export type DropResolution = {
-  board: Board;
-  completed: boolean;
-  merged: boolean;
-  points: number;
+  stacks: Tile[][];
 };
 
-export function resolveDrop(
-  board: Board,
-  col: number,
-  fragment: Fragment,
-  photo: PhotoDef,
-  combo: number,
-): DropResolution {
-  const { board: nextBoard, merged } = dropFragment(board, col, fragment);
-  const column = nextBoard.columns[col];
-  const top = column[column.length - 1];
+/** Seviyeyi kurar: kartlar tahtaya dağıtılır (EMPTY_SLOTS boş kalır), kalan destelere gider. */
+export function buildLevel(level: number, rng: () => number = Math.random): LevelSetup {
+  const photos = photosForLevel(level, rng);
+  const cols = colsForLevel(level);
+  const rows = rowsForLevel(level);
+  const hiddenRate = hiddenRateForLevel(level);
 
-  if (top && isPhotoComplete(top, photo)) {
-    column.pop();
-    const base = 100 * photo.totalHeight;
-    const points = Math.round(base * Math.pow(1.5, Math.min(combo, 5)));
-    return { board: nextBoard, completed: true, merged, points };
-  }
-
-  return { board: nextBoard, completed: false, merged, points: merged ? 10 : 0 };
-}
-
-/** Klasik kontrol: tek bir parça hiçbir yere sığmıyorsa oyun biter. */
-export function isGameOver(board: Board, fragment: Fragment): boolean {
-  for (let c = 0; c < board.cols; c++) {
-    if (canDrop(board, c, fragment)) return false;
-  }
-  return true;
-}
-
-/**
- * Gerçek oyundaki tıkanma kuralı: sıradaki HİÇBİR parça hiçbir sütuna
- * sığmıyorsa tahta kilitlenmiştir (değnek yoksa oyun biter).
- */
-export function isBoardJammed(board: Board, fragments: Fragment[]): boolean {
-  if (fragments.length === 0) return false;
-  for (const f of fragments) {
-    for (let c = 0; c < board.cols; c++) {
-      if (canDrop(board, c, f)) return false;
+  const cards: Tile[] = [];
+  for (const photo of photos) {
+    for (let part = 0; part < photo.emojis.length; part++) {
+      cards.push({ uid: nextUid(), photoId: photo.id, part, hidden: rng() < hiddenRate });
     }
   }
-  return true;
-}
+  const shuffled = shuffle(cards, rng);
 
-/** En dolu sütunun indeksi (Sihirli Değnek hedefi). */
-export function tallestColumnIndex(board: Board): number {
-  let best = 0;
-  let bestH = -1;
-  for (let c = 0; c < board.cols; c++) {
-    const h = columnHeight(board.columns[c]);
-    if (h > bestH) {
-      bestH = h;
-      best = c;
-    }
+  const board = emptyBoard(cols, rows);
+  const cellCount = cols * rows;
+  const emptyCells = shuffle(
+    Array.from({ length: cellCount }, (_, i) => i),
+    rng,
+  ).slice(0, EMPTY_SLOTS);
+  const emptySet = new Set(emptyCells);
+
+  let cardIdx = 0;
+  for (let i = 0; i < cellCount && cardIdx < shuffled.length; i++) {
+    if (emptySet.has(i)) continue;
+    board.cells[i] = shuffled[cardIdx++];
   }
-  return best;
+
+  // Kalan kartlar 5 desteye dağıtılır
+  const stacks: Tile[][] = Array.from({ length: cols }, () => []);
+  let s = 0;
+  while (cardIdx < shuffled.length) {
+    stacks[s % cols].push(shuffled[cardIdx++]);
+    s += 1;
+  }
+
+  // Başlangıçta tamamlanmış resim olmasın
+  const photoById = new Map(photos.map((p) => [p.id, p]));
+  let guard = 0;
+  let completed = findCompletedPhotos(board, photoById);
+  while (completed.length > 0 && guard < 10) {
+    guard += 1;
+    const photo = completed[0];
+    const positions: number[] = [];
+    board.cells.forEach((t, i) => {
+      if (t && t.photoId === photo.id) positions.push(i);
+    });
+    const movable = positions.find((i) => !board.cells[i]?.hidden) ?? positions[0];
+    const emptyIdx = board.cells.findIndex((c) => c === null);
+    if (emptyIdx >= 0 && movable !== undefined) {
+      const moved = moveTile(board, movable, emptyIdx);
+      board.cells = moved.board.cells;
+    }
+    completed = findCompletedPhotos(board, photoById);
+  }
+
+  return { photos, board, stacks };
 }
 
-/** Değnek etkisi: sütunun EN ÜSTTEKİ yerleşik parçasını buğular. Pure. */
-export function removeTopPiece(
+/** Tahtada doğru dizilmiş (tamamlanmış) resimleri bulur. */
+export function findCompletedPhotos(board: Board, photoById: Map<number, PhotoDef>): PhotoDef[] {
+  const completed: PhotoDef[] = [];
+  for (const photo of photoById.values()) {
+    const positions = new Map<number, number>();
+    board.cells.forEach((tile, idx) => {
+      if (tile && tile.photoId === photo.id) positions.set(tile.part, idx);
+    });
+    if (positions.size !== photo.emojis.length) continue;
+    const anchor = positions.get(0)!;
+    const anchorRow = Math.floor(anchor / board.cols);
+    const anchorCol = anchor % board.cols;
+    const a0 = partOffset(photo.shape, 0);
+    let ok = true;
+    for (let part = 1; part < photo.emojis.length; part++) {
+      const idx = positions.get(part);
+      if (idx === undefined) {
+        ok = false;
+        break;
+      }
+      const { dr, dc } = partOffset(photo.shape, part);
+      const expectRow = anchorRow + dr - a0.dr;
+      const expectCol = anchorCol + dc - a0.dc;
+      if (Math.floor(idx / board.cols) !== expectRow || idx % board.cols !== expectCol) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) completed.push(photo);
+  }
+  return completed;
+}
+
+/** Tamamlanmış resmin kartlarını tahtadan kaldırır. */
+export function clearPhoto(board: Board, photo: PhotoDef): Board {
+  return {
+    ...board,
+    cells: board.cells.map((t) => (t && t.photoId === photo.id ? null : t)),
+  };
+}
+
+/** Boş göze taşı; dolu göze ise TAKAS et. from hücresinde kart olmalı. */
+export function moveTile(
   board: Board,
-  col: number,
-): { board: Board; removed: PlacedPiece | null } {
-  const columns = board.columns.map((c) => [...c]);
-  const removed = columns[col].pop() ?? null;
-  return { board: { cols: board.cols, rows: board.rows, columns }, removed };
+  from: number,
+  to: number,
+): { board: Board; swapped: boolean } {
+  const cells = [...board.cells];
+  const tile = cells[from];
+  const target = cells[to];
+  if (!tile || from === to) return { board, swapped: false };
+  cells[from] = target ?? null;
+  cells[to] = tile;
+  return { board: { ...board, cells }, swapped: target !== null };
 }
 
-/**
- * Kaskad dolum: temizlenen boşluğa düşen taze parçalar. Birleştirme ve
- * tamamlama tetiklemez — tek başına yerleşir (zincir reaksiyon yok).
- * Pure.
- */
-export function placePlain(board: Board, col: number, fragment: Fragment): Board {
-  const columns = board.columns.map((c) => [...c]);
-  columns[col].push({
-    photoId: fragment.photoId,
-    slices: [fragment.slice],
-    height: fragment.height,
-    hidden: false,
-  });
-  return { cols: board.cols, rows: board.rows, columns };
+/** Boş gözeleri destelerden doldurur (en yüklü deste önce). */
+export function refillFromStacks(
+  board: Board,
+  stacks: Tile[][],
+): { board: Board; stacks: Tile[][]; placed: Tile[] } {
+  const nextStacks = stacks.map((s) => [...s]);
+  const cells = [...board.cells];
+  const placed: Tile[] = [];
+  for (let i = 0; i < cells.length; i++) {
+    if (cells[i] !== null) continue;
+    let best = -1;
+    let bestLen = 0;
+    nextStacks.forEach((s, si) => {
+      if (s.length > bestLen) {
+        bestLen = s.length;
+        best = si;
+      }
+    });
+    if (best < 0) break;
+    const tile = nextStacks[best].pop()!;
+    cells[i] = tile;
+    placed.push(tile);
+  }
+  return { board: { ...board, cells }, stacks: nextStacks, placed };
+}
+
+/** Seviye bitti mi: tahta ve desteler boş. */
+export function isLevelCleared(board: Board, stacks: Tile[][]): boolean {
+  if (board.cells.some((c) => c !== null)) return false;
+  return stacks.every((s) => s.length === 0);
+}
+
+export function pointsForPhoto(photo: PhotoDef, combo: number): number {
+  return Math.round(100 * photo.emojis.length * Math.pow(1.5, Math.min(combo, 5)));
 }
