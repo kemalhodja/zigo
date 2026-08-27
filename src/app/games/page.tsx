@@ -13,7 +13,7 @@ export default async function ArcadePage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    redirect("/auth?redirect=/student/games");
+    redirect("/auth?redirect=/games");
   }
 
   let isPremium = false;

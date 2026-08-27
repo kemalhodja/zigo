@@ -130,7 +130,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       {/* Mini Games Arcade Section Link */}
       <div className="-mx-4 border-b border-slate-100 bg-white p-4">
         <Link 
-          href="/student/games" 
+          href="/games" 
           className="tap-scale w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-black text-center py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg shadow-purple-500/30"
         >
           <span className="text-2xl mb-1 drop-shadow-md">🎮</span> 

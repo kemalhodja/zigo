@@ -206,7 +206,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     }).select("id").single();
     
     if (data) {
-        const link = `${window.location.origin}/student/games/taboo?duel=${data.id}`;
+        const link = `${window.location.origin}/games/taboo?duel=${data.id}`;
         setDuelLink(link);
         navigator.clipboard.writeText(link);
         toast.success("Düello linki kopyalandı! Arkadaşına gönder.");

@@ -48,7 +48,7 @@ export function MiniGamesArcadeSection({
                 </div>
             </div>
             <Link
-              href="/student/games/memory"
+              href="/games/memory"
               className="tap-scale shrink-0 bg-white text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-indigo-50 transition-colors"
             >
               Oyna
@@ -73,7 +73,7 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/student/games/blocks"              className="tap-scale shrink-0 bg-white text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-emerald-50 transition-colors"
+              href="/games/blocks"              className="tap-scale shrink-0 bg-white text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-emerald-50 transition-colors"
             >
               Oyna
             </Link>
@@ -97,7 +97,7 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/student/games/pipe"
+              href="/games/pipe"
               className="tap-scale shrink-0 bg-white text-cyan-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-cyan-50 transition-colors"
             >
               Oyna
@@ -122,7 +122,7 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/student/games/math"
+              href="/games/math"
               className="tap-scale shrink-0 bg-white text-rose-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-rose-50 transition-colors"
             >
               Oyna
@@ -147,7 +147,7 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/student/games/word"
+              href="/games/word"
               className="tap-scale shrink-0 bg-white text-teal-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-teal-50 transition-colors"
             >
               Oyna
@@ -173,7 +173,7 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/student/games/taboo"
+              href="/games/taboo"
               className="tap-scale shrink-0 bg-white text-fuchsia-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-fuchsia-50 transition-colors"
             >
               Oyna

@@ -24,7 +24,7 @@ export default async function BlockGamePage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    redirect("/auth?redirect=/student/games/blocks");
+    redirect("/auth?redirect=/games/blocks");
   }
 
   let isPremium = false;

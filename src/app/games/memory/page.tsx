@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { GameSessionTracker } from "@/components/games/game-session-tracker";
 import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
 import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
-import { MathMaster } from "@/components/games/math-master";
+import { ZihinAvcisi } from "@/components/games/zihin-avcisi";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { ROLE_BACK } from "@/lib/domain/role-navigation";
 import { getUserSubscription } from "@/lib/domain/subscription";
@@ -13,16 +13,18 @@ import type { UserRole } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Matematik Ustası · Zigo Oyun",
-  description: "Dört işlemle hızlı düşün, seri yap ve Zigo Puanı kazan.",
+  title: "Zihin Avcısı · Zigo Oyun",
+  description: "Kart eşleştirme oyunuyla görsel hafızanı seviye seviye geliştir.",
 };
 
-export default async function MathGamePage() {
+
+
+export default async function MemoryGamePage() {
   const supabase = await createClient();
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    redirect("/auth?redirect=/student/games/math");
+    redirect("/auth?redirect=/games/memory");
   }
 
   let isPremium = false;
@@ -46,17 +48,17 @@ export default async function MathGamePage() {
           <span>←</span>
           <span>{back.label}</span>
         </Link>
-        <span className="text-xs font-bold text-rose-500">Zigo Analitik Oyunu</span>
+        <span className="text-xs font-bold text-slate-400">Zigo Mini Oyun</span>
       </div>
       <div className="w-full">
         <GameTimeLimitWall backHref={back.href} backLabel={back.label}>
           {isPremium ? (
             <GameSessionTracker enabled={isStudent} userId={profile?.id}>
-              <MathMaster userId={profile?.id} />
+              <ZihinAvcisi userId={profile?.id} />
             </GameSessionTracker>
           ) : (
             <GameSubscriptionPaywall
-              gameTitle="Matematik Ustası"
+              gameTitle="Zihin Avcısı"
               backHref={back.href}
               backLabel={back.label}
               isStudent={isStudent}
@@ -67,3 +69,4 @@ export default async function MathGamePage() {
     </div>
   );
 }
+

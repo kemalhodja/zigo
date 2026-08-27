@@ -152,7 +152,6 @@ import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import {
   type ActiveStory,
   getActiveStories,
-  getExplorePosts,
   getFollowingFeed,
   getSuggestedCreators,
   type SocialFeedPost,
@@ -175,13 +174,7 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     if (!profile) return [];
 
     const feedClient = supabase;
-    let followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
-
-    // Eğer kullanıcının takip ettiği kişilerin hiç gönderisi yoksa (örn. yeni kayıt)
-    // boş ekran yerine global keşfet gönderilerini (popüler olanları) fallback olarak göster.
-    if (followingPosts.length === 0) {
-      followingPosts = await getExplorePosts(supabase, profile.id, "", 30).catch(() => []);
-    }
+    const followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
 
     if (followingPosts.length === 0) return [];
 

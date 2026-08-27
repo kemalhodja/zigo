@@ -194,7 +194,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <div className="mt-4 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 p-4 border border-cyan-100">
               <h3 className="font-black text-cyan-900 text-sm mb-2">Veli Özeti</h3>
               <div className="flex gap-2">
-                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">👨‍👩‍👧 2 Bağlı Profil</span>
+                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">👨‍👩‍👧 {profile.childrenCount ?? 0} Bağlı Profil</span>
                 <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">✅ 0 Bekleyen Onay</span>
               </div>
             </div>
@@ -689,6 +689,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
   avatarUrl: string | null;
   userCreatedAt?: string;
   website_url?: string | null;
+  childrenCount?: number;
 }> {
   const signedOutMessages = await getServerMessages();
   const pf = signedOutMessages.profile;
@@ -730,6 +731,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
     avatarUrl: null as string | null,
     userCreatedAt: undefined as string | undefined,
     website_url: null as string | null,
+    childrenCount: 2,
   };
 
   if (!hasSupabaseEnv()) {
@@ -752,6 +754,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       avatarUrl: null as string | null,
       userCreatedAt: undefined as string | undefined,
       website_url: null as string | null,
+      childrenCount: 0,
     };
   }
 
@@ -774,6 +777,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
         avatarUrl: null as string | null,
         userCreatedAt: undefined as string | undefined,
         website_url: null as string | null,
+        childrenCount: 0,
       };
 
   return withSupabaseFallback(async () => {
@@ -798,17 +802,19 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       avatarUrl: null as string | null,
       userCreatedAt: undefined as string | undefined,
       website_url: null as string | null,
+      childrenCount: 0,
     };
   }
 
-  const [stats, posts, suggested, branches] = await Promise.all([
+  const [stats, posts, suggested, branches, children] = await Promise.all([
     getProfileSocialStats(supabase, profile.id),
     // "market" sekmesinde grid varsayılan gönderileri gösterir; ilanlar ayrı bileşenlerde listelenir.
     getProfileGridPosts(supabase, profile.id, activeTab === "market" ? "posts" : activeTab),
     getProfileSuggestedCreators(supabase, profile.id),
     profile.role === "teacher" ? getUserInterestAreaNames(supabase, profile.id) : Promise.resolve([]),
+    profile.role === "parent" ? getChildProfiles(supabase).catch(() => []) : Promise.resolve([]),
   ]);
-  return { ...toProfileData(profile, stats, posts, branches), suggestedCreators: suggested };
+  return { ...toProfileData(profile, stats, posts, branches), suggestedCreators: suggested, childrenCount: children.length };
   }, previewFallback);
 }
 

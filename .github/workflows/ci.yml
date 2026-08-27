@@ -1,41 +1,320 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, develop]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '22.x'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
 jobs:
-  verify:
+  # ============================================================
+  # QUALITY GATES (run on every PR/push)
+  # ============================================================
+  quality-gates:
+    name: Quality Gates
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: 22
-          cache: npm
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Chromium
-        run: npx playwright install chromium
+      - name: TypeScript strict check
+        run: npm run typecheck
 
-      - name: Repo gates (migrations, smoke, RLS, unit, lint, Playwright)
-        run: npm run test:repo
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder
-          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3005
-          CI: true
+      - name: ESLint
+        run: npm run lint
 
-      - name: Unit coverage gate (40% on critical domain paths)
+      - name: Audit: TypeScript strict
+        run: npm run audit:typescript
+
+      - name: Audit: Security (auth, CORS, env leak, service-role, RLS)
+        run: npm run audit:security
+
+      - name: Audit: Moderation pipeline
+        run: node scripts/moderation-pipeline-audit.mjs
+
+      - name: Audit: Product scope
+        run: npm run audit:product-scope
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Unit tests with coverage
         run: npm run test:unit:coverage
 
-      - name: Production build
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: true
+
+  # ============================================================
+  # FULL AUDIT SUITE (run on main/develop pushes)
+  # ============================================================
+  full-audit:
+    name: Full Audit Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    needs: quality-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run all audits
+        run: npm run audit:all
+
+      - name: Build verification
         run: npm run build:safe
+
+      - name: Full test suite (test:repo)
+        run: npm run test:repo
+
+  # ============================================================
+  # E2E TESTS (run on main/develop pushes)
+  # ============================================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    needs: quality-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build:safe
+
+      - name: Start preview server
+        run: |
+          npm run start &
+          sleep 10
+
+      - name: Run E2E tests
+        run: npm run test:playwright
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+
+  # ============================================================
+  # DEPLOY STAGING (on develop push or manual)
+  # ============================================================
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [full-audit, e2e-tests]
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: https://staging.zigo.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:safe
+
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod=false'
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder
-          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Run staging smoke tests
+        run: npm run test:smoke
+        env:
+          BASE_URL: https://staging.zigo.app
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Staging deployment successful"
+          else
+            echo "❌ Staging deployment failed"
+          fi
+
+  # ============================================================
+  # DEPLOY PRODUCTION (on main push with tag or manual)
+  # ============================================================
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [full-audit, e2e-tests]
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://zigo.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build:safe
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod=true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Android AAB to Play Console (Internal Testing)
+        if: hashFiles('android/app/build/outputs/bundle/release/app-release.aab') != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: com.zigo.app
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+
+      - name: Run production smoke tests
+        run: npm run test:smoke
+        env:
+          BASE_URL: https://zigo.app
+
+      - name: Create GitHub Release
+        if: startsWith(github.event.head_commit.message, 'release:')
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          body: |
+            ## Changes
+            ${{ github.event.head_commit.message }}
+            
+            ## Deployment
+            - Vercel: https://zigo.app
+            - Android: Internal testing track
+          draft: false
+          prerelease: false
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Production deployment successful"
+          else
+            echo "❌ Production deployment failed"
+          fi
+
+  # ============================================================
+  # HETZNER DEPLOY (manual trigger for self-hosted)
+  # ============================================================
+  deploy-hetzner:
+    name: Deploy Hetzner (Self-Hosted)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'workflow_dispatch'
+    environment:
+      name: hetzner
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy to Hetzner
+        run: node scripts/deploy-hetzner.mjs
+        env:
+          HETZNER_SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+          HETZNER_USER: ${{ secrets.HETZNER_USER }}
+
+      - name: Verify deployment
+        run: node scripts/verify-deploy-readiness.mjs
+        env:
+          BASE_URL: https://${{ secrets.HETZNER_DOMAIN }}

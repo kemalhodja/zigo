@@ -21,7 +21,7 @@ export default async function AITabooPage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    redirect("/auth?redirect=/student/games/taboo/ai");
+    redirect("/auth?redirect=/games/taboo/ai");
   }
 
   const sub = await getUserSubscription(supabase, profile.id);
@@ -33,7 +33,7 @@ export default async function AITabooPage() {
 
   return (
     <div className="mx-auto max-w-lg p-4 pb-24 md:p-8">
-      <GameTimeLimitWall backHref="/student/games/taboo" backLabel="Tabu">
+      <GameTimeLimitWall backHref="/games/taboo" backLabel="Tabu">
         {isPremium ? (
           <GameSessionTracker enabled={isStudent} userId={profile.id}>
             <Suspense fallback={<div className="animate-pulse h-96 bg-slate-100 rounded-3xl" />}>

@@ -19,7 +19,7 @@ export default async function TabooModeSelectionPage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    redirect("/auth?redirect=/student/games/taboo");
+    redirect("/auth?redirect=/games/taboo");
   }
 
   const sub = await getUserSubscription(supabase, profile.id);
@@ -54,7 +54,7 @@ export default async function TabooModeSelectionPage() {
             <div className="w-full space-y-4">
               {/* AI Mode */}
               <Link
-                href="/student/games/taboo/ai"
+                href="/games/taboo/ai"
                 className="tap-scale block w-full bg-gradient-to-br from-violet-600 to-fuchsia-600 rounded-3xl p-6 shadow-xl shadow-violet-500/20 hover:scale-[1.02] transition-all"
               >
                 <div className="flex items-center gap-4">
@@ -72,7 +72,7 @@ export default async function TabooModeSelectionPage() {
 
               {/* Classic Mode */}
               <Link
-                href="/student/games/taboo/classic"
+                href="/games/taboo/classic"
                 className="tap-scale block w-full bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 shadow-xl shadow-amber-500/20 hover:scale-[1.02] transition-all"
               >
                 <div className="flex items-center gap-4">

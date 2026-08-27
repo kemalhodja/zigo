@@ -22,7 +22,7 @@ export default async function WordHuntPage() {
   const profile = await getCurrentProfile(supabase);
 
   if (!profile) {
-    redirect("/auth?redirect=/student/games/word");
+    redirect("/auth?redirect=/games/word");
   }
 
   let isPremium = false;

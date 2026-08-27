@@ -72,3 +72,8 @@ export const completeSafeDuelSchema = z.object({
   totalQuestions: z.coerce.number().int().min(1).max(10).default(3),
   areaId: z.coerce.number().int().positive().optional(),
 });
+
+export const shareStudyMomentSchema = z.object({
+  sessionId: z.string().uuid(),
+  caption: z.string().trim().max(280).optional(),
+});

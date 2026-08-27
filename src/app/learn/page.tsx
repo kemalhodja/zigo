@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { DailyMissionsCard } from "@/components/daily-missions-card";
 import { LearnQuizCard } from "@/components/learn-quiz-card";
 import { LearnVideoCard } from "@/components/learn-video-card";
 import { StateCard } from "@/components/state-card";
@@ -109,6 +110,8 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
             <p className="text-sm font-black text-night">{l.habitFromMicro}</p>
           </section>
         ) : null}
+
+        <DailyMissionsCard completedMissions={[]} />
 
         <section className="-mx-4 bg-white px-4 py-4">
           <div className="flex items-end justify-between gap-4">
@@ -385,7 +388,9 @@ function LearnHubSummary({
   const segments = [
     { href: "/micro", label: nav.micro, value: videoCount, tone: "from-crystal to-berry" },
     { href: "/learn", label: lp.hubQuizzes, value: quizCount, tone: "from-aqua to-mint" },
-
+    { href: "/focus", label: nav.focus, value: 0, tone: "from-violet to-fuchsia" },
+    { href: "/duels", label: nav.duels, value: 0, tone: "from-amber to-orange" },
+    { href: "/store", label: nav.store, value: 0, tone: "from-emerald to-teal" },
   ];
 
   return (

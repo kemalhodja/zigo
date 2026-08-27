@@ -20,6 +20,7 @@ type SocialMediaFrameProps = {
   scene?: SocialMediaSceneName;
   alt?: string;
   priority?: boolean;
+  fetchPriority?: "high" | "low" | "auto";
   objectFit?: "contain" | "cover" | "fill";
   scale?: number;
   filterPreset?: MediaFilterPreset;
@@ -44,6 +45,7 @@ export function SocialMediaFrame({
   scene = "math",
   alt = "",
   priority = false,
+  fetchPriority = "auto",
   objectFit = "contain",
   scale = 1,
   filterPreset = "normal",
@@ -184,6 +186,7 @@ export function SocialMediaFrame({
                   alt={alt ? `${alt} (${idx + 1}/${items.length})` : "Media"}
                   className={`bg-slate-100 animate-in fade-in duration-700 transition-all ${fitClass}`}
                   priority={priority && idx === 0}
+                  fetchPriority={fetchPriority}
                   src={url}
                   style={combinedStyle}
                 />
@@ -253,6 +256,7 @@ export function SocialMediaFrame({
             alt={alt || "Media"}
             className={`transition-all duration-200 ${fitClass}`}
             priority={priority}
+            fetchPriority={fetchPriority}
             src={items[0]}
             style={combinedStyle}
           />

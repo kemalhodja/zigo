@@ -69,7 +69,7 @@ export default async function HomePage() {
           </svg>
         </Link>
         <button className="flex items-center gap-1 font-bold text-xl text-night">
-          Senin için
+          Takip edilenler
           <svg aria-hidden="true" className="size-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>

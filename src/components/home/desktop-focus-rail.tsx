@@ -61,7 +61,7 @@ export function DesktopFocusRail() {
             </Link>
           </li>
           <li>
-            <Link href="/student/games/math" className="flex items-center gap-2 transition hover:text-indigo-600">
+            <Link href="/games/math" className="flex items-center gap-2 transition hover:text-indigo-600">
               🧮 Matematik Ustası&apos;nda turnuvaya katıl
             </Link>
           </li>
