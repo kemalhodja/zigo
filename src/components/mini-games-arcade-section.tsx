@@ -158,7 +158,7 @@ export function MiniGamesArcadeSection({
           </div>
         </div>
 
-        {/* Oyun 6: Yapboz Düşüşü (Görsel-Mekânsal Zeka) */}
+{/* Oyun 6: Yapboz Düşüşü (Görsel-Mekânsal Zeka) - SUSPENDED
         <div className="bg-gradient-to-r from-teal-500 to-cyan-600 px-3.5 py-3.5 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition">
           <div className="relative z-10 flex items-center justify-between">
             <div>
@@ -182,6 +182,7 @@ export function MiniGamesArcadeSection({
             🧩
           </div>
         </div>
+        */}
 
 
         {/* Oyun 7: Zigo Tabu (Yasak Kelime) */}
