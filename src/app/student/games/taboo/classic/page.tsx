@@ -1,8 +1,15 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import Link from "next/link";
 
 import { ClassicTabooGame } from "@/components/games/classic-taboo-game";
+import { GameSessionTracker } from "@/components/games/game-session-tracker";
+import { GameSubscriptionPaywall } from "@/components/games/game-subscription-paywall";
+import { GameTimeLimitWall } from "@/components/games/game-time-limit-wall";
+import { getCurrentProfile } from "@/lib/domain/profiles";
+import { ROLE_BACK } from "@/lib/domain/role-navigation";
+import { getUserSubscription } from "@/lib/domain/subscription";
+import type { UserRole } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -12,28 +19,46 @@ export const metadata = {
 
 export default async function ClassicTabooPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const profile = await getCurrentProfile(supabase);
 
-  if (!user) {
+  if (!profile) {
     redirect("/auth?redirect=/student/games/taboo/classic");
   }
+
+  const sub = await getUserSubscription(supabase, profile.id);
+  const isPremium = sub.isPremium;
+
+  const role = (profile.role as UserRole) ?? "student";
+  const back = ROLE_BACK[role] ?? ROLE_BACK.student;
+  const isStudent = role === "student";
 
   return (
     <div className="mx-auto max-w-lg p-4 pb-24 md:p-8 relative">
       {/* Back button */}
-      <Link 
+      <Link
         href="/student/games/taboo"
         className="absolute top-6 left-4 md:left-8 tap-scale w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm border border-slate-100 hover:bg-slate-50 transition"
       >
         ←
       </Link>
-      
+
       <div className="pt-12">
-        <Suspense fallback={<div className="animate-pulse h-[500px] bg-slate-100 rounded-3xl"></div>}>
-          <ClassicTabooGame />
-        </Suspense>
+        <GameTimeLimitWall backHref="/student/games/taboo" backLabel="Tabu">
+          {isPremium ? (
+            <GameSessionTracker enabled={isStudent} userId={profile.id}>
+              <Suspense fallback={<div className="animate-pulse h-[500px] bg-slate-100 rounded-3xl" />}>
+                <ClassicTabooGame />
+              </Suspense>
+            </GameSessionTracker>
+          ) : (
+            <GameSubscriptionPaywall
+              gameTitle="Klasik Tabu"
+              backHref={back.href}
+              backLabel={back.label}
+              isStudent={isStudent}
+            />
+          )}
+        </GameTimeLimitWall>
       </div>
     </div>
   );

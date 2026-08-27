@@ -17,6 +17,7 @@ type ProfileEditFormProps = {
   initialProfile: {
     fullName: string;
     bio: string;
+    websiteUrl: string | null;
     avatarUrl: string | null;
     email: string | null;
     role: UserRole;
@@ -43,6 +44,7 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
 
   const [fullName, setFullName] = useState(initialProfile.fullName);
   const [bio, setBio] = useState(initialProfile.bio);
+  const [websiteUrl, setWebsiteUrl] = useState(initialProfile.websiteUrl || "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialProfile.avatarUrl);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [accountKind, setAccountKind] = useState<RequiredSignupOptionId>(
@@ -145,6 +147,7 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
         body: JSON.stringify({
           fullName: fullName.trim(),
           bio: bio.trim(),
+          websiteUrl: websiteUrl.trim(),
           avatarUrl,
         }),
       });
@@ -295,9 +298,29 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
             className="w-full resize-none rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
           />
           <p className="text-[0.7rem] font-semibold text-slate-500">
-            💡 İpucu: Biyografine Instagram, YouTube veya web sitenin bağlantılarını (`https://...`) ekleyebilirsin. Profilinde tıklanabilir sayfa butonları olarak görünecektir.
+            💡 İpucu: Biyografine seni anlatan kısa bir yazı ekle.
           </p>
         </div>
+
+        {initialProfile.role !== "student" && (
+          <div className="space-y-2">
+            <label htmlFor="website" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+              Web Sitesi (İsteğe Bağlı)
+            </label>
+            <input
+              id="website"
+              type="url"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+              disabled={isSaving}
+              placeholder="https://seninsiten.com veya https://youtube.com/@kanalin"
+              className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
+            />
+            <p className="text-[0.7rem] font-semibold text-slate-500">
+              Profilinde tıklanabilir sayfa butonu olarak görünecektir.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-2 rounded-lg bg-slate-50 px-4 py-3">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{pe.emailLabel}</p>

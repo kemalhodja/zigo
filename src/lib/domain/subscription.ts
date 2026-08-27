@@ -35,7 +35,7 @@ export async function getUserSubscription(
     };
   }
 
-  // 30 Günlük Tam Özellikli Ücretsiz Deneme (Trial) Kontrolü
+  // 7 Günlük Tam Özellikli Ücretsiz Deneme (Trial) Kontrolü
   const { data: user } = await supabase
     .from("users")
     .select("created_at")
@@ -49,9 +49,9 @@ export async function getUserSubscription(
     const createdTime = new Date(user.created_at).getTime();
     const diffTime = Date.now() - createdTime;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays <= 30) {
+    if (diffDays <= 7) {
       isTrialActive = true;
-      trialDaysRemaining = Math.max(0, 30 - diffDays);
+      trialDaysRemaining = Math.max(0, 7 - diffDays);
     }
   }
 

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { untypedFrom } from "@/lib/supabase/untyped-tables";
 
@@ -31,7 +30,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "childProfileId gerekli" }, { status: 400 });
     }
 
-    const admin = createAdminClient() ?? supabase;
+    const admin = supabase;
     const { data } = await untypedFrom(admin, "parent_game_settings")
       .select("*")
       .eq("parent_user_id", authData.user.id)
@@ -67,7 +66,7 @@ export async function POST(request: Request) {
     const body = settingsSchema.parse(await request.json());
 
     // Velinin gerçekten bu child'ın velisi olduğunu doğrula
-    const admin = createAdminClient() ?? supabase;
+    const admin = supabase;
     const { data: child } = await admin
       .from("child_profiles")
       .select("id, parent_id")

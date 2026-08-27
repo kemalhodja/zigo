@@ -294,7 +294,7 @@ function getSignUpStatus(message: string, status?: number) {
 }
 
 function getSignUpSuccessMessage(needsEmailConfirmation: boolean) {
-  const campaignMessage = isSubscriptionCampaignActive() ? " 30 gün ücretsiz deneme süresi ile başlayın." : "";
+  const campaignMessage = isSubscriptionCampaignActive() ? " 7 gün ücretsiz deneme süresi ile başlayın." : "";
   return needsEmailConfirmation
     ? `Hesap oluşturuldu. E-postanı doğrula, ardından giriş yap.${campaignMessage}`
     : `Hesap oluşturuldu. Kuruluma devam et.${campaignMessage}`;

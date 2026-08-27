@@ -67,6 +67,7 @@ export function PostWizard({
 
   // ── Form state ───────────────────────────────────────────────────────
   const [caption, setCaption] = useState("");
+  const [externalUrl, setExternalUrl] = useState("");
   const [selectedAreaId, setSelectedAreaId] = useState<number>(areas[0]?.id ?? 0);
   const [targetGrade, setTargetGrade] = useState("Hepsi (Tüm Sınıflar)");
 
@@ -159,6 +160,7 @@ export function PostWizard({
     if (!caption.trim() || !selectedAreaId || pipeline.isLocked) return;
     await pipeline.run({
       caption: caption.trim(),
+      externalUrl: externalUrl.trim() || undefined,
       areaId: selectedAreaId,
       targetGrade,
       isReel: forceReel || (previews.length === 1 && previews[0].type === "video"),
@@ -207,12 +209,14 @@ export function PostWizard({
           <CaptionStep
             areas={areas}
             caption={caption}
+            externalUrl={externalUrl}
             selectedAreaId={selectedAreaId}
             targetGrade={targetGrade}
             forceReel={forceReel}
             pipelineError={pipeline.error}
             canPublish={caption.trim().length > 0 && selectedAreaId > 0 && !pipeline.isLocked}
             onCaptionChange={setCaption}
+            onExternalUrlChange={setExternalUrl}
             onAreaChange={setSelectedAreaId}
             onGradeChange={setTargetGrade}
             onBack={() => { setStep(1); pipeline.reset(); }}
@@ -384,12 +388,14 @@ function MediaPickerStep({
 type CaptionStepProps = {
   areas: ComposerArea[];
   caption: string;
+  externalUrl: string;
   selectedAreaId: number;
   targetGrade: string;
   forceReel: boolean;
   pipelineError: string | null;
   canPublish: boolean;
   onCaptionChange: (v: string) => void;
+  onExternalUrlChange: (v: string) => void;
   onAreaChange: (id: number) => void;
   onGradeChange: (g: string) => void;
   onBack: () => void;
@@ -400,12 +406,14 @@ type CaptionStepProps = {
 function CaptionStep({
   areas,
   caption,
+  externalUrl,
   selectedAreaId,
   targetGrade,
   forceReel,
   pipelineError,
   canPublish,
   onCaptionChange,
+  onExternalUrlChange,
   onAreaChange,
   onGradeChange,
   onBack,
@@ -499,6 +507,23 @@ function CaptionStep({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── External URL ── */}
+      <div className="px-4 pt-5">
+        <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">
+          Dış Bağlantı (İsteğe Bağlı)
+        </label>
+        <input
+          type="url"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-night placeholder:text-slate-400 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
+          placeholder="https://..."
+          value={externalUrl}
+          onChange={(e) => onExternalUrlChange(e.target.value)}
+        />
+        <p className="mt-1.5 text-[0.65rem] font-bold text-slate-400">
+          Gönderinizde tıklanabilir bir buton olarak görünür.
+        </p>
       </div>
 
       {/* ── Pipeline error + retry ── */}

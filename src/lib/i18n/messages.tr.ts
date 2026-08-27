@@ -265,7 +265,7 @@ export const messagesTr = {
     slide3Title: "Eğitimin Geleceğine Destek Olun 💜",
     slide3Safe: "Zigo, çocuklarınızın güvenliği için bağımsız ve moderasyonlu bir eğitim platformudur.",
     slide3Learn: "Bu güvenli ve kaliteli eğitim ekosistemini sürdürülebilir kılmak için lütfen uygulamamıza abone olarak bize destek olun.",
-    slide3Parent: "🎁 İlk 30 gün içinde %50 indirim fırsatıyla hemen abone olabilir ve tam özellikli denemenin keyfini çıkarabilirsiniz!",
+    slide3Parent: "🎁 İlk 7 gün içinde %50 indirim fırsatıyla hemen abone olabilir ve tam özellikli denemenin keyfini çıkarabilirsiniz!",
     supportCallout: "İndirimli abonelikle güvenli ve odaklı öğrenmeyi destekleyin.",
   },
   preview: {

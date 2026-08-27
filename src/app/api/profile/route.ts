@@ -56,6 +56,7 @@ export async function PATCH(request: Request) {
     const profile = await updateUserProfile(supabase, {
       fullName: body.fullName,
       bio: body.bio,
+      websiteUrl: body.websiteUrl,
       avatarUrl: body.avatarUrl,
       coverUrl: body.coverUrl,
     });

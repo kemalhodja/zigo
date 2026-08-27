@@ -236,7 +236,7 @@ export async function getPublicProfile(
 ) {
   const { data, error } = await supabase
     .from("users")
-    .select("id, full_name, bio, avatar_url, role, is_verified, total_points, avatar_assets, created_at, organization_type")
+    .select("id, full_name, bio, avatar_url, role, is_verified, total_points, avatar_assets, created_at, organization_type, website_url")
     .eq("id", userId)
     .maybeSingle();
 

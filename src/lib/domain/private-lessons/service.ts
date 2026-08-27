@@ -25,7 +25,7 @@ type LessonPostStatusRow = {
 
 /**
  * Veli için özel ders ilanı oluşturur.
- * Kural: Sadece parent rolündeki ve Zigo Plus / 30 günlük Trial sahibi veliler ilan verebilir.
+ * Kural: Sadece parent rolündeki ve Zigo Plus / 7 günlük Trial sahibi veliler ilan verebilir.
  */
 export async function createPrivateLessonPost(
   supabase: SupabaseClient<Database>,
@@ -45,11 +45,11 @@ export async function createPrivateLessonPost(
     throw new DomainForbiddenError("Özel ders ilanı yalnızca veli hesapları tarafından oluşturulabilir.");
   }
 
-  // 2. Abonelik kontrolü (Zigo Plus / 30 Günlük Deneme)
+  // 2. Abonelik kontrolü (Zigo Plus / 7 Günlük Deneme)
   const subscription = await getUserSubscription(supabase, parentId);
   if (!subscription.isPremium) {
     throw new DomainForbiddenError(
-      "Özel ders ilanı oluşturmak için Zigo Plus Veli Aboneliği gereklidir. İlk 30 gün ücretsiz deneyebilirsiniz.",
+      "Özel ders ilanı oluşturmak için Zigo Plus Veli Aboneliği gereklidir. İlk 7 gün ücretsiz deneyebilirsiniz.",
     );
   }
 
@@ -159,7 +159,7 @@ export async function getBidsForLessonPost(
  * Öğretmen için branşına uygun açık özel ders ilanlarını getirir.
  * Kural:
  * 1. Öğretmenin en az 1 branşı olmalıdır.
- * 2. Öğretmen Zigo Plus / 30 günlük trial sahibi olmalıdır.
+ * 2. Öğretmen Zigo Plus / 7 günlük trial sahibi olmalıdır.
  * 3. İlanlar öğretmenin branş alanlarıyla eşleşenler olarak listelenir.
  */
 export async function getMatchedLessonPostsForTeacher(

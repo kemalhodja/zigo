@@ -160,7 +160,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               {profile.bio}
             </p>
           ) : null}
-          <ProfileSocialLinks bio={profile.bio} />
+          <ProfileSocialLinks bio={profile.bio} websiteUrl={profile.website_url} />
           
           {/* Instagram-style Highlights */}
           <div className="mt-6 -mx-4 px-4 overflow-x-auto hide-scrollbar flex gap-4 pb-2">
@@ -688,6 +688,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
   isSignedOut: boolean;
   avatarUrl: string | null;
   userCreatedAt?: string;
+  website_url?: string | null;
 }> {
   const signedOutMessages = await getServerMessages();
   const pf = signedOutMessages.profile;
@@ -728,6 +729,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
     isSignedOut: false,
     avatarUrl: null as string | null,
     userCreatedAt: undefined as string | undefined,
+    website_url: null as string | null,
   };
 
   if (!hasSupabaseEnv()) {
@@ -749,6 +751,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       isSignedOut: true,
       avatarUrl: null as string | null,
       userCreatedAt: undefined as string | undefined,
+      website_url: null as string | null,
     };
   }
 
@@ -770,6 +773,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
         isSignedOut: true,
         avatarUrl: null as string | null,
         userCreatedAt: undefined as string | undefined,
+        website_url: null as string | null,
       };
 
   return withSupabaseFallback(async () => {
@@ -793,6 +797,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       isSignedOut: true,
       avatarUrl: null as string | null,
       userCreatedAt: undefined as string | undefined,
+      website_url: null as string | null,
     };
   }
 
@@ -886,5 +891,6 @@ function toProfileData(
     isSignedOut: false,
     avatarUrl: profile.avatar_url || null,
     userCreatedAt: profile.created_at ?? undefined,
+    website_url: (profile as unknown as { website_url?: string | null }).website_url ?? null,
   };
 }

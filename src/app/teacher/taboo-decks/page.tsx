@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/toast-system";
 import { Loader2 } from "lucide-react";
+import { useEffect,useState } from "react";
+
+import { useToast } from "@/components/ui/toast-system";
+import { createClient } from "@/lib/supabase/client";
+import { looseFrom } from "@/lib/supabase/untyped-tables";
+
+export interface TabooDeck {
+  id: string;
+  teacher_id: string;
+  title: string;
+  category: string;
+  code: string;
+}
 
 export default function TeacherTabooDecks() {
-  const [decks, setDecks] = useState<any[]>([]);
+  const [decks, setDecks] = useState<TabooDeck[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState("Fen Bilimleri");
@@ -22,8 +32,7 @@ export default function TeacherTabooDecks() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error }: any = await supabase
-      .from("taboo_custom_decks" as any)
+    const { data, error } = await looseFrom<TabooDeck>(supabase, "taboo_custom_decks")
       .select("*")
       .eq("teacher_id", user.id)
       .order("created_at", { ascending: false });
@@ -47,8 +56,7 @@ export default function TeacherTabooDecks() {
     // Generate random short code
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    const { error } = await supabase
-      .from("taboo_custom_decks" as any)
+    const { error } = await looseFrom(supabase, "taboo_custom_decks")
       .insert({
         teacher_id: user.id,
         title: newTitle,

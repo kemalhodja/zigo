@@ -85,7 +85,7 @@ export function GooglePlaySubscriptionModal({
 
           {isWithinTrialWindow && (
             <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-              <p className="text-sm font-bold text-emerald-700">🎉 İlk 30 güne özel %50 indirim uygulandı!</p>
+              <p className="text-sm font-bold text-emerald-700">🎉 İlk 7 güne özel %50 indirim uygulandı!</p>
             </div>
           )}
 

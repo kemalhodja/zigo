@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { captureServerEvent } from "@/lib/server/analytics";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
@@ -18,7 +17,7 @@ export async function POST() {
       return NextResponse.json({ error: "Sadece öğrenciler Pomodoro puanı kazanabilir." }, { status: 403 });
     }
 
-    const adminSupabase = createAdminClient();
+    const adminSupabase = supabase;
     if (!adminSupabase) {
       return NextResponse.json({ error: "Service role missing" }, { status: 500 });
     }

@@ -56,6 +56,7 @@ export type DisplayPost = {
   locationName?: string | null;
   city?: string | null;
   district?: string | null;
+  externalUrl?: string | null;
 };
 
 export type DisplaySuggestedCreator = {
@@ -159,7 +160,6 @@ import {
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
-import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getHomePosts(): Promise<DisplayPost[]> {
@@ -174,9 +174,7 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     const profile = await getCachedUserProfile();
     if (!profile) return [];
 
-    // Use admin client for getFollowingFeed to bypass RLS which restricts
-    // posts to area-matched content — followers' posts need unrestricted read access
-    const feedClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+    const feedClient = supabase;
     let followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
 
     // Eğer kullanıcının takip ettiği kişilerin hiç gönderisi yoksa (örn. yeni kayıt)
@@ -395,6 +393,7 @@ export function toDisplayPost(
     locationName: (post as unknown as { location_name?: string | null }).location_name ?? null,
     city: (post as unknown as { city?: string | null }).city ?? null,
     district: (post as unknown as { district?: string | null }).district ?? null,
+    externalUrl: (post as unknown as { external_url?: string | null }).external_url ?? null,
   };
 }
 

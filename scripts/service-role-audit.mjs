@@ -24,7 +24,11 @@ const ALLOWED_ADMIN_IMPORTS = new Set([
   "src/app/post/[id]/page.tsx",
   "src/app/profile/[id]/page.tsx",
   "src/app/api/billing/google-play/webhook/route.ts",
-  "src/app/api/billing/role-upgrade/route.ts"
+  "src/app/api/billing/role-upgrade/route.ts",
+  "src/app/api/account/parental-consent/decide/route.ts",
+  "src/app/api/account/parental-consent/route.ts",
+  "src/app/api/cron/churn-reengagement/route.ts",
+  "src/app/api/cron/trial-reminders/route.ts"
 ]);
 
 const ALLOWED_SERVICE_ROLE_MENTIONS = new Set([

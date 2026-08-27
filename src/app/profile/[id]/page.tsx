@@ -195,7 +195,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 {profile.bio}
               </p>
             ) : null}
-            <ProfileSocialLinks bio={profile.bio} />
+            <ProfileSocialLinks bio={profile.bio} websiteUrl={profile.website_url} />
             {profile.role === "teacher" ? (
               <div className="mt-3">
                 <TeacherTrustBadges

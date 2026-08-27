@@ -182,7 +182,7 @@ export function FirstLaunchWelcome() {
               <SubscribeButton
                 buttonText="🎁 %50 İndirimle Abone Ol & Bize Destek Ol"
                 className="w-full tap-scale rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 px-4 py-3.5 text-center text-sm font-black text-white shadow-lg shadow-pink-500/25 transition-all hover:brightness-110"
-                onSuccess={() => finish()}
+                onClick={() => finish()}
               />
             </div>
           ) : null}

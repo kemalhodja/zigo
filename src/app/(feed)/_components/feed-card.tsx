@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheckIcon, CheckCircle2Icon,MessageCircleQuestionIcon } from "lucide-react";
+import { BadgeCheckIcon, CheckCircle2Icon, ExternalLinkIcon, MessageCircleQuestionIcon } from "lucide-react";
 import Image from "next/image";
 
 /**
@@ -28,6 +28,8 @@ interface FeedCardProps {
   };
   /** Formatted time string (e.g., "1s", "2h", "5d") */
   timeAgo?: string;
+  /** External URL associated with the post */
+  externalUrl?: string | null;
 }
 
 /**
@@ -41,7 +43,8 @@ export function FeedCard({
   xpEarned,
   body,
   engagement = { understandCount: 0, questionCount: 0 },
-  timeAgo = "1s"
+  timeAgo = "1s",
+  externalUrl
 }: FeedCardProps) {
   const isEducator = role === "teacher" || role === "institution" || role === "publisher";
   
@@ -100,6 +103,24 @@ export function FeedCard({
       <div className="mt-4 text-[15px] leading-relaxed text-slate-700 whitespace-pre-wrap">
         {body}
       </div>
+
+      {/* External Link */}
+      {externalUrl && (
+        <a 
+          href={externalUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="mt-3 flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors hover:bg-slate-100 active:scale-[0.98]"
+        >
+          <div className="flex flex-col truncate">
+            <span className="text-sm font-bold text-slate-800">Bağlantıyı Ziyaret Et</span>
+            <span className="truncate text-xs font-semibold text-slate-500">{externalUrl}</span>
+          </div>
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <ExternalLinkIcon className="h-4 w-4 text-slate-600" />
+          </div>
+        </a>
+      )}
 
       {/* Footer / Actions */}
       <div className="mt-5 flex items-center gap-4 border-t border-slate-100 pt-3">

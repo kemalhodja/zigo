@@ -60,6 +60,7 @@ export default async function ProfileEditPage() {
           initialProfile={{
             fullName: profile.full_name,
             bio: profile.bio || "",
+            websiteUrl: profile.website_url || null,
             avatarUrl: profile.avatar_url || null,
             email: user?.email ?? null,
             role: profile.role,

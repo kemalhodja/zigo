@@ -1,5 +1,6 @@
 "use client";
 
+import { ExternalLinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -47,6 +48,24 @@ export function FeedPostCard({
         <div className="mt-2">
           <ExpandableCaption caption={post.caption} handle={post.handle} theme="light" />
         </div>
+        {post.externalUrl && (
+          <div className="px-4 mt-3">
+            <a 
+              href={post.externalUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors hover:bg-slate-100 active:scale-[0.98]"
+            >
+              <div className="flex flex-col truncate">
+                <span className="text-sm font-bold text-slate-800">Bağlantıyı Ziyaret Et</span>
+                <span className="truncate text-xs font-semibold text-slate-500">{post.externalUrl}</span>
+              </div>
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                <ExternalLinkIcon className="h-4 w-4 text-slate-600" />
+              </div>
+            </a>
+          </div>
+        )}
         <div className="px-4 mt-1">
           <p className="text-zigo-meta font-semibold uppercase tracking-wide text-slate-500">
             {formatFeedTimestamp(post.createdAt)}

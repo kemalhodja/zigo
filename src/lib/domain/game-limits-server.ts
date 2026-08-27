@@ -6,7 +6,7 @@ import {
   settingsFromParentRow,
 } from "@/lib/domain/game-limits";
 import { readActiveChildProfileId } from "@/lib/server/active-child-profile";
-import { createAdminClient } from "@/lib/supabase/admin";
+
 
 type ParentSettingsRow = {
   daily_limit_minutes?: number | null;
@@ -15,9 +15,12 @@ type ParentSettingsRow = {
   night_ban_end?: string | null;
 };
 
+import { createClient } from "@/lib/supabase/server";
+
 /** Veli oturumunda seçili child_profile için parent_game_settings okur; yoksa varsayılan. */
 export async function resolveStudentGameLimits(): Promise<GameLimitSettings> {
-  const admin = createAdminClient();
+  const supabase = await createClient();
+  const admin = supabase;
   if (!admin) return { ...DEFAULT_GAME_LIMITS };
 
   const cookieStore = await cookies();

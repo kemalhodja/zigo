@@ -40,6 +40,7 @@ export const updateUserProfileSchema = z
   .object({
     fullName: z.string().trim().min(2).max(100).optional(),
     bio: z.string().trim().max(500).optional(),
+    websiteUrl: z.union([z.string().trim().url(), z.literal(""), z.null()]).optional(),
     avatarUrl: z.string().trim().max(250000).optional().nullable(),
     coverUrl: z.string().trim().max(250000).optional().nullable(),
   })
@@ -47,10 +48,11 @@ export const updateUserProfileSchema = z
     (value) =>
       value.fullName !== undefined ||
       value.bio !== undefined ||
+      value.websiteUrl !== undefined ||
       value.avatarUrl !== undefined ||
       value.coverUrl !== undefined,
     {
-      message: "Provide fullName, bio, avatarUrl or coverUrl to update.",
+      message: "Provide fullName, bio, websiteUrl, avatarUrl or coverUrl to update.",
     },
   );
 
@@ -200,6 +202,7 @@ export async function updateUserProfile(
 
   const { data, error } = await supabase.rpc("update_user_profile", {
     ...(safeBio !== undefined ? { next_bio: safeBio ?? undefined } : {}),
+    ...(parsed.websiteUrl !== undefined ? { next_website_url: parsed.websiteUrl === "" ? null : parsed.websiteUrl } : {}),
     ...(parsed.avatarUrl !== undefined ? { next_avatar_url: parsed.avatarUrl ?? undefined } : {}),
     ...(parsed.fullName !== undefined ? { next_full_name: parsed.fullName } : {}),
   });

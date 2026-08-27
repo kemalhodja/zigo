@@ -100,10 +100,10 @@ export default async function HomePage() {
                 Zigo'ya Hoş Geldiniz
               </div>
               <h1 className="text-3xl md:text-4xl font-black leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-violet-100 to-fuchsia-200">
-                Zigo Plus'ı 30 Gün Ücretsiz Deneyin!
+                Zigo Plus'ı 7 Gün Ücretsiz Deneyin!
               </h1>
               <p className="text-sm md:text-base font-medium text-slate-300 max-w-xl">
-                Kayıt olduktan sonraki ilk 30 gün içinde <strong className="text-fuchsia-400">%50 İndirim Fırsatını</strong> kaçırmayın. Sınırsız deneme çözümleri ve ödüller sizi bekliyor.
+                Kayıt olduktan sonraki ilk 7 gün içinde <strong className="text-fuchsia-400">%50 İndirim Fırsatını</strong> kaçırmayın. Sınırsız deneme çözümleri ve ödüller sizi bekliyor.
               </p>
             </div>
             <div className="w-full md:w-auto flex-shrink-0">

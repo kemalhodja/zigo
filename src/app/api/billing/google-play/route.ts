@@ -57,9 +57,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // Default to 30 days trial/subscription period if expiry time is not set
+    // Default to 7 days trial/subscription period if expiry time is not set
     const now = new Date();
-    const defaultExpiry = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const defaultExpiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const finalExpiryTime = verifiedExpiryTime || defaultExpiry;
 
     // 1. Record Google Play Purchase via RPC
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Google Play ZigoPlus aboneliğiniz ve 30 günlük denemeniz aktifleştirildi!",
+      message: "Google Play ZigoPlus aboneliğiniz ve 7 günlük denemeniz aktifleştirildi!",
       data: {
         userId: profile.id,
         productId: body.productId,

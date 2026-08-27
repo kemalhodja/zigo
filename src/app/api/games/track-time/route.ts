@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 function turkeyDateString() {
@@ -25,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Geçersiz süre" }, { status: 400 });
     }
 
-    const admin = createAdminClient() ?? supabase;
+    const admin = supabase;
 
     const { data: userData } = await admin
       .from("users")

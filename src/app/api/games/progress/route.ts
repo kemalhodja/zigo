@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { looseFrom } from "@/lib/supabase/untyped-tables";
 
@@ -12,7 +11,7 @@ type GameType =
   | "word_hunt"
   | "zihin_avcisi"
   | "math_master"
-  | "jigsaw_drop";
+  | "taboo";
 
 const VALID_GAME_TYPES = new Set<string>([
   "memory_card",
@@ -21,7 +20,7 @@ const VALID_GAME_TYPES = new Set<string>([
   "word_hunt",
   "zihin_avcisi",
   "math_master",
-  "jigsaw_drop",
+  "taboo",
 ]);
 
 /** Generous anti-cheat ceilings — legit play never approaches these. */
@@ -120,7 +119,7 @@ async function handlePost(req: NextRequest) {
   const newLastLevel = Math.max(level, existing?.last_level ?? 0);
   const newTotalPlays = (existing?.total_plays ?? 0) + 1;
 
-  const adminClient = createAdminClient() || supabase;
+  const adminClient = supabase || supabase;
 
   let error;
   if (existing) {

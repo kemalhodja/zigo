@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { looseFrom } from "@/lib/supabase/untyped-tables";
 
@@ -28,7 +27,7 @@ export async function GET(req: NextRequest) {
 }
 
 async function handleLeaderboard(req: NextRequest) {
-  const supabase = createAdminClient() || await createClient();
+  const supabase = await createClient();
   const gameType = req.nextUrl.searchParams.get("game_type");
 
   if (!gameType) {

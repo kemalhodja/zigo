@@ -4,7 +4,7 @@
  * 
  * Manages ad-free state, premium subscriptions, and ad-gate logic for Zigo.
  * Enforces Zigo's No Ads Policy: All users operate in an ad-free experience
- * powered by subscriptions and 30-day full trials.
+ * powered by subscriptions and 7-day full trials.
  */
 
 import { decideAdGate } from "@/lib/domain/ad-gate";
@@ -186,7 +186,7 @@ export async function getTotalAdFreeHours(userId: string): Promise<number> {
 }
 
 /**
- * Check if user is in 30-day trial period
+ * Check if user is in 7-day trial period
  */
 export async function isUserInTrial(userId: string): Promise<boolean> {
   const supabase = await createClient();
@@ -203,10 +203,10 @@ export async function isUserInTrial(userId: string): Promise<boolean> {
 
   if (data.created_at) {
     const createdDate = new Date(data.created_at);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    return createdDate > thirtyDaysAgo;
+    return createdDate > sevenDaysAgo;
   }
 
   return false;
@@ -221,14 +221,14 @@ export async function autoDowngradeExpiredTrials(): Promise<{
 }> {
   const supabase = await createClient();
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const { data: expiredTrialUsers, error: fetchError } = await supabase
     .from("users")
     .select("id")
     .eq("is_premium", true)
-    .lt("created_at", thirtyDaysAgo.toISOString());
+    .lt("created_at", sevenDaysAgo.toISOString());
 
   if (fetchError || !expiredTrialUsers) {
     return {

@@ -1,23 +1,58 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { useCallback,useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
 import { useGameProgress } from "@/hooks/use-game-progress";
 import { 
   checkTabooGuess, 
+  getAvailableCategories,
   getRandomDescription, 
   getRandomTabooCard, 
   pointsForTaboo, 
-  getAvailableCategories,
   type TabooCard} from "@/lib/domain/taboo";
+import { createClient } from "@/lib/supabase/client";
+import { looseFrom } from "@/lib/supabase/untyped-tables";
+
+interface SpeechRecognitionEvent extends Event {
+  results: { 0: { transcript: string } }[];
+}
+
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onstart: (event: Event) => void;
+  onend: (event: Event) => void;
+  onerror: (event: Event) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  start(): void;
+  stop(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
 
 import { GameSoundToggle } from "./game-sound-toggle";
 import { LeaderboardModal } from "./leaderboard-modal";
-import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { useToast } from "@/components/ui/toast-system";
+
+export interface DuelData {
+  id?: string;
+  category?: string;
+  challenger_score?: number;
+  challenger_combo?: number;
+}
 
 const ROUND_TIME = 60;
 
@@ -39,7 +74,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
   
   const [deckCodeInput, setDeckCodeInput] = useState("");
   const [customCards, setCustomCards] = useState<TabooCard[] | null>(null);
-  const [duelData, setDuelData] = useState<any>(null);
+  const [duelData, setDuelData] = useState<DuelData | null>(null);
   const [isGeneratingDuel, setIsGeneratingDuel] = useState(false);
   const [duelLink, setDuelLink] = useState("");
 
@@ -91,10 +126,10 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     const deck = searchParams.get("deck");
     
     if (duelId) {
-       supabase.from("taboo_duels" as any).select("*").eq("id", duelId).single().then(({data}: any) => {
+       looseFrom(supabase, "taboo_duels").select("*").eq("id", duelId).single().then(({data}) => {
           if (data) {
              setDuelData(data);
-             setSelectedCategory(data.category || "Tümü");
+             setSelectedCategory((data as { category?: string }).category || "Tümü");
              toast.success("Meydan okumaya katıldın! Hazırsan başla.");
           }
        });
@@ -107,23 +142,26 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
   const loadDeck = async (code: string) => {
      if (!code.trim()) return;
-     const { data, error }: any = await supabase.from("taboo_custom_decks" as any).select("*").eq("code", code.toUpperCase()).single();
-     if (deck) {
-        const { data: cards } = await supabase.from("taboo_custom_cards" as any).select("*").eq("deck_id", deck.id);
+     const { data, error } = await looseFrom(supabase, "taboo_custom_decks").select("*").eq("code", code.toUpperCase()).single();
+     if (error) {
+        toast.error("Geçersiz deste kodu.");
+        return;
+     }
+     if (data) {
+        const { data: cards } = await looseFrom(supabase, "taboo_custom_cards").select("*").eq("deck_id", data.id);
         if (cards && cards.length > 0) {
-           setCustomCards(cards.map((c: any) => ({
+           setCustomCards((cards as {id: string, word: string, forbidden_words: string[]}[]).map((c) => ({
               id: c.id,
               word: c.word,
-              category: deck.category,
-              forbidden: c.forbidden_words
+              category: (data as { category?: string }).category as "Genel Kültür", // Casting to a valid literal
+              forbidden: c.forbidden_words,
+              aiDescriptions: ["Özel deste açıklaması"]
            })));
-           setSelectedCategory(deck.title);
+           setSelectedCategory((data as { title?: string }).title || "Özel Deste");
            toast.success("Özel deste başarıyla yüklendi!");
         } else {
            toast.error("Bu destede hiç kart yok!");
         }
-     } else {
-        toast.error("Geçersiz deste kodu.");
      }
   };
 
@@ -159,7 +197,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     setIsGeneratingDuel(true);
     const { data: { user } } = await supabase.auth.getUser();
     
-    const { data, error }: any = await supabase.from("taboo_duels" as any).insert({
+    const { data } = await looseFrom(supabase, "taboo_duels").insert({
         challenger_id: user?.id || userId,
         challenger_score: score,
         challenger_combo: combo,
@@ -225,13 +263,13 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     if (isListening) return; // Prevent multiple starts
     
     try {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognition) {
+      const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognitionConstructor) {
         alert("Tarayıcınız sesli komutu desteklemiyor. (Chrome/Safari tavsiye edilir)");
         return;
       }
       
-      const recognition = new SpeechRecognition();
+      const recognition = new SpeechRecognitionConstructor();
       recognition.lang = "tr-TR";
       recognition.continuous = false;
       recognition.interimResults = false;
@@ -240,7 +278,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
       recognition.onend = () => setIsListening(false);
       recognition.onerror = () => setIsListening(false);
       
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         setGuessInput(transcript.replace(/\.$/, '')); // strip trailing dot
         // Optionally auto-submit:
@@ -367,7 +405,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
             {duelData && (
               <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 mb-4">
                 <p className="text-xs font-black text-amber-600 uppercase mb-1">Meydan Okuma Modu ⚔️</p>
-                <p className="text-sm font-bold text-slate-700">Arkadaşın <strong>{duelData.challenger_score}</strong> puan yaptı. Onu geçebilir misin?</p>
+                <p className="text-xl font-bold text-violet-700 mt-2">Puanı: {(duelData as { challenger_score?: number })?.challenger_score || 0}</p>
               </div>
             )}
 
@@ -394,10 +432,10 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
               )}
               {duelData && (
                 <div className="mt-4 pt-4 border-t border-violet-200">
-                   {score > duelData.challenger_score ? (
-                      <p className="text-emerald-500 font-black text-lg">🎉 KAZANDIN! Arkadaşını ({duelData.challenger_score}) geçtin!</p>
+                   {score > ((duelData as { challenger_score?: number })?.challenger_score || 0) ? (
+                      <p className="text-emerald-500 font-black text-lg">🎉 KAZANDIN! Arkadaşını ({(duelData as { challenger_score?: number })?.challenger_score || 0}) geçtin!</p>
                    ) : (
-                      <p className="text-rose-500 font-black text-lg">💀 KAYBETTİN! Arkadaşın ({duelData.challenger_score}) seni yendi.</p>
+                      <p className="text-rose-500 font-black text-lg">💀 KAYBETTİN! Arkadaşın ({(duelData as { challenger_score?: number })?.challenger_score || 0}) seni yendi.</p>
                    )}
                 </div>
               )}

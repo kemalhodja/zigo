@@ -39,7 +39,7 @@ export const teacherCampaignSchema = z.object({
   ]),
   isPublished: z.boolean().default(false),
   isSponsored: z.boolean().default(false),
-  sponsoredPackageDays: z.union([z.literal(7), z.literal(30)]).default(30),
+  sponsoredPackageDays: z.union([z.literal(7), z.literal(30)]).default(7),
   sponsoredTargeting: sponsoredTargetingSchema.optional(),
 });
 

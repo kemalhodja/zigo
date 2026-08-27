@@ -2,15 +2,26 @@
 
 type ProfileSocialLinksProps = {
   bio?: string | null;
+  websiteUrl?: string | null;
 };
 
-export function ProfileSocialLinks({ bio }: ProfileSocialLinksProps) {
-  if (!bio) return null;
+export function ProfileSocialLinks({ bio, websiteUrl }: ProfileSocialLinksProps) {
+  if (!bio && !websiteUrl) return null;
 
-  const urlMatches = bio.match(/https?:\/\/[^\s]+/g);
-  if (!urlMatches || urlMatches.length === 0) return null;
+  const urlMatches = bio ? bio.match(/https?:\/\/[^\s]+/g) : null;
+  const validLinks = new Set<string>();
+  
+  if (urlMatches) {
+    urlMatches.forEach(u => validLinks.add(u));
+  }
+  
+  if (websiteUrl) {
+    validLinks.add(websiteUrl);
+  }
 
-  const links = Array.from(new Set(urlMatches)).map((url) => {
+  if (validLinks.size === 0) return null;
+
+  const links = Array.from(validLinks).map((url) => {
     const cleanUrl = url.trim();
     let label = "Web Sitesi";
     let icon = "globe";

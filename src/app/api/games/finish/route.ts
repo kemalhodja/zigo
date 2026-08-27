@@ -29,8 +29,7 @@ export async function POST(request: Request) {
         const calculatedPoints = Math.floor(safeScore / 10);
         const requestedPoints = Math.min(100, calculatedPoints);
 
-        const admin = (await import("@/lib/supabase/admin")).createAdminClient();
-        const dbClient = admin ?? supabase;
+        const dbClient = supabase;
 
         // 🔒 Anti-farm: günlük XP tavanı + bitişler arası cooldown.
         const DAILY_XP_CAP = 300;
@@ -73,8 +72,7 @@ export async function POST(request: Request) {
         // 🕹️ Günlük oyun süresi takibi (oturum sonu — useGameSessionTimer ana kaynak)
         if (played_seconds && typeof played_seconds === "number" && played_seconds > 0) {
           const safeSeconds = Math.min(Math.floor(played_seconds), 7200);
-          const admin = (await import("@/lib/supabase/admin")).createAdminClient();
-          const dbClient = admin ?? supabase;
+          const dbClient = supabase;
 
           await (dbClient as unknown as {
             rpc: (

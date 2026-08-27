@@ -266,7 +266,7 @@ export const messagesEn: Messages = {
     slide3Title: "Support the Future of Education 💜",
     slide3Safe: "Zigo is an independent platform that accepts zero ads to keep students safe.",
     slide3Learn: "To help us sustain this safe educational ecosystem, please support us by subscribing to our application.",
-    slide3Parent: "🎁 Get a 50% discount when subscribing within your first 30 days!",
+    slide3Parent: "🎁 Get a 50% discount when subscribing within your first 7 days!",
     supportCallout: "Support ad-free, safe learning with a discounted subscription.",
   },
   preview: {

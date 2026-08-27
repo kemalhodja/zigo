@@ -9,7 +9,7 @@ export type GameType =
   | "word_hunt"
   | "zihin_avcisi"
   | "math_master"
-  | "jigsaw_drop";
+  | "taboo";
 
 export type GameProgressRow = {
   user_id: string;
@@ -103,6 +103,7 @@ export type LooseTableBuilder<T = Record<string, unknown>> = {
     values: Record<string, unknown>,
     options?: { onConflict?: string },
   ) => Exec<null>;
+  delete: () => LooseChain<null>;
 };
 
 export function looseFrom<T = Record<string, unknown>>(

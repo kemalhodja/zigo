@@ -43,6 +43,7 @@ export function FeedContainer({ posts }: FeedContainerProps) {
             verified={post.verified}
             xpEarned={post.verified ? undefined : 10}
             body={post.caption || "Örnek içerik"}
+            externalUrl={post.externalUrl}
             engagement={{
               understandCount: post.likes,
               questionCount: post.comments,

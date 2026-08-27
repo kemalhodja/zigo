@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Vercel Cron Job — her gün 09:00 UTC (12:00 Türkiye) çalışır.
- * Kayıt tarihinden 28 ve 30 gün geçmiş, free tier kullanıcılara
+ * Kayıt tarihinden 5 ve 7 gün geçmiş, free tier kullanıcılara
  * trial hatırlatma push bildirimi + in-app bildirim gönderir.
  */
 export async function GET(request: Request) {
@@ -21,9 +21,9 @@ export async function GET(request: Request) {
   }
 
   const now = new Date();
-  const results = { day28: { found: 0, pushed: 0 }, day30: { found: 0, pushed: 0 } };
+  const results = { day5: { found: 0, pushed: 0 }, day7: { found: 0, pushed: 0 } };
 
-  async function processDay(daysAgo: number, label: "day28" | "day30") {
+  async function processDay(daysAgo: number, label: "day5" | "day7") {
     const windowStart = new Date(now);
     windowStart.setDate(windowStart.getDate() - daysAgo);
     windowStart.setHours(windowStart.getHours() - 1);
@@ -52,24 +52,24 @@ export async function GET(request: Request) {
     results[label].found = freeIds.length;
     if (freeIds.length === 0) return;
 
-    const is28 = daysAgo === 28;
-    const pushPayload = is28
+    const is5 = daysAgo === 5;
+    const pushPayload = is5
       ? {
           title: "⏳ Deneme sürenin bitmesine 2 gün kaldı!",
           message: "Zigo Plus ile öğrenmeye kesintisiz devam et. Hemen abone ol!",
           url: "/billing",
-          data: { kind: "trial_reminder", day: "28" },
+          data: { kind: "trial_reminder", day: "5" },
         }
       : {
-          title: "🎓 30 günlük deneme süren sona erdi",
+          title: "🎓 7 günlük deneme süren sona erdi",
           message: "Öğrenme yolculuğun burada bitmesin! Zigo Plus ile devam et.",
           url: "/billing",
-          data: { kind: "trial_expired", day: "30" },
+          data: { kind: "trial_expired", day: "7" },
         };
 
-    const inAppMessage = is28
+    const inAppMessage = is5
       ? "⏳ Deneme sürenin bitmesine 2 gün kaldı! Zigo Plus'a geç ve öğrenmeye kesintisiz devam et."
-      : "🎓 30 günlük deneme süren sona erdi. Öğrenmeye devam etmek için Zigo Plus'a abone ol!";
+      : "🎓 7 günlük deneme süren sona erdi. Öğrenmeye devam etmek için Zigo Plus'a abone ol!";
 
     await sendPushToUsers(freeIds, pushPayload);
 
@@ -84,8 +84,8 @@ export async function GET(request: Request) {
     results[label].pushed = freeIds.length;
   }
 
-  await processDay(28, "day28");
-  await processDay(30, "day30");
+  await processDay(5, "day5");
+  await processDay(7, "day7");
 
   return NextResponse.json({ ok: true, results });
 }

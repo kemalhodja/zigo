@@ -1,17 +1,17 @@
-/** Zigo Dinamik Fiyatlandırma ve 30 Günlük Deneme Sürümü Motoru */
+/** Zigo Dinamik Fiyatlandırma ve 7 Günlük Deneme Sürümü Motoru */
 
-export const SUBSCRIPTION_TRIAL_DAYS = 30;
-export const EARLY_BIRD_DISCOUNT_PERCENT = 50; // Kayıttan sonraki ilk 30 gün içinde %50 indirim
-export const STANDARD_DISCOUNT_PERCENT = 0;    // 30 günden sonra indirim yok (%0 / Tam Liste Fiyatı)
+export const SUBSCRIPTION_TRIAL_DAYS = 7;
+export const EARLY_BIRD_DISCOUNT_PERCENT = 50; // Kayıttan sonraki ilk 7 gün içinde %50 indirim
+export const STANDARD_DISCOUNT_PERCENT = 0;    // 7 günden sonra indirim yok (%0 / Tam Liste Fiyatı)
 
 export const SUBSCRIPTION_CAMPAIGN = {
   id: "zigo-trial-pricing",
   earlyBirdDiscountPercent: EARLY_BIRD_DISCOUNT_PERCENT,
   standardDiscountPercent: STANDARD_DISCOUNT_PERCENT,
   discountPercent: EARLY_BIRD_DISCOUNT_PERCENT,
-  badgeLabel: "30 Gün Özel Fırsat",
-  headline: "İlk 30 Güne Özel %50 İndirim",
-  description: "Kayıttan sonraki ilk 30 gün içinde ZIGO50 promosyon kodunu kullanarak %50 indirim kazanabilirsiniz.",
+  badgeLabel: "7 Gün Özel Fırsat",
+  headline: "İlk 7 Güne Özel %50 İndirim",
+  description: "Kayıttan sonraki ilk 7 gün içinde ZIGO50 promosyon kodunu kullanarak %50 indirim kazanabilirsiniz.",
   stripeCouponId: "zigo-50off",
   stripePromotionCode: "ZIGO50",
   stripeCouponEnvKey: "STRIPE_COUPON_50OFF",
@@ -26,7 +26,7 @@ export function isSubscriptionCampaignActive(now = new Date()) {
 /**
  * Dinamik Fiyatlandırma Motoru:
  * - Otomatik indirim uygulanmaz (Her zaman Liste Fiyatı geçerlidir)
- * - Yalnızca 30 gün kuralı hesaplanıp dışarıya aktarılır (Modal'da promosyon kodu kontrolü için)
+ * - Yalnızca 7 gün kuralı hesaplanıp dışarıya aktarılır (Modal'da promosyon kodu kontrolü için)
  */
 export function calculateDynamicPrice(
   listPriceTry: number,
@@ -76,7 +76,7 @@ export function applyPromoCode(listPriceTry: number, code: string, isWithinTrial
     return {
       success: false,
       priceTry: listPriceTry,
-      message: "Bu kod yalnızca kayıttan sonraki ilk 30 gün içinde geçerlidir.",
+      message: "Bu kod yalnızca kayıttan sonraki ilk 7 gün içinde geçerlidir.",
     };
   }
   return {

@@ -48,7 +48,7 @@ export function GameSubscriptionPaywall({
         ) : (
           <>
             Kayıttan sonraki{" "}
-            <strong className="text-slate-900">30 günlük ücretsiz deneme süreniz</strong> dolmuştur.
+            <strong className="text-slate-900">7 günlük ücretsiz deneme süreniz</strong> dolmuştur.
           </>
         )}
       </p>

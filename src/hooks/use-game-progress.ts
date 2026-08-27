@@ -10,7 +10,6 @@ export type GameType =
   | "pipe_connect"
   | "word_hunt"
   | "math_master"
-  | "jigsaw_drop"
   | "taboo";
 
 type UseGameProgressOptions = {

@@ -2,14 +2,16 @@
 
 import confetti from "canvas-confetti";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
 import {
-  getRandomTabooCard,
   getAvailableCategories,
+  getRandomTabooCard,
   type TabooCard,
 } from "@/lib/domain/taboo";
+
 import { GameSoundToggle } from "./game-sound-toggle";
-import { useToast } from "@/components/ui/toast-system";
 
 export function ClassicTabooGame() {
   const [gameState, setGameState] = useState<"setup" | "playing" | "round_end" | "game_over">("setup");

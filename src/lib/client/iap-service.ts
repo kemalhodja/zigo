@@ -52,7 +52,7 @@ export async function verifyGooglePlayPurchase(payload: {
     return {
       success: true,
       data: data.data,
-      message: "Tebrikler! Google Play aboneliğiniz ve 30 günlük denemeniz başarıyla aktifleştirildi.",
+      message: "Tebrikler! Google Play aboneliğiniz ve 7 günlük denemeniz başarıyla aktifleştirildi.",
     };
   } catch (err) {
     return {
