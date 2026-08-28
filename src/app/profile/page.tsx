@@ -195,7 +195,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <h3 className="font-black text-cyan-900 text-sm mb-2">Veli Özeti</h3>
               <div className="flex gap-2">
                 <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">👨‍👩‍👧 {profile.childrenCount ?? 0} Bağlı Profil</span>
-                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">✅ 0 Bekleyen Onay</span>
               </div>
             </div>
           )}

@@ -53,7 +53,25 @@ export async function createZigoPlusCheckoutSession(
   const dynamicPricing = calculateDynamicPrice(100, userCreatedAt);
   const discountPercent = dynamicPricing.discountPercent;
 
-  if (isSubscriptionCampaignActive()) {
+  // Her zaman deneme süresi içindeyse %50 indirim kuponunu uygula
+  // (Global kampanya bitmiş olsa bile, kullanıcının ilk 7 günü içindeyse hak kazanır)
+  if (dynamicPricing.isWithinTrialWindow && dynamicPricing.trialDaysRemaining > 0) {
+    try {
+      await ensureStripeCampaignCoupon(secret);
+    } catch {
+      // Checkout can still proceed; coupon may already exist in Stripe.
+    }
+    const couponId = getSubscriptionCampaignStripeCouponId(50); // %50 indirim
+    if (couponId) {
+      body.set("discounts[0][coupon]", couponId);
+      body.set("metadata[campaign_id]", "zigo-trial-50");
+      body.set("metadata[auto_discount]", "true");
+    }
+    
+    // Deneme süresi içindeyse, kalan gün kadar Stripe Trial ver
+    body.set("subscription_data[trial_period_days]", dynamicPricing.trialDaysRemaining.toString());
+  } else if (isSubscriptionCampaignActive()) {
+    // Global kampanya aktifse standart indirim uygula
     try {
       await ensureStripeCampaignCoupon(secret);
     } catch {
@@ -65,7 +83,6 @@ export async function createZigoPlusCheckoutSession(
       body.set("metadata[campaign_id]", dynamicPricing.isWithinTrialWindow ? "zigo-trial-50" : "zigo-standard-0");
     }
     
-    // Yalnızca deneme süresi içindeyse, kalan gün kadar Stripe Trial ver
     if (dynamicPricing.trialDaysRemaining > 0) {
       body.set("subscription_data[trial_period_days]", dynamicPricing.trialDaysRemaining.toString());
     }

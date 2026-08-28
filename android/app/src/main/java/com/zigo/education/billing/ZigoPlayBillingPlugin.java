@@ -199,7 +199,40 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
                 return;
               }
 
-              String offerToken = details.getSubscriptionOfferDetails().get(0).getOfferToken();
+              String requestedOfferId = call.getString("offerToken");
+              ProductDetails.SubscriptionOfferDetails selectedOffer = null;
+
+              for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+                if (planId.equals(offer.getBasePlanId())) {
+                  if (requestedOfferId != null && !requestedOfferId.isEmpty()) {
+                    if (requestedOfferId.equals(offer.getOfferId())) {
+                      selectedOffer = offer;
+                      break;
+                    }
+                  } else {
+                    if (offer.getOfferId() == null || offer.getOfferId().equals("null") || offer.getOfferId().isEmpty()) {
+                      selectedOffer = offer;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              if (selectedOffer == null) {
+                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+                  if (planId.equals(offer.getBasePlanId())) {
+                    selectedOffer = offer;
+                    break;
+                  }
+                }
+              }
+
+              if (selectedOffer == null) {
+                rejectPendingPurchase("Seçilen abonelik planı (" + planId + ") bulunamadı.");
+                return;
+              }
+
+              String offerToken = selectedOffer.getOfferToken();
               BillingFlowParams.ProductDetailsParams productDetailsParams =
                 BillingFlowParams.ProductDetailsParams.newBuilder()
                   .setProductDetails(details)

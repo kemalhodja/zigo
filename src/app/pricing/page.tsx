@@ -1,25 +1,341 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Fiyatlandırma",
-  description: "Zigo Plus aboneliği ve fiyatlandırma seçenekleri."
-};
+import { CheckCircle2, XCircle, Shield, Sparkles, GraduationCap, Users, BookOpen, Building2, MonitorPlay, Crown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useSubscription, useTrialStatus } from "@/hooks/use-subscription";
+import { createClient } from "@/lib/supabase/client";
+import type { UserRole } from "@/lib/supabase/database.types";
+
+const ROLE_PLANS = {
+  student: {
+    title: "Öğrenci",
+    icon: GraduationCap,
+    gradient: "from-crystal to-berry",
+    monthly: 49,
+    yearly: 450,
+    features: [
+      "Sınırsız soru çözümü ve video izleme",
+      "Tüm branşlarda detaylı performans analizi",
+      "Focus/Pomodoro ve özel çalışma planı",
+      "Zeka Oyunları Salonu (5 mini oyun)",
+      "Mağaza erişimi ve Zigo Puan harcaması",
+      "Reklamsız kesintisiz deneyim",
+      "Gelişmiş veli raporları (veli hesabı varsa)",
+    ],
+  },
+  parent: {
+    title: "Veli",
+    icon: Users,
+    gradient: "from-aqua to-mint",
+    monthly: 49,
+    yearly: 450,
+    features: [
+      "Çocuk gelişimi detaylı analitik",
+      "Focus/Pomodoro takibi ve raporlar",
+      "Mağaza onay ve ödül yönetimi",
+      "Gelişmiş aile raporları",
+      "Reklamsız deneyim",
+    ],
+  },
+  teacher: {
+    title: "Öğretmen",
+    icon: Sparkles,
+    gradient: "from-sun to-peach",
+    monthly: 99,
+    yearly: 749,
+    features: [
+      "İçerik Stüdyosu tam erişim",
+      "Mini quiz oluşturma ve yayınlama",
+      "Yazılı hazırlık linkleri paylaşımı",
+      "Sponsorlu reklam gönderileri",
+      "Öğrenci analitiği ve sınıf yönetimi",
+      "Reklamsız deneyim",
+    ],
+  },
+  institution: {
+    title: "Eğitim Kurumu",
+    icon: Building2,
+    gradient: "from-indigo-400 to-cyan-400",
+    monthly: 250,
+    yearly: 2500,
+    features: [
+      "Kurum vitrini ve branş yönetimi",
+      "Toplu kullanıcı (öğretmen/öğrenci/veli) takibi",
+      "Kurumsal analitik ve raporlama",
+      "Match-Feed branş bazlı içerik dağıtımı",
+      "Creator Plus araçları dahil",
+    ],
+  },
+  platform: {
+    title: "Eğitim Platformu",
+    icon: MonitorPlay,
+    gradient: "from-fuchsia-400 to-pink-500",
+    monthly: 200,
+    yearly: 2000,
+    features: [
+      "Dijital platform vitrini",
+      "Çok branşlı içerik ve abonelik yönetimi",
+      "Match-Feed hedef kitle erişimi",
+      "Kurumsal raporlama ve entegrasyon altyapısı",
+      "Creator Plus araçları dahil",
+    ],
+  },
+  publisher: {
+    title: "Yayınevi",
+    icon: BookOpen,
+    gradient: "from-emerald-400 to-teal-500",
+    monthly: 200,
+    yearly: 2000,
+    features: [
+      "Yayınevi vitrini ve marka görünürlüğü",
+      "Kitap/materyal/soru bankası dağıtımı",
+      "Branş bazlı Match-Feed erişimi",
+      "Kurumsal raporlama ve Creator Plus araçları",
+    ],
+  },
+} as const;
+
+type RoleKey = keyof typeof ROLE_PLANS;
+
+function PlanCard({ role, isCurrentRole, isSelected, onSelect }: { 
+  role: RoleKey; 
+  isCurrentRole: boolean;
+  isSelected: boolean;
+  onSelect: (role: RoleKey) => void;
+}) {
+  const config = ROLE_PLANS[role];
+  const monthly = config.monthly;
+  const yearly = config.yearly;
+  const yearlySavings = Math.round((monthly * 12 - yearly) / (monthly * 12) * 100);
+
+  return (
+    <button
+      onClick={() => onSelect(role)}
+      disabled={isCurrentRole}
+      className={`relative flex flex-col h-full rounded-2xl border-2 p-5 transition-all ${
+        isCurrentRole
+          ? "border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed"
+          : isSelected
+          ? "border-violet-500 bg-violet-50 shadow-md ring-4 ring-violet-500/10"
+          : "border-slate-200 bg-white hover:border-violet-300 hover:bg-slate-50"
+      }`}
+    >
+      {isCurrentRole && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-black uppercase text-slate-600">
+          Mevcut Plan
+        </span>
+      )}
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${config.gradient} text-white shadow-inner`}>
+          <config.icon className="h-6 w-6" />
+        </div>
+        <div>
+          <h3 className="font-black text-night">{config.title}</h3>
+          <p className="text-xs font-bold text-slate-500">Zigo Plus Aboneliği</p>
+        </div>
+      </div>
+
+      <div className="mb-4 space-y-2">
+        <div className="flex items-baseline gap-2">
+          <span className="text-3xl font-black text-night">{monthly.toLocaleString("tr-TR")} ₺</span>
+          <span className="text-sm font-bold text-slate-500">/ay</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-bold text-slate-500 line-through">{monthly * 12} ₺</span>
+          <span className="text-2xl font-black text-night">{yearly.toLocaleString("tr-TR")} ₺</span>
+          <span className="text-sm font-bold text-slate-500">/yıl</span>
+          <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+            %{yearlySavings} kazanç
+          </span>
+        </div>
+      </div>
+
+      <ul className="flex-1 space-y-2 mb-4">
+        {config.features.map((feature, i) => (
+          <li key={i} className="flex items-start gap-2 text-sm font-bold text-slate-600">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500 mt-0.5" />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="pt-3 border-t border-slate-100">
+        <p className="text-xs font-bold text-slate-500 mb-2">
+          İlk 7 gün içinde abone olursanız <span className="text-amber-500">%50 indirim</span> (Promo: <span className="font-mono">ZIGO50</span>)
+        </p>
+        <p className="text-[10px] font-bold text-slate-400">
+          7 gün sonrası: Tam liste fiyatı (indirim yok)
+        </p>
+      </div>
+    </button>
+  );
+}
+
+function FeatureMatrix() {
+  const allFeatures = [
+    { key: "unlimitedContent", label: "Sınırsız soru/video", roles: ["student", "parent", "teacher"] },
+    { key: "analytics", label: "Detaylı analitik", roles: ["student", "parent"] },
+    { key: "customStudyPlan", label: "Özel çalışma planı", roles: ["student"] },
+    { key: "focus", label: "Focus/Pomodoro", roles: ["student", "parent"] },
+    { key: "games", label: "Zeka Oyunları Salonu", roles: ["student"] },
+    { key: "store", label: "Mağaza & Puan harcaması", roles: ["student", "parent"] },
+    { key: "adFree", label: "Reklamsız deneyim", roles: ["student", "parent", "teacher"] },
+    { key: "advancedReports", label: "Gelişmiş veli raporları", roles: ["parent"] },
+    { key: "teacherCreatorPlus", label: "Quiz/Yazılı/Sponsor", roles: ["teacher"] },
+    { key: "institutionTools", label: "Kurumsal araçlar", roles: ["institution", "platform", "publisher"] },
+  ];
+
+  return (
+    <section className="-mx-4 border-y border-slate-100 bg-slate-50 px-4 py-8">
+      <h2 className="text-xl font-black text-night mb-6 text-center">Özellik Karşılaştırma Matrisi</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm font-bold">
+          <thead>
+            <tr className="border-b border-slate-200">
+              <th className="text-left py-3 px-2 text-slate-500">Özellik</th>
+              {Object.keys(ROLE_PLANS).map((role) => (
+                <th key={role} className="py-3 px-2 text-center text-slate-500 capitalize">{role}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {allFeatures.map((feature) => (
+              <tr key={feature.key} className="border-b border-slate-100 hover:bg-white">
+                <td className="py-3 px-2 text-slate-700">{feature.label}</td>
+                {Object.keys(ROLE_PLANS).map((role) => (
+                  <td key={role} className="py-3 px-2 text-center">
+                    {feature.roles.includes(role) ? (
+                      <CheckCircle2 className="h-5 w-5 mx-auto text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 mx-auto text-slate-300" />
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
 
 export default function PricingPage() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8 text-center text-slate-900 bg-white">
-      <h1 className="zigo-display mb-4">Abonelik Seçenekleri</h1>
-      <p className="zigo-body-text mb-8 max-w-md text-slate-600">
-        Öğrenme yolculuğuna tam erişim ile devam et.
-      </p>
+  const router = useRouter();
+  const { subscription, isLoading } = useSubscription();
+  const { isTrial, trialDaysRemaining } = useTrialStatus();
+  const [selectedRole, setSelectedRole] = useState<RoleKey | null>("student");
+  const supabase = createClient();
 
-      <div className="border border-slate-200 rounded-xl p-8 bg-slate-50 shadow-xl max-w-sm w-full">
-        <h2 className="text-2xl font-bold mb-2">Aylık Abonelik</h2>
-        <p className="text-4xl font-black text-white mb-6">₺99<span className="text-sm font-normal text-slate-500"> /ay</span></p>
-        <button className="w-full bg-crystal text-white rounded-xl py-3 font-bold hover:bg-crystal/90 transition-colors">
-          Yakında
-        </button>
+  const currentRole = subscription?.isPremium ? "student" : null; // Simplified
+
+  const handleSubscribe = async (role: RoleKey) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/auth?next=/pricing");
+        return;
+      }
+
+      // Redirect to Stripe checkout with role-specific price
+      const response = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, interval: "monthly" }),
+      });
+
+      const data = await response.json();
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-violet-600 border-t-transparent"></div>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <header className="border-b border-slate-100 bg-white">
+        <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-500 to-fuchsia-500 text-white shadow-lg">
+              <Crown className="h-8 w-8" />
+            </div>
+            <h1 className="mt-6 text-4xl font-black tracking-tight text-night">Zigo Plus Aboneliği</h1>
+            <p className="mt-4 text-lg font-bold text-slate-500">
+              Rolüne göre özel fiyatlandırma. İlk 7 gün içinde <span className="text-amber-500">%50 indirim</span> (Promo: <span className="font-mono">ZIGO50</span>)
+            </p>
+            
+            {isTrial && trialDaysRemaining > 0 && (
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-black text-amber-700 border border-amber-200">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100">⏳</span>
+                <span>Deneme süreniz: <strong>{trialDaysRemaining} gün</strong> kaldı</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {Object.keys(ROLE_PLANS).map((role) => (
+            <PlanCard
+              key={role}
+              role={role as RoleKey}
+              isCurrentRole={false} // Would check against user's actual role
+              isSelected={selectedRole === role}
+              onSelect={setSelectedRole}
+            />
+          ))}
+        </div>
+
+        <FeatureMatrix />
+
+        <section className="mt-12 -mx-4 border-y border-slate-100 bg-white px-4 py-8">
+          <h2 className="text-xl font-black text-night mb-6 text-center">Sık Sorulan Sorular</h2>
+          <dl className="space-y-4 max-w-3xl mx-auto">
+            <div className="border border-slate-200 rounded-xl p-4">
+              <dt className="font-black text-night mb-1">7 günlük deneme nasıl çalışıyor?</dt>
+              <dd className="text-slate-600">Kayıt tarihinizden itibaren 7 gün boyunca tüm premium özellikler serbest. 7. gün bitiminde otomatik olarak ücretsiz plana dönersiniz (veri kaybı yok).</dd>
+            </div>
+            <div className="border border-slate-200 rounded-xl p-4">
+              <dt className="font-black text-night mb-1">%50 indirim nasıl alınır?</dt>
+              <dd className="text-slate-600">Kayıttan sonraki ilk 7 gün içinde ödeme sayfasında <strong>ZIGO50</strong> promo kodunu girin. İndirim otomatik uygulanır. 7 gün geçtise kod çalışmaz.</dd>
+            </div>
+            <div className="border border-slate-200 rounded-xl p-4">
+              <dt className="font-black text-night mb-1">Abonelik iptali nasıl yapılır?</dt>
+              <dd className="text-slate-600">Profil → Abonelik → İptal. İptal ettikten sonra dönem bitimine kadar erişiminiz devam eder. Yenileme yapılmaz.</dd>
+            </div>
+            <div className="border border-slate-200 rounded-xl p-4">
+              <dt className="font-black text-night mb-1">Rol değiştirirsem fiyat değişir mi?</dt>
+              <dd className="text-slate-600">Evet. Her rolün kendi fiyatı vardır. Rol değiştirme sayfasından geçiş yapabilir, fark ücreti hesaplanır.</dd>
+            </div>
+            <div className="border border-slate-200 rounded-xl p-4">
+              <dt className="font-black text-night mb-1">Yıllık planda avantaj var mı?</dt>
+              <dd className="text-slate-600">Evet. Yıllık plan aylığa göre <strong>%15-23</strong> daha uygun (2 ay bedava mantığıyla).</dd>
+            </div>
+          </dl>
+        </section>
+
+        <div className="mt-12 text-center">
+          <p className="text-sm font-bold text-slate-500 mb-4">
+            Reklam yok. Veri satılmaz. Güvenli öğrenme.
+          </p>
+          <p className="text-xs font-bold text-slate-400">
+            Tüm fiyatlar KDV dahildir. Kurumsal toplu lisanslar için <a href="https://wa.me/905550000000" className="text-crystal hover:underline">WhatsApp</a> ile iletişime geçin.
+          </p>
+        </div>
+      </main>
     </div>
   );
 }
