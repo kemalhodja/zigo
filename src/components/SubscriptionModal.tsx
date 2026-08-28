@@ -1,9 +1,10 @@
 "use client";
 
+import { type Product } from "@capgo/native-purchases";
+import { Loader2,X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Product } from "@capgo/native-purchases";
-import { X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+
 import { BillingService } from "@/services/billingService";
 
 type SubscriptionModalProps = {

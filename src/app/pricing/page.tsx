@@ -1,11 +1,10 @@
 "use client";
 
-import { CheckCircle2, XCircle, Shield, Sparkles, GraduationCap, Users, BookOpen, Building2, MonitorPlay, Crown } from "lucide-react";
+import { BookOpen, Building2, CheckCircle2, Crown, GraduationCap, MonitorPlay, Sparkles, Users, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useSubscription, useTrialStatus } from "@/hooks/use-subscription";
+import { useEffect, useState } from "react";
+
 import { createClient } from "@/lib/supabase/client";
-import type { UserRole } from "@/lib/supabase/database.types";
 
 const ROLE_PLANS = {
   student: {
@@ -222,16 +221,104 @@ function FeatureMatrix() {
   );
 }
 
+type SubscriptionState = {
+  isPremium: boolean;
+  isTrial: boolean;
+  trialDaysRemaining: number;
+  isLoading: boolean;
+};
+
+function usePricingSubscription(): SubscriptionState {
+  const [state, setState] = useState<SubscriptionState>({
+    isPremium: false,
+    isTrial: false,
+    trialDaysRemaining: 0,
+    isLoading: true,
+  });
+  const supabase = createClient();
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchSubscription() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          if (mounted) setState({ isPremium: false, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("user_subscriptions")
+          .select("tier, current_period_end")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        const tier = (data?.tier ?? "free") as "free" | "zigo_plus";
+        const periodEnd = data?.current_period_end ? new Date(data.current_period_end) : null;
+        const isActivePaidPremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
+
+        if (isActivePaidPremium) {
+          if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+          return;
+        }
+
+        const { data: userData } = await supabase
+          .from("users")
+          .select("created_at")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        let isTrialActive = false;
+        let trialDaysRemaining = 0;
+
+        if (userData?.created_at) {
+          const createdTime = new Date(userData.created_at).getTime();
+          const diffTime = Date.now() - createdTime;
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays <= 7) {
+            isTrialActive = true;
+            trialDaysRemaining = Math.max(0, 7 - diffDays);
+          }
+        }
+
+        if (mounted) {
+          setState({
+            isPremium: isTrialActive,
+            isTrial: isTrialActive,
+            trialDaysRemaining,
+            isLoading: false,
+          });
+        }
+      } catch {
+        if (mounted) setState({ isPremium: false, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+      }
+    }
+
+    fetchSubscription();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      fetchSubscription();
+    });
+
+    return () => {
+      mounted = false;
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  return state;
+}
+
 export default function PricingPage() {
   const router = useRouter();
-  const { subscription, isLoading } = useSubscription();
-  const { isTrial, trialDaysRemaining } = useTrialStatus();
+  const { isTrial, trialDaysRemaining, isLoading } = usePricingSubscription();
   const [selectedRole, setSelectedRole] = useState<RoleKey | null>("student");
   const supabase = createClient();
 
-  const currentRole = subscription?.isPremium ? "student" : null; // Simplified
-
-  const handleSubscribe = async (role: RoleKey) => {
+  const _handleSubscribe = async (role: RoleKey) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -239,7 +326,6 @@ export default function PricingPage() {
         return;
       }
 
-      // Redirect to Stripe checkout with role-specific price
       const response = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -292,7 +378,7 @@ export default function PricingPage() {
             <PlanCard
               key={role}
               role={role as RoleKey}
-              isCurrentRole={false} // Would check against user's actual role
+              isCurrentRole={false}
               isSelected={selectedRole === role}
               onSelect={setSelectedRole}
             />

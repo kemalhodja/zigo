@@ -1,4 +1,4 @@
-import { NativePurchases, Product, Transaction } from "@capgo/native-purchases";
+import { NativePurchases, type Product, type Transaction } from "@capgo/native-purchases";
 
 export const PRODUCT_IDS = {
   MONTHLY: "zigo_plus_monthly",

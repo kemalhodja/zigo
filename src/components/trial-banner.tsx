@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+
 import { createClient } from "@/lib/supabase/client";
 
 type TrialSubscription = {
@@ -101,7 +102,7 @@ export function TrialBanner({
   showDismiss?: boolean;
   variant?: "top" | "inline";
 }) {
-  const { subscription, isLoading } = useTrialStatus();
+  const { isTrial, trialDaysRemaining, isLoading } = useTrialStatus();
   const [dismissed, setDismissed] = useState(false);
   const [dismissUntil, setDismissUntil] = useState<Date | null>(null);
 
@@ -111,12 +112,10 @@ export function TrialBanner({
     }
   }, [dismissUntil]);
 
-  if (isLoading || !subscription || !subscription.isTrial || dismissed) {
+  if (isLoading || !isTrial || dismissed) {
     return null;
   }
 
-  const { trialDaysRemaining } = subscription;
-  
   if (trialDaysRemaining <= 0) {
     return null;
   }
@@ -190,11 +189,10 @@ export function TrialBadge({
 }: { 
   variant?: "compact" | "full";
 }) {
-  const { subscription } = useTrialStatus();
+  const { isTrial, trialDaysRemaining } = useTrialStatus();
   
-  if (!subscription?.isTrial) return null;
+  if (!isTrial) return null;
   
-  const { trialDaysRemaining } = subscription;
   if (trialDaysRemaining <= 0) return null;
 
   if (variant === "full") {

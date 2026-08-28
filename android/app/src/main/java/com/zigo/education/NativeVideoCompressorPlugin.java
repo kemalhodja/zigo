@@ -33,12 +33,15 @@ public class NativeVideoCompressorPlugin extends Plugin {
         String outputPath = getContext().getCacheDir().getPath() + "/compressed_" + System.currentTimeMillis() + ".mp4";
 
         try {
+            java.util.List<Uri> uris = new java.util.ArrayList<>();
+            uris.add(inputUri);
+            
             // Initiate LightCompressor
             VideoCompressor.start(
                 getContext(),
-                inputUri,
-                null,
-                outputPath,
+                uris,
+                false, // isSharedStorage
+                null,  // sharedStorageConfiguration
                 new Configuration(
                     VideoQuality.MEDIUM,
                     false, // isMinBitrateCheckEnabled
@@ -46,36 +49,37 @@ public class NativeVideoCompressorPlugin extends Plugin {
                     false, // disableAudio
                     false, // keepOriginalResolution
                     720.0, // videoWidth
-                    1280.0 // videoHeight
+                    1280.0, // videoHeight
+                    new java.util.ArrayList<String>() // videoNames
                 ),
                 new CompressionListener() {
                     @Override
-                    public void onProgress(float percent) {
+                    public void onProgress(int index, float percent) {
                         // In a more advanced implementation, we could emit events to JS here.
                     }
 
                     @Override
-                    public void onSuccess() {
-                        File outFile = new File(outputPath);
+                    public void onSuccess(int index, long size, String path) {
+                        File outFile = new File(path != null ? path : outputPath);
                         JSObject ret = new JSObject();
-                        ret.put("fileUri", "file://" + outputPath);
-                        ret.put("size", outFile.length());
+                        ret.put("fileUri", "file://" + outFile.getAbsolutePath());
+                        ret.put("size", size > 0 ? size : outFile.length());
                         call.resolve(ret);
                     }
 
                     @Override
-                    public void onFailure(String failureMessage) {
+                    public void onFailure(int index, String failureMessage) {
                         Log.e("ZigoVideoCompressor", "Compression Failed: " + failureMessage);
                         call.reject("Compression failed: " + failureMessage);
                     }
 
                     @Override
-                    public void onStart() {
+                    public void onStart(int index) {
                         Log.i("ZigoVideoCompressor", "Compression Started");
                     }
 
                     @Override
-                    public void onCancelled() {
+                    public void onCancelled(int index) {
                         call.reject("Compression cancelled");
                     }
                 }
