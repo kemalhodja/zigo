@@ -32,8 +32,9 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
       if (fetchedProducts?.length > 0) {
         setSelectedProductId(fetchedProducts[0].identifier);
       }
-    } catch (error: any) {
-      toast.error(error.message || "Paketler yüklenemedi.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Paketler yüklenemedi.";
+      toast.error(message);
     } finally {
       setFetching(false);
     }
@@ -62,8 +63,9 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
       } else {
         toast.error("Satın alma işlemi başarısız oldu (token bulunamadı).");
       }
-    } catch (error: any) {
-      toast.error(error.message || "Satın alma işlemi sırasında bir hata oluştu.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Satın alma işlemi sırasında bir hata oluştu.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

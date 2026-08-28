@@ -90,6 +90,8 @@
     "live-rooms-client.tsx",
     "sponsored-ad-link.tsx",
     "teacher-analytics-card.tsx",
-    "teacher-home-insights.tsx"
+    "teacher-home-insights.tsx",
+    "trial-banner.tsx",
+    "SubscriptionModal.tsx"
   ]
 }

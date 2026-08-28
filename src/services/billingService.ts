@@ -50,9 +50,10 @@ export class BillingService {
       }
       
       return transaction;
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to purchase product:", error);
-      throw new Error(error?.message || "Satın alma sırasında bir hata oluştu.");
+      const message = error instanceof Error ? error.message : "Satın alma sırasında bir hata oluştu.";
+      throw new Error(message);
     }
   }
 
