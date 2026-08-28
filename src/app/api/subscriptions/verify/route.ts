@@ -40,18 +40,19 @@ export async function POST(req: Request) {
     const now = new Date();
     const expiresAt = new Date(purchase.expiryTimeMillis);
 
-    // Upsert subscription record
-    const { error } = await (supabase.from("user_subscriptions") as unknown as { upsert: (data: Record<string, unknown>, opts?: { onConflict?: string }) => Promise<{ error: unknown }> }).upsert({
-      user_id: user.id,
-      product_id: productId,
-      status: "active",
-      started_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      receipt_token: receipt,
-    }, { onConflict: "user_id" });
+    // Call the RPC to record the purchase and update the user's subscription tier
+    const { error } = await supabase.rpc("record_google_play_purchase", {
+      p_user_id: user.id,
+      p_plan_id: productId,
+      p_product_id: productId,
+      p_purchase_token: receipt,
+      p_order_id: purchase.orderId || null,
+      p_package_name: packageName,
+      p_expiry_time: expiresAt.toISOString(),
+    });
 
     if (error) {
-      console.error("Supabase upsert error:", error);
+      console.error("Supabase RPC error:", error);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
