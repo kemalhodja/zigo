@@ -39,6 +39,14 @@ export function FeedPostHeader({
                 Zigo Plus Öğrenci
               </span>
             )}
+            {post.isFollowersOnly && (
+              <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-600">
+                <svg aria-hidden="true" className="size-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-5.836 2l.778 7h6.116l.778-7H6.164z" clipRule="evenodd" />
+                </svg>
+                Sadece Takipçiler
+              </span>
+            )}
           </div>
       </Link>
       <div className="flex shrink-0 items-center gap-3">

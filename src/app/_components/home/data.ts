@@ -58,6 +58,7 @@ export type DisplayPost = {
   city?: string | null;
   district?: string | null;
   externalUrl?: string | null;
+  isFollowersOnly?: boolean;
   isFollowersOnlyLocked?: boolean;
   teaserText?: string | null;
   followersOnlyComments?: boolean;
@@ -394,6 +395,7 @@ export function toDisplayPost(
     externalUrl: (post as unknown as { external_url?: string | null }).external_url ?? null,
     teaserText: (post as unknown as { teaser_text?: string | null }).teaser_text ?? null,
     followersOnlyComments: (post as unknown as { followers_only_comments?: boolean }).followers_only_comments ?? false,
+    isFollowersOnly: post.isFollowersOnly,
   };
 
   const isOwner = Boolean(followState.viewerId && post.author?.id && followState.viewerId === post.author.id);

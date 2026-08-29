@@ -270,7 +270,7 @@ export async function createStory(
           caption: safeCaption,
           media_url: parsed.mediaUrl || null,
           followers_only: parsed.followersOnly,
-        });
+        } as any);
 
       if (error) throw error;
 
@@ -459,8 +459,9 @@ export async function createComment(
     .eq("id", parsed.postId)
     .single();
 
-  if (postData?.followers_only_comments && postData.author_id !== input.userId) {
-    const isFollowing = await hasFollow(supabase, input.userId, postData.author_id);
+  const pd = postData as any;
+  if (pd?.followers_only_comments && pd.author_id !== input.userId) {
+    const isFollowing = await hasFollow(supabase, input.userId, pd.author_id);
     if (!isFollowing) {
       throw new Error("Bu gönderiye sadece yazarın takipçileri yorum yapabilir.");
     }
@@ -529,7 +530,9 @@ export async function toggleFollow(
 
   if (parsed.sourcePostId) {
     try {
-      await supabase.rpc('increment_follower_conversion', { p_post_id: parsed.sourcePostId });
+      const { error } = await supabase.rpc("increment_follower_conversion" as any, {
+      p_post_id: parsed.sourcePostId,
+    });
     } catch {
       // Best effort analytic
     }

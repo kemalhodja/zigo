@@ -127,6 +127,7 @@ export async function hydrateSocialPosts(
       ranking_score: scoreSocialPost(post, likes, comments, saves, viewerContext),
       is_liked: likedPostIds.has(post.id),
       is_saved: savedPostIds.has(post.id),
+      isFollowersOnly: post.target_audience === "followers",
     };
   });
 }

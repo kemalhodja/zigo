@@ -325,7 +325,8 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 </span>
               </div>
             </Link>
-          ))
+            );
+          })
         )}
       </section>
     </div>

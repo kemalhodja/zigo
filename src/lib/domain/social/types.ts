@@ -21,6 +21,7 @@ export type SocialFeedPost = Omit<SocialPostRow, "premium_prep_url" | "sponsored
   is_sponsored_active: boolean;
   can_open_premium_prep: boolean;
   can_open_sponsored: boolean;
+  isFollowersOnly?: boolean;
 };
 
 export type ActiveStory = {

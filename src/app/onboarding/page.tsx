@@ -97,16 +97,14 @@ export default async function OnboardingPage() {
         <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">{m.roles[profile.role]}</p>
         <h3 className="mt-2 text-xl font-black text-night">{profile.full_name}</h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">{roleNote}</p>
-        {selectedAreaIds.length > 0 ? (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link className="tap-scale rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-3 text-center text-sm font-black text-white" href="/">
-              {ob.previewFeed}
-            </Link>
-            <Link className="tap-scale rounded-lg bg-gradient-to-r from-aqua to-mint px-4 py-3 text-center text-sm font-black text-white" href={profile.role === "parent" ? "/family" : "/micro"}>
-              {profile.role === "parent" ? ob.addChild : m.nav.micro}
-            </Link>
-          </div>
-        ) : null}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Link className="tap-scale rounded-lg bg-gradient-to-r from-crystal to-berry px-4 py-3 text-center text-sm font-black text-white" href="/">
+            {ob.previewFeed}
+          </Link>
+          <Link className="tap-scale rounded-lg bg-gradient-to-r from-aqua to-mint px-4 py-3 text-center text-sm font-black text-white" href={profile.role === "parent" ? "/family" : "/micro"}>
+            {profile.role === "parent" ? ob.addChild : m.nav.micro}
+          </Link>
+        </div>
       </section>
 
       <NextBestActionPanel
@@ -187,7 +185,7 @@ function NextBestActionPanel({
             className={`zigo-action-chip tap-scale rounded-lg ${
               action.primary ? "zigo-tab-active" : "bg-white text-slate-700"
             }`}
-            href={hasAreas ? action.href : "/onboarding"}
+            href={action.href}
             key={action.label}
           >
             {action.label}
