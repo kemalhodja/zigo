@@ -49,7 +49,7 @@ export function BottomNav({
         variant === "overlay"
           ? "border-t border-white/10 bg-black/35 text-white backdrop-blur-md"
           : "zigo-bottom-bar text-slate-500"
-      } md:sticky md:bottom-0 md:z-50`}
+      } md:z-50`}
       style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
     >
       {navItems.map((item) => {

@@ -201,7 +201,7 @@ export function AppShell({
 
       <main
         key={pathname}
-        className={`min-w-0 flex-1 page-transition-fade ${isImmersive ? "overflow-hidden p-0" : `px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 ${pathname === "/" ? "pt-0" : "py-3"}`}`}
+        className={`min-w-0 flex-1 page-transition-fade ${isImmersive ? "overflow-hidden p-0" : `px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-[4.5rem] ${pathname === "/" ? "pt-0" : "py-3"}`}`}
         id="main-content"
       >
         {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
