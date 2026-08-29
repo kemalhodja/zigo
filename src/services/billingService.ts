@@ -3,6 +3,8 @@ import { NativePurchases, type Product, type Transaction } from "@capgo/native-p
 export const PRODUCT_IDS = {
   MONTHLY: "zigo_plus_monthly",
   YEARLY: "zigo_plus_yearly",
+  MONTHLY_50OFF: "zigo_plus_monthly_50off",
+  YEARLY_50OFF: "zigo_plus_yearly_50off",
 };
 
 export class BillingService {
@@ -25,7 +27,12 @@ export class BillingService {
   static async fetchProducts(): Promise<Product[]> {
     try {
       const response = await NativePurchases.getProducts({
-        productIdentifiers: [PRODUCT_IDS.MONTHLY, PRODUCT_IDS.YEARLY],
+        productIdentifiers: [
+          PRODUCT_IDS.MONTHLY,
+          PRODUCT_IDS.YEARLY,
+          PRODUCT_IDS.MONTHLY_50OFF,
+          PRODUCT_IDS.YEARLY_50OFF,
+        ],
       });
       return response.products;
     } catch (error) {
