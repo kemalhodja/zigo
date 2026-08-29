@@ -171,10 +171,10 @@ export function FollowingStarter({
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-slate-50 text-2xl font-black text-slate-400 shadow-lg shadow-slate-100 border border-slate-100">
         +
       </span>
-      <h2 className="zigo-section-title mt-5 text-slate-900">{f.buildFeed || "Akışını Oluştur"}</h2>
-      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-500">{f.buildFeedDesc || "İlgi alanlarını seçerek veya öğretmenleri takip ederek akışını oluştur."}</p>
-      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white bg-crystal" href="/onboarding">
-        İlgi alanını seç
+      <h2 className="zigo-section-title mt-5 text-slate-900">Takip Etmeye Başla</h2>
+      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-500">Akışın, takip ettiğin öğretmenlerin ve arkadaşlarının paylaşımlarıyla şekillenir.</p>
+      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white bg-crystal" href="/explore?format=teachers">
+        Kullanıcıları Keşfet
       </Link>
       <div className="no-scrollbar mt-7 flex gap-3 overflow-x-auto pb-1 text-left">
         {creators.map((creator) => (
@@ -202,10 +202,10 @@ export function ForYouStarter({ messages }: { messages: Messages }) {
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry text-2xl font-black text-white shadow-lg shadow-crystal/25">
         Z
       </span>
-      <h2 className="zigo-section-title mt-5 text-night">{f.buildFeed}</h2>
-      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-600">{f.buildFeedDesc}</p>
-      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white" href="/onboarding">
-        {o.chooseInterests}
+      <h2 className="zigo-section-title mt-5 text-night">Takip Etmeye Başla</h2>
+      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-600">Akışın, takip ettiğin öğretmenlerin ve arkadaşlarının paylaşımlarıyla şekillenir.</p>
+      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white" href="/explore?format=teachers">
+        Kullanıcıları Keşfet
       </Link>
     </section>
   );
