@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Building2, CheckCircle2, ChevronRight, GraduationCap, Loader2, MonitorPlay, Shield, Sparkles, Users } from "lucide-react";
+import { BookOpen, Building2, CheckCircle2, ChevronRight, Crown, GraduationCap, Loader2, MonitorPlay, Shield, Sparkles, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect,useState } from "react";
 import { toast } from "react-hot-toast";
@@ -14,44 +14,109 @@ const ROLE_OPTIONS = [
   {
     id: "student",
     title: "Öğrenci",
-    description: "Sınavlara hazırlan, quiz çöz ve arkadaşlarınla yarış.",
     icon: GraduationCap,
     gradient: "from-crystal to-berry",
+    baseBenefits: [
+      "Quiz çöz ve puan kazan",
+      "Micro dersleri izle",
+      "Arkadaşlarına meydan oku (Düello)",
+      "Zeka oyunları salonu (sınırlı)",
+      "Puanlarla mağazadan ödül al",
+    ],
+    premiumBenefits: [
+      "Sınırsız zeka oyunları salonu",
+      "Günlük 1 saat oyun süresi (08:00-22:00)",
+      "Focus/Pomodoro ve özel çalışma planı",
+      "Detaylı performans analitiği",
+      "Reklamsız deneyim",
+      "Gelişmiş veli raporları",
+    ],
   },
   {
     id: "parent",
     title: "Veli",
-    description: "Öğrenci gelişimini takip et, aile paketini yönet.",
     icon: Users,
     gradient: "from-aqua to-mint",
+    baseBenefits: [
+      "Çocuk profilleri oluştur ve yönet",
+      "Çocuk gelişimini takip et",
+      "Mağaza onayları ver",
+    ],
+    premiumBenefits: [
+      "Detaylı çocuk analitik raporları",
+      "Focus/Pomodoro takibi ve süre yönetimi",
+      "Gelişmiş aile ve çocuk raporları",
+      "Reklamsız deneyim",
+      "Sınıf grubu yönetimi",
+    ],
   },
   {
     id: "teacher",
     title: "Öğretmen / İçerik Üretici",
-    description: "Kendi içeriklerini yayınla, öğrencilere ulaş ve gelir elde et.",
     icon: Sparkles,
     gradient: "from-sun to-peach",
+    baseBenefits: [
+      "İçerik paylaş (ders, quiz, video)",
+      "Öğrenci sorularını yanıtla",
+      "Temel analitik görüntüle",
+    ],
+    premiumBenefits: [
+      "İçerik Stüdyosu tam erişim",
+      "Mini quiz oluştur ve yayınla",
+      "Yazılı hazırlık linkleri paylaş",
+      "Sponsorlu reklam gönderileri",
+      "Öğrenci analitiği ve sınıf yönetimi",
+      "Reklamsız deneyim",
+    ],
   },
   {
     id: "institution",
     title: "Eğitim Kurumu",
-    description: "Kurum yönetimi, toplu kullanıcı takibi ve kurumsal paylaşım yapın.",
     icon: Building2,
     gradient: "from-indigo-400 to-cyan-400",
+    baseBenefits: [
+      "Kurum vitrini oluştur",
+      "Kullanıcıları toplu yönet",
+    ],
+    premiumBenefits: [
+      "Kurumsal analitik ve raporlama",
+      "Match-Feed branş bazlı dağıtım",
+      "Creator Plus araçları dahil",
+      "Toplu kullanıcı (öğretmen/öğrenci/veli) takibi",
+      "Kurumsal paylaşım ve entegrasyon",
+    ],
   },
   {
     id: "platform",
     title: "Eğitim Platformu",
-    description: "Dijital kurs ve müfredat içerikleri sunarak geniş kitlelere ulaşın.",
     icon: MonitorPlay,
     gradient: "from-fuchsia-400 to-pink-500",
+    baseBenefits: [
+      "Platform vitrini oluştur",
+      "İçerik katalogu yönet",
+    ],
+    premiumBenefits: [
+      "Çok branşlı içerik ve abonelik yönetimi",
+      "Match-Feed hedef kitle erişimi",
+      "Kurumsal raporlama ve entegrasyon altyapısı",
+      "Creator Plus araçları dahil",
+    ],
   },
   {
     id: "publisher",
     title: "Yayınevi",
-    description: "Soru bankası, kaynak ve dijital yayın paylaşımları yapın.",
     icon: BookOpen,
     gradient: "from-emerald-400 to-teal-500",
+    baseBenefits: [
+      "Yayınevi vitrini oluştur",
+      "Dijital kaynak paylaş",
+    ],
+    premiumBenefits: [
+      "Soru bankası ve materyal dağıtımı",
+      "Branş bazlı Match-Feed erişimi",
+      "Kurumsal raporlama ve Creator Plus araçları",
+      "Marka görünürlüğü ve vitrin öne çıkarma",
+    ],
   },
 ] as const;
 
@@ -118,9 +183,9 @@ export default function RoleUpgradePage() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-200">
           <Shield className="h-8 w-8" />
         </div>
-        <h1 className="mt-6 text-3xl font-black tracking-tight text-night">Rol Değiştirme ve Yükseltme</h1>
+        <h1 className="mt-6 text-3xl font-black tracking-tight text-night">Rol Seç ve Ayrıcalıkları Gör</h1>
         <p className="mt-4 text-base font-bold text-slate-500">
-          Zigo'da farklı bir kullanıcı türüne geçiş yapmak istiyorsanız aşağıdaki seçeneklerden birini seçin. Mevcut aboneliğinize göre dinamik bir fark ücreti hesaplanacaktır.
+          Her rolü tıklayarak rolle gelen temel özellikleri ve Zigo Plus aboneliğiyle kazanacağın premium ayrıcalıkları karşılaştır.
         </p>
       </div>
 
@@ -135,7 +200,7 @@ export default function RoleUpgradePage() {
               type="button"
               disabled={isCurrent || loading}
               onClick={() => setSelectedRole(option.id)}
-              className={`relative flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all ${
+              className={`relative flex flex-col rounded-2xl border-2 p-4 text-left transition-all ${
                 isCurrent
                   ? "border-slate-100 bg-slate-50 opacity-60"
                   : isSelected
@@ -143,35 +208,66 @@ export default function RoleUpgradePage() {
                   : "border-slate-200 bg-white hover:border-violet-300 hover:bg-slate-50"
               }`}
             >
-              <div
-                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${option.gradient} text-white shadow-inner`}
-              >
-                <option.icon className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-black text-night">{option.title}</h3>
-                  {isCurrent && (
-                    <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-black uppercase text-slate-600">
-                      Mevcut Rol
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-xs font-bold leading-relaxed text-slate-500">
-                  {option.description}
-                </p>
-              </div>
-              {!isCurrent && (
+              <div className="flex items-start gap-4">
                 <div
-                  className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
-                    isSelected
-                      ? "border-violet-500 bg-violet-500 text-white"
-                      : "border-slate-300 bg-transparent text-transparent"
-                  }`}
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${option.gradient} text-white shadow-inner`}
                 >
-                  <CheckCircle2 className="h-4 w-4" />
+                  <option.icon className="h-6 w-6" />
                 </div>
-              )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-night">{option.title}</h3>
+                    {isCurrent && (
+                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-black uppercase text-slate-600">
+                        Mevcut Rol
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {!isCurrent && (
+                  <div
+                    className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+                      isSelected
+                        ? "border-violet-500 bg-violet-500 text-white"
+                        : "border-slate-300 bg-transparent text-transparent"
+                    }`}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+
+              {/* Base Benefits */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-1.5 text-xs font-black text-slate-500 mb-2">
+                  <span>📦</span>
+                  <span>Rolle Gelen Temel Özellikler</span>
+                </div>
+                <ul className="space-y-1">
+                  {option.baseBenefits.map((benefit, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs font-bold text-slate-600">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500 mt-0.5" />
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Premium Benefits */}
+              <div className="mt-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-1.5 text-xs font-black text-amber-600 mb-2">
+                  <Crown className="h-3.5 w-3.5" />
+                  <span>Zigo Plus Aboneliğiyle Kazanacağın Premium Ayrıcalıklar</span>
+                </div>
+                <ul className="space-y-1">
+                  {option.premiumBenefits.map((benefit, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs font-bold text-slate-600">
+                      <Crown className="h-3.5 w-3.5 shrink-0 text-amber-500 mt-0.5" />
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </button>
           );
         })}

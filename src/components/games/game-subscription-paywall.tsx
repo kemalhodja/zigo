@@ -66,11 +66,11 @@ export function GameSubscriptionPaywall({
       </div>
 
       <div className="space-y-2.5">
-        <Link
-          href="/profile/upgrade"
+<Link
+          href="/pricing"
           className="tap-scale block w-full bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black py-3.5 rounded-xl shadow-lg shadow-amber-500/25 hover:brightness-105 transition text-sm"
         >
-          Zigo Plus&apos;a Abone Ol ✨
+          Zigo Plus'a Abone Ol ✨
         </Link>
 
         <Link
