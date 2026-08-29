@@ -23,7 +23,7 @@
 
 html.dark-theme {
   color-scheme: dark;
-  --zigo-bg: #000000;
+  --zigo-bg: #020617;
   --zigo-text: #f8fafc;
 }
 
@@ -72,20 +72,25 @@ a:not([class*="text-"]):not([class*="zigo-"]) {
 }
 
 .zigo-cta {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 52%, #ec4899 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 52%, #f97316 100%);
   color: #ffffff !important;
-  box-shadow: 0 8px 20px rgb(124 58 237 / 0.18);
+  box-shadow: 0 8px 24px rgb(37 99 235 / 0.35);
   transition:
-    transform 160ms ease,
+    transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
     filter 160ms ease,
     box-shadow 160ms ease;
 }
 
+.zigo-cta:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 28px rgb(249 115 22 / 0.4);
+}
+
 .zigo-cta:active,
 .tap-scale.zigo-cta:active {
-  transform: scale(0.97);
-  filter: brightness(1.06) saturate(1.08);
-  box-shadow: 0 6px 16px rgb(124 58 237 / 0.28);
+  transform: scale(0.95);
+  filter: brightness(1.1) saturate(1.15);
+  box-shadow: 0 4px 12px rgb(37 99 235 / 0.4);
 }
 
 .role-theme-parent .zigo-cta {
@@ -267,10 +272,10 @@ a,
 }
 
 .glass-panel {
-  border: 1px solid rgb(255 255 255 / 0.16);
-  background: rgb(15 23 42 / 0.28);
-  box-shadow: 0 18px 45px rgb(15 23 42 / 0.24);
-  backdrop-filter: blur(18px);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: rgb(2 6 23 / 0.4);
+  box-shadow: 0 18px 45px rgb(0 0 0 / 0.4);
+  backdrop-filter: blur(24px);
 }
 
 .zigo-shell-bg {
@@ -289,24 +294,24 @@ a,
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   background:
-    radial-gradient(circle at 18% 20%, rgb(124 58 237 / 0.25), transparent 42%),
-    radial-gradient(circle at 82% 78%, rgb(236 72 153 / 0.2), transparent 46%),
+    radial-gradient(circle at 18% 20%, rgb(37 99 235 / 0.35), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgb(249 115 22 / 0.3), transparent 46%),
     linear-gradient(160deg, #0f172a 0%, #020617 100%);
   border: 1px solid rgb(30 41 59);
-  box-shadow: 0 18px 40px rgb(0 0 0 / 0.5);
+  box-shadow: 0 24px 50px rgb(0 0 0 / 0.6);
 }
 
 .zigo-empty-hero::before {
   content: "";
   position: absolute;
   inset: auto -20% -35% auto;
-  width: 12rem;
-  height: 12rem;
+  width: 14rem;
+  height: 14rem;
   border-radius: 9999px;
-  background: radial-gradient(circle, rgb(124 58 237 / 0.25), transparent 68%);
-  animation: float-soft 5.2s ease-in-out infinite;
+  background: radial-gradient(circle, rgb(249 115 22 / 0.25), transparent 68%);
+  animation: float-soft 4s ease-in-out infinite;
   z-index: -1;
 }
 
@@ -368,8 +373,8 @@ a,
 
 .feed-pulse-hero {
   background:
-    radial-gradient(circle at top right, rgb(236 72 153 / 0.22), transparent 42%),
-    linear-gradient(135deg, #101828 0%, #4c1d95 48%, #7c3aed 100%);
+    radial-gradient(circle at top right, rgb(249 115 22 / 0.35), transparent 42%),
+    linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 48%, #2563eb 100%);
   color: #ffffff;
   position: relative;
 }
@@ -379,9 +384,9 @@ a,
   pointer-events: none;
   position: absolute;
   inset: 0;
-  background: linear-gradient(110deg, transparent 20%, rgb(255 255 255 / 0.07) 48%, transparent 72%);
+  background: linear-gradient(110deg, transparent 20%, rgb(255 255 255 / 0.12) 48%, transparent 72%);
   transform: translateX(-120%);
-  animation: pulse-sheen 7s ease-in-out infinite;
+  animation: pulse-sheen 6s ease-in-out infinite;
 }
 
 .feed-pulse-hero p,
@@ -390,9 +395,9 @@ a,
 }
 
 .zigo-quick-action-primary {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 52%, #ec4899 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 52%, #f97316 100%);
   color: #ffffff !important;
-  box-shadow: 0 10px 24px rgb(124 58 237 / 0.22);
+  box-shadow: 0 10px 24px rgb(37 99 235 / 0.3);
 }
 
 .zigo-quick-action-secondary {
@@ -401,13 +406,13 @@ a,
 }
 
 .zigo-tab-active {
-  background-color: #7c3aed;
+  background-color: #2563eb;
   color: #ffffff !important;
 }
 
 .zigo-tab-active-pill {
-  border-color: #7c3aed;
-  background-color: #7c3aed;
+  border-color: #2563eb;
+  background-color: #2563eb;
   color: #ffffff !important;
 }
 
@@ -418,8 +423,8 @@ a,
 }
 
 .zigo-tab-active-underline {
-  border-bottom-color: #7c3aed;
-  color: #7c3aed !important;
+  border-bottom-color: #2563eb;
+  color: #2563eb !important;
 }
 
 .zigo-tab-inactive-underline {
@@ -428,7 +433,7 @@ a,
 }
 
 .zigo-ring-active {
-  box-shadow: 0 0 0 2px #7c3aed;
+  box-shadow: 0 0 0 2px #f97316;
 }
 
 .zigo-action-grid {

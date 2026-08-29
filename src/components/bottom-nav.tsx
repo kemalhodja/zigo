@@ -65,15 +65,15 @@ export function BottomNav({
               isActive
                 ? variant === "overlay"
                   ? "bg-white/25 text-white shadow-sm"
-                  : "bg-white/10 text-white"
+                  : "bg-blue-600/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
                 : variant === "overlay"
                   ? "text-white/80 hover:text-white"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
             href={item.href}
             key={item.href}
           >
-            <span className={`role-nav-icon flex size-7 items-center justify-center transition ${isActive ? "scale-105" : ""}`}>
+            <span className={`role-nav-icon flex size-7 items-center justify-center transition-all duration-300 ${isActive ? "scale-110 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" : ""}`}>
               <NavIcon active={isActive} name={item.icon} variant={variant} />
             </span>
             <span className={`max-w-full truncate px-0.5 text-center text-[0.63rem] leading-tight ${isActive ? "font-bold text-white" : "font-semibold"}`}>
@@ -111,7 +111,7 @@ function NavIcon({
   name: string;
   variant?: "default" | "overlay";
 }) {
-  const activeFill = variant === "overlay" ? "currentColor" : "#7C3AED";
+  const activeFill = variant === "overlay" ? "currentColor" : "#2563EB";
   if (name === "home") {
     return (
       <svg aria-hidden="true" className="size-5" fill={active ? activeFill : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
