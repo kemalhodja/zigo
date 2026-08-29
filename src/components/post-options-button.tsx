@@ -135,7 +135,7 @@ export function PostOptionsButton({
     complete(a.feedTuned);
   }
 
-  async function reportPost() {
+  async function reportPost(reason: string = "safety_review") {
     if (isSaving) return;
 
     if (!postId) {
@@ -149,7 +149,7 @@ export function PostOptionsButton({
       const response = await fetch("/api/social/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, reason: "safety_review" }),
+        body: JSON.stringify({ postId, reason }),
       });
 
       if (!response.ok) {
@@ -315,14 +315,24 @@ export function PostOptionsButton({
               {isMuted ? a.notInterestedAdded : a.notInterested}
             </button>
             {canReport ? (
-              <button
-                className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-rose-600"
-                disabled={isSaving}
-                onClick={reportPost}
-                type="button"
-              >
-                {a.report}
-              </button>
+              <>
+                <button
+                  className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-rose-600"
+                  disabled={isSaving}
+                  onClick={() => reportPost("safety_review")}
+                  type="button"
+                >
+                  {a.report || "Gönderiyi Şikayet Et (Güvenlik)"}
+                </button>
+                <button
+                  className="tap-scale w-full border-b border-slate-100 px-5 py-4 text-left text-sm font-black text-rose-600"
+                  disabled={isSaving}
+                  onClick={() => reportPost("off_topic")}
+                  type="button"
+                >
+                  🚫 Uygulama Amacı Dışında Paylaşım
+                </button>
+              </>
             ) : null}
             <button
               className="tap-scale w-full px-5 py-4 text-center text-sm font-black text-slate-500"

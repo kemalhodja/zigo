@@ -70,11 +70,24 @@ export async function POST(request: Request) {
       "education_institution",
       "education_platform",
       "publisher",
+      "student",
+      "parent",
     ]);
 
     if (!ALLOWED_PUBLISHER_ROLES.has(profile.role)) {
       console.warn("[SERVER_POST_REJECTED] Role check failed:", profile.role);
-      return NextResponse.json({ error: "Gönderi paylaşmak için öğretmen veya yayıncı/kurum hesabı gereklidir." }, { status: 403 });
+      return NextResponse.json({ error: "Gönderi paylaşmak için öğretmen, yayıncı/kurum, veya Zigo Plus abonesi öğrenci/veli hesabı gereklidir." }, { status: 403 });
+    }
+
+    if (profile.role === "student" || profile.role === "parent") {
+      const subscription = await getUserSubscription(supabase, profile.id);
+      if (!subscription || subscription.status !== "active") {
+        console.warn("[SERVER_POST_REJECTED] Unsubscribed student/parent attempted post creation:", profile.id);
+        return NextResponse.json(
+          { error: "Öğrenciler ve Veliler gönderi paylaşabilmek için aktif bir Zigo Plus abonesi olmalıdır." },
+          { status: 403 },
+        );
+      }
     }
 
     if (profile.role === "teacher" && !profile.is_verified) {
