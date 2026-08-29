@@ -295,5 +295,17 @@ export async function updateStoreRedemptionStatus(
     .single();
 
   if (error) throw error;
+  if (error) throw error;
   return data;
+}
+
+export async function getRiskyUsersQueue(supabase: SupabaseClient<Database>) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, full_name, email, role, social_safety_strike_count, social_interactions_blocked")
+    .gt("social_safety_strike_count", 0)
+    .order("social_safety_strike_count", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
 }

@@ -20,6 +20,9 @@ export const createSocialPostSchema = z.object({
   mediaUrl: mediaUrlSchema,
   mediaType: z.enum(["image", "video", "carousel"]).default("image"),
   isReel: z.coerce.boolean().default(false),
+  followersOnly: z.coerce.boolean().default(false),
+  followersOnlyComments: z.coerce.boolean().default(false),
+  teaserText: z.string().trim().max(150, "Kilit ekranı metni çok uzun").optional().nullable().or(z.literal("")),
   areaId: z.preprocess(
     (val) => {
       const num = Number(val);
@@ -114,12 +117,14 @@ export const commentSchema = socialPostActionSchema.extend({
 
 export const followSchema = z.object({
   followingId: z.string().uuid(),
+  sourcePostId: z.string().uuid().optional().nullable(),
 });
 
 export const createStorySchema = z.object({
   caption: z.string().trim().max(500).optional().or(z.literal("")),
   mediaUrl: mediaUrlSchema,
   areaId: z.coerce.number().int().positive(),
+  followersOnly: z.coerce.boolean().default(false),
 });
 
 export const storyReplySchema = z.object({

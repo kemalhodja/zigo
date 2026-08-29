@@ -32,6 +32,7 @@ type SocialPostActionsProps = {
   initialShares?: number;
   initialLiked?: boolean;
   initialSaved?: boolean;
+  isCommentRestricted?: boolean;
   variant?: "full" | "compact";
 };
 
@@ -42,6 +43,7 @@ export function SocialPostActions({
   initialShares = 0,
   initialLiked = false,
   initialSaved = false,
+  isCommentRestricted = false,
   variant = "full",
   theme = "dark",
 }: SocialPostActionsProps & { theme?: "dark" | "light" }) {
@@ -416,6 +418,7 @@ export function SocialPostActions({
         inputRef={commentSheetInputRef}
         isCommentLoading={isCommentLoading}
         isCommentSaving={isCommentSaving}
+        isCommentRestricted={isCommentRestricted}
         isOpen={isCommentSheetOpen}
         labels={{
           addComment: a.addComment,

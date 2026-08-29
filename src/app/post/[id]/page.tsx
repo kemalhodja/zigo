@@ -39,7 +39,7 @@ export async function generateMetadata(
   const caption = post.caption || `${authorName} tarafından paylaşıldı.`;
   
   let mediaUrl: string[] = [];
-  if (post.media_url) {
+  if (post.media_url && !(post as any).followers_only) {
     if (post.media_type === "carousel") {
       try {
         mediaUrl = JSON.parse(post.media_url);

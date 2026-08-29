@@ -1,10 +1,12 @@
 {
-  "scripts": [
+"scripts": [
     "analyze-bundle.mjs",
     "bundle-migrations.mjs",
+    "check-users.mjs",
     "clean-next.mjs",
     "dependency-audit.mjs",
     "dead-code-audit.mjs",
+    "delete-custom-users.mjs",
     "typescript-audit.mjs",
     "sync-database-types.mjs",
     "visual-regression-probe.mjs",
@@ -40,7 +42,11 @@
     "hetzner-wait-dns-and-cert.mjs",
     "hetzner-zigo-env-rebuild.mjs",
     "hetzner-zigo-nginx.mjs",
+    "make-admin.mjs",
+    "mobile-smoke.mjs",
+    "redistribute-users.mjs",
     "seed-custom-users.mjs",
+    "set-admin.mjs",
     "supabase-auth-cutover-check.mjs",
     "vercel-detach-zigo.mjs",
     "diag-smoke.mjs"

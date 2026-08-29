@@ -5,9 +5,9 @@ import { Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-import { BillingService, PRODUCT_IDS } from "@/services/billingService";
 import { applyPromoCode, calculateDynamicPrice } from "@/lib/domain/subscription-campaign";
 import { createClient } from "@/lib/supabase/client";
+import { BillingService, PRODUCT_IDS } from "@/services/billingService";
 
 type SubscriptionModalProps = {
   isOpen: boolean;

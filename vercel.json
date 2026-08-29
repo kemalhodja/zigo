@@ -3,7 +3,7 @@
   "framework": "nextjs",
   "buildCommand": "npm run build:safe",
   "installCommand": "npm ci",
-  "regions": ["fra1", "iad1"],
+  "regions": ["fra1"],
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30

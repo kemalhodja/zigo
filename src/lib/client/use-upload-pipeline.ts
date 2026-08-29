@@ -44,6 +44,9 @@ export interface PublishInput {
   sponsoredLabel?: string;
   sponsoredTargetUrl?: string;
   externalUrl?: string;
+  followersOnly?: boolean;
+  followersOnlyComments?: boolean;
+  teaserText?: string;
 }
 
 // ── Daily limit helpers ───────────────────────────────────────────────────────
@@ -302,6 +305,9 @@ export function useUploadPipeline() {
       targetAudience: input.targetGrade?.trim() ? "grade" : "all",
       targetGrade: input.targetGrade?.trim() || null,
       isReel: input.isReel,
+      followersOnly: input.followersOnly,
+      followersOnlyComments: input.followersOnlyComments,
+      teaserText: input.teaserText?.trim() || undefined,
       externalUrl: input.externalUrl?.trim() || undefined,
       ...(input.teacherCreatorPlus && input.premiumPrepLabel && input.premiumPrepUrl
         ? { premiumPrepLabel: input.premiumPrepLabel, premiumPrepUrl: input.premiumPrepUrl }

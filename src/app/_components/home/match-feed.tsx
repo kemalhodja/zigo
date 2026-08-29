@@ -54,7 +54,17 @@ export function FeedPostCard({
           )}
         </div>
         <div className="px-4 mt-3 space-y-2">
-          <SocialPostActions initialComments={post.comments} initialLikes={post.likes} initialShares={post.shares} initialLiked={post.isLiked} initialSaved={post.isSaved} postId={post.postId} variant="compact" theme="light" />
+          <SocialPostActions 
+            initialComments={post.comments} 
+            initialLikes={post.likes} 
+            initialShares={post.shares} 
+            initialLiked={post.isLiked} 
+            initialSaved={post.isSaved} 
+            postId={post.postId} 
+            isCommentRestricted={post.followersOnlyComments && !post.isFollowingCreator && !post.isOwner}
+            variant="compact" 
+            theme="light" 
+          />
         </div>
         <div className="mt-2">
           <ExpandableCaption caption={post.caption} handle={post.handle} theme="light" />
@@ -160,12 +170,11 @@ export function CreatorRail({
 
 export function FollowingStarter({
   creators,
-  messages,
+  _messages,
 }: {
   creators: DisplaySuggestedCreator[];
-  messages: Messages;
+  _messages: Messages;
 }) {
-  const f = messages.feedExtras;
   return (
     <section className="zigo-empty-hero px-6 py-12 text-center bg-white border-b border-slate-100">
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-slate-50 text-2xl font-black text-slate-400 shadow-lg shadow-slate-100 border border-slate-100">
@@ -194,9 +203,7 @@ export function FollowingStarter({
   );
 }
 
-export function ForYouStarter({ messages }: { messages: Messages }) {
-  const f = messages.feedExtras;
-  const o = messages.onboarding;
+export function ForYouStarter({ _messages }: { _messages: Messages }) {
   return (
     <section className="zigo-empty-hero px-6 py-12 text-center">
       <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-crystal to-berry text-2xl font-black text-white shadow-lg shadow-crystal/25">

@@ -70,6 +70,9 @@ export function PostWizard({
   const [externalUrl, setExternalUrl] = useState("");
   const [selectedAreaId, setSelectedAreaId] = useState<number>(areas[0]?.id ?? 0);
   const [targetGrade, setTargetGrade] = useState("Hepsi (Tüm Sınıflar)");
+  const [followersOnly, setFollowersOnly] = useState(false);
+  const [followersOnlyComments, setFollowersOnlyComments] = useState(false);
+  const [teaserText, setTeaserText] = useState("");
 
   useEffect(() => {
     if ((!selectedAreaId || selectedAreaId === 0) && areas.length > 0 && areas[0]?.id) {
@@ -166,6 +169,9 @@ export function PostWizard({
       isReel: forceReel || (previews.length === 1 && previews[0].type === "video"),
       files: selectedFiles,
       teacherCreatorPlus,
+      followersOnly,
+      followersOnlyComments,
+      teaserText,
     });
   }
 
@@ -212,6 +218,9 @@ export function PostWizard({
             externalUrl={externalUrl}
             selectedAreaId={selectedAreaId}
             targetGrade={targetGrade}
+            followersOnly={followersOnly}
+            followersOnlyComments={followersOnlyComments}
+            teaserText={teaserText}
             forceReel={forceReel}
             pipelineError={pipeline.error}
             canPublish={caption.trim().length > 0 && selectedAreaId > 0 && !pipeline.isLocked}
@@ -219,6 +228,9 @@ export function PostWizard({
             onExternalUrlChange={setExternalUrl}
             onAreaChange={setSelectedAreaId}
             onGradeChange={setTargetGrade}
+            onFollowersOnlyChange={setFollowersOnly}
+            onFollowersOnlyCommentsChange={setFollowersOnlyComments}
+            onTeaserTextChange={setTeaserText}
             onBack={() => { setStep(1); pipeline.reset(); }}
             onPublish={handlePublish}
             onRetry={pipeline.reset}
@@ -391,6 +403,9 @@ type CaptionStepProps = {
   externalUrl: string;
   selectedAreaId: number;
   targetGrade: string;
+  followersOnly: boolean;
+  followersOnlyComments: boolean;
+  teaserText: string;
   forceReel: boolean;
   pipelineError: string | null;
   canPublish: boolean;
@@ -398,6 +413,9 @@ type CaptionStepProps = {
   onExternalUrlChange: (v: string) => void;
   onAreaChange: (id: number) => void;
   onGradeChange: (g: string) => void;
+  onFollowersOnlyChange: (v: boolean) => void;
+  onFollowersOnlyCommentsChange: (v: boolean) => void;
+  onTeaserTextChange: (v: string) => void;
   onBack: () => void;
   onPublish: () => void;
   onRetry: () => void;
@@ -409,6 +427,9 @@ function CaptionStep({
   externalUrl,
   selectedAreaId,
   targetGrade,
+  followersOnly,
+  followersOnlyComments,
+  teaserText,
   forceReel,
   pipelineError,
   canPublish,
@@ -416,6 +437,9 @@ function CaptionStep({
   onExternalUrlChange,
   onAreaChange,
   onGradeChange,
+  onFollowersOnlyChange,
+  onFollowersOnlyCommentsChange,
+  onTeaserTextChange,
   onBack,
   onPublish,
   onRetry,
@@ -524,6 +548,59 @@ function CaptionStep({
         <p className="mt-1.5 text-[0.65rem] font-bold text-slate-400">
           Gönderinizde tıklanabilir bir buton olarak görünür.
         </p>
+      </div>
+
+      {/* ── Followers Only Toggle ── */}
+      <div className="px-4 pt-5">
+        <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:bg-slate-50 cursor-pointer">
+          <div className="flex flex-col gap-1 pr-4">
+            <span className="text-sm font-black text-night flex items-center gap-2">
+              🔒 Sadece Takipçilerime Özel
+            </span>
+            <span className="text-[0.65rem] font-bold text-slate-400">
+              Gönderiyi sadece sizi takip edenler görebilir. Takip etmeyenler bulanık görecek.
+            </span>
+          </div>
+          <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+               style={{ backgroundColor: followersOnly ? "#8b5cf6" : "#e2e8f0" }}
+               onClick={() => onFollowersOnlyChange(!followersOnly)}>
+            <span className={`inline-block size-4 transform rounded-full bg-white transition-transform duration-300 ${followersOnly ? "translate-x-6" : "translate-x-1"}`} />
+          </div>
+        </label>
+        {followersOnly && (
+          <div className="mt-3">
+            <input
+              type="text"
+              className="w-full rounded-xl border border-violet-200 bg-violet-50/50 px-4 py-3 text-sm text-night placeholder:text-violet-300 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
+              placeholder="Teaser yazısı ör: 'Ödüllü soru burada!'"
+              value={teaserText}
+              onChange={(e) => onTeaserTextChange(e.target.value)}
+              maxLength={150}
+            />
+            <p className="mt-1 text-right text-[0.65rem] font-bold text-violet-400">
+              {teaserText.length}/150
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Followers Only Comments Toggle ── */}
+      <div className="px-4 pt-3">
+        <label className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:bg-slate-50 cursor-pointer">
+          <div className="flex flex-col gap-1 pr-4">
+            <span className="text-sm font-black text-night flex items-center gap-2">
+              💬 Yorumlar Sadece Takipçilerime Açık
+            </span>
+            <span className="text-[0.65rem] font-bold text-slate-400">
+              Yorum yapabilmek için takipçi olmayı zorunlu kılar.
+            </span>
+          </div>
+          <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+               style={{ backgroundColor: followersOnlyComments ? "#8b5cf6" : "#e2e8f0" }}
+               onClick={() => onFollowersOnlyCommentsChange(!followersOnlyComments)}>
+            <span className={`inline-block size-4 transform rounded-full bg-white transition-transform duration-300 ${followersOnlyComments ? "translate-x-6" : "translate-x-1"}`} />
+          </div>
+        </label>
       </div>
 
       {/* ── Pipeline error + retry ── */}

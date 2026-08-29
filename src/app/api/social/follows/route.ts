@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     const data = await toggleFollow(supabase, {
       followerId: profile.id,
       followingId: body.followingId,
+      sourcePostId: body.sourcePostId,
     });
 
     revalidatePath("/");

@@ -831,12 +831,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 </p>
               </div>
             </div>
-            <Link
-              className="mt-3 inline-flex text-xs font-black text-crystal"
-              href="/moderation"
-            >
-              Tüm Kullanıcı ve İçerik Şikayetlerini Görüntüle →
-            </Link>
+            <div className="mt-4 flex flex-col gap-2">
+              <Link
+                className="inline-flex text-xs font-black text-crystal"
+                href="/moderation"
+              >
+                Tüm Kullanıcı ve İçerik Şikayetlerini Görüntüle →
+              </Link>
+              <Link
+                className="inline-flex text-xs font-black text-red-500 hover:text-red-600"
+                href="/admin/risky-users"
+              >
+                ⚠️ Riskli ve İhlal Yapan Kullanıcıları Yönet →
+              </Link>
+            </div>
           </section>
           <div className="mt-4">
             <AdminAdApprovalQueue />

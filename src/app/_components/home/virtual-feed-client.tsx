@@ -35,7 +35,7 @@ export function VirtualFeedClient({
   });
 
   if (posts.length === 0) {
-    return <FollowingStarter creators={suggestedCreators} messages={messages} />;
+    return <FollowingStarter creators={suggestedCreators} _messages={messages} />;
   }
 
   return (

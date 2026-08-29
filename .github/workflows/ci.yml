@@ -15,6 +15,9 @@ on:
         options:
           - staging
           - production
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC for security scans
+    - cron: '0 3 * * 1'  # Weekly on Monday 3 AM for performance tests
 
 env:
   NODE_VERSION: '22.x'
@@ -28,7 +31,7 @@ jobs:
   quality-gates:
     name: Quality Gates
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,13 +77,19 @@ jobs:
           files: ./coverage/lcov.info
           fail_ci_if_error: true
 
+      - name: Accessibility audit
+        run: npm run audit:accessibility
+
+      - name: Visual regression check
+        run: npm run test:visual
+
   # ============================================================
   # FULL AUDIT SUITE (run on main/develop pushes)
   # ============================================================
   full-audit:
     name: Full Audit Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     needs: quality-gates
     steps:
@@ -113,7 +122,7 @@ jobs:
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     needs: quality-gates
     steps:
@@ -132,7 +141,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Build
         run: npm run build:safe
@@ -140,10 +149,19 @@ jobs:
       - name: Start preview server
         run: |
           npm run start &
-          sleep 10
+          sleep 15
 
-      - name: Run E2E tests
-        run: npm run test:playwright
+      - name: Run E2E tests (critical paths)
+        run: npm run test:playwright -- --project=chromium
+
+      - name: Run Visual Regression tests
+        run: npm run test:playwright -- --project=chromium --grep "Visual Regression"
+
+      - name: Run Accessibility tests
+        run: npm run test:playwright -- --project=chromium --grep "Accessibility"
+
+      - name: Run Mobile tests
+        run: npm run test:playwright -- --project=mobile-chrome --grep "Mobile"
 
       - name: Upload Playwright traces
         if: failure()
@@ -153,13 +171,85 @@ jobs:
           path: test-results/
           retention-days: 7
 
+      - name: Upload visual regression screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diffs
+          path: test-results/
+          retention-days: 7
+
+  # ============================================================
+  # PERFORMANCE TESTS (scheduled + manual)
+  # ============================================================
+  performance-tests:
+    name: Performance Tests (k6)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: quality-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup k6
+        uses: grafana/k6-action@v0.2.0
+        with:
+          version: 'latest'
+
+      - name: Run load test (smoke)
+        run: k6 run e2e/load-test.js --env BASE_URL=https://staging.zigo.app
+
+      - name: Run load test (stress)
+        if: github.event_name == 'workflow_dispatch'
+        run: k6 run e2e/load-test.js --env BASE_URL=https://staging.zigo.app --duration 5m --vus 500
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-results
+          path: k6-results/
+          retention-days: 7
+
+  # ============================================================
+  # SECURITY SCANS
+  # ============================================================
+  security-scan:
+    name: Security Scan (OWASP ZAP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: quality-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run OWASP ZAP Scan
+        uses: zaproxy/action-full-scan@v0.12.0
+        with:
+          target: 'https://staging.zigo.app'
+          cmd_options: '-a'
+
+      - name: Upload ZAP Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: zap-report.html
+          retention-days: 7
+
   # ============================================================
   # DEPLOY STAGING (on develop push or manual)
   # ============================================================
   deploy-staging:
     name: Deploy Staging
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     needs: [full-audit, e2e-tests]
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/develop') ||
@@ -200,6 +290,11 @@ jobs:
         env:
           BASE_URL: https://staging.zigo.app
 
+      - name: Run staging visual regression
+        run: npm run test:visual
+        env:
+          BASE_URL: https://staging.zigo.app
+
       - name: Notify deployment
         if: always()
         run: |
@@ -215,8 +310,8 @@ jobs:
   deploy-production:
     name: Deploy Production
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [full-audit, e2e-tests]
+    timeout-minutes: 35
+    needs: [full-audit, e2e-tests, performance-tests]
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')) ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
@@ -263,6 +358,11 @@ jobs:
 
       - name: Run production smoke tests
         run: npm run test:smoke
+        env:
+          BASE_URL: https://zigo.app
+
+      - name: Run production visual regression
+        run: npm run test:visual
         env:
           BASE_URL: https://zigo.app
 
@@ -316,5 +416,10 @@ jobs:
 
       - name: Verify deployment
         run: node scripts/verify-deploy-readiness.mjs
+        env:
+          BASE_URL: https://${{ secrets.HETZNER_DOMAIN }}
+
+      - name: Run post-deploy smoke tests
+        run: npm run test:smoke
         env:
           BASE_URL: https://${{ secrets.HETZNER_DOMAIN }}

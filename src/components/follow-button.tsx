@@ -7,6 +7,7 @@ import { useMessages } from "@/lib/i18n/locale-context";
 
 type FollowButtonProps = {
   followingId?: string;
+  sourcePostId?: string;
   initialFollowing?: boolean;
   initialFollowersCount?: number;
   showCount?: boolean;
@@ -15,6 +16,7 @@ type FollowButtonProps = {
 
 export function FollowButton({
   followingId,
+  sourcePostId,
   initialFollowersCount,
   initialFollowing = false,
   showCount = false,
@@ -41,10 +43,15 @@ export function FollowButton({
     setIsSaving(true);
 
     try {
+      const payloadObj: any = { followingId };
+      if (sourcePostId) {
+        payloadObj.sourcePostId = sourcePostId;
+      }
+      
       const response = await fetch("/api/social/follows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ followingId }),
+        body: JSON.stringify(payloadObj),
       });
 
       if (!response.ok) {

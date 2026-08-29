@@ -58,6 +58,9 @@ export type DisplayPost = {
   city?: string | null;
   district?: string | null;
   externalUrl?: string | null;
+  isFollowersOnlyLocked?: boolean;
+  teaserText?: string | null;
+  followersOnlyComments?: boolean;
 };
 
 export type DisplaySuggestedCreator = {
@@ -342,7 +345,7 @@ export function toDisplayPost(
   } = {},
 ): DisplayPost {
   const authorName = post.author?.full_name ?? "Zigo Creator";
-  return {
+  const displayPost: DisplayPost = {
     postId: post.id,
     authorId: post.author?.id,
     authorName,
@@ -389,7 +392,24 @@ export function toDisplayPost(
     city: (post as unknown as { city?: string | null }).city ?? null,
     district: (post as unknown as { district?: string | null }).district ?? null,
     externalUrl: (post as unknown as { external_url?: string | null }).external_url ?? null,
+    teaserText: (post as unknown as { teaser_text?: string | null }).teaser_text ?? null,
+    followersOnlyComments: (post as unknown as { followers_only_comments?: boolean }).followers_only_comments ?? false,
   };
+
+  const isOwner = Boolean(followState.viewerId && post.author?.id && followState.viewerId === post.author.id);
+  const isFollowersOnlyLocked = Boolean(
+    (post as any).followers_only &&
+    !followState.isFollowingCreator &&
+    !isOwner
+  );
+
+  if (isFollowersOnlyLocked) {
+    displayPost.mediaUrl = null;
+    displayPost.caption = "Bu içerik sadece takipçilere özeldir.";
+    (displayPost as any).isFollowersOnlyLocked = true;
+  }
+
+  return displayPost;
 }
 
 export async function getHomeViewerContext(): Promise<{

@@ -277,34 +277,43 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             </p>
           </div>
         ) : (
-          posts.map((post, index) => (
-            <Link
-              className="group relative block text-[0.68rem] font-black text-white"
-              href={post.media_type === "video" || activeTab === "reels" ? `/micro?reelId=${post.id}` : `/post/${post.id}`}
-              key={post.id}
-            >
-              <SocialMediaFrame
-                className="aspect-square media-polish"
-                gradient={
-                  index % 3 === 0
-                    ? "from-crystal to-fuchsia-500"
-                    : index % 3 === 1
-                      ? "from-emerald-500 to-teal-500"
-                      : "from-amber-400 to-orange-500"
-                }
-                mediaType={post.media_type}
-                mediaUrl={post.media_url}
-                scene={index % 4 === 0 ? "math" : index % 4 === 1 ? "science" : index % 4 === 2 ? "coding" : "english"}
+          posts.map((post, index) => {
+            const isLocked = (post as any).followers_only && !following && !isOwnProfile;
+
+            return (
+              <Link
+                className="group relative block text-[0.68rem] font-black text-white"
+                href={post.media_type === "video" || activeTab === "reels" ? `/micro?reelId=${post.id}` : `/post/${post.id}`}
+                key={post.id}
               >
-                <div className="flex items-start justify-between">
-                  {post.media_type === "video" ? (
-                    <span className="flex size-6 items-center justify-center rounded-md bg-black/30 backdrop-blur">
-                      <svg aria-hidden="true" className="ml-0.5 size-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    </span>
-                  ) : <span />}
-                </div>
-                <div />
-              </SocialMediaFrame>
+                <SocialMediaFrame
+                  className="aspect-square media-polish"
+                  gradient={
+                    index % 3 === 0
+                      ? "from-crystal to-fuchsia-500"
+                      : index % 3 === 1
+                        ? "from-emerald-500 to-teal-500"
+                        : "from-amber-400 to-orange-500"
+                  }
+                  mediaType={post.media_type}
+                  mediaUrl={isLocked ? null : post.media_url}
+                  scene={index % 4 === 0 ? "math" : index % 4 === 1 ? "science" : index % 4 === 2 ? "coding" : "english"}
+                >
+                  <div className="flex items-start justify-between">
+                    {isLocked ? (
+                      <span className="flex size-6 items-center justify-center rounded-md bg-black/40 backdrop-blur">
+                        🔒
+                      </span>
+                    ) : post.media_type === "video" ? (
+                      <span className="flex size-6 items-center justify-center rounded-md bg-black/30 backdrop-blur">
+                        <svg aria-hidden="true" className="ml-0.5 size-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+                  </div>
+                  <div />
+                </SocialMediaFrame>
               <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 group-active:opacity-100">
                 <span className="flex items-center gap-1 font-black">
                   <svg aria-hidden="true" className="size-4 fill-white" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>

@@ -111,6 +111,9 @@ export async function createSocialPost(
           location_name: parsed.locationName ?? null,
           city: parsed.city ?? null,
           district: parsed.district ?? null,
+          followers_only: parsed.followersOnly,
+          followers_only_comments: parsed.followersOnlyComments,
+          teaser_text: parsed.teaserText ?? null,
         } as Database["public"]["Tables"]["social_posts"]["Insert"])
         .select("*")
         .single();
@@ -266,6 +269,7 @@ export async function createStory(
           area_id: parsed.areaId,
           caption: safeCaption,
           media_url: parsed.mediaUrl || null,
+          followers_only: parsed.followersOnly,
         });
 
       if (error) throw error;
@@ -448,6 +452,20 @@ export async function createComment(
 ) {
   const parsed = commentSchema.parse(input);
 
+  // Check followers_only_comments restriction
+  const { data: postData } = await supabase
+    .from("social_posts")
+    .select("author_id, followers_only_comments")
+    .eq("id", parsed.postId)
+    .single();
+
+  if (postData?.followers_only_comments && postData.author_id !== input.userId) {
+    const isFollowing = await hasFollow(supabase, input.userId, postData.author_id);
+    if (!isFollowing) {
+      throw new Error("Bu gönderiye sadece yazarın takipçileri yorum yapabilir.");
+    }
+  }
+
   return runModeratedPublishAction(
     supabase,
     {
@@ -480,7 +498,7 @@ export async function createComment(
 
 export async function toggleFollow(
   supabase: SupabaseClient<Database>,
-  input: { followerId: string; followingId: string },
+  input: { followerId: string; followingId: string; sourcePostId?: string | null },
 ) {
   const parsed = followSchema.parse(input);
   if (input.followerId === parsed.followingId) {
@@ -508,6 +526,14 @@ export async function toggleFollow(
     following_id: parsed.followingId,
   });
   if (error) throw error;
+
+  if (parsed.sourcePostId) {
+    try {
+      await supabase.rpc('increment_follower_conversion', { p_post_id: parsed.sourcePostId });
+    } catch {
+      // Best effort analytic
+    }
+  }
 
   await supabase.from("notifications").insert({
     user_id: parsed.followingId,
