@@ -4,11 +4,15 @@
 
 export const IAP_PRODUCT_IDS = {
   ZIGO_PLUS: "zigo_plus",
-  STUDENT_MONTHLY: "zigo_student_plus_monthly",
-  STUDENT_YEARLY: "zigo_student_plus_yearly",
+  STUDENT_MONTHLY: "zigo-plus-student-monthly",
+  STUDENT_YEARLY: "zigo-plus-student-yearly",
   PARENT_MONTHLY: "zigo_parent_plus_monthly",
-  TEACHER_MONTHLY: "zigo_teacher_plus_monthly",
-  TEACHER_YEARLY: "zigo_teacher_plus_yearly",
+  TEACHER_MONTHLY: "zigo-plus-teachers-monthly",
+  TEACHER_YEARLY: "zigo-plus-teachers-yearly",
+  INSTITUTION_MONTHLY: "zigo-plus-educational-institutions-monthly",
+  INSTITUTION_YEARLY: "zigo-plus-educational-institutions-yearly",
+  PLATFORM_MONTHLY: "zigo-plus-platform-monthly",
+  PLATFORM_YEARLY: "zigo-plus-platform-yearly",
 } as const;
 
 export type MobilePurchasePayload = {

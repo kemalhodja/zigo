@@ -291,8 +291,8 @@ function PlanPriceRow({
     let purchaseToken: string | null = null;
     let orderId: string | null = null;
     
-    // As per Option A: Use the same base product "zigo_plus" but attach the offerToken.
-    const productId = "zigo_plus";
+    // Use the specific Google Play product ID based on planId
+    const productId = planId;
     const offerToken = isPromoApplied ? "zigo_50_offer" : undefined;
 
     try {

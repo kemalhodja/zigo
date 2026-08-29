@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const googlePlaySchema = z.object({
   planId: z.string().trim().min(3).max(80).default("zigo-plus-student-monthly"),
-  productId: z.string().trim().min(3).max(80).default("zigo_plus"),
+  productId: z.string().trim().min(3).max(80).default("zigo-plus-student-monthly"),
   purchaseToken: z.string().trim().min(5),
   packageName: z.string().trim().min(3).default("com.zigo.app"),
   orderId: z.string().trim().optional().nullable(),
