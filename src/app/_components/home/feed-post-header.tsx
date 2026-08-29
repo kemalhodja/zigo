@@ -22,15 +22,22 @@ export function FeedPostHeader({
     <div className="flex items-center justify-between px-4 py-3">
       <Link className="flex min-w-0 flex-1 items-center gap-3" href={post.authorId ? `/profile/${post.authorId}` : "/profile"}>
         <SocialAvatar className="size-9" label={post.authorName} imageUrl={post.avatarUrl} />
-          <div className="flex items-center gap-1">
-            <p className={`truncate text-[0.95rem] font-bold ${textColorClass}`}>
-              {post.handle}
-              {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
-            </p>
-            {post.verified && (
-              <svg aria-hidden="true" className="size-4 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.1 14.8l-4.2-4.2 1.4-1.4 2.8 2.8 6.4-6.4 1.4 1.4-7.8 7.8z" />
-              </svg>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1">
+              <p className={`truncate text-[0.95rem] font-bold ${textColorClass}`}>
+                {post.handle}
+                {post.coAuthorName ? ` & ${post.coAuthorName.toLowerCase().replaceAll(" ", "")}` : ""}
+              </p>
+              {post.verified && (
+                <svg aria-hidden="true" className="size-4 text-sky-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.1 14.8l-4.2-4.2 1.4-1.4 2.8 2.8 6.4-6.4 1.4 1.4-7.8 7.8z" />
+                </svg>
+              )}
+            </div>
+            {post.authorRole === "student" && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Zigo Plus Öğrenci
+              </span>
             )}
           </div>
       </Link>

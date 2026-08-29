@@ -33,6 +33,18 @@ export async function POST(request: Request) {
       details: body.details,
     });
 
+    if (body.reason === "off_topic") {
+      const { count } = await supabase
+        .from("content_reports")
+        .select("*", { count: "exact", head: true })
+        .eq("post_id", body.postId)
+        .eq("reason", "off_topic");
+
+      if (count && count >= 3) {
+        await supabase.rpc("auto_hide_social_post", { p_post_id: body.postId });
+      }
+    }
+
     return NextResponse.json({ data });
   } catch (error) {
     if (error instanceof z.ZodError) {

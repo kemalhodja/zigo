@@ -23,6 +23,7 @@ export type DisplayPost = {
   postId?: string;
   authorId?: string;
   authorName: string;
+  authorRole?: string;
   coAuthorId?: string;
   coAuthorName?: string;
   handle: string;
@@ -345,6 +346,7 @@ export function toDisplayPost(
     postId: post.id,
     authorId: post.author?.id,
     authorName,
+    authorRole: post.author?.role,
     coAuthorId: post.co_author?.id,
     coAuthorName: post.co_author?.full_name,
     handle: authorName.toLowerCase().replaceAll(" ", ""),

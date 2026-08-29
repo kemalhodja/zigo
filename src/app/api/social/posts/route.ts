@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
     if (profile.role === "student" || profile.role === "parent") {
       const subscription = await getUserSubscription(supabase, profile.id);
-      if (!subscription || subscription.status !== "active") {
+      if (!subscription || !subscription.isPremium) {
         console.warn("[SERVER_POST_REJECTED] Unsubscribed student/parent attempted post creation:", profile.id);
         return NextResponse.json(
           { error: "Öğrenciler ve Veliler gönderi paylaşabilmek için aktif bir Zigo Plus abonesi olmalıdır." },
@@ -102,7 +102,6 @@ export async function POST(request: Request) {
     const body = createSocialPostSchema.parse(rawBody);
     const areaId = body.areaId;
 
-    const MAX_DAILY_POSTS = 5;
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -118,10 +117,12 @@ export async function POST(request: Request) {
       dailyPostCount = 0;
     }
 
+    const MAX_DAILY_POSTS = (profile.role === "student" || profile.role === "parent") ? 1 : 5;
+
     if (dailyPostCount >= MAX_DAILY_POSTS) {
       console.warn("[SERVER_POST_REJECTED] Daily post limit reached:", dailyPostCount);
       return NextResponse.json(
-        { error: "Günlük maksimum gönderi paylaşım sınırına (5 gönderi) ulaştınız." },
+        { error: `Günlük maksimum gönderi paylaşım sınırına (${MAX_DAILY_POSTS} gönderi) ulaştınız.` },
         { status: 429 },
       );
     }
