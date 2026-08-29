@@ -11,9 +11,9 @@ import { Directory,Filesystem } from '@capacitor/filesystem';
 
 import { NativeVideoCompressor } from './capacitor/native-video-compressor';
 
-export const VIDEO_MAX_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB hard limit
+export const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB limit
 export const VIDEO_MIN_DURATION_SECONDS = 5;
-export const VIDEO_MAX_DURATION_SECONDS = 45; // 45 saniye süre sınırı
+export const VIDEO_MAX_DURATION_SECONDS = 90; // 90 saniye süre sınırı
 
 /** Validate client-side video file size (15 MB max) and duration (45s max). */
 export async function validateVideoLimits(file: File): Promise<{ valid: boolean; error?: string; duration?: number }> {
@@ -22,7 +22,7 @@ export async function validateVideoLimits(file: File): Promise<{ valid: boolean;
   if (file.size > VIDEO_MAX_SIZE_BYTES) {
     return {
       valid: false,
-      error: `Video dosya boyutu 15 MB sınırını aşamaz (${(file.size / (1024 * 1024)).toFixed(1)} MB). Lütfen sıkıştırarak tekrar deneyin.`,
+      error: `Video dosya boyutu 100 MB sınırını aşamaz (${(file.size / (1024 * 1024)).toFixed(1)} MB). Lütfen sıkıştırarak tekrar deneyin.`,
     };
   }
 
