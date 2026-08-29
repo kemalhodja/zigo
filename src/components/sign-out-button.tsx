@@ -28,8 +28,9 @@ export function SignOutButton({
         return;
       }
 
-      router.refresh();
-      router.push("/auth");
+      // Redirect directly via window.location to force a hard reload
+      // and ensure middleware re-evaluates the cleared session cookies
+      window.location.href = "/auth";
     } catch {
       setMessage(s.connectionFailed);
     } finally {
