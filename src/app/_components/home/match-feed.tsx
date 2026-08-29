@@ -22,6 +22,7 @@ export function FeedPostCard({
   teacherBadges,
   priorityMedia = false,
   enterDelayMs = 0,
+  isHero = false,
 }: {
   post: DisplayPost;
   teacherBadges: { verifiedTeacher: string; moreAreas: string };
@@ -31,16 +32,26 @@ export function FeedPostCard({
   viewerRole?: UserRole | "guest" | null;
   enterDelayMs?: number;
   fullHeight?: boolean;
+  isHero?: boolean;
 }) {
   const postKey = post.postId ?? post.handle;
   const { containerStyle } = useFeedPostState(enterDelayMs);
+
+  const heroStyles = isHero
+    ? "relative aspect-[4/3] w-full bg-slate-50 border-y border-slate-100 rounded-t-2xl shadow-xl"
+    : "relative aspect-square w-full bg-slate-50 border-y border-slate-100";
 
   return (
     <DismissibleFeedPost postKey={postKey}>
       <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 bg-white pb-4 border-b border-slate-200" style={containerStyle}>
         <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="light" />
-        <div className="relative aspect-square w-full bg-slate-50 border-y border-slate-100">
+        <div className={heroStyles}>
           <FeedMediaViewer post={post} priorityMedia={priorityMedia} />
+          {isHero && post.caption && (
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent text-white pointer-events-none">
+              <p className="text-lg font-semibold line-clamp-2">{post.caption}</p>
+            </div>
+          )}
         </div>
         <div className="px-4 mt-3 space-y-2">
           <SocialPostActions initialComments={post.comments} initialLikes={post.likes} initialShares={post.shares} initialLiked={post.isLiked} initialSaved={post.isSaved} postId={post.postId} variant="compact" theme="light" />

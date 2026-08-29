@@ -30,8 +30,8 @@ export function VirtualFeedClient({
 
   const virtualizer = useWindowVirtualizer({
     count: posts.length,
-    estimateSize: () => 700, // Estimated pixel height of a single FeedPostCard
-    overscan: 2, // Optimize memory by keeping fewer off-screen items
+    estimateSize: (index) => index === 0 ? 900 : 700,
+    overscan: 2,
   });
 
   if (posts.length === 0) {
@@ -51,6 +51,7 @@ export function VirtualFeedClient({
         const index = virtualItem.index;
         const post = posts[index];
         const isRailSlot = index === 3;
+        const isHero = index === 0;
 
         return (
           <div
@@ -73,6 +74,7 @@ export function VirtualFeedClient({
               priorityMedia={index === 0}
               teacherBadges={teacherBadges}
               viewerRole={viewerRole}
+              isHero={isHero}
             />
             {isRailSlot ? (
               <CreatorRail
