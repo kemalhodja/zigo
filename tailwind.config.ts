@@ -5,29 +5,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        night: "#101828",
-        crystal: "#7C3AED",
-        berry: "#EC4899",
-        aqua: "#06B6D4",
-        peach: "#FB7185",
-        mint: "#2DD4BF",
-        sun: "#FACC15",
+        night: "#09090B", // True sharp black
+        crystal: "#0047FF", // Electric cobalt blue (The singular avant-garde accent)
+        berry: "#18181B", // Dark zinc instead of pink
+        aqua: "#27272A", // Slate/Zinc tones instead of playful colors
+        peach: "#3F3F46", 
+        mint: "#52525B", 
+        sun: "#71717A",
       },
       fontFamily: {
         sans: ["var(--font-jakarta)", "system-ui", "sans-serif"],
       },
       fontSize: {
-        "zigo-micro": ["var(--zigo-text-micro)", { lineHeight: "1.2" }],
-        "zigo-caption": ["var(--zigo-text-caption)", { lineHeight: "1.35" }],
-        "zigo-meta": ["var(--zigo-text-meta)", { lineHeight: "1.35" }],
-        "zigo-body": ["var(--zigo-text-body)", { lineHeight: "1.5" }],
-        "zigo-title-sm": ["var(--zigo-text-title-sm)", { lineHeight: "1.25" }],
-        "zigo-title": ["var(--zigo-text-title)", { lineHeight: "1.25" }],
-        "zigo-title-lg": ["var(--zigo-text-title-lg)", { lineHeight: "1.25" }],
-        "zigo-display": ["var(--zigo-text-display)", { lineHeight: "1.15" }],
+        "zigo-micro": ["var(--zigo-text-micro)", { lineHeight: "1.2", letterSpacing: "0.02em" }],
+        "zigo-caption": ["var(--zigo-text-caption)", { lineHeight: "1.35", letterSpacing: "0.01em" }],
+        "zigo-meta": ["var(--zigo-text-meta)", { lineHeight: "1.35", letterSpacing: "0.01em" }],
+        "zigo-body": ["var(--zigo-text-body)", { lineHeight: "1.5", letterSpacing: "-0.01em" }],
+        "zigo-title-sm": ["var(--zigo-text-title-sm)", { lineHeight: "1.25", letterSpacing: "-0.02em" }],
+        "zigo-title": ["var(--zigo-text-title)", { lineHeight: "1.25", letterSpacing: "-0.03em" }],
+        "zigo-title-lg": ["var(--zigo-text-title-lg)", { lineHeight: "1.25", letterSpacing: "-0.04em" }],
+        "zigo-display": ["var(--zigo-text-display)", { lineHeight: "1.15", letterSpacing: "-0.05em" }],
       },
       boxShadow: {
-        soft: "0 24px 60px rgba(16, 24, 40, 0.12)",
+        soft: "0 10px 30px rgba(0, 0, 0, 0.05)", // Sharper, more subtle shadow
+        sharp: "0 4px 12px rgba(0, 0, 0, 0.1)", // For avant-garde boxes
       },
     },
   },

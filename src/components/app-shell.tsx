@@ -183,7 +183,7 @@ export function AppShell({
       className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 flex-col overflow-x-hidden ${getRoleThemeClass(viewerRole)} ${
         pathname === "/" 
           ? "max-w-full" 
-          : `max-w-md md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-slate-200/80 md:shadow-[0_28px_100px_rgb(15_23_42_/_0.18)] ${isImmersive ? "relative bg-night" : ""}`
+          : `max-w-md md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-white/8 md:shadow-[0_32px_80px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,71,255,0.08)] ${isImmersive ? "relative bg-night" : ""}`
       }`}
     >
       {isPreviewMode ? <PreviewModeBanner /> : null}
@@ -251,12 +251,12 @@ function QuickActionDock({
 
   if (isStudentGamificationRole(viewerRole)) {
     return (
-      <section className="role-dock-student premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-violet-100 bg-white/95 p-2 backdrop-blur">
+      <section className="role-dock-student premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-[#0047FF]/10 bg-[#09090B]/95 p-2 backdrop-blur">
         <div className="flex flex-wrap justify-center gap-1.5">
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-crystal to-fuchsia-500 text-white" href="/student">
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-[#0047FF] text-white" href="/student">
             {dock.student.hub}
           </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/learn">
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-white/8 text-white/80 border border-white/10" href="/learn">
             {dock.student.learn}
           </Link>
         </div>
@@ -266,18 +266,18 @@ function QuickActionDock({
 
   if (isParentSupervisionRole(viewerRole)) {
     return (
-      <section className="role-dock-parent premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-cyan-100 bg-white/95 p-2 backdrop-blur">
+      <section className="role-dock-parent premium-action-dock relative mx-3 mb-2 overflow-hidden rounded-2xl border border-[#0047FF]/10 bg-[#09090B]/95 p-2 backdrop-blur">
         <div className="flex flex-wrap justify-center gap-1.5">
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-gradient-to-r from-aqua to-cyan-600 text-white" href="/parent">
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-[#0047FF] text-white" href="/parent">
             {dock.parent.hub}
           </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/family">
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-white/8 text-white/80 border border-white/10" href="/family">
             {dock.parent.family}
           </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/store">
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-white/8 text-white/80 border border-white/10" href="/store">
             {dock.parent.rewards}
           </Link>
-          <Link className="zigo-compact-pill tap-scale rounded-xl bg-slate-100 text-night" href="/questions">
+          <Link className="zigo-compact-pill tap-scale rounded-xl bg-white/8 text-white/80 border border-white/10" href="/questions">
             {dock.parent.ask}
           </Link>
         </div>

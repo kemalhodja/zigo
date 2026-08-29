@@ -78,8 +78,8 @@ function tryGenerate(
   rng: () => number,
 ): PipeTemplate | null {
   const tier = Math.max(0, levelIndex - presetCount);
-  const size = Math.min(5 + Math.floor(tier / 8), 7);
-  const decoyRatio = Math.min(0.35 + tier * 0.04, 0.6);
+  const size = Math.min(5 + Math.floor(tier / 10), 9);
+  const decoyRatio = Math.min(0.40 + tier * 0.05, 0.75);
 
   // Köşeden köşeye 4 farklı yön, tahmin edilebilirliği azaltır
   const corners: [number, number][] = [

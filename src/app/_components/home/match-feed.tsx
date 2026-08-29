@@ -43,7 +43,7 @@ export function FeedPostCard({
 
   return (
     <DismissibleFeedPost postKey={postKey}>
-      <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 bg-white pb-4 border-b border-slate-200" style={containerStyle}>
+      <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 bg-white pb-3 border-b border-slate-200/60" style={containerStyle}>
         <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="light" />
         <div className={heroStyles}>
           <FeedMediaViewer post={post} priorityMedia={priorityMedia} />
@@ -87,8 +87,8 @@ export function FeedPostCard({
             </a>
           </div>
         )}
-        <div className="px-4 mt-1">
-          <p className="text-zigo-meta font-semibold uppercase tracking-wide text-slate-500">
+        <div className="px-4 mt-0.5">
+          <p className="text-[0.68rem] font-bold uppercase tracking-wider text-slate-400">
             {formatFeedTimestamp(post.createdAt)}
           </p>
         </div>
@@ -176,28 +176,49 @@ export function FollowingStarter({
   _messages: Messages;
 }) {
   return (
-    <section className="zigo-empty-hero px-6 py-12 text-center bg-white border-b border-slate-100">
-      <span className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-slate-50 text-2xl font-black text-slate-400 shadow-lg shadow-slate-100 border border-slate-100">
-        +
+    <section className="zigo-empty-hero px-6 py-16 text-center bg-white border-b border-zinc-200 relative overflow-hidden">
+      <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-zinc-50 border border-zinc-100 rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-zinc-50 border border-zinc-100 rounded-full pointer-events-none" />
+
+      <span className="relative mx-auto flex size-14 items-center justify-center rounded-none bg-black text-2xl font-black text-white shadow-sharp">
+        <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
       </span>
-      <h2 className="zigo-section-title mt-5 text-slate-900">Takip Etmeye Başla</h2>
-      <p className="mx-auto mt-2 max-w-72 text-zigo-body leading-relaxed text-slate-500">Akışın, takip ettiğin öğretmenlerin ve arkadaşlarının paylaşımlarıyla şekillenir.</p>
-      <Link className="tap-scale zigo-cta mt-5 inline-flex rounded-xl px-5 py-2.5 text-zigo-body font-bold text-white bg-crystal" href="/explore?format=teachers">
-        Kullanıcıları Keşfet
+      
+      <h2 className="zigo-section-title mt-6 text-black text-2xl tracking-tight">Akışın Şimdilik Boş</h2>
+      <p className="mx-auto mt-2 max-w-sm text-[0.95rem] leading-relaxed text-zinc-500 tracking-tight">
+        Zigo'da en iyi içeriklere ulaşmak için öğretmenleri, öğrencileri ve çalışma arkadaşlarını takip etmeye başla.
+      </p>
+      
+      <Link 
+        className="group relative mt-8 inline-flex items-center justify-center rounded-sm bg-black px-8 py-3.5 text-sm font-bold text-white shadow-sharp transition-all hover:-translate-y-0.5 hover:bg-[#0047FF] active:translate-y-px" 
+        href="/explore?format=teachers"
+      >
+        <span className="relative flex items-center gap-2 tracking-widest uppercase text-[0.75rem]">
+          Kullanıcıları Keşfet 
+          <svg className="size-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </span>
       </Link>
-      <div className="no-scrollbar mt-7 flex gap-3 overflow-x-auto pb-1 text-left">
-        {creators.map((creator) => (
-          <article className="min-w-32 rounded-xl border border-slate-100 bg-white p-3 shadow-sm" key={creator.id ?? creator.handle}>
-            <Link className="tap-scale block" href={creator.href}>
-              <SocialAvatar className="size-10" label={creator.name} ring={false} />
-              <p className="zigo-fit-text mt-3 text-zigo-body font-bold text-slate-900">@{creator.handle}</p>
-              <p className="mt-1 text-zigo-caption text-slate-500">{creator.area}</p>
-            </Link>
-            <div className="mt-3">
-              <FollowButton followingId={creator.id} initialFollowing={creator.isFollowing} variant="compact" />
-            </div>
-          </article>
-        ))}
+      
+      <div className="relative mt-12 border-t border-zinc-100 pt-6">
+        <p className="text-[0.65rem] font-bold text-zinc-400 uppercase tracking-[0.1em] mb-4">Önerilen Öğretmenler</p>
+        <div className="no-scrollbar flex gap-4 overflow-x-auto pb-4 snap-x text-left px-1">
+          {creators.map((creator) => (
+            <article className="snap-start shrink-0 w-36 rounded-sm border border-zinc-200 bg-white p-4 transition-shadow hover:shadow-sharp" key={creator.id ?? creator.handle}>
+              <Link className="tap-scale block" href={creator.href}>
+                <SocialAvatar className="size-14 mx-auto mb-3" label={creator.name} ring={false} />
+                <p className="zigo-fit-text text-center text-[0.8rem] font-bold text-black truncate tracking-tight">@{creator.handle}</p>
+                <p className="mt-1 text-center text-[0.65rem] font-medium text-zinc-500 truncate">{creator.area}</p>
+              </Link>
+              <div className="mt-4 flex justify-center">
+                <FollowButton followingId={creator.id} initialFollowing={creator.isFollowing} variant="compact" />
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

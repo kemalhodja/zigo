@@ -65,15 +65,15 @@ export function BottomNav({
               isActive
                 ? variant === "overlay"
                   ? "bg-white/25 text-white shadow-sm"
-                  : "bg-blue-600/10 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                  : "text-[#0047FF]"
                 : variant === "overlay"
                   ? "text-white/80 hover:text-white"
-                  : "text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  : "text-slate-400 hover:text-slate-700"
             }`}
             href={item.href}
             key={item.href}
           >
-            <span className={`role-nav-icon flex size-7 items-center justify-center transition-all duration-300 ${isActive ? "scale-110 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]" : ""}`}>
+            <span className={`role-nav-icon flex size-7 items-center justify-center transition-all duration-300 ${isActive ? "scale-110 drop-shadow-[0_0_8px_rgba(0,71,255,0.55)]" : ""}`}>
               <NavIcon active={isActive} name={item.icon} variant={variant} />
             </span>
             <span className={`max-w-full truncate px-0.5 text-center text-[0.63rem] leading-tight ${isActive ? "font-bold text-white" : "font-semibold"}`}>
@@ -90,9 +90,10 @@ export function BottomNav({
             ) : null}
             {isActive ? (
               <span
-                className={`absolute bottom-0 h-0.5 w-4 rounded-full ${
-                  variant === "overlay" ? "bg-white" : "bg-crystal"
+                className={`absolute bottom-0 h-[2px] w-6 rounded-full transition-all duration-300 ${
+                  variant === "overlay" ? "bg-white" : "bg-[#0047FF]"
                 }`}
+                style={{ boxShadow: variant === "overlay" ? "none" : "0 0 8px rgba(0,71,255,0.5)" }}
               />
             ) : null}
           </Link>

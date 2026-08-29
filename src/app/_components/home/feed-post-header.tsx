@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { FollowButton } from "@/components/follow-button";
 import { PostOptionsButton } from "@/components/post-options-button";
 import { SocialAvatar } from "@/components/social-primitives";
 
@@ -50,6 +51,15 @@ export function FeedPostHeader({
           </div>
       </Link>
       <div className="flex shrink-0 items-center gap-3">
+        {!post.isOwner && post.authorId && (
+          <div className="w-24">
+            <FollowButton
+              followingId={post.authorId}
+              initialFollowing={post.isFollowingCreator}
+              variant="compact"
+            />
+          </div>
+        )}
         <PostOptionsButton
           initialAreaId={post.areaId}
           initialCaption={post.caption}

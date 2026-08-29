@@ -72,45 +72,52 @@ a:not([class*="text-"]):not([class*="zigo-"]) {
 }
 
 .zigo-cta {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 52%, #f97316 100%);
+  background: #09090B; /* Deep sharp black */
   color: #ffffff !important;
-  box-shadow: 0 8px 24px rgb(37 99 235 / 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #27272A;
+  border-radius: 4px !important; /* Avant-garde sharp edges */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   transition:
     transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    filter 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
     box-shadow 160ms ease;
 }
 
 .zigo-cta:hover {
-  transform: scale(1.02);
-  box-shadow: 0 12px 28px rgb(249 115 22 / 0.4);
+  background: #0047FF; /* Electric Cobalt Blue */
+  border-color: #0047FF;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 71, 255, 0.25);
 }
 
 .zigo-cta:active,
 .tap-scale.zigo-cta:active {
-  transform: scale(0.95);
-  filter: brightness(1.1) saturate(1.15);
-  box-shadow: 0 4px 12px rgb(37 99 235 / 0.4);
+  transform: translateY(1px) scale(0.98);
+  background: #0038CC;
+  box-shadow: 0 2px 8px rgba(0, 71, 255, 0.4);
 }
 
 .role-theme-parent .zigo-cta {
-  background: linear-gradient(135deg, #0e7490 0%, #0891b2 55%, #06b6d4 100%);
-  box-shadow: 0 8px 20px rgb(8 145 178 / 0.2);
+  background: #09090B;
+  border-color: #3F3F46;
 }
 
 .role-theme-parent .zigo-cta:active,
 .role-theme-parent .tap-scale.zigo-cta:active {
-  box-shadow: 0 6px 16px rgb(8 145 178 / 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .role-theme-teacher .zigo-cta {
-  background: linear-gradient(135deg, #101828 0%, #1e293b 55%, #334155 100%);
-  box-shadow: 0 8px 20px rgb(15 23 42 / 0.22);
+  background: #09090B;
+  border-color: #52525B;
 }
 
 .role-theme-teacher .zigo-cta:active,
 .role-theme-teacher .tap-scale.zigo-cta:active {
-  box-shadow: 0 6px 16px rgb(15 23 42 / 0.32);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.32);
 }
 
 .zigo-media-overlay {
@@ -175,15 +182,28 @@ a,
 
 .tap-scale {
   transition:
-    transform 160ms ease,
-    opacity 160ms ease,
-    filter 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
+    transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 250ms ease,
+    filter 250ms ease,
+    box-shadow 250ms ease,
+    background-color 250ms ease;
 }
 
 .tap-scale:active {
-  transform: scale(0.96);
+  transform: scale(0.92);
+  transition-duration: 100ms;
+}
+
+@keyframes spring {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  50% { transform: scale(0.95); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.animate-spring {
+  animation: spring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .zigo-wordmark {
@@ -195,9 +215,10 @@ a,
 }
 
 .zigo-display {
+  font-family: var(--font-inter-tight), sans-serif;
   font-size: var(--zigo-text-display);
   font-weight: 800;
-  letter-spacing: var(--zigo-tracking-tight);
+  letter-spacing: -0.04em;
   line-height: var(--zigo-leading-tight);
 }
 
@@ -210,16 +231,18 @@ a,
 }
 
 .zigo-page-title {
+  font-family: var(--font-inter-tight), sans-serif;
   font-size: var(--zigo-text-title-lg);
   font-weight: 800;
-  letter-spacing: var(--zigo-tracking-tight);
+  letter-spacing: -0.03em;
   line-height: var(--zigo-leading-tight);
 }
 
 .zigo-section-title {
+  font-family: var(--font-inter-tight), sans-serif;
   font-size: var(--zigo-text-title);
   font-weight: 800;
-  letter-spacing: var(--zigo-tracking-tight);
+  letter-spacing: -0.025em;
   line-height: var(--zigo-leading-tight);
 }
 
@@ -515,9 +538,10 @@ a,
 }
 
 .zigo-bottom-bar {
-  border-top: 1px solid rgb(30 41 59);
-  background: rgb(0 0 0 / 0.85);
-  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(9, 9, 11, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .zigo-card {
@@ -608,7 +632,7 @@ a,
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
-  background: #eef2f7;
+  background: #f0f2f5;
 }
 
 .skeleton-shimmer::after {
@@ -616,14 +640,20 @@ a,
   inset: 0;
   content: "";
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.65), transparent);
-  animation: shimmer 1.4s infinite;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.85) 40%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0.85) 60%,
+    transparent 80%
+  );
+  animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 @keyframes float-soft {
@@ -1136,15 +1166,50 @@ body.role-theme-teacher {
 @keyframes page-fade-in {
   0% {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px) scale(0.995);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .page-transition-fade {
-  animation: page-fade-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: page-fade-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Premium card hover */
+.zigo-feed-card {
+  box-shadow: none;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.zigo-feed-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+/* Slim premium scrollbar */
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 71, 255, 0.25);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 71, 255, 0.45);
+}
+
+/* Premium input focus — Cobalt */
+.zigo-input:focus {
+  border-color: #0047FF;
+  box-shadow: 0 0 0 3px rgba(0, 71, 255, 0.12);
+  outline: none;
+}

@@ -73,10 +73,9 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
 
   const loadLevel = useCallback((lvlIndex: number) => {
     // Preset bölümler bitince sonsuz prosedürel bölümler başlar (gittikçe zorlaşır)
-    const template =
-      lvlIndex < PRESET_LEVELS.length
-        ? PRESET_LEVELS[lvlIndex]
-        : generatePipeLevel(lvlIndex, PRESET_LEVELS.length);
+    // Kullanıcı en baştan zor ve karmaşık bölümler istediği için
+    // preset bölümleri atlıyoruz ve doğrudan yüksek seviye (tier) üretiyoruz.
+    const template = generatePipeLevel(lvlIndex + 50, 0);
     const newGrid: CellData[][] = template.map((row) =>
       row.map((cell) => {
         if (cell.type === "source" || cell.type === "target" || cell.type === "empty") {

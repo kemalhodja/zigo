@@ -365,15 +365,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
           <section className="-mx-4 grid grid-cols-3 gap-0.5 bg-white">
             {profile.posts.length === 0 ? (
-              <div className="col-span-3 bg-white px-6 py-14 text-center">
-                <span className="mx-auto flex size-16 items-center justify-center rounded-lg border-2 border-night text-2xl font-black text-night">
-                  <svg aria-hidden="true" className="size-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M4 4h16v16H4z" />
-                    <path d="M4 12h16" />
-                    <path d="M12 4v16" />
+              <div className="col-span-3 py-16 text-center border-t border-zinc-100 bg-zinc-50/50 mt-4">
+                <div className="mx-auto flex size-14 items-center justify-center rounded-none bg-black text-white shadow-sharp">
+                  <svg aria-hidden="true" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <rect height="18" rx="2" ry="2" width="18" x="3" y="3" />
+                    <line x1="8" x2="16" y1="12" y2="12" />
                   </svg>
-                </span>
-                <h3 className="mt-4 text-lg font-black text-night">
+                </div>
+                <h3 className="mt-6 text-base font-bold text-black tracking-tight">
                   {profile.isSignedOut
                     ? p.signInTitle
                     : activeTab === "saved"
@@ -382,7 +381,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                         ? p.noMicro
                         : p.noPosts}
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <p className="mx-auto mt-2 max-w-xs text-[0.95rem] leading-relaxed text-zinc-500 tracking-tight">
                   {profile.isSignedOut
                     ? p.signInDesc
                     : activeTab === "saved"
@@ -392,7 +391,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                         : p.noPostsDesc}
                 </p>
                 <Link
-                  className="tap-scale mt-4 inline-flex rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-black text-night"
+                  className="group relative mt-8 inline-flex items-center justify-center rounded-sm bg-black px-8 py-3.5 text-sm font-bold text-white shadow-sharp transition-all hover:-translate-y-0.5 hover:bg-[#0047FF] active:translate-y-px"
                   href={
                     profile.isSignedOut
                       ? "/auth"
@@ -401,6 +400,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                         : emptyProfilePrimaryHref(profile.role)
                   }
                 >
+                  <span className="relative flex items-center gap-2 tracking-widest uppercase text-[0.75rem]">
                   {profile.isSignedOut
                     ? m.common.signIn
                     : activeTab === "saved"
@@ -412,6 +412,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                           : profile.role === "parent"
                             ? m.profilesPage.familySetup
                             : m.common.open}
+                  </span>
                 </Link>
               </div>
             ) : (

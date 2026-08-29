@@ -1,7 +1,7 @@
 import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter_Tight } from "next/font/google";
 import Script from "next/script";
 import { cache } from "react";
 
@@ -27,6 +27,11 @@ import { createClient } from "@/lib/supabase/server";
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
   variable: "--font-jakarta",
+});
+
+const interTight = Inter_Tight({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-inter-tight",
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -108,7 +113,7 @@ export default async function RootLayout({
         <meta name="color-scheme" content="light only" />
         <meta name="darkreader-lock" />
       </head>
-      <body className={`${jakarta.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
+      <body className={`${jakarta.variable} ${interTight.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

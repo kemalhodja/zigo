@@ -98,7 +98,7 @@ export function LikeAndShareBar({
                   style={{ animation: "heart-burst-ring 500ms ease-out forwards" }}
                 />
               ) : null}
-              <span key={`icon-${bounceKey}`} className={bounceKey > 0 ? "like-bounce" : ""}>
+              <span key={`icon-${bounceKey}`} className={bounceKey > 0 ? "animate-spring" : ""}>
                 <ActionIcon name="like" filled={isLiked} />
               </span>
             </div>

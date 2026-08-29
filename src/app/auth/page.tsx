@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   },
 };
 
+import { AppFeatureSlides } from "@/components/app-feature-slides";
 import { AuthLegalLinks } from "@/components/auth-legal-links";
 import { AuthPanel } from "@/components/auth-panel";
 import { DemoLoginPanel } from "@/components/demo-login-panel";
@@ -23,7 +24,7 @@ export default async function AuthPage() {
   if (!hasSupabaseEnv()) {
     return (
       <div className="space-y-5 pb-4">
-        <AuthPremiumHero />
+        <AppFeatureSlides />
         <SupabaseSetupCard />
         <AuthLegalLinks />
       </div>
@@ -32,7 +33,7 @@ export default async function AuthPage() {
 
   return (
     <div className="space-y-5 pb-4">
-      <AuthPremiumHero />
+      <AppFeatureSlides />
 
       {isLocalDemoSupabase() ? (
         <Suspense fallback={null}>
@@ -47,27 +48,3 @@ export default async function AuthPage() {
     </div>
   );
 }
-
-async function AuthPremiumHero() {
-  const a = (await getServerMessages()).auth;
-
-  return (
-    <section className="-mx-4 overflow-hidden border-b border-violet-100 bg-white">
-      <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-6 pb-7 pt-8 text-center text-white">
-        <h1 className="zigo-display text-white">Zigo</h1>
-        <p className="mx-auto mt-3 max-w-80 text-zigo-body font-semibold leading-relaxed text-white/80">{a.hero}</p>
-        <div className="mx-auto mt-5 zigo-action-grid max-w-sm">
-          <span className="zigo-stat-chip rounded-xl bg-white/14 backdrop-blur">{a.safeFeed}</span>
-          <span className="zigo-stat-chip rounded-xl bg-white/14 backdrop-blur">{a.noDm}</span>
-          <span className="zigo-stat-chip rounded-xl bg-white/14 backdrop-blur">{a.verified}</span>
-        </div>
-      </div>
-      <div className="zigo-action-grid px-4 py-3">
-        <span className="zigo-stat-chip rounded-xl bg-violet-50 text-crystal">{a.register}</span>
-        <span className="zigo-stat-chip rounded-xl bg-pink-50 text-berry">{a.pickRole}</span>
-        <span className="zigo-stat-chip rounded-xl bg-cyan-50 text-aqua">{a.startFeed}</span>
-      </div>
-    </section>
-  );
-}
-

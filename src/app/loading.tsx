@@ -1,28 +1,42 @@
 export default function Loading() {
   return (
-    <div className="space-y-4 pb-3">
-      <section className="-mx-4 border-b border-slate-100 bg-white px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="size-12 animate-pulse rounded-lg bg-slate-200 story-ring" />
-          <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-3 w-28 animate-pulse rounded-lg bg-slate-200" />
-            <div className="h-2 w-40 animate-pulse rounded-lg bg-slate-200" />
+    <div className="space-y-0 pb-3">
+      {/* Premium post skeleton */}
+      {[0, 1].map((i) => (
+        <article
+          key={i}
+          className="mb-3"
+          style={{ opacity: i === 1 ? 0.55 : 1 }}
+        >
+          {/* Header */}
+          <div className="-mx-4 flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3">
+            <div className="size-9 skeleton-shimmer rounded-full" />
+            <div className="flex-1 space-y-1.5">
+              <div className="h-2.5 w-28 skeleton-shimmer rounded-md" />
+              <div className="h-2 w-20 skeleton-shimmer rounded-md" />
+            </div>
+            <div className="h-7 w-16 skeleton-shimmer rounded-lg" />
+            <div className="size-7 skeleton-shimmer rounded-md" />
           </div>
-          <div className="size-9 animate-pulse rounded-lg bg-slate-200" />
-        </div>
-      </section>
-      <section className="space-y-3">
-        <div className="-mx-4 h-[28rem] animate-pulse border-y border-slate-100 bg-slate-200/50" />
-        <div className="flex gap-3 px-1">
-          <div className="size-9 animate-pulse rounded-lg bg-slate-200" />
-          <div className="size-9 animate-pulse rounded-lg bg-slate-200" />
-          <div className="size-9 animate-pulse rounded-lg bg-slate-200" />
-          <div className="ml-auto size-9 animate-pulse rounded-lg bg-slate-200" />
-        </div>
-        <div className="h-3 w-32 animate-pulse rounded-lg bg-slate-200" />
-        <div className="h-3 w-full animate-pulse rounded-lg bg-slate-200" />
-        <div className="h-3 w-2/3 animate-pulse rounded-lg bg-slate-200" />
-      </section>
+
+          {/* Media */}
+          <div className="-mx-4 aspect-[4/5] skeleton-shimmer" />
+
+          {/* Actions */}
+          <div className="-mx-4 flex items-center gap-3 bg-white px-4 pt-3 pb-1">
+            <div className="size-8 skeleton-shimmer rounded-lg" />
+            <div className="size-8 skeleton-shimmer rounded-lg" />
+            <div className="size-8 skeleton-shimmer rounded-lg" />
+            <div className="ml-auto size-8 skeleton-shimmer rounded-lg" />
+          </div>
+
+          {/* Caption */}
+          <div className="-mx-4 space-y-2 bg-white px-4 pb-4 pt-2">
+            <div className="h-2.5 w-3/4 skeleton-shimmer rounded-md" />
+            <div className="h-2.5 w-1/2 skeleton-shimmer rounded-md" />
+          </div>
+        </article>
+      ))}
     </div>
   );
 }

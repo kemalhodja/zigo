@@ -76,7 +76,39 @@ export function AdminUserActions({ userId, userName, isVerified, accountStatus }
     }
   }
 
+  async function deleteUser() {
+    if (isLoading) return;
+    
+    const confirmed = window.confirm(`DİKKAT: ${userName} adlı kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ.`);
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/admin/users/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        setMessage(payload?.error ?? "Silme başarısız oldu");
+        return;
+      }
+
+      setMessage("Silindi");
+      router.refresh();
+    } catch {
+      setMessage(c.connectionFailed);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const btnText = isLoading ? a.updating : isVerified ? a.revokeVerificationShort : a.verify;
+
   const ariaLabel = isVerified ? a.revokeVerification : a.verifyTeacher;
 
   return (
@@ -114,9 +146,19 @@ export function AdminUserActions({ userId, userName, isVerified, accountStatus }
         >
           ✉️ {a.sendMessage}
         </button>
+
+        <button
+          onClick={deleteUser}
+          disabled={isLoading}
+          type="button"
+          className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-black text-red-600 transition hover:bg-red-100 disabled:opacity-60 mt-1"
+        >
+          🗑️ Sil
+        </button>
       </div>
 
       {message ? <p className="rounded-lg bg-slate-50 px-2 py-1 text-[0.65rem] font-bold text-slate-600">{message}</p> : null}
+
 
       {showMessageDialog && (
         <AdminMessageDialog
