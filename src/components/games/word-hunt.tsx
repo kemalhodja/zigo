@@ -36,7 +36,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
   const { playSound } = useAudio();
   const keyboardRef = useRef<HTMLDivElement>(null);
-const winLatchRef = useRef(false);
+  const winLatchRef = useRef(false);
+  const validWordsRef = useRef<Record<number, Set<string>> | null>(null);
 
   const {
     highScore,
@@ -89,10 +90,10 @@ const winLatchRef = useRef(false);
             parsedDict[parseInt(len, 10)] = new Set(words);
           }
           setValidWords(parsedDict);
+          validWordsRef.current = parsedDict; // Always keep ref in sync
         })
         .catch(err => {
           console.error("Failed to load dictionary", err);
-          // Fallback handled in isValidWord
         });
     }
   }, [currentLevel, selectedLang, initLevel]);
@@ -103,17 +104,17 @@ const winLatchRef = useRef(false);
     setTimeout(() => setToastMessage(null), 2000);
   };
 
-  const isValidWord = (guess: string, lang: Lang) => {
-    // If dictionary loaded successfully, check it
-    if (validWords && validWords[cols]) {
-      if (validWords[cols].has(guess)) return true;
+  const isValidWord = (guess: string, lang: Lang, wordLen: number): boolean => {
+    // Always use the ref (up-to-date, no stale closure)
+    const dict = validWordsRef.current;
+    if (dict && dict[wordLen]) {
+      return dict[wordLen].has(guess);
     }
-    // Fallback: check if it's one of the target words from the small TS dictionary
-    const fallbackList = WORD_DICTIONARY[lang][cols];
+    // Fallback: the small built-in TS dictionary (always available)
+    const fallbackList = WORD_DICTIONARY[lang][wordLen];
     if (fallbackList && fallbackList.some(w => w.word === guess)) return true;
-    
-    // If validWords failed to load completely, we don't want to block play, but normally we reject
-    return validWords === null; 
+    // If dictionary never loaded (network error) — block to prevent cheating
+    return false;
   };
 
   const onKeyPress = useCallback((key: string) => {
@@ -130,7 +131,7 @@ const winLatchRef = useRef(false);
       
       const guess = guesses[currentRow];
       
-      if (!isValidWord(guess, selectedLang)) {
+      if (!isValidWord(guess, selectedLang, cols)) {
         setShakeRow(currentRow);
         showToast(selectedLang === "TR" ? "Sözlükte bulunamadı" : "Not in dictionary");
         setTimeout(() => setShakeRow(-1), 500);

@@ -231,22 +231,6 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
 
   return (
     <div className="w-full max-w-sm mx-auto select-none">
-      {/* SVG Goo Filter */}
-      <svg className="absolute w-0 h-0" aria-hidden="true">
-        <defs>
-          <filter id="goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
-              result="goo"
-            />
-            <feBlend in="SourceGraphic" in2="goo" />
-          </filter>
-        </defs>
-      </svg>
-
       {/* Header */}
       <div className="bg-gradient-to-br from-slate-900 to-cyan-950 rounded-3xl p-4 mb-3 border border-cyan-500/20 shadow-2xl shadow-cyan-500/10">
         <div className="flex items-center justify-between mb-3">
@@ -338,8 +322,6 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
           style={{
             gridTemplateColumns: `repeat(${grid.length || 5}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${grid.length || 5}, minmax(0, 1fr))`,
-            filter: "url(#goo)",
-            transform: "translateZ(0)"
           }}
         >
           {grid.map((row, rIndex) =>
