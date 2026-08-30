@@ -105,15 +105,22 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   };
 
   const isValidWord = (guess: string, lang: Lang, wordLen: number): boolean => {
-    // Always use the ref (up-to-date, no stale closure)
     const dict = validWordsRef.current;
-    if (dict && dict[wordLen]) {
-      return dict[wordLen].has(guess);
+    
+    if (dict) {
+      // Dictionary is loaded — strict check
+      if (dict[wordLen]) return dict[wordLen].has(guess);
+      // Dict loaded but no words for this length — fall through to TS fallback
     }
-    // Fallback: the small built-in TS dictionary (always available)
+    
+    // TS built-in fallback (small, always available)
     const fallbackList = WORD_DICTIONARY[lang][wordLen];
     if (fallbackList && fallbackList.some(w => w.word === guess)) return true;
-    // If dictionary never loaded (network error) — block to prevent cheating
+
+    // Dict still loading (null) → be permissive so player isn't blocked
+    if (!dict) return true;
+
+    // Dict is loaded but word not found
     return false;
   };
 
@@ -220,9 +227,10 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
   const getKeyColor = (key: string) => {
     const collected: LetterState[] = [];
-    for (let i = 0; i < ROWS; i++) {
+    // Only evaluate SUBMITTED rows (i < currentRow), never the active row
+    for (let i = 0; i < currentRow; i++) {
       const guess = guesses[i];
-      if (!guess || guess.length !== cols) continue; // tamamlanmamış satırı atla
+      if (!guess || guess.length !== cols) continue;
       for (let j = 0; j < cols; j++) {
         if (guess[j] === key) {
           collected.push(getLetterState(guess, j));
