@@ -21,6 +21,7 @@ type WordHuntProps = {
 
 export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const [selectedLang, setSelectedLang] = useState<Lang | null>(null);
+  const [validWords, setValidWords] = useState<Record<number, Set<string>> | null>(null);
   
   const [currentLevel, setCurrentLevel] = useState(1);
   const [targetWordObj, setTargetWordObj] = useState<WordEntry | null>(null);
@@ -78,6 +79,21 @@ const winLatchRef = useRef(false);
   useEffect(() => {
     if (selectedLang) {
       initLevel(currentLevel, selectedLang);
+      
+      // Fetch the dictionary for the selected language
+      fetch(`/dictionaries/${selectedLang.toLowerCase()}-words.json`)
+        .then(res => res.json())
+        .then((data: Record<string, string[]>) => {
+          const parsedDict: Record<number, Set<string>> = {};
+          for (const [len, words] of Object.entries(data)) {
+            parsedDict[parseInt(len, 10)] = new Set(words);
+          }
+          setValidWords(parsedDict);
+        })
+        .catch(err => {
+          console.error("Failed to load dictionary", err);
+          // Fallback handled in isValidWord
+        });
     }
   }, [currentLevel, selectedLang, initLevel]);
 
@@ -87,9 +103,18 @@ const winLatchRef = useRef(false);
     setTimeout(() => setToastMessage(null), 2000);
   };
 
-  // Sözlük yalnızca hedef kelime seçiminde kullanılır; oyuncunun tahmini serbesttir
-  // (derli toplu bir TDK listesi pakete sığmayacağı için geçerli kelimeler reddedilmesin)
-  const isValidWord = (_guess: string, _lang: Lang) => true;
+  const isValidWord = (guess: string, lang: Lang) => {
+    // If dictionary loaded successfully, check it
+    if (validWords && validWords[cols]) {
+      if (validWords[cols].has(guess)) return true;
+    }
+    // Fallback: check if it's one of the target words from the small TS dictionary
+    const fallbackList = WORD_DICTIONARY[lang][cols];
+    if (fallbackList && fallbackList.some(w => w.word === guess)) return true;
+    
+    // If validWords failed to load completely, we don't want to block play, but normally we reject
+    return validWords === null; 
+  };
 
   const onKeyPress = useCallback((key: string) => {
     if (isGameOver || !selectedLang || !targetWord) return;

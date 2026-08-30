@@ -1751,6 +1751,10 @@ export type Database = {
           target_audience: string
           target_grade: string | null
           title: string | null
+          followers_only: boolean
+          followers_only_comments: boolean
+          teaser_text: string | null
+          follower_conversion_count: number
         }
         Insert: {
           area_id?: number | null
@@ -1778,6 +1782,10 @@ export type Database = {
           target_audience?: string
           target_grade?: string | null
           title?: string | null
+          followers_only?: boolean
+          followers_only_comments?: boolean
+          teaser_text?: string | null
+          follower_conversion_count?: number
         }
         Update: {
           area_id?: number | null
@@ -1805,6 +1813,10 @@ export type Database = {
           target_audience?: string
           target_grade?: string | null
           title?: string | null
+          followers_only?: boolean
+          followers_only_comments?: boolean
+          teaser_text?: string | null
+          follower_conversion_count?: number
         }
         Relationships: [
           {
@@ -2632,6 +2644,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      auto_hide_social_post: {
+        Args: { p_post_id: string }
+        Returns: void
       }
       admin_send_user_message: {
         Args: { msg_body: string; msg_title: string; target_user_id: string }

@@ -11,15 +11,10 @@ import { LeaderboardModal } from "./leaderboard-modal";
 import { MemoryCard } from "./memory-card";
 
 const ALL_ICONS = [
-  "🚀", "⭐", "🌍", "☄️", "🪐", "👽", "🔭", "🛸", "🍎", "🍌", 
-  "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🥭", "🥝", "🐶", "🐱", 
-  "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", 
-  "⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🏉", "🎱", "🏓", "🏸", 
-  "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐",
-  "⌚", "📱", "💻", "⌨️", "🖥️", "🖨️", "🖱️", "🖲️", "🕹️", "🗜️",
-  "😀", "😁", "😂", "🤣", "😃", "😄", "😅", "😆", "😉", "😊",
-  "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔",
-  "🍔", "🍕", "🍟", "🌭", "🍿", "🧂", "🥓", "🥚", "🍳", "🧇"
+  "Rocket", "Star", "Globe", "Atom", "Telescope", "Car", "Bus", "Gamepad2", "Cpu", "Gem",
+  "Heart", "Sun", "Moon", "Zap", "Cloud", "Music", "Camera", "Coffee", "Headphones", "Umbrella",
+  "Anchor", "Smile", "Flame", "Droplet", "Feather", "Leaf", "Bug", "Ghost", "Cat", "Dog",
+  "Fish", "Bird", "Snowflake", "Wind", "Thermometer", "Compass", "Key", "Lock", "Clock", "Bell"
 ];
 
 type Card = {
@@ -300,6 +295,8 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
           .preserve-3d { transform-style: preserve-3d; }
           .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
           .rotate-y-180 { transform: rotateY(180deg); }
+          .translate-z-\\[30px\\] { transform: translateZ(30px) rotateY(180deg); }
+          .perspective-\\[1000px\\] { perspective: 1000px; }
           @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px) rotate(-5deg); }

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         .eq("reason", "off_topic");
 
       if (count && count >= 3) {
-        await supabase.rpc("auto_hide_social_post" as any, { p_post_id: body.postId });
+        await supabase.rpc("auto_hide_social_post", { p_post_id: body.postId });
       }
     }
 

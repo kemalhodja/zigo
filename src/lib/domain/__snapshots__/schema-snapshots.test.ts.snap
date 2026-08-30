@@ -16,18 +16,6 @@ exports[`domain schema snapshots > matches feed post schema snapshot 1`] = `
 }
 `;
 
-exports[`domain schema snapshots > matches focus completion schema snapshot 1`] = `
-{
-  "sessionId": "00000000-0000-4000-8000-000000000901",
-}
-`;
-
-exports[`domain schema snapshots > matches focus session schema snapshot 1`] = `
-{
-  "topicLabel": "Paragraf çalışması",
-}
-`;
-
 exports[`domain schema snapshots > matches follow schema snapshot 1`] = `
 {
   "followingId": "00000000-0000-4000-8000-000000000101",
@@ -100,6 +88,8 @@ exports[`domain schema snapshots > matches social post schema snapshot 1`] = `
   "areaId": 1,
   "caption": "Kesirler dersi",
   "externalUrl": null,
+  "followersOnly": false,
+  "followersOnlyComments": false,
   "isReel": true,
   "mediaType": "video",
   "targetAudience": "all",
@@ -124,12 +114,6 @@ exports[`domain schema snapshots > matches story schema snapshot 1`] = `
 {
   "areaId": 2,
   "caption": "Spark notu",
-}
-`;
-
-exports[`domain schema snapshots > matches study moment share schema snapshot 1`] = `
-{
-  "caption": "Odaklandım",
-  "sessionId": "00000000-0000-4000-8000-000000000901",
+  "followersOnly": false,
 }
 `;

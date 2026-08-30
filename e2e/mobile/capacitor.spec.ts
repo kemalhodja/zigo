@@ -1,4 +1,4 @@
-import { devices,expect, test } from "@playwright/test";
+import { devices, expect, test } from "@playwright/test";
 
 import { isDemoAuthAvailable } from "../helpers";
 
@@ -14,14 +14,14 @@ declare global {
   }
 }
 
+test.describe.configure({ mode: "serial" });
+
+test.use({
+  ...devices["Pixel 5"],
+  viewport: { width: 390, height: 844 },
+});
+
 test.describe("Mobile Capacitor Tests", () => {
-  test.describe.configure({ mode: "serial" });
-
-  test.use({
-    ...devices["Pixel 5"],
-    viewport: { width: 390, height: 844 },
-  });
-
   test.beforeEach(async ({ request }, testInfo) => {
     if (!(await isDemoAuthAvailable(request))) {
       testInfo.skip(true, "Live Supabase demo auth unavailable");

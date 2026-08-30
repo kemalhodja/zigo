@@ -3,6 +3,7 @@
 import confetti from "canvas-confetti";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
@@ -342,7 +343,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
       </div>
 
       {/* Game Area */}
-      <div className="bg-white border-2 border-violet-100 rounded-[2rem] p-4 shadow-xl min-h-[300px] flex flex-col relative overflow-hidden">
+      <div className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-[2rem] p-5 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15),inset_0_-4px_8px_rgba(0,0,0,0.05)] min-h-[350px] flex flex-col relative overflow-hidden">
         
         {!isPlaying && !isGameOver && (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
@@ -468,8 +469,34 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
         )}
 
         {isPlaying && currentCard && (
-          <div className="flex-1 flex flex-col">
-            {/* AI Message Bubble */}
+          <div className="flex-1 flex flex-col relative">
+            {/* Draggable Card */}
+            <motion.div 
+              className="flex-1 flex flex-col relative z-10 touch-pan-y"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.7}
+              onDragEnd={(e, info) => {
+                if (info.offset.x < -80) {
+                  playSound("error");
+                  setCombo(0);
+                  nextCard();
+                } else if (info.offset.x > 80 && difficulty === "zor" && !showHint) {
+                  setShowHint(true);
+                  setScore(prev => Math.max(0, prev - 10));
+                }
+              }}
+              style={{
+                // Add some motion values for rotation/opacity if we want, but inline is fine too
+              }}
+              whileDrag={{ scale: 1.02, cursor: "grabbing" }}
+            >
+              {/* Swipe Indicators */}
+              <div className="absolute inset-y-0 left-0 flex items-center justify-start opacity-0 pointer-events-none transition-opacity -ml-4" style={{ opacity: 0 }}>
+                {/* Needs useTransform to show properly during drag, but for simplicity we rely on the physics */}
+              </div>
+
+              {/* AI Message Bubble */}
             <div className="flex gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-xl shrink-0 border border-violet-200 shadow-sm">
                 🤖
@@ -506,6 +533,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
                 </div>
               )}
             </div>
+            </motion.div>
 
             {/* Input Area */}
             <form onSubmit={handleGuess} className="relative mt-auto">
@@ -531,10 +559,16 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
                 onClick={toggleListening}
                 title="Sesli Yanıt"
                 className={`absolute right-20 top-2 bottom-2 aspect-square rounded-xl flex items-center justify-center transition-colors tap-scale ${
-                  isListening ? "bg-rose-500 text-white animate-pulse" : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                  isListening ? "bg-rose-500 text-white" : "bg-slate-200 text-slate-600 hover:bg-slate-300"
                 }`}
               >
-                🎙️
+                {isListening && (
+                  <>
+                    <span className="absolute inset-0 rounded-xl bg-rose-500 animate-ping opacity-75"></span>
+                    <span className="absolute -inset-1 rounded-xl border border-rose-500 animate-ping opacity-50" style={{ animationDelay: '150ms' }}></span>
+                  </>
+                )}
+                <span className="relative z-10">🎙️</span>
               </button>
               <button
                 type="button"

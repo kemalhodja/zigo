@@ -22,6 +22,10 @@ export type SocialFeedPost = Omit<SocialPostRow, "premium_prep_url" | "sponsored
   can_open_premium_prep: boolean;
   can_open_sponsored: boolean;
   isFollowersOnly?: boolean;
+  followers_only?: boolean;
+  followers_only_comments?: boolean;
+  teaser_text?: string | null;
+  follower_conversion_count?: number;
 };
 
 export type ActiveStory = {

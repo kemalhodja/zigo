@@ -84,6 +84,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const [level, setLevel] = useState(1);
   const [isGameOver, setIsGameOver] = useState(false);
   const [justCleared, setJustCleared] = useState<{ rows: number[]; cols: number[] } | null>(null);
+  const [justDropped, setJustDropped] = useState<{row: number, col: number}[]>([]);
 
   const { playSound } = useAudio();
   const {
@@ -196,16 +197,24 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     // Parçayı yerleştir
     const newBoard = board.map((r) => [...r]);
     let blocksPlaced = 0;
+    const newlyDropped: {row: number, col: number}[] = [];
     for (let r = 0; r < shape.matrix.length; r++) {
       for (let c = 0; c < shape.matrix[0].length; c++) {
         if (shape.matrix[r][c] === 1) {
           newBoard[row + r][col + c] = shape.color;
           blocksPlaced++;
+          newlyDropped.push({row: row + r, col: col + c});
         }
       }
     }
+    
+    setJustDropped(newlyDropped);
+    setTimeout(() => setJustDropped([]), 400);
 
     playSound("pop");
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(15);
+    }
 
     const newOptions = [...options];
     newOptions[shapeIdx] = null;
@@ -228,6 +237,9 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     const linesCleared = rowsToClear.length + colsToClear.length;
     if (linesCleared > 0) {
       playSound("clear");
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([30, 50, 30, 50, 40]);
+      }
       setJustCleared({ rows: rowsToClear, cols: colsToClear });
       setTimeout(() => setJustCleared(null), 400);
 
@@ -399,6 +411,17 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
   return (
     <div className="w-full max-w-sm mx-auto select-none relative touch-none">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes jellyDrop {
+          0% { transform: scale(1); }
+          30% { transform: scaleX(1.25) scaleY(0.75); }
+          40% { transform: scaleX(0.75) scaleY(1.25); }
+          50% { transform: scaleX(1.15) scaleY(0.85); }
+          65% { transform: scaleX(0.95) scaleY(1.05); }
+          75% { transform: scaleX(1.05) scaleY(0.95); }
+          100% { transform: scale(1); }
+        }
+      `}} />
       {/* Header */}
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-4 mb-3 border border-white/10 shadow-2xl relative overflow-hidden">
         <div className="flex items-center justify-between mb-3 relative z-10">
@@ -455,7 +478,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
       </div>
 
       {/* Game Grid */}
-      <div className="bg-slate-900 rounded-3xl p-2.5 border border-white/10 shadow-2xl mb-3 relative" ref={boardRef}>
+      <div className="bg-slate-900/40 backdrop-blur-xl rounded-3xl p-3 border border-white/10 shadow-[inset_0_0_30px_rgba(255,255,255,0.05)] shadow-2xl mb-3 relative" ref={boardRef}>
         <div
           className="grid gap-[3px]"
           style={{
@@ -491,6 +514,8 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
                 }
               }
 
+              const isNewlyDropped = justDropped.some(d => d.row === rIndex && d.col === cIndex);
+
               return (
                 <div
                   key={`${rIndex}-${cIndex}`}
@@ -498,11 +523,13 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
                   data-col={cIndex}
                   className={`aspect-square rounded-md transition-all duration-300 ${
                     isHighlighted
-                      ? "bg-white scale-0 rotate-45 opacity-0 z-10"
+                      ? "bg-white scale-110 opacity-0 z-10 shadow-[0_0_20px_white]"
                       : isPreview
-                      ? `${dragState.shape?.color} border border-white/40 opacity-60 shadow-lg scale-95`
+                      ? `bg-white/30 border-2 border-white/80 border-dashed opacity-60 shadow-inner scale-95`
                       : cell !== EMPTY_CELL
-                      ? `${cell} border border-white/20 shadow-sm animate-in zoom-in-75 duration-200`
+                      ? `${cell} border border-t-white/40 border-l-white/40 border-b-black/30 border-r-black/30 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4)] ${
+                          isNewlyDropped ? "animate-[jellyDrop_0.4s_ease-out]" : ""
+                        }`
                       : "bg-white/5 border border-white/5"
                   }`}
                 />

@@ -400,7 +400,7 @@ export function toDisplayPost(
 
   const isOwner = Boolean(followState.viewerId && post.author?.id && followState.viewerId === post.author.id);
   const isFollowersOnlyLocked = Boolean(
-    (post as any).followers_only &&
+    post.followers_only &&
     !followState.isFollowingCreator &&
     !isOwner
   );
@@ -408,7 +408,7 @@ export function toDisplayPost(
   if (isFollowersOnlyLocked) {
     displayPost.mediaUrl = null;
     displayPost.caption = "Bu içerik sadece takipçilere özeldir.";
-    (displayPost as any).isFollowersOnlyLocked = true;
+    displayPost.isFollowersOnlyLocked = true;
   }
 
   return displayPost;

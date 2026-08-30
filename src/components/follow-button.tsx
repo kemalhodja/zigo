@@ -43,7 +43,7 @@ export function FollowButton({
     setIsSaving(true);
 
     try {
-      const payloadObj: any = { followingId };
+      const payloadObj: { followingId: string; sourcePostId?: string } = { followingId };
       if (sourcePostId) {
         payloadObj.sourcePostId = sourcePostId;
       }

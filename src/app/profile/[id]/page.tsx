@@ -278,7 +278,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           </div>
         ) : (
           posts.map((post, index) => {
-            const isLocked = (post as any).followers_only && !following && !isOwnProfile;
+            const isLocked = post.followers_only && !following && !isOwnProfile;
 
             return (
               <Link

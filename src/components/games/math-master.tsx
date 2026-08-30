@@ -166,6 +166,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [streak, setStreak] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
 
   const { playSound } = useAudio();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -303,6 +304,13 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   const handleWrongAnswer = () => {
     playSound("error");
     setStreak(0);
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 500);
+    
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate([40, 40, 40]); // Heavy double vibrate
+    }
+    
     const newLives = livesRef.current - 1;
     livesRef.current = newLives;
     setLives(newLives);
@@ -436,7 +444,13 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   }
 
   return (
-    <div className="w-full max-w-sm mx-auto select-none">
+    <div className={`w-full max-w-sm mx-auto select-none ${isShaking ? "animate-shake" : ""}`}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes overdriveGrid {
+          from { background-position: 0 0, 0 0, 0 0; }
+          to { background-position: 0 0, 0 0, 0 30px; }
+        }
+      `}} />
       {/* Header */}
       <div className="bg-gradient-to-br from-rose-600 to-pink-700 rounded-3xl p-4 mb-3 border border-rose-400/20 shadow-2xl shadow-rose-500/20">
         <div className="flex items-center justify-between mb-3">
@@ -490,8 +504,14 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm">
-            <span className="text-[0.6rem] font-black text-rose-200 block uppercase">Puan</span>
+          <div className={`rounded-xl p-2 text-center backdrop-blur-sm transition-all duration-300 ${
+            streak >= 3 
+              ? "bg-gradient-to-r from-orange-500 to-rose-600 shadow-lg shadow-orange-500/50 scale-105" 
+              : "bg-white/10"
+          }`}>
+            <span className="text-[0.6rem] font-black text-white block uppercase">
+              {streak >= 3 ? `🔥 KOMBO x${streak}` : "Puan"}
+            </span>
             <span className="text-lg font-black text-white">{score}</span>
           </div>
           <div className="bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm flex items-center justify-center gap-1 text-lg">
@@ -505,12 +525,30 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
       </div>
 
       {/* Game Area */}
-      <div className={`bg-slate-900 rounded-3xl p-4 border shadow-2xl mb-3 relative overflow-hidden transition-colors duration-300 ${
-        timeLeft < 25 && !isGameOver ? "border-rose-500/50 bg-rose-950/20" : "border-slate-800"
+      <div className={`bg-slate-900 rounded-3xl p-4 border shadow-2xl mb-3 relative overflow-hidden transition-all duration-300 ${
+        timeLeft < 25 && !isGameOver ? "border-rose-500 shadow-[inset_0_0_80px_rgba(225,29,72,0.4)]" : 
+        streak >= 5 ? "border-fuchsia-500 shadow-[0_0_40px_rgba(217,70,239,0.4)]" : "border-slate-800"
       }`}>
         {/* Red Pulse Overlay when time is running out */}
         {timeLeft < 25 && !isGameOver && (
           <div className="absolute inset-0 bg-rose-500/10 animate-pulse pointer-events-none" />
+        )}
+
+        {/* Overdrive Grid Background */}
+        {streak >= 5 && !isGameOver && (
+          <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-50 z-0 flex flex-col justify-end">
+            <div className="w-full h-[150%] bg-gradient-to-t from-fuchsia-600/30 to-transparent absolute bottom-0 left-0" />
+            <div 
+              className="w-full h-full absolute bottom-0 left-0 perspective-[500px]"
+              style={{
+                backgroundImage: "linear-gradient(transparent 0%, rgba(217,70,239,0.5) 100%), linear-gradient(90deg, rgba(217,70,239,0.4) 1px, transparent 1px), linear-gradient(rgba(217,70,239,0.4) 1px, transparent 1px)",
+                backgroundSize: "100% 100%, 30px 30px, 30px 30px",
+                animation: "overdriveGrid 0.5s linear infinite",
+                transformOrigin: "bottom",
+                transform: "rotateX(45deg) scale(1.5)"
+              }}
+            />
+          </div>
         )}
 
         {/* Progress Bar */}
@@ -523,7 +561,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
           />
         </div>
 
-        <div className="mt-4 mb-8 text-center">
+        <div className="mt-4 mb-8 text-center relative z-10">
           <div className="text-[0.65rem] font-black text-slate-500 uppercase tracking-widest mb-1">
             Soru {correctAnswers + 1}
           </div>

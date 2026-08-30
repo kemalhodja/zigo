@@ -8,6 +8,7 @@ type PipeCellProps = {
   type: PipeType;
   rotation: number; // 0, 90, 180, 270
   isFilled: boolean;
+  flowDistance?: number;
   onClick: () => void;
   disabled?: boolean;
 };
@@ -16,16 +17,22 @@ export const PipeCell = memo(function PipeCell({
   type,
   rotation,
   isFilled,
+  flowDistance = -1,
   onClick,
   disabled,
 }: PipeCellProps) {
   if (type === "empty") {
-    return <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-200/50" />;
+    return <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-900/50 border border-white/5" />;
   }
 
   // Akış rengi: Enerji/Su akıyorsa cyan/mavi neon, akmıyorsa gri/slate
-  const pipeColor = isFilled ? "bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,1)] animate-pulse" : "bg-slate-400 transition-colors duration-300";
-  const glowBorder = isFilled ? "border-cyan-200" : "border-slate-500";
+  const pipeColor = isFilled 
+    ? "bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_0_15px_rgba(34,211,238,0.8)]" 
+    : "bg-gradient-to-r from-slate-500 to-slate-600 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2)]";
+  
+  const glowBorder = isFilled ? "border-cyan-300" : "border-slate-500";
+  const delayStyle = flowDistance >= 0 ? { transitionDelay: `${flowDistance * 100}ms` } : {};
+  const duration = "duration-500";
 
   return (
     <button
@@ -58,33 +65,33 @@ export const PipeCell = memo(function PipeCell({
         >
           {/* Straight Pipe: Düz çizgi (dikey) */}
           {type === "straight" && (
-            <div className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder}`} />
+            <div className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder} transition-all ${duration}`} style={delayStyle} />
           )}
 
           {/* Corner Pipe: L Boru (Üstten Sağa) */}
           {type === "corner" && (
             <>
-              <div className={`absolute left-1/2 -translate-x-1/2 top-0 h-1/2 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder}`} />
-              <div className={`absolute top-1/2 -translate-y-1/2 right-0 w-1/2 h-3.5 sm:h-4 ${pipeColor} border-y ${glowBorder}`} />
+              <div className={`absolute left-1/2 -translate-x-1/2 top-0 h-1/2 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder} transition-all ${duration}`} style={delayStyle} />
+              <div className={`absolute top-1/2 -translate-y-1/2 right-0 w-1/2 h-3.5 sm:h-4 ${pipeColor} border-y ${glowBorder} transition-all ${duration}`} style={delayStyle} />
               {/* Ortadaki Köşe Bağlantısı */}
-              <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-br-xs ${pipeColor}`} />
+              <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-br-xs ${pipeColor} transition-all ${duration}`} style={delayStyle} />
             </>
           )}
 
           {/* T-Junction Pipe: T Birleşim (Sol, Sağ, Alt) */}
           {type === "t_junction" && (
             <>
-              <div className={`absolute top-1/2 -translate-y-1/2 left-0 right-0 h-3.5 sm:h-4 ${pipeColor} border-y ${glowBorder}`} />
-              <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-1/2 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder}`} />
-              <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 ${pipeColor}`} />
+              <div className={`absolute top-1/2 -translate-y-1/2 left-0 right-0 h-3.5 sm:h-4 ${pipeColor} border-y ${glowBorder} transition-all ${duration}`} style={delayStyle} />
+              <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-1/2 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder} transition-all ${duration}`} style={delayStyle} />
+              <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 ${pipeColor} transition-all ${duration}`} style={delayStyle} />
             </>
           )}
 
           {/* Cross Pipe: Artı Boru (+) */}
           {type === "cross" && (
             <>
-              <div className={`absolute top-1/2 -translate-y-1/2 left-0 right-0 h-3.5 sm:h-4 ${pipeColor} border-y ${glowBorder}`} />
-              <div className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder}`} />
+              <div className={`absolute top-1/2 -translate-y-1/2 left-0 right-0 h-3.5 sm:h-4 ${pipeColor} border-y ${glowBorder} transition-all ${duration}`} style={delayStyle} />
+              <div className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-3.5 sm:w-4 ${pipeColor} border-x ${glowBorder} transition-all ${duration}`} style={delayStyle} />
             </>
           )}
         </div>

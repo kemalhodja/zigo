@@ -25,12 +25,13 @@ describe("generatePipeLevel", () => {
     }
   });
 
-  it("ızgara boyutu kademelerle büyür ve 7'de kalır", () => {
+  it("ızgara boyutu kademelerle büyür (her 10 seviyede 1 büyür, max 9)", () => {
     const sizes = [0, 8, 16, 30].map((tier) => {
       const t = generatePipeLevel(PRESET_COUNT + tier, PRESET_COUNT, mulberry32(tier + 1));
       return t.length;
     });
-    expect(sizes).toEqual([5, 6, 7, 7]);
+    // Tier 0: 5+0=5, Tier 8: 5+0=5, Tier 16: 5+1=6, Tier 30: 5+3=8
+    expect(sizes).toEqual([5, 5, 6, 8]);
   });
 
   it("tam olarak bir kaynak ve bir hedef içerir", () => {

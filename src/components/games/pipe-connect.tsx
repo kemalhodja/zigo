@@ -16,6 +16,7 @@ type CellData = {
   type: PipeType;
   rotation: number;
   isFilled: boolean;
+  flowDistance?: number;
 };
 
 // GRID_SIZE is now dynamic based on level size
@@ -86,6 +87,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
           type: cell.type,
           rotation: rots[Math.floor(Math.random() * rots.length)],
           isFilled: false,
+          flowDistance: -1,
         };
       })
     );
@@ -108,7 +110,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     const cols = currentGrid[0].length;
 
     const updated = currentGrid.map((r) =>
-      r.map((c) => ({ ...c, isFilled: c.type === "source" }))
+      r.map((c) => ({ ...c, isFilled: c.type === "source", flowDistance: c.type === "source" ? 0 : -1 }))
     );
 
     let startR = -1, startC = -1, targetR = -1, targetC = -1;
@@ -122,7 +124,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
 
     if (startR === -1 || targetR === -1) return { newGrid: updated, targetReached: false };
 
-    const queue: [number, number][] = [[startR, startC]];
+    const queue: [number, number, number][] = [[startR, startC, 0]];
     const visited = new Set<string>([`${startR},${startC}`]);
     const dRow = [-1, 0, 1, 0];
     const dCol = [0, 1, 0, -1];
@@ -130,7 +132,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     let targetReached = false;
 
     while (queue.length > 0) {
-      const [r, c] = queue.shift()!;
+      const [r, c, distance] = queue.shift()!;
       const currentCell = updated[r][c];
       const currentDirs = rotateDirections(BASE_DIRECTIONS[currentCell.type], currentCell.rotation);
 
@@ -149,7 +151,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
                 if (!visited.has(key)) {
                   visited.add(key);
                   neighbor.isFilled = true;
-                  queue.push([nR, nC]);
+                  neighbor.flowDistance = distance + 1;
+                  queue.push([nR, nC, distance + 1]);
                 }
               }
             }
@@ -228,6 +231,22 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
 
   return (
     <div className="w-full max-w-sm mx-auto select-none">
+      {/* SVG Goo Filter */}
+      <svg className="absolute w-0 h-0" aria-hidden="true">
+        <defs>
+          <filter id="goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
+              result="goo"
+            />
+            <feBlend in="SourceGraphic" in2="goo" />
+          </filter>
+        </defs>
+      </svg>
+
       {/* Header */}
       <div className="bg-gradient-to-br from-slate-900 to-cyan-950 rounded-3xl p-4 mb-3 border border-cyan-500/20 shadow-2xl shadow-cyan-500/10">
         <div className="flex items-center justify-between mb-3">
@@ -319,6 +338,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
           style={{
             gridTemplateColumns: `repeat(${grid.length || 5}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${grid.length || 5}, minmax(0, 1fr))`,
+            filter: "url(#goo)",
+            transform: "translateZ(0)"
           }}
         >
           {grid.map((row, rIndex) =>
@@ -328,6 +349,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
                 type={cell.type}
                 rotation={cell.rotation}
                 isFilled={cell.isFilled}
+                flowDistance={cell.flowDistance}
                 onClick={() => handleCellClick(rIndex, cIndex)}
                 disabled={isLevelCompleted || isGameFinished}
               />
