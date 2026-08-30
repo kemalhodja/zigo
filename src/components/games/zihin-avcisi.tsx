@@ -53,6 +53,8 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const [isPeeking, setIsPeeking] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [levelBonus, setLevelBonus] = useState(0);
+  const [comboPopup, setComboPopup] = useState<string | null>(null);
+  const [matchFlash, setMatchFlash] = useState<string[]>([]);
 
   const [firstChoice, setFirstChoice] = useState<Card | null>(null);
   const [secondChoice, setSecondChoice] = useState<Card | null>(null);
@@ -196,6 +198,24 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       streakRef.current += 1;
       maxStreakRef.current = Math.max(maxStreakRef.current, streakRef.current);
       setCurrentStreak(streakRef.current);
+
+      // Match Flash: Eşleşen kartlar için parlama efekti
+      const matchedIds = cards
+        .filter(c => c.icon === firstChoice.icon)
+        .map(c => c.id);
+      setMatchFlash(matchedIds);
+      setTimeout(() => setMatchFlash([]), 600);
+
+      // Combo Popup
+      if (streakRef.current >= 3) {
+        setComboPopup(`🔥 ${streakRef.current} KOMBO!`);
+        setTimeout(() => setComboPopup(null), 1200);
+      }
+
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([20, 30, 20]);
+      }
+
       setCards((prev) =>
         prev.map((c) => (c.icon === firstChoice.icon ? { ...c, isMatched: true } : c))
       );
@@ -381,21 +401,30 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       </div>
 
       {/* Game Grid */}
-      <div className="bg-slate-900 rounded-3xl p-3 border border-slate-800 shadow-2xl mb-3">
+      <div className="bg-slate-900 rounded-3xl p-3 border border-slate-800 shadow-2xl mb-3 relative overflow-hidden">
+        {/* Combo Popup Banner */}
+        {comboPopup && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+            <div className="bg-black/80 backdrop-blur-sm rounded-2xl px-6 py-3 animate-in zoom-in-95 fade-in duration-150">
+              <p className="text-2xl font-black text-amber-400">{comboPopup}</p>
+            </div>
+          </div>
+        )}
         <div
           className="grid gap-2"
           style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
         >
           {cards.map((card) => (
-            <MemoryCard
-              key={card.id}
-              id={card.id}
-              icon={card.icon}
-              isFlipped={card.isFlipped || isPeeking}
-              isMatched={card.isMatched}
-              isError={card.isError}
-              onClick={handleCardClick}
-            />
+            <div key={card.id} className={`transition-transform duration-200 ${matchFlash.includes(card.id) ? "scale-110" : ""}`}>
+              <MemoryCard
+                id={card.id}
+                icon={card.icon}
+                isFlipped={card.isFlipped || isPeeking}
+                isMatched={card.isMatched}
+                isError={card.isError}
+                onClick={handleCardClick}
+              />
+            </div>
           ))}
         </div>
       </div>

@@ -57,6 +57,50 @@ export interface DuelData {
 
 const ROUND_TIME = 60;
 
+function DraggableCard({ onSwipeLeft, onSwipeRight, children }: { onSwipeLeft: () => void; onSwipeRight: () => void; children: React.ReactNode }) {
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 200], [-18, 18]);
+  const passOpacity = useTransform(x, [-120, -40], [1, 0]);
+  const correctOpacity = useTransform(x, [40, 120], [0, 1]);
+
+  return (
+    <motion.div
+      className="flex-1 flex flex-col relative z-10 cursor-grab active:cursor-grabbing touch-pan-y"
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.5}
+      style={{ x, rotate }}
+      onDragEnd={(_, info) => {
+        if (info.offset.x < -80) onSwipeLeft();
+        else if (info.offset.x > 80) onSwipeRight();
+      }}
+      whileTap={{ scale: 1.02 }}
+    >
+      {/* PAS Damgası */}
+      <motion.div
+        className="absolute top-4 right-4 z-20 pointer-events-none"
+        style={{ opacity: passOpacity }}
+      >
+        <div className="border-4 border-rose-500 rounded-xl px-3 py-1 rotate-12">
+          <span className="text-rose-500 font-black text-xl tracking-widest">PAS</span>
+        </div>
+      </motion.div>
+
+      {/* DOĞRU Damgası */}
+      <motion.div
+        className="absolute top-4 left-4 z-20 pointer-events-none"
+        style={{ opacity: correctOpacity }}
+      >
+        <div className="border-4 border-emerald-500 rounded-xl px-3 py-1 -rotate-12">
+          <span className="text-emerald-500 font-black text-xl tracking-widest">İPUCU</span>
+        </div>
+      </motion.div>
+
+      {children}
+    </motion.div>
+  );
+}
+
 export function TabooGame({ userId = "guest" }: { userId?: string }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -470,31 +514,16 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
         {isPlaying && currentCard && (
           <div className="flex-1 flex flex-col relative">
-            {/* Draggable Card */}
-            <motion.div 
-              className="flex-1 flex flex-col relative z-10 touch-pan-y"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.7}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -80) {
-                  playSound("error");
-                  setCombo(0);
-                  nextCard();
-                } else if (info.offset.x > 80 && difficulty === "zor" && !showHint) {
+            {/* Draggable Card with Rotation + Stamp */}
+            <DraggableCard
+              onSwipeLeft={() => { playSound("error"); setCombo(0); nextCard(); }}
+              onSwipeRight={() => {
+                if (difficulty === "zor" && !showHint) {
                   setShowHint(true);
                   setScore(prev => Math.max(0, prev - 10));
                 }
               }}
-              style={{
-                // Add some motion values for rotation/opacity if we want, but inline is fine too
-              }}
-              whileDrag={{ scale: 1.02, cursor: "grabbing" }}
             >
-              {/* Swipe Indicators */}
-              <div className="absolute inset-y-0 left-0 flex items-center justify-start opacity-0 pointer-events-none transition-opacity -ml-4" style={{ opacity: 0 }}>
-                {/* Needs useTransform to show properly during drag, but for simplicity we rely on the physics */}
-              </div>
 
               {/* AI Message Bubble */}
             <div className="flex gap-3 mb-6">
@@ -590,6 +619,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
                 ➔
               </button>
             </form>
+          </DraggableCard>
           </div>
         )}
       </div>

@@ -278,17 +278,32 @@ const winLatchRef = useRef(false);
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes flipIn {
-            0% { transform: rotateX(-90deg); }
-            100% { transform: rotateX(0deg); }
+            0% { transform: rotateX(0deg); opacity: 1; }
+            45% { transform: rotateX(-90deg); opacity: 0.3; }
+            55% { transform: rotateX(-90deg); opacity: 0.3; }
+            100% { transform: rotateX(0deg); opacity: 1; }
           }
-          .animate-flip { animation: flipIn 0.4s ease forwards; }
+          .animate-flip { animation: flipIn 0.5s ease forwards; }
           @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
           }
-          .animate-shake { animation: shake 0.4s ease-in-out; }
+          .animate-shake { animation: shake 0.45s ease-in-out; }
+          @keyframes letterPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.18); }
+            100% { transform: scale(1); }
+          }
+          .animate-pop { animation: letterPop 0.12s ease-out; }
+          @keyframes winBounce {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-12px); }
+            50% { transform: translateY(-6px); }
+            75% { transform: translateY(-10px); }
+          }
         `
       }} />
 
@@ -352,6 +367,7 @@ const winLatchRef = useRef(false);
         {guesses.map((guess, i) => {
           const isCurrentRow = i === currentRow;
           const isSubmitted = i < currentRow;
+          const isWinRow = hasWon && i === currentRow - 1;
           
           return (
             <div 
@@ -361,25 +377,37 @@ const winLatchRef = useRef(false);
               {Array.from({ length: cols }).map((_, j) => {
                 const letter = guess[j] || "";
                 let bgClass = "bg-slate-800 border-slate-700 text-white";
+                let flipDelay = {};
+                let extraClass = "";
                 
                 if (letter && isCurrentRow) {
-                  bgClass = "bg-slate-800 border-slate-500 text-white border-2 scale-105 transition-transform";
+                  bgClass = "bg-slate-800 border-white/70 text-white border-2";
+                  extraClass = "animate-pop";
                 } else if (isSubmitted) {
                   const state = getLetterState(guess, j);
-                  if (state === "correct") bgClass = "bg-emerald-500 border-emerald-600 text-white animate-flip";
-                  else if (state === "present") bgClass = "bg-amber-500 border-amber-600 text-white animate-flip";
-                  else bgClass = "bg-slate-700 border-slate-800 text-slate-400 animate-flip";
+                  flipDelay = { animationDelay: `${j * 150}ms` };
+                  if (state === "correct") {
+                    bgClass = isWinRow
+                      ? "bg-emerald-500 border-emerald-600 text-white animate-flip"
+                      : "bg-emerald-500 border-emerald-600 text-white animate-flip";
+                  } else if (state === "present") {
+                    bgClass = "bg-amber-500 border-amber-600 text-white animate-flip";
+                  } else {
+                    bgClass = "bg-slate-600 border-slate-700 text-slate-300 animate-flip";
+                  }
                 }
 
                 let boxSize = "w-11 h-11 sm:w-14 sm:h-14";
                 if (cols > 5) boxSize = "w-9 h-9 sm:w-12 sm:h-12";
                 if (cols > 6) boxSize = "w-8 h-8 sm:w-10 sm:h-10";
 
+                const winBounceDelay = isWinRow ? { animationDelay: `${j * 100 + 700}ms` } : {};
+
                 return (
                   <div
                     key={j}
-                    className={`${boxSize} flex items-center justify-center rounded-xl border-2 text-2xl font-black uppercase ${bgClass}`}
-                    style={{ animationDelay: `${j * 100}ms` }}
+                    className={`${boxSize} flex items-center justify-center rounded-xl border-2 text-2xl font-black uppercase transition-colors ${bgClass} ${extraClass} ${isWinRow ? "animate-[winBounce_0.6s_ease_forwards]" : ""}`}
+                    style={{ ...flipDelay, ...winBounceDelay }}
                   >
                     {letter}
                   </div>

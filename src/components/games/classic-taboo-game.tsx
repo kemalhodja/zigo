@@ -137,15 +137,15 @@ export function ClassicTabooGame() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* Header (always visible except in playing to save space maybe?) */}
-      <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-4 mb-4 shadow-xl text-white">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-4 mb-4 shadow-xl text-white shadow-orange-500/30">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-black flex items-center gap-2">
               👥 Klasik Tabu
             </h2>
             <p className="text-xs font-bold text-amber-100">
-              Arkadaşlarınla Oyna
+              Tur {round} / 3 · Sıra: <span className="font-black text-white">{currentTurn === "team1" ? team1Name : team2Name}</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -154,13 +154,13 @@ export function ClassicTabooGame() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className={`bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm border-2 ${currentTurn === "team1" ? "border-white" : "border-transparent"}`}>
+          <div className={`bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm border-2 transition-all duration-300 ${currentTurn === "team1" ? "border-white shadow-inner scale-105" : "border-transparent opacity-70"}`}>
             <span className="text-[0.6rem] font-black text-amber-200 block uppercase tracking-wider">{team1Name}</span>
-            <span className="text-2xl font-black text-white">{scores.team1}</span>
+            <span className="text-3xl font-black text-white">{scores.team1}</span>
           </div>
-          <div className={`bg-white/10 rounded-xl p-2 text-center backdrop-blur-sm border-2 ${currentTurn === "team2" ? "border-white" : "border-transparent"}`}>
+          <div className={`bg-white/10 rounded-2xl p-3 text-center backdrop-blur-sm border-2 transition-all duration-300 ${currentTurn === "team2" ? "border-white shadow-inner scale-105" : "border-transparent opacity-70"}`}>
             <span className="text-[0.6rem] font-black text-amber-200 block uppercase tracking-wider">{team2Name}</span>
-            <span className="text-2xl font-black text-white">{scores.team2}</span>
+            <span className="text-3xl font-black text-white">{scores.team2}</span>
           </div>
         </div>
       </div>
@@ -254,25 +254,52 @@ export function ClassicTabooGame() {
         {/* PLAYING SCREEN */}
         {gameState === "playing" && currentCard && (
           <div className="flex-1 flex flex-col h-full">
-            {/* Timer Bar */}
+            {/* Timer Row */}
             <div className="flex items-center justify-between mb-4">
-              <div className="text-2xl font-black text-slate-700">⏱️ {timeLeft}s</div>
-              <div className="text-sm font-bold text-slate-500">Pas: {passesLeft}</div>
+              {/* Circular Timer */}
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 60 60">
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="5" />
+                  <circle
+                    cx="30" cy="30" r="26" fill="none"
+                    stroke={timeLeft > timeSetting * 0.5 ? "#10b981" : timeLeft > timeSetting * 0.25 ? "#f59e0b" : "#ef4444"}
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 26}`}
+                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - timeLeft / timeSetting)}`}
+                    style={{ transition: "stroke-dashoffset 1s linear, stroke 0.5s" }}
+                  />
+                </svg>
+                <span className={`absolute text-lg font-black ${timeLeft <= timeSetting * 0.25 ? "text-rose-500" : "text-slate-700"}`}>{timeLeft}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">Pas Hakkı:</span>
+                {Array.from({ length: passLimit }).map((_, i) => (
+                  <div key={i} className={`w-3 h-3 rounded-full ${i < passesLeft ? "bg-amber-400" : "bg-slate-200"}`} />
+                ))}
+              </div>
             </div>
 
-            {/* Card */}
-            <div className="flex-1 bg-amber-50 rounded-3xl border-2 border-amber-200 flex flex-col items-center justify-center p-6 mb-6 shadow-sm">
-              <h2 className="text-4xl font-black text-slate-800 mb-6 text-center break-words w-full uppercase">
-                {currentCard.word}
-              </h2>
-              
-              <div className="w-full bg-white rounded-2xl p-4 shadow-sm border border-amber-100 space-y-3">
-                <div className="text-[0.65rem] font-black text-amber-500 uppercase tracking-widest text-center mb-2">Yasaklı Kelimeler</div>
-                {currentCard.forbidden.map((fw, i) => (
-                  <div key={i} className="text-center font-bold text-lg text-slate-600 border-b border-dashed border-amber-100 last:border-0 pb-2 last:pb-0">
-                    {fw}
-                  </div>
-                ))}
+            {/* Physical Card */}
+            <div className="flex-1 flex flex-col mb-4 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.18),0_2px_8px_rgba(0,0,0,0.12)] border border-slate-100">
+              {/* Top - Target Word */}
+              <div className="bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center py-8 px-4">
+                <h2 className="text-4xl sm:text-5xl font-black text-white text-center break-words uppercase tracking-wide drop-shadow-sm">
+                  {currentCard.word}
+                </h2>
+              </div>
+              {/* Divider */}
+              <div className="bg-slate-800 h-2 w-full" />
+              {/* Bottom - Forbidden Words */}
+              <div className="bg-white flex-1 flex flex-col justify-center px-6 py-4">
+                <div className="text-[0.65rem] font-black text-rose-500 uppercase tracking-widest text-center mb-3">⛔ Yasaklı Kelimeler</div>
+                <div className="space-y-2">
+                  {currentCard.forbidden.map((fw, i) => (
+                    <div key={i} className="text-center font-bold text-xl text-slate-700 border-b border-dashed border-slate-200 last:border-0 pb-2 last:pb-0">
+                      {fw}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -280,27 +307,27 @@ export function ClassicTabooGame() {
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={handleTaboo}
-                className="tap-scale py-4 bg-rose-100 text-rose-600 rounded-2xl font-black border-2 border-rose-200 hover:bg-rose-200 flex flex-col items-center justify-center gap-1"
+                className="tap-scale py-5 bg-rose-500 text-white rounded-2xl font-black shadow-lg shadow-rose-500/30 hover:bg-rose-600 active:scale-95 flex flex-col items-center justify-center gap-1 border-b-4 border-rose-700"
               >
                 <span className="text-2xl">❌</span>
-                <span className="text-xs uppercase">Tabu (-1)</span>
+                <span className="text-xs uppercase tracking-wide">Tabu (-1)</span>
               </button>
               
               <button
                 onClick={handlePass}
                 disabled={passesLeft <= 0}
-                className="tap-scale py-4 bg-slate-100 text-slate-600 rounded-2xl font-black border-2 border-slate-200 hover:bg-slate-200 disabled:opacity-50 flex flex-col items-center justify-center gap-1"
+                className="tap-scale py-5 bg-slate-200 text-slate-600 rounded-2xl font-black shadow hover:bg-slate-300 active:scale-95 disabled:opacity-40 flex flex-col items-center justify-center gap-1 border-b-4 border-slate-400"
               >
                 <span className="text-2xl">⏭️</span>
-                <span className="text-xs uppercase">Pas</span>
+                <span className="text-xs uppercase tracking-wide">Pas</span>
               </button>
 
               <button
                 onClick={handleCorrect}
-                className="tap-scale py-4 bg-emerald-100 text-emerald-600 rounded-2xl font-black border-2 border-emerald-200 hover:bg-emerald-200 flex flex-col items-center justify-center gap-1"
+                className="tap-scale py-5 bg-emerald-500 text-white rounded-2xl font-black shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 active:scale-95 flex flex-col items-center justify-center gap-1 border-b-4 border-emerald-700"
               >
                 <span className="text-2xl">✅</span>
-                <span className="text-xs uppercase">Doğru (+1)</span>
+                <span className="text-xs uppercase tracking-wide">Doğru (+1)</span>
               </button>
             </div>
           </div>

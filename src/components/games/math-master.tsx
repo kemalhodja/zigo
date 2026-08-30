@@ -577,15 +577,18 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
 
         <div className="grid grid-cols-2 gap-3 relative z-10">
           {question?.options.map((opt, i) => {
-            let btnClass = "bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border-slate-700";
+            const KAHOOT_COLORS = [
+              { base: "bg-rose-600 border-rose-700 hover:bg-rose-500", correct: "bg-emerald-500 border-emerald-600", wrong: "bg-rose-800 border-rose-900 opacity-70", shape: "△" },
+              { base: "bg-blue-600 border-blue-700 hover:bg-blue-500", correct: "bg-emerald-500 border-emerald-600", wrong: "bg-blue-900 border-blue-900 opacity-70", shape: "□" },
+              { base: "bg-amber-500 border-amber-600 hover:bg-amber-400", correct: "bg-emerald-500 border-emerald-600", wrong: "bg-amber-800 border-amber-900 opacity-70", shape: "◯" },
+              { base: "bg-emerald-600 border-emerald-700 hover:bg-emerald-500", correct: "bg-emerald-400 border-emerald-500", wrong: "bg-emerald-900 border-emerald-900 opacity-70", shape: "♥" },
+            ];
+            const color = KAHOOT_COLORS[i];
+            let btnClass = color.base;
             if (selectedAnswer !== null) {
-              if (opt === question.answer && selectedAnswer === opt) {
-                btnClass = "bg-emerald-500 border-emerald-400 scale-105";
-              } else if (opt === selectedAnswer && selectedAnswer !== question.answer) {
-                btnClass = "bg-rose-500 border-rose-400 animate-shake";
-              } else if (opt === question.answer) {
-                btnClass = "bg-emerald-500/50 border-emerald-400/50"; // Doğru cevabı göster
-              }
+              if (opt === question.answer) btnClass = color.correct + " scale-105 shadow-lg";
+              else if (opt === selectedAnswer) btnClass = color.wrong + " animate-shake";
+              else btnClass = color.base + " opacity-40";
             }
 
             return (
@@ -594,8 +597,9 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
                 id={`btn-${opt}`}
                 disabled={isGameOver || selectedAnswer !== null}
                 onClick={() => handleAnswer(opt)}
-                className={`tap-scale border rounded-2xl py-4 text-2xl font-black text-white transition-all shadow-lg ${btnClass}`}
+                className={`tap-scale border-b-4 rounded-2xl py-4 text-2xl font-black text-white transition-all shadow-lg ${btnClass} flex items-center justify-center gap-2`}
               >
+                <span className="text-base opacity-70">{color.shape}</span>
                 {opt}
               </button>
             );
