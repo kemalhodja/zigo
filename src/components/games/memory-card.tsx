@@ -65,11 +65,11 @@ export const MemoryCard = memo(function MemoryCard({
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         disabled={isFlipped || isMatched}
-        style={{
-          rotateX: isFlipped || isMatched ? 0 : rotateX,
-          rotateY: isFlipped || isMatched ? 0 : rotateY,
-          transformStyle: "preserve-3d"
-        }}
+        style={
+          isFlipped || isMatched
+            ? { transformStyle: "preserve-3d" }
+            : { rotateX, rotateY, transformStyle: "preserve-3d" }
+        }
         className={`relative w-full h-full rounded-2xl transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] focus:outline-none tap-scale ${
           isFlipped || isMatched ? "rotate-y-180" : ""
         } ${isMatched ? "cursor-default translate-z-[30px]" : "cursor-pointer"} ${isError ? "animate-shake" : ""}`}

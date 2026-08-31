@@ -109,7 +109,10 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     
     if (dict) {
       // Dictionary is loaded — strict check
-      if (dict[wordLen]) return dict[wordLen].has(guess);
+      if (dict[wordLen]) {
+        const lowerGuess = guess.toLocaleLowerCase(lang === "TR" ? "tr-TR" : "en-US");
+        if (dict[wordLen].has(guess) || dict[wordLen].has(lowerGuess)) return true;
+      }
       // Dict loaded but no words for this length — fall through to TS fallback
     }
     
