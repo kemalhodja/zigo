@@ -105,9 +105,26 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   };
 
   const isValidWord = (guess: string, lang: Lang, wordLen: number): boolean => {
-    // Sözlük dosyamız çok kısıtlı (sadece hedef kelimeleri içeriyor) olduğu için
-    // oyuncunun deneme yapmasını engellememek adına tüm tahminleri geçerli sayıyoruz.
-    return true;
+    const dict = validWordsRef.current;
+    
+    if (dict) {
+      // Dictionary is loaded — strict check
+      if (dict[wordLen]) {
+        const lowerGuess = guess.toLocaleLowerCase(lang === "TR" ? "tr-TR" : "en-US");
+        if (dict[wordLen].has(guess) || dict[wordLen].has(lowerGuess)) return true;
+      }
+      // Dict loaded but no words for this length — fall through to TS fallback
+    }
+    
+    // TS built-in fallback (small, always available)
+    const fallbackList = WORD_DICTIONARY[lang][wordLen];
+    if (fallbackList && fallbackList.some(w => w.word === guess)) return true;
+
+    // Dict still loading (null) → be permissive so player isn't blocked
+    if (!dict) return true;
+
+    // Dict is loaded but word not found
+    return false;
   };
 
   const onKeyPress = useCallback((key: string) => {
