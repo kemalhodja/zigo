@@ -208,11 +208,12 @@ export function AppShell({
           <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
         ) : null}
         {children}
+        {hideQuickDock || isPlatformAdmin ? null : (
+          <div className="-mx-1 mt-6">
+            <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
+          </div>
+        )}
       </main>
-
-      {hideQuickDock || isPlatformAdmin ? null : (
-        <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
-      )}
 
       {pathname.startsWith("/auth") ? <LegalFooter /> : null}
 
