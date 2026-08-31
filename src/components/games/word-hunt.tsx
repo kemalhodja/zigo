@@ -33,6 +33,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   
   const [shakeRow, setShakeRow] = useState(-1);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLoadingTarget, setIsLoadingTarget] = useState(false);
 
   const { playSound } = useAudio();
   const keyboardRef = useRef<HTMLDivElement>(null);
@@ -60,13 +61,27 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
       .catch(() => {});
   }, [userId]);
 
-  const initLevel = useCallback((level: number, lang: Lang) => {
-    let wordLen = 4;
-    if (level >= 3 && level <= 5) wordLen = 5;
-    if (level >= 6) wordLen = 6;
+  const initLevel = useCallback(async (level: number, lang: Lang) => {
+    setIsLoadingTarget(true);
+    let wordObj = null;
     
-    const wordList = WORD_DICTIONARY[lang][wordLen];
-    const wordObj = wordList[Math.floor(Math.random() * wordList.length)];
+    try {
+      const res = await fetch(`/api/games/word?lang=${lang}&level=${level}`);
+      if (res.ok) {
+        wordObj = await res.json();
+      }
+    } catch (err) {
+      console.error("Failed to fetch target word, using fallback", err);
+    }
+
+    if (!wordObj || !wordObj.word) {
+      let wordLen = 4;
+      if (level >= 3 && level <= 5) wordLen = 5;
+      if (level >= 6) wordLen = 6;
+      
+      const wordList = WORD_DICTIONARY[lang][wordLen] || WORD_DICTIONARY[lang][4];
+      wordObj = wordList[Math.floor(Math.random() * wordList.length)];
+    }
     
     setTargetWordObj(wordObj);
     setGuesses(Array(ROWS).fill(""));
@@ -75,6 +90,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     setHasWon(false);
     setShakeRow(-1);
     setToastMessage(null);
+    setIsLoadingTarget(false);
   }, []);
 
   useEffect(() => {
@@ -367,6 +383,12 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
           <span className="text-lg font-black text-white">{score}</span>
         </div>
       </div>
+
+      {isLoadingTarget && (
+        <div className="absolute inset-0 z-10 bg-slate-900/80 backdrop-blur-sm rounded-3xl flex items-center justify-center">
+          <div className="animate-spin text-teal-500 text-4xl">🔄</div>
+        </div>
+      )}
 
       {/* Grid */}
       <div className="bg-slate-900 rounded-3xl p-4 border border-slate-800 shadow-2xl mb-3 flex flex-col items-center gap-2 relative">

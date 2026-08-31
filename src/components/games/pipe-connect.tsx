@@ -73,9 +73,9 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
   }, [userId]);
 
   const loadLevel = useCallback((lvlIndex: number) => {
-    const template = lvlIndex < PRESET_LEVELS.length 
-      ? PRESET_LEVELS[lvlIndex]
-      : generatePipeLevel(lvlIndex - PRESET_LEVELS.length + 1, 0);
+    // 1. seviyeden itibaren zorluğu artırmak için preset seviyeleri atlıyoruz
+    // ve tier hesaplamasında başlangıç zorluğunu (+3) artırıyoruz.
+    const template = generatePipeLevel(lvlIndex + 3, 0);
     const newGrid: CellData[][] = template.map((row) =>
       row.map((cell) => {
         if (cell.type === "source" || cell.type === "target" || cell.type === "empty") {
