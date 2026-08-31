@@ -1,9 +1,9 @@
 "use client";
 
 import confetti from "canvas-confetti";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useTransform } from "framer-motion";
 
 import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
@@ -562,7 +562,6 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
                 </div>
               )}
             </div>
-            </motion.div>
 
             {/* Input Area */}
             <form onSubmit={handleGuess} className="relative mt-auto">

@@ -1,9 +1,8 @@
 import { DoubleTapLikeLink } from "@/components/double-tap-like-link";
+import { FollowButton } from "@/components/follow-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 
 import type { DisplayPost } from "./data";
-
-import { FollowButton } from "@/components/follow-button";
 
 export function FeedMediaViewer({
   post,

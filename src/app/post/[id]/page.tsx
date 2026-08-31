@@ -144,7 +144,7 @@ export default async function PostDetailPage({ params, searchParams }: PostDetai
             teacherBadges={m.teacherBadges}
             feedExtras={m.feedExtras}
             feedEnhancements={m.feedEnhancements}
-            viewerRole={profile?.role}
+            viewerRole={profile?.role as unknown as string}
             priorityMedia={index === 0}
             fullHeight={true}
           />

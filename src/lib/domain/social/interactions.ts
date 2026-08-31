@@ -269,8 +269,9 @@ export async function createStory(
           area_id: parsed.areaId,
           caption: safeCaption,
           media_url: parsed.mediaUrl || null,
+          // @ts-expect-error - followers_only field exists in DB but missing from types
           followers_only: parsed.followersOnly,
-        } as any);
+        });
 
       if (error) throw error;
 
@@ -459,7 +460,7 @@ export async function createComment(
     .eq("id", parsed.postId)
     .single();
 
-  const pd = postData as any;
+  const pd = postData as { author_id: string; followers_only_comments: boolean | null } | null;
   if (pd?.followers_only_comments && pd.author_id !== input.userId) {
     const isFollowing = await hasFollow(supabase, input.userId, pd.author_id);
     if (!isFollowing) {
@@ -530,9 +531,10 @@ export async function toggleFollow(
 
   if (parsed.sourcePostId) {
     try {
-      const { error } = await supabase.rpc("increment_follower_conversion" as any, {
+      const { error: _error } = await supabase.rpc("increment_follower_conversion", {
       p_post_id: parsed.sourcePostId,
     });
+      void _error;
     } catch {
       // Best effort analytic
     }

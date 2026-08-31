@@ -1,4 +1,5 @@
 import { ArrowRightIcon, CalendarIcon, TrophyIcon } from "lucide-react";
+
 import { createClient } from "@/lib/supabase/server";
 
 export async function LeaderboardWidget() {

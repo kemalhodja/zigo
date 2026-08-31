@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
 
@@ -21,6 +22,44 @@ export function GooglePlaySubscriptionModal({
   basePriceTry,
   isWithinTrialWindow = false,
 }: GooglePlaySubscriptionModalProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    prevFocusRef.current = document.activeElement as HTMLElement | null;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const t = setTimeout(() => closeBtnRef.current?.focus(), 0);
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Tab" && overlayRef.current) {
+        const focusable = overlayRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t);
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKey);
+      prevFocusRef.current?.focus();
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const startDate = new Date();
@@ -36,13 +75,23 @@ export function GooglePlaySubscriptionModal({
   const formattedEndDate = dateFormater.format(endDate);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 backdrop-blur-sm">
+    <div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="google-play-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="w-full max-w-[540px] overflow-hidden rounded-[24px] bg-white shadow-2xl">
         <div className="flex items-center justify-between bg-slate-50 px-6 py-4">
-          <h2 className="text-xl font-bold text-slate-800">Abonelik Özeti</h2>
+          <h2 id="google-play-modal-title" className="text-xl font-bold text-slate-800">Abonelik Özeti</h2>
           <button
+            ref={closeBtnRef}
             aria-label="Kapat"
-            className="flex size-8 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition hover:bg-slate-300"
+            className="flex size-8 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition hover:bg-slate-300 focus-visible:ring-2 focus-visible:ring-violet-500"
             onClick={onClose}
             type="button"
           >

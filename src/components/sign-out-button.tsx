@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -11,7 +10,6 @@ export function SignOutButton({
   className?: string;
 } = {}) {
   const s = useMessages().signOut;
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
 

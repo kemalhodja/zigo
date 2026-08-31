@@ -139,7 +139,7 @@ export default async function HomePage() {
           posts={posts}
           suggestedCreators={suggestedCreators}
           teacherBadges={m.teacherBadges}
-          viewerRole={viewer.role}
+          viewerRole={viewer.role as unknown as string}
         />
       </section>
       </div>

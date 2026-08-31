@@ -21,7 +21,7 @@ type WordHuntProps = {
 
 export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const [selectedLang, setSelectedLang] = useState<Lang | null>(null);
-  const [validWords, setValidWords] = useState<Record<number, Set<string>> | null>(null);
+  const [_validWords, setValidWords] = useState<Record<number, Set<string>> | null>(null);
   
   const [currentLevel, setCurrentLevel] = useState(1);
   const [targetWordObj, setTargetWordObj] = useState<WordEntry | null>(null);

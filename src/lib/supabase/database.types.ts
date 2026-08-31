@@ -2649,6 +2649,10 @@ export type Database = {
         Args: { p_post_id: string }
         Returns: void
       }
+      increment_follower_conversion: {
+        Args: { p_post_id: string }
+        Returns: undefined
+      }
       admin_send_user_message: {
         Args: { msg_body: string; msg_title: string; target_user_id: string }
         Returns: undefined

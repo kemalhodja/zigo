@@ -11,77 +11,69 @@ type TrialSubscription = {
   isLoading: boolean;
 };
 
+// SWR-like global cache: 5dk stale, deduped fetch, tüm mount'lar paylaşır
+let trialCache: TrialSubscription | null = null;
+let trialCacheAt = 0;
+let trialInflight: Promise<TrialSubscription> | null = null;
+const TRIAL_CACHE_TTL = 5 * 60 * 1000;
+
+async function fetchTrialStatusUncached(): Promise<TrialSubscription> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
+
+  const { data } = await supabase
+    .from("user_subscriptions")
+    .select("tier, current_period_end")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const tier = (data?.tier ?? "free") as "free" | "zigo_plus";
+  const periodEnd = data?.current_period_end ? new Date(data.current_period_end) : null;
+  const isActivePaidPremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
+  if (isActivePaidPremium) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
+
+  const { data: userData } = await supabase.from("users").select("created_at").eq("id", user.id).maybeSingle();
+  if (!userData?.created_at) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
+  const diffDays = Math.floor((Date.now() - new Date(userData.created_at).getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 7) return { isTrial: true, trialDaysRemaining: Math.max(0, 7 - diffDays), isLoading: false };
+  return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
+}
+
 function useTrialStatus(): TrialSubscription {
-  const [subscription, setSubscription] = useState<TrialSubscription>({
-    isTrial: false,
-    trialDaysRemaining: 0,
-    isLoading: true,
+  const [subscription, setSubscription] = useState<TrialSubscription>(() => {
+    if (trialCache && Date.now() - trialCacheAt < TRIAL_CACHE_TTL) return trialCache;
+    return { isTrial: false, trialDaysRemaining: 0, isLoading: true };
   });
   const supabase = createClient();
 
   useEffect(() => {
     let mounted = true;
+    const isStale = !trialCache || Date.now() - trialCacheAt >= TRIAL_CACHE_TTL;
 
-    async function fetchTrialStatus() {
+    async function load() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          if (mounted) setSubscription({ isTrial: false, trialDaysRemaining: 0, isLoading: false });
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("user_subscriptions")
-          .select("tier, current_period_end")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        const tier = (data?.tier ?? "free") as "free" | "zigo_plus";
-        const periodEnd = data?.current_period_end ? new Date(data.current_period_end) : null;
-        const isActivePaidPremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
-
-        if (isActivePaidPremium) {
-          if (mounted) setSubscription({ isTrial: false, trialDaysRemaining: 0, isLoading: false });
-          return;
-        }
-
-        const { data: userData } = await supabase
-          .from("users")
-          .select("created_at")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        let isTrialActive = false;
-        let trialDaysRemaining = 0;
-
-        if (userData?.created_at) {
-          const createdTime = new Date(userData.created_at).getTime();
-          const diffTime = Date.now() - createdTime;
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays <= 7) {
-            isTrialActive = true;
-            trialDaysRemaining = Math.max(0, 7 - diffDays);
-          }
-        }
-
-        if (mounted) {
-          setSubscription({
-            isTrial: isTrialActive,
-            trialDaysRemaining,
-            isLoading: false,
+        if (!trialInflight) {
+          trialInflight = fetchTrialStatusUncached().finally(() => {
+            setTimeout(() => { trialInflight = null; }, 0);
           });
         }
+        const fresh = await trialInflight;
+        trialCache = fresh;
+        trialCacheAt = Date.now();
+        if (mounted) setSubscription(fresh);
       } catch {
         if (mounted) setSubscription({ isTrial: false, trialDaysRemaining: 0, isLoading: false });
       }
     }
 
-    fetchTrialStatus();
+    if (isStale) void load();
+    else if (trialCache) setSubscription(trialCache);
 
     const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      fetchTrialStatus();
+      trialCache = null;
+      trialInflight = null;
+      void load();
     });
 
     return () => {

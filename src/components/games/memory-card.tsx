@@ -1,14 +1,14 @@
 "use client";
 
-import { memo } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { 
-  Rocket, Star, Globe, Atom, Telescope, Car, Bus, Gamepad2, Cpu, Gem,
-  Heart, Sun, Moon, Zap, Cloud, Music, Camera, Coffee, Headphones, Umbrella,
-  Anchor, Smile, Flame, Droplet, Feather, Leaf, Bug, Ghost, Cat, Dog,
-  Fish, Bird, Snowflake, Wind, Thermometer, Compass, Key, Lock, Clock, Bell,
-  Brain
-} from "lucide-react";
+  Anchor, Atom, Bell,
+Bird,   Brain,
+Bug, Bus, Camera, Car, Cat, Clock, Cloud, Coffee, Compass, Cpu, Dog,
+Droplet, Feather,   Fish, Flame, Gamepad2, Gem,
+Ghost, Globe, Headphones,   Heart, Key, Leaf, Lock, Moon, Music,   Rocket, Smile, Snowflake, Star, Sun, Telescope, Thermometer, Umbrella,
+Wind, Zap} from "lucide-react";
+import { memo } from "react";
 
 const IconComponents: Record<string, React.ElementType> = {
   Rocket, Star, Globe, Atom, Telescope, Car, Bus, Gamepad2, Cpu, Gem,

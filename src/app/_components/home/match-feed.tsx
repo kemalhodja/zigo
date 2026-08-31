@@ -11,7 +11,7 @@ import { SocialAvatar } from "@/components/social-primitives";
 import { useFeedPostState } from "@/hooks/use-feed-post-state";
 import { formatFeedTimestamp } from "@/lib/format-time";
 import type { Messages } from "@/lib/i18n/server";
-import type { UserRole } from "@/lib/supabase/database.types";
+type UserRole = string;
 
 import type { DisplayPost, DisplaySuggestedCreator } from "./data";
 import { FeedMediaViewer } from "./feed-media-viewer";
