@@ -1,4 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+
+import { trackEvent } from "@/lib/client/analytics";
+import { FUNNEL } from "@/lib/domain/funnel";
 
 type GameSubscriptionPaywallProps = {
   gameTitle: string;
@@ -14,6 +20,10 @@ export function GameSubscriptionPaywall({
   backLabel = "Panele Dön",
   isStudent = false,
 }: GameSubscriptionPaywallProps) {
+  useEffect(() => {
+    trackEvent(FUNNEL.PAYWALL_VIEWED, { game: gameTitle, isStudent });
+  }, [gameTitle, isStudent]);
+
   const features = isStudent
     ? [
         { icon: "⏱️", label: "Günde 1 Saat" },
@@ -66,8 +76,9 @@ export function GameSubscriptionPaywall({
       </div>
 
       <div className="space-y-2.5">
-<Link
+ <Link
           href="/pricing"
+          onClick={() => trackEvent(FUNNEL.PAYWALL_CLICKED, { game: gameTitle, isStudent })}
           className="tap-scale block w-full bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black py-3.5 rounded-xl shadow-lg shadow-amber-500/25 hover:brightness-105 transition text-sm"
         >
           Zigo Plus'a Abone Ol ✨

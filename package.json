@@ -72,6 +72,8 @@
     "test:stripe-webhook": "node scripts/test-stripe-webhook.mjs",
     "stripe:campaign-coupon": "node scripts/create-stripe-campaign-coupon.mjs",
     "test:video-delivery": "node scripts/test-video-delivery.mjs",
+    "video:cdn-check": "node scripts/video-cdn-check.mjs",
+    "video:cdn-estimate": "node -e \"const {estimateMonthlyEgressCost}=require('./src/lib/domain/video-delivery.ts'); console.log(estimateMonthlyEgressCost(900))\"",
     "test:mobile": "playwright test --project=mobile-chrome",
     "setup:complete": "npm run test:all",
     "test:unit": "vitest run",

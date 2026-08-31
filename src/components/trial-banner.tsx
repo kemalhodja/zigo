@@ -3,6 +3,8 @@
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { trackEvent } from "@/lib/client/analytics";
+import { FUNNEL } from "@/lib/domain/funnel";
 import { createClient } from "@/lib/supabase/client";
 
 type TrialSubscription = {
@@ -103,6 +105,13 @@ export function TrialBanner({
       setDismissed(true);
     }
   }, [dismissUntil]);
+
+  useEffect(() => {
+    if (!isLoading && isTrial && trialDaysRemaining > 0 && !dismissed) {
+      trackEvent(FUNNEL.TRIAL_STARTED, { daysRemaining: trialDaysRemaining, variant });
+      trackEvent(FUNNEL.PAYWALL_VIEWED, { source: "trial_banner", daysRemaining: trialDaysRemaining });
+    }
+  }, [isLoading, isTrial, trialDaysRemaining, dismissed, variant]);
 
   if (isLoading || !isTrial || dismissed) {
     return null;
