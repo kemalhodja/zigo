@@ -251,18 +251,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               children={parentChildProfiles}
             />
           ) : null}
-          {(profile.role === "teacher" || profile.role === "student") && !profile.isSignedOut ? (
-            <ProfileAdvertiseModal
-              profile={{
-                id: profile.id,
-                role: profile.role,
-                organization_type: profile.organization_type,
-                full_name: profile.name,
-              }}
-              isOwner={true}
-              triggerClassName="zigo-action-chip tap-scale col-span-2 w-full mt-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-slate-900 font-black flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-transform"
-            />
-          ) : null}
+
         </div>
       </section>
 

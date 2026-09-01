@@ -209,20 +209,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             ) : null}
           </div>
 
-          {isOwnProfile && profile.role === "teacher" ? (
-            <div className="mt-3 flex w-full">
-              <ProfileAdvertiseModal
-                profile={{
-                  id: profile.id,
-                  role: profile.role,
-                  organization_type: profile.organization_type,
-                  full_name: profile.full_name,
-                }}
-                isOwner={true}
-                triggerClassName="zigo-action-chip tap-scale w-full rounded-lg bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500 text-slate-950 font-black flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/15"
-              />
-            </div>
-          ) : null}
+
           <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500" data-invariant="Public creator profile. Follow actions are visible; saved posts remain private to each viewer.">
             Açık üretici profili. Takip hareketleri görünürdür; kaydedilen gönderiler ise her izleyiciye özel gizli kalır.
           </p>
