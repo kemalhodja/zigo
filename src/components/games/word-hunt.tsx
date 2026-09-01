@@ -433,14 +433,22 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
                 let boxSize = "w-11 h-11 sm:w-14 sm:h-14";
                 if (cols > 5) boxSize = "w-9 h-9 sm:w-12 sm:h-12";
-                if (cols > 6) boxSize = "w-8 h-8 sm:w-10 sm:h-10";
+                if (cols > 6) boxSize = "w-7 h-7 sm:w-10 sm:h-10";
+                if (cols > 7) boxSize = "w-6 h-6 sm:w-9 sm:h-9";
+                if (cols > 8) boxSize = "w-6 h-6 sm:w-8 sm:h-8";
+
+                // Scale font size down for longer words
+                let fontSize = "text-2xl";
+                if (cols > 6) fontSize = "text-lg";
+                if (cols > 7) fontSize = "text-base";
+                if (cols > 8) fontSize = "text-sm";
 
                 const winBounceDelay = isWinRow ? { animationDelay: `${j * 100 + 700}ms` } : {};
 
                 return (
                   <div
                     key={j}
-                    className={`${boxSize} flex items-center justify-center rounded-xl border-2 text-2xl font-black uppercase transition-colors ${bgClass} ${extraClass} ${isWinRow ? "animate-[winBounce_0.6s_ease_forwards]" : ""}`}
+                    className={`${boxSize} flex items-center justify-center rounded-xl border-2 ${fontSize} font-black uppercase transition-colors ${bgClass} ${extraClass} ${isWinRow ? "animate-[winBounce_0.6s_ease_forwards]" : ""}`}
                     style={{ ...flipDelay, ...winBounceDelay }}
                   >
                     {letter}
