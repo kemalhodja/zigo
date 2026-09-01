@@ -47,13 +47,14 @@ export function GradeLevelForm({
       });
       const payload = (await response.json().catch(() => null)) as {
         error?: string;
+        details?: any;
         autoAssigned?: boolean;
         areaIds?: number[];
       } | null;
 
       if (!response.ok) {
         setStatus("error");
-        setMessage(payload?.error ?? "Sınıf güncellenemedi.");
+        setMessage(payload?.details ? JSON.stringify(payload.details) : (payload?.error ?? "Sınıf güncellenemedi."));
         return;
       }
 

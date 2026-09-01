@@ -36,7 +36,7 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Choose a valid grade level." }, { status: 400 });
+      return NextResponse.json({ error: "Choose a valid grade level.", details: error.errors }, { status: 400 });
     }
 
     return respondWithDomainError(error, "Grade level could not be updated.");
