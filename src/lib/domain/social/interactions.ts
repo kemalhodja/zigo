@@ -47,7 +47,7 @@ export async function createSocialPost(
     mediaType?: SocialMediaType;
     isReel?: boolean;
     areaId: number;
-    targetAudience?: "all" | "parent_only" | "grade";
+    targetAudience?: "all" | "parent_only" | "grade" | "followers";
     targetGrade?: string | null;
     postType?: ContentPostType;
     title?: string | null;

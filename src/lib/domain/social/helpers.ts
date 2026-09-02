@@ -21,7 +21,13 @@ export function filterPostsForAudience(
   viewerProfile?: { id?: string; role?: string | null; grade_level?: string | null } | null,
 ): RawSocialPost[] {
   return posts.filter((post) => {
-    // ── Öğrenci ve Veli gönderileri artık Keşfete düşebilir. No role-based exclusion.
+    // Öğrenci ve veli gönderileri (veya followers-only gönderiler) genel akışta/keşfette başkalarına görünmez
+    const isStudentOrParentAuthor = post.author?.role === "student" || post.author?.role === "parent";
+    if (post.target_audience === "followers" || isStudentOrParentAuthor) {
+      // Yalnızca yazarın kendisi görebilir (takipçiler ise getFollowingFeed üzerinden görür)
+      if (viewerId && post.author_id === viewerId) return true;
+      return false;
+    }
 
     if (!post.target_audience || post.target_audience === "all") return true;
     if (

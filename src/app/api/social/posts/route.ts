@@ -117,7 +117,7 @@ export async function POST(request: Request) {
       dailyPostCount = 0;
     }
 
-    const MAX_DAILY_POSTS = (profile.role === "student" || profile.role === "parent") ? 1 : 5;
+    const MAX_DAILY_POSTS = (profile.role === "student" || profile.role === "parent") ? 2 : 5;
 
     if (dailyPostCount >= MAX_DAILY_POSTS) {
       console.warn("[SERVER_POST_REJECTED] Daily post limit reached:", dailyPostCount);
@@ -140,6 +140,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const isStudentOrParent = profile.role === "student" || profile.role === "parent";
+
     const profileLoc = profile as unknown as { city?: string | null; district?: string | null };
     const postPayload = {
       authorId: profile.id,
@@ -148,7 +150,8 @@ export async function POST(request: Request) {
       mediaType: body.mediaType,
       isReel: body.isReel,
       areaId,
-      targetAudience: body.targetAudience,
+      // Öğrenci ve veliler keşfete düşmesin, sadece takipçileri görsün:
+      targetAudience: isStudentOrParent ? "followers" : body.targetAudience,
       targetGrade: body.targetGrade,
       postType: body.postType,
       title: body.title,

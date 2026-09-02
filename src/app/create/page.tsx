@@ -129,7 +129,7 @@ function CreateStudioHero({
   );
 }
 
-type CreateLockReason = "areas" | "auth" | "not-teacher" | "setup" | "unverified";
+type CreateLockReason = "areas" | "auth" | "not-teacher" | "not-premium" | "setup" | "unverified";
 
 async function getCreatePageData(): Promise<{
   areas: ComposerArea[];
@@ -170,6 +170,50 @@ async function getCreatePageData(): Promise<{
       };
     }
 
+    const subscription = await getUserSubscription(supabase, profile.id);
+
+    // Öğrenci ve Veliler Zigo Plus abonesi ise paylaşım yapabilir:
+    if (profile.role === "student" || profile.role === "parent") {
+      if (!subscription.isPremium) {
+        return {
+          areas: [],
+          canCreate: false,
+          lockReason: "not-premium",
+          teacherCreatorPlus: false,
+          allowDevActivate: canUseDevBillingBypass(),
+        };
+      }
+
+      const [areas, userAreaIds] = await Promise.all([
+        getEducationAreas(supabase),
+        getUserInterestAreaIds(supabase, profile.id),
+      ]);
+      const allowedAreas = userAreaIds.length > 0
+        ? areas.filter((area) => userAreaIds.includes(area.id))
+        : areas; // İlgi alanı seçilmemişse tüm alanları kullanabilir
+
+      return {
+        areas: allowedAreas,
+        canCreate: allowedAreas.length > 0,
+        lockReason: allowedAreas.length > 0 ? undefined : "areas",
+        teacherCreatorPlus: false,
+        allowDevActivate: canUseDevBillingBypass(),
+      };
+    }
+
+    // Kurumsal ve platform rolleri
+    const isInstitution = ["education_institution", "education_platform", "publisher"].includes(profile.role);
+    if (isInstitution) {
+      const areas = await getEducationAreas(supabase);
+      return {
+        areas,
+        canCreate: true,
+        teacherCreatorPlus: true,
+        allowDevActivate: canUseDevBillingBypass(),
+      };
+    }
+
+    // Öğretmen kontrolü
     if (profile.role !== "teacher") {
       return {
         areas: [],
@@ -190,10 +234,9 @@ async function getCreatePageData(): Promise<{
       };
     }
 
-    const [areas, teacherAreaIds, subscription] = await Promise.all([
+    const [areas, teacherAreaIds] = await Promise.all([
       getEducationAreas(supabase),
       getUserInterestAreaIds(supabase, profile.id),
-      getUserSubscription(supabase, profile.id),
     ]);
     const allowedAreas = areas.filter((area) => teacherAreaIds.includes(area.id));
 
@@ -226,6 +269,12 @@ const createLockedCopy = (c: Messages["createPage"], common: Messages["common"],
       description: c.notTeacherDesc,
       href: "/",
       title: c.notTeacherTitle,
+    },
+    "not-premium": {
+      action: "Zigo Plus'a Geç ✨",
+      description: "Öğrenciler ve Veliler yalnızca aktif Zigo Plus aboneliği ile gönderi ve ders notu paylaşabilir (Günde 2 paylaşım).",
+      href: "/pricing",
+      title: "Zigo Plus ile Paylaşım Yapın",
     },
     setup: {
       action: common.setup,

@@ -30,7 +30,7 @@ export const createSocialPostSchema = z.object({
     },
     z.number().int().positive("Geçerli bir ders/konu alanı seçilmelidir."),
   ),
-  targetAudience: z.enum(["all", "parent_only", "grade"]).default("all"),
+  targetAudience: z.enum(["all", "parent_only", "grade", "followers"]).default("all"),
   targetGrade: z.string().trim().optional().nullable(),
   postType: z.enum(["normal", "quiz", "micro"]).optional(),
   title: z.string().trim().max(255).optional().nullable().or(z.literal("")),

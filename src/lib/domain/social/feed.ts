@@ -173,7 +173,11 @@ export async function getExplorePosts(
     throw error;
   }
 
-  const posts = (Array.isArray(data) ? data : []) as RawSocialPost[];
+  const rawPosts = (Array.isArray(data) ? data : []) as RawSocialPost[];
+  // Öğrenci ve veli gönderileri keşfete ASLA düşmez, sadece takipçilerine görünür:
+  const posts = rawPosts.filter(
+    (p) => p.author?.role !== "student" && p.author?.role !== "parent" && p.target_audience !== "followers"
+  );
   if (posts.length === 0) return [];
 
   const canOpenSponsored = Boolean(viewerId);
