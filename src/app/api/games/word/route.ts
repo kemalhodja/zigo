@@ -51,13 +51,25 @@ export async function GET(request: Request) {
       const trTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
       const dateKey = trTime.toISOString().split("T")[0]; // e.g. "2026-09-03"
       
+      // Filter list for clear, recognizable, high-frequency words (avoid archaic/slang/obscure)
+      const filteredWords = wordList.filter((item) => {
+        const m = item.meaning || "";
+        if (m.startsWith("►") || m.includes("halk ağzı") || m.includes("eskimiş") || m.includes("argo") || m.includes("Osmanlı")) {
+          return false;
+        }
+        if (/[^ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ]/i.test(item.word)) return false;
+        return true;
+      });
+
+      const pool = filteredWords.length > 0 ? filteredWords : wordList;
+
       let hash = 0;
       for (let i = 0; i < dateKey.length; i++) {
         hash = (hash << 5) - hash + dateKey.charCodeAt(i);
         hash |= 0; // Convert to 32bit integer
       }
       const positiveHash = Math.abs(hash);
-      const dailyWord = wordList[positiveHash % wordList.length];
+      const dailyWord = pool[positiveHash % pool.length];
       return NextResponse.json({ ...dailyWord, dateKey, isDaily: true });
     }
 

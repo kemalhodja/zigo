@@ -37,8 +37,21 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
   const [notesMode, setNotesMode] = useState(false);
   const [notes, setNotes] = useState<Record<string, Set<number>>>({});
   const [hintsRemaining, setHintsRemaining] = useState(3);
+  const [history, setHistory] = useState<SudokuBoard[]>([]);
 
   const { playSound } = useAudio();
+
+  const triggerHaptic = useCallback((type: "light" | "medium" | "heavy" | "error" = "light") => {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        if (type === "error") navigator.vibrate([40, 60, 40]);
+        else if (type === "heavy") navigator.vibrate(30);
+        else navigator.vibrate(15);
+      } catch {
+        // Ignore if not supported or disabled by device
+      }
+    }
+  }, []);
 
   const {
     highScore,
@@ -46,6 +59,8 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
     setIsLeaderboardOpen,
     saveProgress,
   } = useGameProgress({ gameType: "sudoku", userId });
+
+  const STORAGE_KEY = `zigo_sudoku_state_${userId}`;
 
   // Start / Reset new game
   const startNewGame = useCallback((diff: Difficulty) => {
@@ -61,11 +76,68 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
     setIsTimerRunning(true);
     setNotes({});
     setHintsRemaining(diff === "easy" ? 3 : diff === "medium" ? 2 : 1);
-  }, []);
+    setHistory([]);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+    }
+  }, [STORAGE_KEY]);
 
+  // Load saved state on mount if available
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data && data.board && data.solution && !data.hasWon && !data.isGameOver) {
+          setDifficulty(data.difficulty || "easy");
+          setInitialBoard(data.initialBoard);
+          setBoard(data.board);
+          setSolution(data.solution);
+          setMistakes(data.mistakes || 0);
+          setSeconds(data.seconds || 0);
+          setHintsRemaining(data.hintsRemaining ?? 3);
+          setIsTimerRunning(true);
+          // Restore notes
+          if (data.notes) {
+            const restoredNotes: Record<string, Set<number>> = {};
+            for (const k of Object.keys(data.notes)) {
+              restoredNotes[k] = new Set(data.notes[k]);
+            }
+            setNotes(restoredNotes);
+          }
+          return;
+        }
+      }
+    } catch {}
     startNewGame(difficulty);
-  }, [difficulty, startNewGame]);
+  }, [STORAGE_KEY, startNewGame]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto save progress to localStorage
+  useEffect(() => {
+    if (typeof window === "undefined" || !isTimerRunning || isGameOver || hasWon) return;
+    try {
+      const serializableNotes: Record<string, number[]> = {};
+      for (const [k, v] of Object.entries(notes)) {
+        serializableNotes[k] = Array.from(v);
+      }
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          difficulty,
+          initialBoard,
+          board,
+          solution,
+          mistakes,
+          seconds,
+          hintsRemaining,
+          notes: serializableNotes,
+        })
+      );
+    } catch {}
+  }, [STORAGE_KEY, difficulty, initialBoard, board, solution, mistakes, seconds, hintsRemaining, notes, isTimerRunning, isGameOver, hasWon]);
 
   // Timer
   useEffect(() => {
@@ -109,12 +181,16 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
       }
 
       const isCorrect = solution[r][c] === num;
+      // Push previous board state to history for Undo
+      setHistory((prev) => [...prev.slice(-19), board.map((row) => [...row])]);
+
       const nextBoard = board.map((row) => [...row]);
       nextBoard[r][c] = num;
       setBoard(nextBoard);
 
       if (!isCorrect) {
         playSound("error");
+        triggerHaptic("error");
         const nextMistakes = mistakes + 1;
         setMistakes(nextMistakes);
         if (nextMistakes >= maxMistakes) {
@@ -123,6 +199,7 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
         }
       } else {
         playSound("pop");
+        triggerHaptic("light");
         // Clear notes in affected row, col, and box
         setNotes((prev) => {
           const next = { ...prev };
@@ -135,6 +212,7 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
           setHasWon(true);
           setIsTimerRunning(false);
           playSound("success");
+          triggerHaptic("heavy");
           confetti({
             particleCount: 150,
             spread: 80,
@@ -165,16 +243,29 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
       difficulty,
       seconds,
       playSound,
+      triggerHaptic,
       saveProgress,
       onGameEnd,
     ]
   );
 
+  // Undo last action
+  const handleUndo = useCallback(() => {
+    if (history.length === 0 || isGameOver || hasWon) return;
+    const previous = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, -1));
+    setBoard(previous);
+    playSound("pop");
+    triggerHaptic("light");
+  }, [history, isGameOver, hasWon, playSound, triggerHaptic]);
+
   // Erase cell
   const handleErase = useCallback(() => {
     if (!selectedCell || isGameOver || hasWon) return;
     const [r, c] = selectedCell;
-    if (initialBoard[r][c] !== 0) return;
+    if (initialBoard[r][c] !== 0 || board[r][c] === 0) return;
+
+    setHistory((prev) => [...prev.slice(-19), board.map((row) => [...row])]);
 
     const nextBoard = board.map((row) => [...row]);
     nextBoard[r][c] = 0;
@@ -186,7 +277,8 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
       return next;
     });
     playSound("pop");
-  }, [selectedCell, isGameOver, hasWon, initialBoard, board, playSound]);
+    triggerHaptic("light");
+  }, [selectedCell, isGameOver, hasWon, initialBoard, board, playSound, triggerHaptic]);
 
   // Hint
   const handleHint = useCallback(() => {
@@ -213,7 +305,10 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isLeaderboardOpen || isGameOver || hasWon) return;
 
-      if (e.key >= "1" && e.key <= "9") {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z")) {
+        e.preventDefault();
+        handleUndo();
+      } else if (e.key >= "1" && e.key <= "9") {
         handleNumberInput(parseInt(e.key, 10));
       } else if (e.key === "Backspace" || e.key === "Delete") {
         handleErase();
@@ -221,6 +316,8 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
         setNotesMode((prev) => !prev);
       } else if (e.key === "h" || e.key === "H") {
         handleHint();
+      } else if (e.key === "u" || e.key === "U") {
+        handleUndo();
       } else if (selectedCell) {
         const [r, c] = selectedCell;
         if (e.key === "ArrowUp" && r > 0) setSelectedCell([r - 1, c]);
@@ -232,7 +329,7 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLeaderboardOpen, isGameOver, hasWon, handleNumberInput, handleErase, handleHint, selectedCell]);
+  }, [isLeaderboardOpen, isGameOver, hasWon, handleNumberInput, handleErase, handleHint, handleUndo, selectedCell]);
 
   const selectedValue = selectedCell ? board[selectedCell[0]][selectedCell[1]] : null;
 
@@ -375,31 +472,39 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
         )}
       </div>
 
-      {/* Action Tools: Notes, Erase, Hint */}
-      <div className="flex justify-between gap-2 mb-3">
+      {/* Action Tools: Undo, Erase, Notes, Hint */}
+      <div className="flex justify-between gap-1.5 mb-3">
+        <button
+          onClick={handleUndo}
+          disabled={history.length === 0}
+          aria-label="Geri Al"
+          className="flex-1 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold text-slate-300 border border-slate-700 transition flex items-center justify-center gap-1"
+        >
+          <span>↩️</span> Geri ({history.length})
+        </button>
         <button
           onClick={handleErase}
           aria-label="Sil"
-          className="flex-1 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 border border-slate-700 transition flex items-center justify-center gap-1.5"
+          className="flex-1 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 border border-slate-700 transition flex items-center justify-center gap-1"
         >
           <span>🧹</span> Sil
         </button>
         <button
           onClick={() => setNotesMode((prev) => !prev)}
           aria-label="Not Modu"
-          className={`flex-1 py-2 rounded-2xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2 rounded-2xl text-xs font-bold border transition flex items-center justify-center gap-1 ${
             notesMode
               ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-500/30"
               : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700"
           }`}
         >
-          <span>✏️</span> Not ({notesMode ? "Açık" : "Kapalı"})
+          <span>✏️</span> Not
         </button>
         <button
           onClick={handleHint}
           disabled={hintsRemaining <= 0}
           aria-label="İpucu"
-          className="flex-1 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-xs font-bold text-amber-300 border border-slate-700 transition flex items-center justify-center gap-1.5"
+          className="flex-1 py-2 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold text-amber-300 border border-slate-700 transition flex items-center justify-center gap-1"
         >
           <span>💡</span> İpucu
         </button>

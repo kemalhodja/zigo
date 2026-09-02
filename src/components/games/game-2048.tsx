@@ -45,9 +45,20 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
   const [hasWon2048, setHasWon2048] = useState(false);
   const [continueAfterWin, setContinueAfterWin] = useState(false);
   const [lastGained, setLastGained] = useState(0);
+  const [history, setHistory] = useState<{ board: Board; score: number }[]>([]);
 
   const { playSound } = useAudio();
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const triggerHaptic = useCallback((type: "light" | "medium" | "heavy" | "error" = "light") => {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        if (type === "error") navigator.vibrate([40, 60, 40]);
+        else if (type === "heavy") navigator.vibrate(30);
+        else navigator.vibrate(15);
+      } catch {}
+    }
+  }, []);
 
   const {
     highScore,
@@ -55,6 +66,41 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
     setIsLeaderboardOpen,
     saveProgress,
   } = useGameProgress({ gameType: "game_2048", userId });
+
+  const STORAGE_KEY = `zigo_2048_state_${userId}`;
+
+  // Restore state on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data && data.board && Array.isArray(data.board) && !data.isGameOver) {
+          setBoard(data.board);
+          setScore(data.score || 0);
+          setHasWon2048(data.hasWon2048 || false);
+          setContinueAfterWin(data.continueAfterWin || false);
+        }
+      }
+    } catch {}
+  }, [STORAGE_KEY]);
+
+  // Save state on change
+  useEffect(() => {
+    if (typeof window === "undefined" || isGameOver) return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          board,
+          score,
+          hasWon2048,
+          continueAfterWin,
+        })
+      );
+    } catch {}
+  }, [STORAGE_KEY, board, score, hasWon2048, continueAfterWin, isGameOver]);
 
   const maxTile = getMaxTile(board);
 
@@ -66,7 +112,16 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
       const result = moveBoard(board, dir);
       if (!result.moved) return;
 
+      // Push to history for undo
+      setHistory((prev) => [...prev.slice(-9), { board: board.map((r) => [...r]), score }]);
+
       playSound("pop");
+      if (result.scoreGained > 0) {
+        triggerHaptic("medium");
+      } else {
+        triggerHaptic("light");
+      }
+
       const nextBoard = spawnTile(result.board);
       const newScore = score + result.scoreGained;
 
@@ -82,6 +137,7 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
       if (currentMax >= 2048 && !hasWon2048 && !continueAfterWin) {
         setHasWon2048(true);
         playSound("success");
+        triggerHaptic("heavy");
         confetti({
           particleCount: 150,
           spread: 80,
@@ -97,22 +153,44 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
       if (!hasMovesRemaining(nextBoard)) {
         setIsGameOver(true);
         playSound("error");
+        triggerHaptic("error");
         void saveProgress(newScore, currentMax, { maxTile: currentMax });
         if (onGameEnd) onGameEnd(newScore, { maxTile: currentMax });
       }
     },
-    [board, score, isGameOver, hasWon2048, continueAfterWin, playSound, saveProgress, onGameEnd]
+    [board, score, isGameOver, hasWon2048, continueAfterWin, playSound, triggerHaptic, saveProgress, onGameEnd]
   );
+
+  const handleUndo = useCallback(() => {
+    if (history.length === 0 || isGameOver) return;
+    const previous = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, -1));
+    setBoard(previous.board);
+    setScore(previous.score);
+    playSound("pop");
+    triggerHaptic("light");
+  }, [history, isGameOver, playSound, triggerHaptic]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isLeaderboardOpen) return;
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z")) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
       let dir: Direction | null = null;
       if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") dir = "UP";
       else if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") dir = "DOWN";
       else if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") dir = "LEFT";
       else if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") dir = "RIGHT";
+      else if (e.key === "u" || e.key === "U") {
+        handleUndo();
+        return;
+      }
 
       if (dir) {
         e.preventDefault();
@@ -122,7 +200,7 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleMove, isLeaderboardOpen]);
+  }, [handleMove, handleUndo, isLeaderboardOpen]);
 
   // Touch Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -157,6 +235,12 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
     setHasWon2048(false);
     setContinueAfterWin(false);
     setLastGained(0);
+    setHistory([]);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+    }
   };
 
   return (
@@ -184,6 +268,14 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
               </div>
             )}
             <div className="flex gap-1">
+              <button
+                onClick={handleUndo}
+                disabled={history.length === 0}
+                aria-label="Geri Al"
+                className="tap-scale bg-white/20 hover:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed border border-white/30 rounded-xl px-2 py-1 text-xs font-bold text-white transition flex items-center gap-1"
+              >
+                ↩️ Geri
+              </button>
               <button
                 onClick={resetGame}
                 aria-label="Yeniden Başlat"
