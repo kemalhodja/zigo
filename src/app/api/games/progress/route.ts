@@ -9,18 +9,24 @@ type GameType =
   | "block_puzzle"
   | "pipe_connect"
   | "word_hunt"
+  | "word_hunt_daily"
   | "zihin_avcisi"
   | "math_master"
-  | "taboo";
+  | "taboo"
+  | "game_2048"
+  | "sudoku";
 
 const VALID_GAME_TYPES = new Set<string>([
   "memory_card",
   "block_puzzle",
   "pipe_connect",
   "word_hunt",
+  "word_hunt_daily",
   "zihin_avcisi",
   "math_master",
   "taboo",
+  "game_2048",
+  "sudoku",
 ]);
 
 /** Generous anti-cheat ceilings — legit play never approaches these. */

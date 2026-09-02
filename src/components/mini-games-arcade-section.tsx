@@ -29,7 +29,7 @@ export function MiniGamesArcadeSection({
         <span className={`text-[0.65rem] font-black px-2 py-0.5 rounded-md border ${
           isPremium ? "bg-indigo-50 text-indigo-700 border-indigo-100" : "bg-amber-50 text-amber-700 border-amber-200"
         }`}>
-          {isPremium ? "5 Mini Oyun" : "Kilitli 🔒"}
+          {isPremium ? "8 Mini Oyun" : "Kilitli 🔒"}
         </span>
       </div>
 
@@ -181,6 +181,56 @@ export function MiniGamesArcadeSection({
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
             🗣️
+          </div>
+        </div>
+
+        {/* Oyun 7: 2048 (Sayısal Strateji) */}
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-3.5 py-3.5 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-white flex items-center gap-1.5">
+                <span>🔢</span> 2048
+              </h3>
+              <p className="text-amber-100 text-[0.62rem] font-bold mt-0.5">Sayısal Strateji</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span aria-hidden="true">🏆</span>
+                Sayıları birleştir · 2048&apos;e ulaş
+              </div>
+            </div>
+            <Link
+              href="/games/2048"
+              className="tap-scale shrink-0 bg-white text-orange-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-orange-50 transition-colors"
+            >
+              Oyna
+            </Link>
+          </div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
+            🔢
+          </div>
+        </div>
+
+        {/* Oyun 8: Sudoku (Mantık & Zeka) */}
+        <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 px-3.5 py-3.5 rounded-2xl shadow-sm relative overflow-hidden group hover:shadow-md transition">
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-white flex items-center gap-1.5">
+                <span>🧩</span> Sudoku
+              </h3>
+              <p className="text-indigo-100 text-[0.62rem] font-bold mt-0.5">Mantıksal Akıl Yürütme</p>
+              <div className="mt-2 flex items-center gap-1 text-[0.55rem] font-black text-white/80 bg-black/20 w-fit px-1.5 py-0.5 rounded-md backdrop-blur-sm">
+                <span aria-hidden="true">🧠</span>
+                Kolay / Orta / Zor · İpucu &amp; Not
+              </div>
+            </div>
+            <Link
+              href="/games/sudoku"
+              className="tap-scale shrink-0 bg-white text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-indigo-50 transition-colors"
+            >
+              Oyna
+            </Link>
+          </div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform -rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
+            🧩
           </div>
         </div>
       </div>

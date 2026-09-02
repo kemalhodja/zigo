@@ -9,8 +9,11 @@ export type GameType =
   | "block_puzzle"
   | "pipe_connect"
   | "word_hunt"
+  | "word_hunt_daily"
   | "math_master"
-  | "taboo";
+  | "taboo"
+  | "game_2048"
+  | "sudoku";
 
 type UseGameProgressOptions = {
   gameType: GameType;
