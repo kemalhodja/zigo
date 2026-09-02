@@ -44,6 +44,44 @@ describe("filterPostsForAudience", () => {
 
     expect(filtered.map((p) => p.id)).toEqual(["platform-post", "institution-post"]);
   });
+
+  it("hides student and parent posts from general audience, visible only to author", () => {
+    const studentPost = {
+      ...samplePostRow,
+      id: "student-post",
+      author_id: "student-123",
+      target_audience: "followers" as const,
+      author: {
+        id: "student-123",
+        full_name: "Ali Veli",
+        role: "student",
+        is_verified: false,
+        organization_type: null,
+      },
+    } as unknown as RawSocialPost;
+
+    const teacherPost = {
+      ...samplePostRow,
+      id: "teacher-post",
+      author_id: "teacher-456",
+      target_audience: "all" as const,
+      author: {
+        id: "teacher-456",
+        full_name: "Ahmet Hoca",
+        role: "teacher",
+        is_verified: true,
+        organization_type: null,
+      },
+    } as unknown as RawSocialPost;
+
+    // Başka bir kullanıcı genel akışta baktığında sadece öğretmeni görmeli
+    const otherViewer = filterPostsForAudience([studentPost, teacherPost], "other-user-789");
+    expect(otherViewer.map((p) => p.id)).toEqual(["teacher-post"]);
+
+    // Öğrenci kendi akışına baktığında kendi gönderisini de görebilmeli
+    const authorViewer = filterPostsForAudience([studentPost, teacherPost], "student-123");
+    expect(authorViewer.map((p) => p.id)).toEqual(["student-post", "teacher-post"]);
+  });
 });
 
 describe("hydrateSocialPosts", () => {
