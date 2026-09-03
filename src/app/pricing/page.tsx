@@ -109,9 +109,8 @@ function PlanCard({ role, isCurrentRole, isSelected, onSelect }: {
   const yearlySavings = Math.round((monthly * 12 - yearly) / (monthly * 12) * 100);
 
   return (
-    <button
+    <div
       onClick={() => onSelect(role)}
-      disabled={isCurrentRole}
       className={`relative flex flex-col h-full rounded-2xl border-2 p-5 transition-all ${
         isCurrentRole
           ? "border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed"
@@ -164,11 +163,23 @@ function PlanCard({ role, isCurrentRole, isSelected, onSelect }: {
         <p className="text-xs font-bold text-slate-500 mb-2">
           İlk 7 gün içinde abone olursanız <span className="text-amber-500">%50 indirim</span> (Promo: <span className="font-mono">ZIGO50</span>)
         </p>
-        <p className="text-[10px] font-bold text-slate-400">
+        <p className="text-[10px] font-bold text-slate-400 mb-3">
           7 gün sonrası: Tam liste fiyatı (indirim yok)
         </p>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(role);
+            window.location.href = `/billing/havale?planId=zigo-plus-${role === "teacher" ? "teachers" : "student"}-monthly`;
+          }}
+          className="tap-scale w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black text-xs shadow-md hover:brightness-105 transition flex items-center justify-center gap-1"
+        >
+          <span>✨</span>
+          <span>Zigo Plus'a Abone Ol</span>
+        </button>
       </div>
-    </button>
+    </div>
   );
 }
 
