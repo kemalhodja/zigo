@@ -158,6 +158,7 @@ import {
   type ActiveStory,
   getActiveStories,
   getFollowingFeed,
+  getSocialFeed,
   getSuggestedCreators,
   type SocialFeedPost,
 } from "@/lib/domain/social";
@@ -179,7 +180,14 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     if (!profile) return [];
 
     const feedClient = supabase;
-    const followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
+    let followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
+
+    // Cold Start Çözümü: Henüz kimseyi takip etmeyen kullanıcıya boş ekran göstermek yerine
+    // ilgi alanına ve popülerliğe göre önerilen keşif gönderilerini getir
+    if (followingPosts.length === 0) {
+      const fallbackPage = await getSocialFeed(feedClient, profile.id, { limit: 20 }).catch(() => ({ posts: [] }));
+      followingPosts = fallbackPage.posts;
+    }
 
     if (followingPosts.length === 0) return [];
 

@@ -19,12 +19,14 @@ export function filterPostsForAudience(
   posts: RawSocialPost[],
   viewerId?: string,
   viewerProfile?: { id?: string; role?: string | null; grade_level?: string | null } | null,
+  isFollowingFeed = false,
 ): RawSocialPost[] {
   return posts.filter((post) => {
     // Öğrenci ve veli gönderileri (veya followers-only gönderiler) genel akışta/keşfette başkalarına görünmez
     const isStudentOrParentAuthor = post.author?.role === "student" || post.author?.role === "parent";
     if (post.target_audience === "followers" || isStudentOrParentAuthor) {
-      // Yalnızca yazarın kendisi görebilir (takipçiler ise getFollowingFeed üzerinden görür)
+      // Yazarın kendisi veya takip edilenler akışındaki takipçisi görebilir
+      if (isFollowingFeed) return true;
       if (viewerId && post.author_id === viewerId) return true;
       return false;
     }
@@ -69,6 +71,7 @@ export async function hydrateSocialPosts(
   viewerId?: string,
   canOpenPremiumPrep = false,
   canOpenSponsored = false,
+  isFollowingFeed = false,
 ): Promise<SocialFeedPost[]> {
   if (posts.length === 0) return [];
 
@@ -87,7 +90,7 @@ export async function hydrateSocialPosts(
     if (profile) {
       viewerContext = { role: profile.role, city: profile.city, district: profile.district };
       if (posts.some((p) => p.target_audience && p.target_audience !== "all")) {
-        allowedPosts = filterPostsForAudience(posts, viewerId, profile as never);
+        allowedPosts = filterPostsForAudience(posts, viewerId, profile as never, isFollowingFeed);
       }
     }
   }

@@ -355,6 +355,23 @@ export function useUploadPipeline() {
     setMessage("Paylaşıldı! 🎉");
     setPublishedPostId(body?.data?.id ?? null);
     runningRef.current = false;
+
+    // Haptic ve başarı kutlaması
+    try {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([40, 60, 40]);
+      }
+      import("canvas-confetti").then((confettiMod) => {
+        const confetti = confettiMod.default;
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.7 },
+        });
+      }).catch(() => {});
+    } catch {
+      // non-critical UI polish
+    }
   }
 
   return {

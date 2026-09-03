@@ -320,7 +320,8 @@ export async function getFollowingFeed(
   if (followsError) throw followsError;
 
   const followingIds = (follows ?? []).map((follow) => follow.following_id);
-  const authorIds = [...new Set(followingIds)];
+  // Kullanıcının kendi paylaştığı gönderileri de ana akışında görmesini sağla:
+  const authorIds = [...new Set([...followingIds, viewerId])];
 
   if (authorIds.length === 0) return [];
 
@@ -347,7 +348,6 @@ export async function getFollowingFeed(
     `,
     )
     .in("author_id", authorIds)
-    .neq("author_id", viewerId)
     .order("created_at", { ascending: false })
     .limit(50);
 
@@ -360,6 +360,7 @@ export async function getFollowingFeed(
     viewerId,
     canOpenPremiumPrep,
     canOpenSponsored,
+    true, // isFollowingFeed: True because all authors here are already followed by viewerId
   );
   return rankSocialPosts(hydrated);
 }
