@@ -82,7 +82,7 @@ export function LimitSettingsCard({ childId, childName }: LimitSettingsCardProps
         <input
           type="range"
           min="15"
-          max="180"
+          max="120"
           step="15"
           value={settings.daily_limit_minutes}
           onChange={(e) =>
@@ -92,7 +92,7 @@ export function LimitSettingsCard({ childId, childName }: LimitSettingsCardProps
         />
         <div className="flex justify-between text-[0.6rem] font-bold text-slate-400 mt-0.5">
           <span>15 dk</span>
-          <span>3 saat</span>
+          <span>Maks 2 saat (120 dk)</span>
         </div>
       </div>
 

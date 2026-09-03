@@ -117,17 +117,34 @@ export async function POST(request: Request) {
       dailyPostCount = 0;
     }
 
-    const MAX_DAILY_POSTS = (profile.role === "student" || profile.role === "parent") ? 2 : 5;
+    const subscription = await getUserSubscription(supabase, profile.id);
+    const isStudentOrParent = profile.role === "student" || profile.role === "parent";
+    const isCreator = !isStudentOrParent; // teacher, education_institution, education_platform, publisher
+
+    // Paylaşım Limitleri:
+    // - Öğrenci & Veli (Zigo Plus): Günde maksimum 2 gönderi
+    // - İçerik Üreticileri (Öğretmen, Kurum, Platform, Yayınevi):
+    //     * Abone ise: SINIRSIZ (Infinity)
+    //     * Abone değilse: Günde 1 gönderi (MAX_DAILY_POSTS = 1)
+    let MAX_DAILY_POSTS = 1;
+    if (isStudentOrParent) {
+      MAX_DAILY_POSTS = 2;
+    } else if (isCreator) {
+      MAX_DAILY_POSTS = subscription.isPremium ? Infinity : 1;
+    }
 
     if (dailyPostCount >= MAX_DAILY_POSTS) {
-      console.warn("[SERVER_POST_REJECTED] Daily post limit reached:", dailyPostCount);
+      console.warn("[SERVER_POST_REJECTED] Daily post limit reached:", dailyPostCount, "Limit:", MAX_DAILY_POSTS);
       return NextResponse.json(
-        { error: `Günlük maksimum gönderi paylaşım sınırına (${MAX_DAILY_POSTS} gönderi) ulaştınız.` },
+        { 
+          error: isCreator 
+            ? `Abonesiz kullanıcılar günde en fazla 1 gönderi paylaşabilir. Sınırsız paylaşım için Zigo Plus'a geçin.`
+            : `Günlük maksimum gönderi paylaşım sınırına (${MAX_DAILY_POSTS} gönderi) ulaştınız.` 
+        },
         { status: 429 },
       );
     }
 
-    const subscription = await getUserSubscription(supabase, profile.id);
     if (socialPostRequiresTeacherCreatorPlus(body)) {
       if (body.premiumPrepLabel || body.premiumPrepUrl) {
         assertTeacherCreatorPlus(subscription, profile.role, "yazılı hazırlık linki");
@@ -139,8 +156,6 @@ export async function POST(request: Request) {
         assertTeacherCreatorPlus(subscription, profile.role, "quiz gönderisi");
       }
     }
-
-    const isStudentOrParent = profile.role === "student" || profile.role === "parent";
 
     const profileLoc = profile as unknown as { city?: string | null; district?: string | null };
     const postPayload = {

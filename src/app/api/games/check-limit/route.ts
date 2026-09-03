@@ -2,19 +2,31 @@ import { NextResponse } from "next/server";
 
 import { isNightBanActive, turkeyHourAndDate } from "@/lib/domain/game-limits";
 import { resolveStudentGameLimits } from "@/lib/domain/game-limits-server";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { requireRole } from "@/lib/server/role-guard";
 import { createClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/games/check-limit
- * Öğrenci: gece yasağı (22:00–08:00) + günlük 60 dk (veli ayarı ile değişebilir).
- * Diğer roller: sınır yok.
+ * Abonesiz: Oyun hakkı yok (0 dk).
+ * Öğrenci Abone: gece yasağı (22:00–08:00) + günlük maks 120 dk (2 saat).
+ * Diğer roller: Zigo Plus abonesi ise sınır yok.
  */
 export async function GET() {
   try {
     const supabase = await createClient();
     const { user } = await requireRole(["student"], { apiContext: true });
     const userId = user.id;
+
+    const subscription = await getUserSubscription(supabase, userId);
+    if (!subscription.isPremium) {
+      return NextResponse.json({
+        allowed: false,
+        reason: "subscription_required",
+        message: "Oyun Salonuna erişmek için Zigo Plus aboneliği gereklidir.",
+      }, { status: 403 });
+    }
+
     const admin = supabase;
 
     const limits = await resolveStudentGameLimits();

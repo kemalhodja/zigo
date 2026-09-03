@@ -341,43 +341,65 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                     {new Date(item.created_at).toLocaleDateString()}
                   </time>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{item.message_body}</p>
-
-                {isTeacherPending ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      className="tap-scale rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white"
-                      disabled={pendingAction === item.id}
-                      onClick={() => void updateStatus(item.id, "accepted")}
-                      type="button"
-                    >
-                      {lr.accept}
-                    </button>
-                    <button
-                      className="tap-scale rounded-xl bg-rose-500 px-3 py-2 text-xs font-black text-white"
-                      disabled={pendingAction === item.id}
-                      onClick={() => void updateStatus(item.id, "rejected")}
-                      type="button"
-                    >
-                      {lr.reject}
-                    </button>
-                    <a
-                      href={`/teacher/lessons?user=${peerUserId}`}
-                      className="tap-scale rounded-xl bg-violet-600 px-3 py-2 text-xs font-black text-white hover:bg-violet-700"
-                    >
-                      💬 Canlı DM Gönder
-                    </a>
+                {/* Öğretmen abone değilse: Talebi görür, ancak ayrıntıları ve veli mesajını okumak/yanıtlamak için Zigo Plus gerekir */}
+                {role === "teacher" && !isSubscriber ? (
+                  <div className="mt-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3.5">
+                    <p className="text-xs font-bold text-slate-500 blur-[3px] select-none">
+                      {item.message_body || "Merhaba hocam, çocuğum için haftalık 2 saat LGS hazırlık özel dersi almak istiyoruz..."}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <p className="text-xs font-black text-amber-900">
+                        🔒 Velinin mesajı ve iletişim detayları kilitli
+                      </p>
+                      <a
+                        href="/pricing"
+                        className="tap-scale rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-sm hover:brightness-105 transition shrink-0"
+                      >
+                        Zigo Plus ile Aç ✨
+                      </a>
+                    </div>
                   </div>
                 ) : (
-                  <div className="mt-3">
-                    <a
-                      href={`/teacher/lessons?user=${peerUserId}`}
-                      className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-black text-white hover:bg-slate-800"
-                    >
-                      <span>💬</span>
-                      <span>Mesajlaşmayı Aç</span>
-                    </a>
-                  </div>
+                  <>
+                    <p className="mt-3 text-sm leading-6 text-slate-700">{item.message_body}</p>
+
+                    {isTeacherPending ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          className="tap-scale rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white"
+                          disabled={pendingAction === item.id}
+                          onClick={() => void updateStatus(item.id, "accepted")}
+                          type="button"
+                        >
+                          {lr.accept}
+                        </button>
+                        <button
+                          className="tap-scale rounded-xl bg-rose-500 px-3 py-2 text-xs font-black text-white"
+                          disabled={pendingAction === item.id}
+                          onClick={() => void updateStatus(item.id, "rejected")}
+                          type="button"
+                        >
+                          {lr.reject}
+                        </button>
+                        <a
+                          href={`/teacher/lessons?user=${peerUserId}`}
+                          className="tap-scale rounded-xl bg-violet-600 px-3 py-2 text-xs font-black text-white hover:bg-violet-700"
+                        >
+                          💬 Canlı DM Gönder
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="mt-3">
+                        <a
+                          href={`/teacher/lessons?user=${peerUserId}`}
+                          className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-black text-white hover:bg-slate-800"
+                        >
+                          <span>💬</span>
+                          <span>Mesajlaşmayı Aç</span>
+                        </a>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {item.status === "accepted" ? (

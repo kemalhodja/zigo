@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     // Kayıt yoksa varsayılanları döndür
     return NextResponse.json({
       data: data ?? {
-        daily_limit_minutes: 60,
+        daily_limit_minutes: 120,
         night_ban_enabled: true,
         night_ban_start: "22:00",
         night_ban_end: "08:00",

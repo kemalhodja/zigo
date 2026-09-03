@@ -8,7 +8,7 @@ export type GameLimitSettings = {
 };
 
 export const DEFAULT_GAME_LIMITS: GameLimitSettings = {
-  dailyLimitMinutes: 60,
+  dailyLimitMinutes: 120, // 2 saat (maksimum)
   nightBanEnabled: true,
   nightBanStartHour: 22,
   nightBanEndHour: 8,
@@ -56,7 +56,7 @@ export function settingsFromParentRow(row: {
   const nightBanEndHour = parseHourFromTimeValue(row.night_ban_end, DEFAULT_GAME_LIMITS.nightBanEndHour);
 
   return {
-    dailyLimitMinutes: row.daily_limit_minutes ?? DEFAULT_GAME_LIMITS.dailyLimitMinutes,
+    dailyLimitMinutes: Math.min(120, Math.max(15, row.daily_limit_minutes ?? DEFAULT_GAME_LIMITS.dailyLimitMinutes)),
     nightBanEnabled: row.night_ban_enabled ?? DEFAULT_GAME_LIMITS.nightBanEnabled,
     nightBanStartHour,
     nightBanEndHour,

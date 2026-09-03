@@ -10,9 +10,9 @@ export function MiniGamesArcadeSection({
   isStudent?: boolean;
 }) {
   const subtitle = !isPremium
-    ? "7 günlük deneme süresi doldu. Oyunları açmak için abone olun."
+    ? "Oyun salonu Zigo Plus abonelerine özeldir. Hemen abone olun."
     : isStudent
-      ? "Günde 1 saat · 08:00–22:00 · Zigo Puanı (XP) kazan!"
+      ? "Günde maksimum 2 saat · 08:00–22:00 · Zigo Puanı (XP) kazan!"
       : "Zihnini dinlendir, odaklan ve Zigo Puanı (XP) kazan!";
 
   return (

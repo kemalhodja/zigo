@@ -7,6 +7,11 @@
   - Kayıttan sonraki **ilk 7 gün içinde** abone olan kullanıcılara **%50 indirimli** dinamik fiyat uygulanır (Promo kodu: ZIGO50).
   - **7 günden sonra** abone olan kullanıcılara indirim uygulanmaz (**%0 / Standart Tam Liste Fiyatı** uygulanır).
   - Fiyatlandırma motoru (`subscription-campaign.ts` / `subscription-plans.ts`) her zaman bu dinamik hesaba göre çalışmalıdır.
+- **Oyun Salonu Kuralı (Game Gate)**:
+  - Abonesiz kullanıcılara oyun hakkı **YOKTUR** (`0 dk`). Oyun salonuna erişmek için Zigo Plus aboneliği zorunludur.
+  - Abone olan öğrenci: Günde **maksimum 2 saat (120 dk)** ve yalnızca **08:00 ile 22:00 saatleri arasında** oynayabilir (22:00-08:00 gece yasağı).
+- **Öğretmen Özel Ders Talepleri Hook Modeli**:
+  - Abonesiz öğretmenler gelen özel ders taleplerini listede görebilir; ancak detayları, veli mesajını ve iletişimi açmak için Zigo Plus abonesi olması gerekir.
 
 ## 2. Roles & Authorization (RBAC)
 Sistemde 6 temel rol bulunur. Her ekran ve rota (Route Guards) kullanıcının rolüne göre doğrulanmalıdır:
@@ -19,7 +24,9 @@ Sistemde 6 temel rol bulunur. Her ekran ve rota (Route Guards) kullanıcının r
 
 ## 3. Data & Content Limits (Rate Limiting & Storage)
 - **Daily Post Limit**:
-  - Öğretmen, kurum ve platformlar: Günde maksimum 5 gönderi (`MAX_DAILY_POSTS = 5`).
+  - **İçerik Üreticileri (Öğretmen, Kurum, Platform, Yayınevi)**:
+    - Zigo Plus Abonesi ise: **SINIRSIZ (Unlimited)**.
+    - Abonesiz ise: Günde **maksimum 1 gönderi** (`MAX_DAILY_POSTS = 1`).
   - **Öğrenci & Veli (Zigo Plus)**: Günde maksimum 2 gönderi (`MAX_DAILY_POSTS = 2`).
   - **Gizlilik Kuralı**: Öğrenci ve veli gönderileri Keşfet'e (`/explore`) ASLA düşmez; yalnızca karşılıklı takipleşen kullanıcıların ana sayfa akışında (`/`) görünür.
 - **Video & Reels Limits**:

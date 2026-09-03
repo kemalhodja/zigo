@@ -43,6 +43,17 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Öğretmen abonesiz ise talebi listede görür ama ayrıntıları okumak için Zigo Plus gerekir:
+    if (profile.role === "teacher") {
+      const subscription = await getUserSubscription(supabase, profile.id);
+      if (!subscription.isPremium) {
+        return NextResponse.json({
+          error: "Özel ders talebinin detaylarını ve veli mesajını görüntülemek için Zigo Plus aboneliği gereklidir.",
+          requiresSubscription: true,
+        }, { status: 403 });
+      }
+    }
+
     const thread = await getLessonRequestThread(supabase, id);
     await markLessonRequestThreadRead(supabase, id, profile.id).catch(() => 0);
     return NextResponse.json({ data: { request: requestRow, thread } });

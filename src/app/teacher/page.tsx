@@ -286,7 +286,11 @@ export default async function TeacherPage({
         requestsNode={
           <div className="space-y-4">
             {!isOrganizationRegistrationType(organizationType) ? (
-              <LessonRequestsPanel role="teacher" viewerId={profile.id} />
+              <LessonRequestsPanel 
+                role="teacher" 
+                viewerId={profile.id} 
+                isSubscriber={teacherCreatorPlus} 
+              />
             ) : null}
           </div>
         }

@@ -51,14 +51,14 @@ export function GameSubscriptionPaywall({
       <p className="text-xs text-slate-600 font-semibold leading-relaxed mb-3">
         {isStudent ? (
           <>
-            Zigo Plus ile 5 zeka oyununa eriş. Öğrenciler için{" "}
-            <strong className="text-slate-900">günde 1 saat</strong> ve{" "}
-            <strong className="text-slate-900">08:00–22:00</strong> oyun saatleri geçerlidir.
+            Oyun Salonu Zigo Plus aboneliği gerektirir. Öğrenciler için{" "}
+            <strong className="text-slate-900">günde maksimum 2 saat</strong> ve{" "}
+            <strong className="text-slate-900">08:00–22:00</strong> saatleri arasında oyun hakkı bulunur.
           </>
         ) : (
           <>
-            Kayıttan sonraki{" "}
-            <strong className="text-slate-900">7 günlük ücretsiz deneme süreniz</strong> dolmuştur.
+            Zigo Zeka Oyunları Salonu{" "}
+            <strong className="text-slate-900">Zigo Plus abonelerine</strong> özeldir.
           </>
         )}
       </p>
