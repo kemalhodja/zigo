@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useMessages } from "@/lib/i18n/locale-context";
 
@@ -29,6 +29,28 @@ export function FollowButton({
   const [followersCount, setFollowersCount] = useState(initialFollowersCount);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setIsFollowing(initialFollowing);
+  }, [initialFollowing]);
+
+  useEffect(() => {
+    if (!followingId) return;
+
+    const handleGlobalFollowChange = (e: CustomEvent<{ followingId: string; isFollowing: boolean; count?: number }>) => {
+      if (e.detail.followingId === followingId) {
+        setIsFollowing(e.detail.isFollowing);
+        if (typeof e.detail.count === "number") {
+          setFollowersCount(e.detail.count);
+        }
+      }
+    };
+
+    window.addEventListener("zigo:follow-change", handleGlobalFollowChange as EventListener);
+    return () => {
+      window.removeEventListener("zigo:follow-change", handleGlobalFollowChange as EventListener);
+    };
+  }, [followingId]);
 
   async function toggleFollow() {
     if (isSaving) return;
@@ -63,11 +85,26 @@ export function FollowButton({
       const payload = (await response.json()) as {
         data: { followers_count?: number; following_count?: number; is_following: boolean };
       };
-      setIsFollowing(payload.data.is_following);
+      const nextFollowing = payload.data.is_following;
+      setIsFollowing(nextFollowing);
       if (typeof payload.data.followers_count === "number") {
         setFollowersCount(payload.data.followers_count);
       }
-      setMessage(payload.data.is_following ? "Following this creator." : "Unfollowed.");
+      
+      // Dispatch global event to sync all other buttons of the same author immediately
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("zigo:follow-change", {
+            detail: {
+              followingId,
+              isFollowing: nextFollowing,
+              count: payload.data.followers_count,
+            },
+          })
+        );
+      }
+
+      setMessage(nextFollowing ? "Following this creator." : "Unfollowed.");
       router.refresh();
     } catch {
       setMessage(a.tryAgain);

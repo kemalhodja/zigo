@@ -167,6 +167,8 @@ import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 
+import { createAdminClient } from "@/lib/supabase/admin";
+
 export async function getHomePosts(): Promise<DisplayPost[]> {
   const m = await getServerMessages();
 
@@ -179,8 +181,11 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     const profile = await getCachedUserProfile();
     if (!profile) return [];
 
-    const feedClient = supabase;
-    let followingPosts = await getFollowingFeed(feedClient, profile.id).catch(() => []);
+    const feedClient = createAdminClient() ?? supabase;
+    let followingPosts = await getFollowingFeed(feedClient, profile.id).catch((err) => {
+      console.error("getFollowingFeed Error:", err);
+      return [];
+    });
 
     // Cold Start Çözümü: Henüz kimseyi takip etmeyen kullanıcıya boş ekran göstermek yerine
     // ilgi alanına ve popülerliğe göre önerilen keşif gönderilerini getir
