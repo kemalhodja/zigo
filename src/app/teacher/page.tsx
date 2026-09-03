@@ -285,6 +285,20 @@ export default async function TeacherPage({
         }
         requestsNode={
           <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 p-4 text-white shadow-sm">
+              <div>
+                <span className="text-[0.65rem] font-black uppercase tracking-wider text-violet-200">Topluluk Soru Havuzu</span>
+                <h3 className="text-sm font-black mt-0.5">Öğrenci & Veli Soruları</h3>
+                <p className="text-xs text-violet-100 font-semibold mt-1">Soruları yanıtla, profil itibarını artır ve velilere ulaş.</p>
+              </div>
+              <Link
+                href="/questions"
+                className="tap-scale shrink-0 rounded-xl bg-white px-3.5 py-2 text-xs font-black text-violet-700 shadow hover:bg-violet-50 transition"
+              >
+                Soruları Gör ↗
+              </Link>
+            </div>
+
             {!isOrganizationRegistrationType(organizationType) ? (
               <LessonRequestsPanel 
                 role="teacher" 

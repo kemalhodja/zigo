@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { InteractiveWhiteboard } from "@/components/interactive-whiteboard";
 import { triggerConfetti } from "@/lib/client/confetti";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/types";
@@ -32,6 +33,7 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
   const [message, setMessage] = useState(l.solveToEarn.replace("{points}", String(quiz.points_reward)));
   const [result, setResult] = useState<{ scorePercent: number; pointsAwarded: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
 
   const legacyOptions = Array.isArray(quiz.options) ? quiz.options : [];
   const activeQuestion = questions[currentIndex] ?? null;
@@ -233,15 +235,27 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
   return (
     <article className="-mx-4 space-y-4 border-b border-slate-100 bg-white px-4 py-4" data-testid="learn-quiz-card">
       <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-night">
-            {l.matchedQuiz}
-          </span>
-          {isMultiQuestion ? (
-            <span className="rounded-lg bg-violet-50 px-3 py-1 text-xs font-black text-crystal">
-              {questions.length} {l.questionsLabel}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-night">
+              {l.matchedQuiz}
             </span>
-          ) : null}
+            {isMultiQuestion ? (
+              <span className="rounded-lg bg-violet-50 px-3 py-1 text-xs font-black text-crystal">
+                {questions.length} {l.questionsLabel}
+              </span>
+            ) : null}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsWhiteboardOpen(true)}
+            className="tap-scale flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50/80 px-2.5 py-1 text-xs font-black text-violet-700 hover:bg-violet-100 transition shadow-2xs"
+            title="İşlem yapmak veya soru üzerinde çizim yapmak için tahtayı aç"
+          >
+            <span>✏️</span>
+            <span>Karalama Tahtası</span>
+          </button>
         </div>
         <h3 className="mt-4 text-xl font-black text-night">{quiz.title}</h3>
         {progressLabel ? (
@@ -249,6 +263,12 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
         ) : null}
         <p className="mt-2 text-sm leading-6 text-slate-600">{displayPrompt}</p>
       </div>
+
+      <InteractiveWhiteboard
+        isOpen={isWhiteboardOpen}
+        onClose={() => setIsWhiteboardOpen(false)}
+        title={`${quiz.title} · Karalama Alanı`}
+      />
 
       {loadingQuestions ? (
         <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500">{l.loadingQuestions}</p>
@@ -342,11 +362,11 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
             <button
               className="w-full tap-scale rounded-lg bg-violet-600 px-4 py-3 text-sm font-black text-white shadow-md shadow-violet-600/20 transition-transform active:scale-95 flex items-center justify-center gap-2"
               onClick={() => {
-                router.push("/ai-mentor");
+                router.push("/questions");
               }}
               type="button"
             >
-              🤖 Anlamadım, AI Mentor'a Sor
+              🧑‍🏫 Anlamadım, Öğretmene Sor (Soru Havuzu)
             </button>
           )}
         </div>
