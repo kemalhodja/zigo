@@ -47,7 +47,7 @@ export async function requestPasswordReset(params: {
   email: string;
   requestOrigin?: string;
 }): Promise<PasswordResetResult> {
-  const siteUrl = getSiteUrl(params.requestOrigin);
+  const siteUrl = params.requestOrigin ? params.requestOrigin.replace(/\/$/, "") : getSiteUrl();
   const profile = await findRegisteredUserByEmail(params.admin, params.email);
   if (!profile) {
     return { ok: false, code: "ACCOUNT_NOT_FOUND" };
