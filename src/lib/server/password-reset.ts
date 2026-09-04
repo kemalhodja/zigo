@@ -94,7 +94,7 @@ export async function requestPasswordReset(params: {
   }
 
   const { error } = await params.anon.auth.resetPasswordForEmail(params.email, {
-    redirectTo: new URL("/auth/callback?next=/auth/reset-password", siteUrl).toString(),
+    redirectTo: new URL("/auth/callback/recovery", siteUrl).toString(),
   });
 
   if (error) {

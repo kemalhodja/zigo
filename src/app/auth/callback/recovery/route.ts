@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
@@ -6,8 +5,7 @@ import { createAuthActionClient, persistRememberMePreference } from "@/lib/supab
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const nextParam = requestUrl.searchParams.get("next") ?? "/onboarding";
-  const next = nextParam.startsWith("/") ? nextParam : "/onboarding";
+  const next = "/auth/reset-password";
 
   if (!code) {
     const authUrl = new URL("/auth", requestUrl.origin);
