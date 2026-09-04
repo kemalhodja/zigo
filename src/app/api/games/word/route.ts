@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import fs from "fs";
+import { NextResponse } from "next/server";
 import path from "path";
 
 // In-memory cache for the dictionary to avoid reading from disk on every request
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const lang = searchParams.get("lang") || "TR";
     const levelStr = searchParams.get("level") || "1";
-    let level = parseInt(levelStr, 10);
+    const level = parseInt(levelStr, 10);
     
     const isDaily = searchParams.get("daily") === "true";
     

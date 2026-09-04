@@ -2451,6 +2451,8 @@ export type Database = {
           student_document_url: string | null
           total_points: number
           website_url: string | null
+          youtube_url: string | null
+          instagram_url: string | null
         }
         Insert: {
           account_status?: Database["public"]["Enums"]["account_status"]
@@ -2486,6 +2488,8 @@ export type Database = {
           student_document_url?: string | null
           total_points?: number
           website_url?: string | null
+          youtube_url?: string | null
+          instagram_url?: string | null
         }
         Update: {
           account_status?: Database["public"]["Enums"]["account_status"]
@@ -2521,6 +2525,8 @@ export type Database = {
           student_document_url?: string | null
           total_points?: number
           website_url?: string | null
+          youtube_url?: string | null
+          instagram_url?: string | null
         }
         Relationships: [
           {

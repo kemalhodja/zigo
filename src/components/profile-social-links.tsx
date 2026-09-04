@@ -3,10 +3,12 @@
 type ProfileSocialLinksProps = {
   bio?: string | null;
   websiteUrl?: string | null;
+  youtubeUrl?: string | null;
+  instagramUrl?: string | null;
 };
 
-export function ProfileSocialLinks({ bio, websiteUrl }: ProfileSocialLinksProps) {
-  if (!bio && !websiteUrl) return null;
+export function ProfileSocialLinks({ bio, websiteUrl, youtubeUrl, instagramUrl }: ProfileSocialLinksProps) {
+  if (!bio && !websiteUrl && !youtubeUrl && !instagramUrl) return null;
 
   const urlMatches = bio ? bio.match(/https?:\/\/[^\s]+/g) : null;
   const validLinks = new Set<string>();
@@ -17,6 +19,12 @@ export function ProfileSocialLinks({ bio, websiteUrl }: ProfileSocialLinksProps)
   
   if (websiteUrl) {
     validLinks.add(websiteUrl);
+  }
+  if (youtubeUrl) {
+    validLinks.add(youtubeUrl);
+  }
+  if (instagramUrl) {
+    validLinks.add(instagramUrl);
   }
 
   if (validLinks.size === 0) return null;

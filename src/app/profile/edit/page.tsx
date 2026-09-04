@@ -61,6 +61,8 @@ export default async function ProfileEditPage() {
             fullName: profile.full_name,
             bio: profile.bio || "",
             websiteUrl: profile.website_url || null,
+            youtubeUrl: (profile as unknown as { youtube_url?: string | null }).youtube_url || null,
+            instagramUrl: (profile as unknown as { instagram_url?: string | null }).instagram_url || null,
             avatarUrl: profile.avatar_url || null,
             email: user?.email ?? null,
             role: profile.role,

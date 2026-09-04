@@ -22,6 +22,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ data, meta: { action: "toggle-like" } });
   } catch (error) {
+    console.error("[SOCIAL_LIKE_ERROR]", error);
     const message = error instanceof z.ZodError
       ? "Lütfen beğenmek için geçerli bir gönderi seçin."
       : error instanceof Error

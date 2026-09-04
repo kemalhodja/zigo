@@ -79,7 +79,7 @@ export function slideLine(line: number[]): { line: number[]; score: number; move
 }
 
 export function moveBoard(board: Board, dir: Direction): MoveResult {
-  let rotated: Board = board.map((r) => [...r]);
+  const rotated: Board = board.map((r) => [...r]);
   let scoreGained = 0;
   let moved = false;
 

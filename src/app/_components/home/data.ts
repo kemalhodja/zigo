@@ -165,9 +165,8 @@ import {
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
-
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 export async function getHomePosts(): Promise<DisplayPost[]> {
   const m = await getServerMessages();

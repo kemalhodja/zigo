@@ -404,10 +404,10 @@ export async function hasRow(
     .select("post_id")
     .eq("post_id", postId)
     .eq("user_id", userId)
-    .maybeSingle();
+    .limit(1);
 
   if (error) throw error;
-  return Boolean(data);
+  return data && data.length > 0;
 }
 
 export async function hasFollow(

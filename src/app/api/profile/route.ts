@@ -57,6 +57,8 @@ export async function PATCH(request: Request) {
       fullName: body.fullName,
       bio: body.bio,
       websiteUrl: body.websiteUrl,
+      youtubeUrl: body.youtubeUrl,
+      instagramUrl: body.instagramUrl,
       avatarUrl: body.avatarUrl,
       coverUrl: body.coverUrl,
     });

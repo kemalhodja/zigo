@@ -160,7 +160,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               {profile.bio}
             </p>
           ) : null}
-          <ProfileSocialLinks bio={profile.bio} websiteUrl={profile.website_url} />
+          <ProfileSocialLinks 
+            bio={profile.bio} 
+            websiteUrl={profile.website_url} 
+            youtubeUrl={profile.youtube_url} 
+            instagramUrl={profile.instagram_url} 
+          />
           
           {/* Instagram-style Highlights */}
           <div className="mt-6 -mx-4 px-4 overflow-x-auto hide-scrollbar flex gap-4 pb-2">
@@ -678,6 +683,8 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
   avatarUrl: string | null;
   userCreatedAt?: string;
   website_url?: string | null;
+  youtube_url?: string | null;
+  instagram_url?: string | null;
   childrenCount?: number;
 }> {
   const signedOutMessages = await getServerMessages();
@@ -720,6 +727,8 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
     avatarUrl: null as string | null,
     userCreatedAt: undefined as string | undefined,
     website_url: null as string | null,
+    youtube_url: null as string | null,
+    instagram_url: null as string | null,
     childrenCount: 2,
   };
 
@@ -743,6 +752,8 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       avatarUrl: null as string | null,
       userCreatedAt: undefined as string | undefined,
       website_url: null as string | null,
+      youtube_url: null as string | null,
+      instagram_url: null as string | null,
       childrenCount: 0,
     };
   }
@@ -766,6 +777,8 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
         avatarUrl: null as string | null,
         userCreatedAt: undefined as string | undefined,
         website_url: null as string | null,
+        youtube_url: null as string | null,
+        instagram_url: null as string | null,
         childrenCount: 0,
       };
 
@@ -791,6 +804,8 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       avatarUrl: null as string | null,
       userCreatedAt: undefined as string | undefined,
       website_url: null as string | null,
+      youtube_url: null as string | null,
+      instagram_url: null as string | null,
       childrenCount: 0,
     };
   }
@@ -887,5 +902,7 @@ function toProfileData(
     avatarUrl: profile.avatar_url || null,
     userCreatedAt: profile.created_at ?? undefined,
     website_url: (profile as unknown as { website_url?: string | null }).website_url ?? null,
+    youtube_url: (profile as unknown as { youtube_url?: string | null }).youtube_url ?? null,
+    instagram_url: (profile as unknown as { instagram_url?: string | null }).instagram_url ?? null,
   };
 }

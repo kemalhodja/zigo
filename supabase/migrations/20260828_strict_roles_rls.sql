@@ -51,5 +51,5 @@ DROP POLICY IF EXISTS "Parents manage own game settings" ON public.parent_game_s
 CREATE POLICY "Strict parents manage own game settings"
 ON public.parent_game_settings
 FOR ALL
-USING (auth.uid() = parent_id)
-WITH CHECK (auth.uid() = parent_id);
+USING (auth.uid() = parent_user_id)
+WITH CHECK (auth.uid() = parent_user_id);

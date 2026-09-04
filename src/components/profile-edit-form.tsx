@@ -18,6 +18,8 @@ type ProfileEditFormProps = {
     fullName: string;
     bio: string;
     websiteUrl: string | null;
+    youtubeUrl: string | null;
+    instagramUrl: string | null;
     avatarUrl: string | null;
     email: string | null;
     role: UserRole;
@@ -45,6 +47,8 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
   const [fullName, setFullName] = useState(initialProfile.fullName);
   const [bio, setBio] = useState(initialProfile.bio);
   const [websiteUrl, setWebsiteUrl] = useState(initialProfile.websiteUrl || "");
+  const [youtubeUrl, setYoutubeUrl] = useState(initialProfile.youtubeUrl || "");
+  const [instagramUrl, setInstagramUrl] = useState(initialProfile.instagramUrl || "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialProfile.avatarUrl);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [accountKind, setAccountKind] = useState<RequiredSignupOptionId>(
@@ -54,6 +58,7 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingKind, setIsSavingKind] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -148,6 +153,8 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
           fullName: fullName.trim(),
           bio: bio.trim(),
           websiteUrl: websiteUrl.trim(),
+          youtubeUrl: youtubeUrl.trim(),
+          instagramUrl: instagramUrl.trim(),
           avatarUrl,
         }),
       });
@@ -200,6 +207,34 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
       setMessage(err instanceof Error ? err.message : pe.accountKindError);
     } finally {
       setIsSavingKind(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (isDeleting) return;
+
+    const confirmed = window.confirm(
+      "DİKKAT: Hesabınızı kalıcı olarak silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ ve tüm verileriniz silinir."
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setMessage("");
+    setStatus("idle");
+
+    try {
+      const response = await fetch("/api/profile/delete", { method: "POST" });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Hesap silme başarısız oldu.");
+      }
+
+      window.location.href = "/auth";
+    } catch (err) {
+      setStatus("error");
+      setMessage(err instanceof Error ? err.message : "Hesap silme başarısız oldu.");
+      setIsDeleting(false);
     }
   }
 
@@ -303,21 +338,51 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
         </div>
 
         {initialProfile.role !== "student" && (
-          <div className="space-y-2">
-            <label htmlFor="website" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-              Web Sitesi (İsteğe Bağlı)
-            </label>
-            <input
-              id="website"
-              type="url"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-              disabled={isSaving}
-              placeholder="https://seninsiten.com veya https://youtube.com/@kanalin"
-              className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="website" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+                Web Sitesi (İsteğe Bağlı)
+              </label>
+              <input
+                id="website"
+                type="url"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                disabled={isSaving}
+                placeholder="https://seninsiten.com"
+                className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="youtube" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+                YouTube Kanalı (İsteğe Bağlı)
+              </label>
+              <input
+                id="youtube"
+                type="url"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                disabled={isSaving}
+                placeholder="https://youtube.com/@kanalin"
+                className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="instagram" className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+                Instagram Sayfası (İsteğe Bağlı)
+              </label>
+              <input
+                id="instagram"
+                type="url"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                disabled={isSaving}
+                placeholder="https://instagram.com/kullaniciadin"
+                className="w-full rounded-lg border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-crystal focus:ring-2 focus:ring-crystal focus:ring-offset-2"
+              />
+            </div>
             <p className="text-[0.7rem] font-semibold text-slate-500">
-              Profilinde tıklanabilir sayfa butonu olarak görünecektir.
+              Sosyal medya bağlantıları profilinde tıklanabilir butonlar olarak velilere ve öğrencilere görünecektir.
             </p>
           </div>
         )}
@@ -382,6 +447,24 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
           {message}
         </p>
       ) : null}
+
+      <section className="-mx-4 space-y-3 rounded-xl border border-red-100 bg-red-50/70 px-4 py-4 mt-6">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-red-700">Tehlikeli Alan</p>
+          <h3 className="mt-1 text-base font-black text-night">Hesabımı Sil</h3>
+          <p className="mt-1 text-xs font-semibold leading-5 text-red-900">
+            Hesabınızı sildiğinizde profiliniz, gönderileriniz ve tüm verileriniz kalıcı olarak silinir. Bu işlem geri alınamaz.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          disabled={isDeleting || isSaving || isUploading || isSavingKind}
+          className="tap-scale w-full rounded-lg bg-red-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50 hover:bg-red-700"
+        >
+          {isDeleting ? "Siliniyor..." : "Hesabımı Kalıcı Olarak Sil"}
+        </button>
+      </section>
     </div>
   );
 }

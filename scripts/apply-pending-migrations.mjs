@@ -26,8 +26,8 @@ const PENDING = [
     },
   },
   {
-    id: "050",
-    file: "050_verified_teacher_answers_rls.sql",
+    id: "108",
+    file: "108_verified_teacher_answers_rls.sql",
     probe: async () => probeAnswersVerifiedPolicy(),
   },
   {

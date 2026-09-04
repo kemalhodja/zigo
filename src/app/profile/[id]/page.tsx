@@ -195,7 +195,12 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 {profile.bio}
               </p>
             ) : null}
-            <ProfileSocialLinks bio={profile.bio} websiteUrl={profile.website_url} />
+            <ProfileSocialLinks 
+              bio={profile.bio} 
+              websiteUrl={profile.website_url} 
+              youtubeUrl={(profile as unknown as { youtube_url?: string | null }).youtube_url}
+              instagramUrl={(profile as unknown as { instagram_url?: string | null }).instagram_url}
+            />
             {profile.role === "teacher" ? (
               <div className="mt-3">
                 <TeacherTrustBadges

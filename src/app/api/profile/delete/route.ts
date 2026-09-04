@@ -1,40 +1,35 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
-import { requirePlatformAdmin } from "@/lib/domain/admin-auth";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const deleteUserSchema = z.object({
-  userId: z.string().uuid(),
-});
 
 export async function POST(request: Request) {
   try {
-    const auth = await requirePlatformAdmin();
-    if ("error" in auth) return auth.error;
+    const supabase = await createClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    const body = await request.json();
-    const { userId } = deleteUserSchema.parse(body);
+    if (userError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const adminClient = createAdminClient();
     if (!adminClient) {
       return NextResponse.json({ error: "Service role missing" }, { status: 500 });
     }
 
-    const { error } = await adminClient.auth.admin.deleteUser(userId);
+    const { error } = await adminClient.auth.admin.deleteUser(user.id);
 
     if (error) {
       console.error("Error deleting user auth:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Call sign out to clear session cookies
+    await supabase.auth.signOut();
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof z.ZodError
-      ? "Invalid parameters"
-      : error instanceof Error
-        ? error.message
-        : "Failed to delete user";
+    const message = error instanceof Error ? error.message : "Failed to delete user";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

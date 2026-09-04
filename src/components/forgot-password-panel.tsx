@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 
 import { useMessages } from "@/lib/i18n/locale-context";
+import { useRecaptcha } from "@/lib/hooks/use-recaptcha";
 
 type Status = "idle" | "loading" | "success" | "error";
 
 export function ForgotPasswordPanel() {
   const m = useMessages();
   const a = m.auth;
+  const recaptcha = useRecaptcha("forgot-password");
   const submittingRef = useRef(false);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState(a.forgotPasswordDesc);
@@ -24,10 +26,27 @@ export function ForgotPasswordPanel() {
     const email = String(formData.get("email") ?? "").trim();
 
     try {
+      let recaptchaToken: string | undefined;
+      if (recaptcha.enabled) {
+        if (!recaptcha.ready) {
+          setStatus("error");
+          setMessage(a.recaptchaLoading);
+          submittingRef.current = false;
+          return;
+        }
+        recaptchaToken = (await recaptcha.getToken()) ?? undefined;
+        if (!recaptchaToken) {
+          setStatus("error");
+          setMessage(a.recaptchaFailed);
+          submittingRef.current = false;
+          return;
+        }
+      }
+
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, recaptchaToken }),
       });
       const result = (await response.json()) as {
         error?: string;
@@ -92,6 +111,10 @@ export function ForgotPasswordPanel() {
       >
         {message}
       </p>
+
+      {recaptcha.enabled ? (
+        <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500">{a.recaptchaNotice}</p>
+      ) : null}
 
       <Link className="inline-block text-sm font-black text-crystal" href="/auth">
         {a.backToAuth}
