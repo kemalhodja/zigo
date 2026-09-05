@@ -46,6 +46,7 @@
     "test:auth:fix-url": "node scripts/fix-supabase-auth-url.mjs",
     "test:billing:havale": "node scripts/manual-bank-transfer-journey.mjs",
     "test:billing:prod": "node scripts/production-billing-scenario-test.mjs",
+    "test:subscription:scenario": "vitest run src/lib/domain/subscription-full-scenario.test.ts",
     "fix:supabase-auth-url": "node scripts/fix-supabase-auth-url.mjs",
     "env:check": "node scripts/validate-env.mjs",
     "setup:verify": "npm run test:live && npm run test:deploy && npm run test:e2e",
