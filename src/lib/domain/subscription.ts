@@ -14,80 +14,74 @@ export type UserSubscription = {
 /**
  * Kullanıcının abonelik durumunu döndürür.
  *
- * Kritik: user_subscriptions ve users tablolarını RLS'yi devre dışı bırakan
- * Admin (Service Role) istemciyle okur. RLS politikaları bazen sessizce
- * data: null döndürür (hata fırlatmaz) ve isPremium yanlışlıkla false olur.
- * Admin client bu sorunu köklü olarak çözer.
+ * ÜÇ KAYNAĞI birden kontrol eder — herhangi biri true ise isPremium=true:
+ *  1. user_subscriptions.tier = 'zigo_plus' (Stripe / Google Play / Apple IAP webhook)
+ *  2. users.is_premium = true (admin grant / mobil satın alma fallback)
+ *  3. 7 günlük kayıt denemesi (users.created_at < 7 gün önce)
  *
- * Eğer admin env yoksa (geliştirme/preview), normal supabase client'a düşer.
+ * Admin (Service Role) client kullanır — RLS hiçbir zaman aboneliği gizleyemez.
  */
 export async function getUserSubscription(
   supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<UserSubscription> {
-  // Admin client: RLS'yi tamamen bypass eder — abonelik hiçbir zaman yanlış okunmaz.
+  // Admin client: RLS'yi tamamen bypass eder.
   const db = createAdminClient() ?? supabase;
 
-  // ── Step 1: Paid subscription kontrolü ───────────────────────────────────
+  // ── Kaynak 1: user_subscriptions tablosu ─────────────────────────────────
   try {
-    const { data, error } = await db
+    const { data } = await db
       .from("user_subscriptions")
       .select("tier, current_period_end")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (!error && data) {
+    if (data) {
       const tier = (data.tier ?? "free") as SubscriptionTier;
       const periodEnd = data.current_period_end ? new Date(data.current_period_end) : null;
-      const isActivePaidPremium =
-        tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
+      const isActive = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
 
-      if (isActivePaidPremium) {
-        return {
-          tier: "zigo_plus",
-          isPremium: true,
-          isTrial: false,
-          trialDaysRemaining: 0,
-        };
+      if (isActive) {
+        return { tier: "zigo_plus", isPremium: true, isTrial: false, trialDaysRemaining: 0 };
       }
     }
   } catch {
-    // DB veya ağ hatası — trial kontrolüne geç
+    // Hata varsa diğer kaynaklara geç
   }
 
-  // ── Step 2: 7 Günlük Ücretsiz Trial kontrolü ─────────────────────────────
-  let isTrialActive = false;
-  let trialDaysRemaining = 0;
+  // ── Kaynak 2 + Trial: users tablosu (is_premium & created_at) ────────────
   try {
     const { data: user } = await db
       .from("users")
-      .select("created_at")
+      .select("is_premium, created_at")
       .eq("id", userId)
       .maybeSingle();
 
+    // users.is_premium = true → admin grant veya mobil IAP fallback
+    if (user?.is_premium === true) {
+      return { tier: "zigo_plus", isPremium: true, isTrial: false, trialDaysRemaining: 0 };
+    }
+
+    // 7 günlük kayıt denemesi
     if (user?.created_at) {
       const diffDays = Math.floor(
         (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24),
       );
-      // 7 günlük trial: kayıt gününden itibaren 0-6. gün (< 7)
       if (diffDays < 7) {
-        isTrialActive = true;
-        trialDaysRemaining = Math.max(0, 6 - diffDays);
+        const trialDaysRemaining = Math.max(0, 6 - diffDays);
+        return {
+          tier: "zigo_plus",
+          isPremium: true,
+          isTrial: true,
+          trialDaysRemaining,
+        };
       }
     }
   } catch {
-    // Fail-open: trial durumu okunamazsa kullanıcıyı bloklama
+    // Fail-open: okunamazsa kullanıcıyı bloklama
   }
 
-  // Step 1'de isPremium bulunduysa zaten döndük. Buraya geldiysek ödeme yoktu.
-  const isPremium = isTrialActive;
-
-  return {
-    tier: isPremium ? "zigo_plus" : "free",
-    isPremium,
-    isTrial: isTrialActive,
-    trialDaysRemaining,
-  };
+  return { tier: "free", isPremium: false, isTrial: false, trialDaysRemaining: 0 };
 }
 
 export function canAccessAdvancedAnalytics(subscription: UserSubscription) {
