@@ -9,6 +9,7 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createSocialPost, createSocialPostSchema, deleteSocialPost, getSocialFeed, SOCIAL_FEED_CACHE_TAG, socialFeedCacheTag, updateSocialPost, updateSocialPostSchema } from "@/lib/domain/social";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { assertTeacherCreatorPlus, socialPostRequiresTeacherCreatorPlus } from "@/lib/domain/teacher-creator-plus";
+import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -177,12 +178,10 @@ export async function POST(request: Request) {
       sponsoredLabel: body.sponsoredLabel,
       sponsoredTargetUrl: body.sponsoredTargetUrl,
       externalUrl: body.externalUrl,
-      locationName: body.locationName ?? (profileLoc.city ? `${profileLoc.district ? `${profileLoc.district}, ` : ""}${profileLoc.city}` : null),
-      city: body.city ?? profileLoc.city ?? null,
-      district: body.district ?? profileLoc.district ?? null,
     };
 
-    const post = await createSocialPost(supabase, postPayload);
+    const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+    const post = await createSocialPost(dbClient, postPayload);
 
     safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
     safeRevalidateTag(socialFeedCacheTag(profile.id));
@@ -248,12 +247,10 @@ export async function PATCH(request: Request) {
       targetAudience: body.targetAudience,
       targetGrade: body.targetGrade,
       externalUrl: body.externalUrl,
-      locationName: body.locationName,
-      city: body.city,
-      district: body.district,
     };
 
-    const post = await updateSocialPost(supabase, updatePayload);
+    const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+    const post = await updateSocialPost(dbClient, updatePayload);
 
     safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
     safeRevalidateTag(socialFeedCacheTag(profile.id));
@@ -295,7 +292,8 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Silinecek gönderi ID'si belirtilmedi." }, { status: 400 });
     }
 
-    await deleteSocialPost(supabase, postId, profile.id);
+    const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+    await deleteSocialPost(dbClient, postId, profile.id);
 
     safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
     safeRevalidateTag(socialFeedCacheTag(profile.id));

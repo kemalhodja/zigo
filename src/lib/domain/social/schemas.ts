@@ -49,9 +49,6 @@ export const createSocialPostSchema = z.object({
     z.string().url().max(2048).optional().nullable(),
   ),
   coAuthorId: z.string().uuid().optional().nullable().or(z.literal("")),
-  locationName: z.string().trim().max(150).optional().nullable().or(z.literal("")),
-  city: z.string().trim().max(100).optional().nullable().or(z.literal("")),
-  district: z.string().trim().max(100).optional().nullable().or(z.literal("")),
 }).superRefine((value, ctx) => {
   const hasLabel = Boolean(value.premiumPrepLabel?.trim());
   const hasUrl = Boolean(value.premiumPrepUrl?.trim());
@@ -98,9 +95,6 @@ export const updateSocialPostSchema = z.object({
     },
     z.string().url().max(2048).optional().nullable(),
   ),
-  locationName: z.string().trim().max(150).optional().nullable().or(z.literal("")),
-  city: z.string().trim().max(100).optional().nullable().or(z.literal("")),
-  district: z.string().trim().max(100).optional().nullable().or(z.literal("")),
 });
 
 export const socialPostActionSchema = z.object({

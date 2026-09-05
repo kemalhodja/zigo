@@ -50,28 +50,8 @@ export interface PublishInput {
 }
 
 // ── Daily limit helpers ───────────────────────────────────────────────────────
-
-const MAX_DAILY_POSTS = 5;
-
-function getDailyKey(): string {
-  return `zigo:daily-posts:${new Date().toISOString().slice(0, 10)}`;
-}
-
-function readDailyCount(): number {
-  try {
-    return Number(localStorage.getItem(getDailyKey()) ?? 0);
-  } catch {
-    return 0; // fail open — server enforces authoritatively
-  }
-}
-
-function bumpDailyCount(): void {
-  try {
-    localStorage.setItem(getDailyKey(), String(readDailyCount() + 1));
-  } catch {
-    // non-critical
-  }
-}
+// Limits are strictly enforced by the server API (based on user role and Zigo Plus subscription).
+// Client-side limits (e.g. MAX_DAILY_POSTS = 5) were removed as they incorrectly blocked premium users.
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
@@ -115,14 +95,8 @@ export function useUploadPipeline() {
     }
     runningRef.current = true;
 
-    // ── Client-side daily limit pre-check ──────────────────────────────
-    if (readDailyCount() >= MAX_DAILY_POSTS) {
-      console.warn("[POST_PIPELINE] Daily post limit reached.");
-      setPhase("error");
-      setError("Günlük maksimum 5 gönderi sınırına ulaştınız. Yarın tekrar deneyin.");
-      runningRef.current = false;
-      return;
-    }
+    // ── Pre-check ──────────────────────────────
+    // Daily limits are enforced authoritatively by the server.
 
     setError(null);
     setPhase("validating");
@@ -206,7 +180,8 @@ export function useUploadPipeline() {
           const { data: { user } } = await supabase.auth.getUser();
           if (user?.id) {
             const extension = fileToUpload.name.split(".").pop() || (fileToUpload.type.startsWith("video/") ? "mp4" : "jpg");
-            const objectPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+            const randomId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+            const objectPath = `${user.id}/${randomId}.${extension}`;
             const { error: directErr } = await supabase.storage
               .from("social-media")
               .upload(objectPath, fileToUpload, { contentType: fileToUpload.type, upsert: false });
@@ -349,7 +324,6 @@ export function useUploadPipeline() {
       data?: { id?: string };
     } | null;
 
-    bumpDailyCount();
     setProgress(100);
     setPhase("done");
     setMessage("Paylaşıldı! 🎉");

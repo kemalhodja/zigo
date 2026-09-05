@@ -59,9 +59,6 @@ export async function createSocialPost(
     sponsoredTargetUrl?: string | null;
     externalUrl?: string | null;
     coAuthorId?: string | null;
-    locationName?: string | null;
-    city?: string | null;
-    district?: string | null;
   },
 ) {
   const parsed = createSocialPostSchema.parse(input);
@@ -108,9 +105,6 @@ export async function createSocialPost(
           sponsored_target_url: parsed.sponsoredTargetUrl ?? null,
           external_url: parsed.externalUrl ?? null,
           co_author_id: parsed.coAuthorId ?? null,
-          location_name: parsed.locationName ?? null,
-          city: parsed.city ?? null,
-          district: parsed.district ?? null,
           followers_only: parsed.followersOnly,
           followers_only_comments: parsed.followersOnlyComments,
           teaser_text: parsed.teaserText ?? null,
@@ -160,9 +154,6 @@ export async function updateSocialPost(
     targetAudience?: "all" | "parent_only" | "grade";
     targetGrade?: string | null;
     externalUrl?: string | null;
-    locationName?: string | null;
-    city?: string | null;
-    district?: string | null;
   },
 ) {
   const parsed = updateSocialPostSchema.parse(input);
@@ -192,9 +183,6 @@ export async function updateSocialPost(
     if (parsed.targetAudience !== undefined) updatePayload.target_audience = parsed.targetAudience;
     if (parsed.targetGrade !== undefined) updatePayload.target_grade = parsed.targetGrade;
     if (parsed.externalUrl !== undefined) updatePayload.external_url = parsed.externalUrl;
-    if (parsed.locationName !== undefined) updatePayload.location_name = parsed.locationName;
-    if (parsed.city !== undefined) updatePayload.city = parsed.city;
-    if (parsed.district !== undefined) updatePayload.district = parsed.district;
 
     if (Object.keys(updatePayload).length === 0) {
       throw new Error("Güncellenecek alan belirtilmedi.");
@@ -230,9 +218,6 @@ export async function updateSocialPost(
       if (parsed.targetAudience !== undefined) updatePayload.target_audience = parsed.targetAudience;
       if (parsed.targetGrade !== undefined) updatePayload.target_grade = parsed.targetGrade;
       if (parsed.externalUrl !== undefined) updatePayload.external_url = parsed.externalUrl;
-      if (parsed.locationName !== undefined) updatePayload.location_name = parsed.locationName;
-      if (parsed.city !== undefined) updatePayload.city = parsed.city;
-      if (parsed.district !== undefined) updatePayload.district = parsed.district;
 
       const { data, error } = await supabase
         .from("social_posts")
