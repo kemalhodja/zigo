@@ -179,6 +179,17 @@ export async function adminUpdateSubscriptionTier(
   });
 
   if (error) throw error;
+
+  // Garantili fallback: users.is_premium'u da güncelle
+  try {
+    await (supabase.from("users") as unknown as {
+      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
+    })
+      .update({ is_premium: parsed.tier === "zigo_plus" })
+      .eq("id", parsed.userId);
+  } catch {
+    // Non-critical
+  }
 }
 
 export async function adminSendUserMessage(

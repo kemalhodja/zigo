@@ -38,7 +38,7 @@ async function fetchTrialStatusUncached(): Promise<TrialSubscription> {
   const { data: userData } = await supabase.from("users").select("created_at").eq("id", user.id).maybeSingle();
   if (!userData?.created_at) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
   const diffDays = Math.floor((Date.now() - new Date(userData.created_at).getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays <= 7) return { isTrial: true, trialDaysRemaining: Math.max(0, 7 - diffDays), isLoading: false };
+  if (diffDays < 7) return { isTrial: true, trialDaysRemaining: Math.max(0, 6 - diffDays), isLoading: false };
   return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
 }
 

@@ -16,7 +16,7 @@ export const SUBSCRIPTION_CAMPAIGN = {
   stripePromotionCode: "ZIGO50",
   stripeCouponEnvKey: "STRIPE_COUPON_50OFF",
   trialDays: SUBSCRIPTION_TRIAL_DAYS,
-  endsAt: new Date("2026-09-01T23:59:59Z"),
+  endsAt: new Date("2099-12-31T23:59:59Z"),
 } as const;
 
 export function isSubscriptionCampaignActive(now = new Date()) {

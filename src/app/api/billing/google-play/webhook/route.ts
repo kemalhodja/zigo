@@ -117,13 +117,13 @@ export async function POST(request: Request) {
         })
         .eq("receipt_token", purchaseToken);
 
-      // Update users table subscription_tier if active vs expired
-      const newTier = newStatus === "active" ? "zigo_plus" : "free";
+      // Update users.is_premium (the field getUserSubscription reads)
+      const newIsPremium = newStatus === "active";
       await (adminClient.from("users") as unknown as {
         update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
       })
         .update({
-          subscription_tier: newTier,
+          is_premium: newIsPremium,
           updated_at: now,
         })
         .eq("id", targetUserId);
