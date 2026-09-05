@@ -62,22 +62,15 @@ export async function POST(req: Request) {
       if (error) console.warn("record_google_play_purchase RPC:", error.message);
     });
 
-    // 2. Direct upsert to user_subscriptions
+    // 2. Direct upsert to user_subscriptions (schema: user_id, tier, current_period_end, updated_at)
     await (dbClient.from("user_subscriptions") as unknown as {
       upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
     }).upsert(
       {
         user_id: user.id,
-        plan_id: productId,
-        product_id: verification.productId || productId,
         tier: "zigo_plus",
-        status: "active",
-        started_at: now.toISOString(),
         current_period_end: expiresAt.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        provider: "google_play",
-        receipt_token: token,
-        order_id: verification.orderId || null,
+        updated_at: now.toISOString(),
       },
       { onConflict: "user_id" },
     ).then(({ error }) => {

@@ -278,16 +278,14 @@ function usePricingSubscription(): SubscriptionState {
                   limit: (n: number) => Promise<{
                     data: Array<{
                       tier?: string | null;
-                      status?: string | null;
                       current_period_end?: string | null;
-                      expires_at?: string | null;
                     }> | null;
                   }>;
                 };
               };
             };
           })
-            .select("tier, status, current_period_end, expires_at")
+            .select("*")
             .eq("user_id", user.id)
             .order("updated_at", { ascending: false })
             .limit(5);
@@ -295,10 +293,46 @@ function usePricingSubscription(): SubscriptionState {
           if (Array.isArray(subs) && subs.length > 0) {
             const now = Date.now();
             const isActive = subs.some((s) => {
-              const isPlus = s.tier === "zigo_plus" || s.status === "active" || s.status === "trialing";
+              const isPlus = s.tier === "zigo_plus" || (s as any).status === "active" || (s as any).status === "trialing";
               if (!isPlus) return false;
-              const end = s.current_period_end || s.expires_at;
+              const end = s.current_period_end || (s as any).expires_at;
               return !end || new Date(end).getTime() > now;
+            });
+
+            if (isActive) {
+              if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+              return;
+            }
+          }
+        } catch {
+          // silent
+        }
+
+        // 1.5. google_play_purchases kontrolü
+        try {
+          const { data: gpPurchases } = await (supabase.from("google_play_purchases") as unknown as {
+            select: (cols: string) => {
+              eq: (col: string, val: string) => {
+                order: (col2: string, opts: { ascending: boolean }) => {
+                  limit: (n: number) => Promise<{
+                    data: Array<{
+                      expiry_time?: string | null;
+                    }> | null;
+                  }>;
+                };
+              };
+            };
+          })
+            .select("expiry_time")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(5);
+
+          if (Array.isArray(gpPurchases) && gpPurchases.length > 0) {
+            const now = Date.now();
+            const isActive = gpPurchases.some((gp) => {
+              if (!gp.expiry_time) return true;
+              return new Date(gp.expiry_time).getTime() > now;
             });
 
             if (isActive) {

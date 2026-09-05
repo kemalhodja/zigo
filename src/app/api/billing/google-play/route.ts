@@ -80,23 +80,17 @@ export async function POST(request: Request) {
       console.warn("RPC record_google_play_purchase failed, falling back to direct table sync:", rpcError.message);
     }
 
-    // 2. Direct Sync with user_subscriptions table for status='active' & tier='zigo_plus'
-    const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
+    // 2. Direct Sync with user_subscriptions table (valid schema: user_id, tier, current_period_end, updated_at)
+    const adminDb = createAdminClient();
+    const dbClient = adminDb ?? supabase;
     const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as {
       upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
     }).upsert(
       {
         user_id: profile.id,
-        plan_id: body.planId,
-        product_id: body.productId,
         tier: "zigo_plus",
-        status: "active",
-        started_at: now.toISOString(),
         current_period_end: finalExpiryTime,
-        expires_at: finalExpiryTime,
-        provider: "google_play",
-        receipt_token: body.purchaseToken,
-        order_id: verifiedOrderId ?? null,
+        updated_at: now.toISOString(),
       },
       { onConflict: "user_id" },
     );
@@ -105,12 +99,34 @@ export async function POST(request: Request) {
       console.warn("user_subscriptions upsert notice:", upsertErr.message);
     }
 
-    // 3. Set users.is_premium = true (the field getUserSubscription reads as fallback)
+    // 2.5 Ensure backup row in google_play_purchases
+    try {
+      await (dbClient.from("google_play_purchases") as unknown as {
+        upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<unknown>;
+      }).upsert(
+        {
+          user_id: profile.id,
+          plan_id: body.planId,
+          product_id: body.productId,
+          purchase_token: body.purchaseToken,
+          order_id: verifiedOrderId ?? null,
+          package_name: body.packageName,
+          expiry_time: finalExpiryTime,
+          verified_at: now.toISOString(),
+        },
+        { onConflict: "purchase_token" },
+      );
+    } catch {
+      // silent
+    }
+
+    // 3. Set users.is_premium = true and ad_free_until
     await (dbClient.from("users") as unknown as {
       update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
     })
       .update({
         is_premium: true,
+        ad_free_until: finalExpiryTime,
         updated_at: now.toISOString(),
       })
       .eq("id", profile.id);

@@ -49,7 +49,7 @@ export async function getUserSubscription(
         };
       };
     })
-      .select("tier, status, current_period_end, expires_at")
+      .select("*")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false })
       .limit(5);
@@ -62,12 +62,49 @@ export async function getUserSubscription(
         if (!isPlusTier && !isActiveStatus) return false;
 
         const rawEnd = sub.current_period_end || sub.expires_at;
-        if (!rawEnd) return true; // Süre sonu belirtilmemişse aktif sayılır
+        if (!rawEnd) return true;
         const periodEnd = new Date(rawEnd);
         return !Number.isNaN(periodEnd.getTime()) && periodEnd.getTime() > now;
       });
 
       if (activeSub) {
+        return { tier: "zigo_plus", isPremium: true, isTrial: false, trialDaysRemaining: 0 };
+      }
+    }
+  } catch {
+    // Hata varsa diğer kaynaklara geç
+  }
+
+  // ── Kaynak 1.5: google_play_purchases tablosu ────────────────────────────
+  try {
+    const { data: gpPurchases, error: gpErr } = await (db.from("google_play_purchases") as unknown as {
+      select: (cols: string) => {
+        eq: (col: string, val: string) => {
+          order: (col2: string, opts: { ascending: boolean }) => {
+            limit: (n: number) => Promise<{
+              data: Array<{
+                expiry_time?: string | null;
+              }> | null;
+              error: unknown;
+            }>;
+          };
+        };
+      };
+    })
+      .select("expiry_time")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (!gpErr && Array.isArray(gpPurchases) && gpPurchases.length > 0) {
+      const now = Date.now();
+      const activeGp = gpPurchases.find((gp) => {
+        if (!gp.expiry_time) return true;
+        const expTime = new Date(gp.expiry_time);
+        return !Number.isNaN(expTime.getTime()) && expTime.getTime() > now;
+      });
+
+      if (activeGp) {
         return { tier: "zigo_plus", isPremium: true, isTrial: false, trialDaysRemaining: 0 };
       }
     }

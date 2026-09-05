@@ -95,22 +95,15 @@ export async function POST(request: Request) {
       }
     }
 
-    // Save subscription in database (user_subscriptions)
+    // Save subscription in database (user_subscriptions - schema: user_id, tier, current_period_end, updated_at)
     const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as {
       upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
     }).upsert(
       {
         user_id: profile.id,
-        plan_id: planId,
-        product_id: body.productId || planId,
         tier: "zigo_plus",
-        status: "active",
-        started_at: now.toISOString(),
         current_period_end: expiresAt,
-        expires_at: expiresAt,
-        provider: body.platform === "ios" ? "apple" : "google_play",
-        receipt_token: body.purchaseToken,
-        order_id: resolvedOrderId,
+        updated_at: now.toISOString(),
       },
       { onConflict: "user_id" },
     );
