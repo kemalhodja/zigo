@@ -35,17 +35,7 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
   const reqHeaders = await headers();
   const userAgent = reqHeaders.get("user-agent");
   if (isAndroidCapacitorUserAgent(userAgent)) {
-    return (
-      <StateCard
-        action={
-          <Link className="font-black text-crystal" href="/profile">
-            {h.backProfile}
-          </Link>
-        }
-        description={getBillingPlatformMessage("tr")}
-        title="Google Play İle Abonelik"
-      />
-    );
+    redirect(`/pricing?openPlay=1&planId=${encodeURIComponent(planId)}`);
   }
 
   if (!hasSupabaseEnv()) {

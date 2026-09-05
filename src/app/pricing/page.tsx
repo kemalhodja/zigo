@@ -1,9 +1,12 @@
 "use client";
 
 import { BookOpen, Building2, CheckCircle2, Crown, GraduationCap, MonitorPlay, Sparkles, Users, XCircle } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
+import { purchaseGooglePlaySubscription } from "@/lib/client/google-play-billing";
 import { createClient } from "@/lib/supabase/client";
 
 const ROLE_PLANS = {
@@ -97,46 +100,41 @@ const ROLE_PLANS = {
 
 type RoleKey = keyof typeof ROLE_PLANS;
 
-function PlanCard({ role, isCurrentRole, isSelected, onSelect }: { 
-  role: RoleKey; 
+function PlanCard({
+  role,
+  isCurrentRole: _isCurrentRole,
+  isSelected: _isSelected,
+  onSelect,
+  onOpenModal,
+}: {
+  role: RoleKey;
   isCurrentRole: boolean;
   isSelected: boolean;
   onSelect: (role: RoleKey) => void;
+  onOpenModal: (role: RoleKey, interval: "monthly" | "yearly") => void;
 }) {
   const config = ROLE_PLANS[role];
   const monthly = config.monthly;
   const yearly = config.yearly;
-  const yearlySavings = Math.round((monthly * 12 - yearly) / (monthly * 12) * 100);
+  const yearlySavings = Math.round(((monthly * 12 - yearly) / (monthly * 12)) * 100);
 
   return (
     <div
       onClick={() => onSelect(role)}
-      className={`relative flex flex-col h-full rounded-2xl border-2 p-5 transition-all ${
-        isCurrentRole
-          ? "border-slate-100 bg-slate-50 opacity-60 cursor-not-allowed"
-          : isSelected
-          ? "border-violet-500 bg-violet-50 shadow-md ring-4 ring-violet-500/10"
-          : "border-slate-200 bg-white hover:border-violet-300 hover:bg-slate-50"
-      }`}
+      className="relative flex flex-col h-full rounded-2xl border-2 p-5 transition-all border-slate-200 bg-white hover:border-slate-300 shadow-sm"
     >
-      {isCurrentRole && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-black uppercase text-slate-600">
-          Mevcut Plan
-        </span>
-      )}
-
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${config.gradient} text-white shadow-inner`}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr ${config.gradient} text-white shadow-md`}>
           <config.icon className="h-6 w-6" />
         </div>
         <div>
-          <h3 className="font-black text-night">{config.title}</h3>
-          <p className="text-xs font-bold text-slate-500">Zigo Plus Aboneliği</p>
+          <h3 className="text-lg font-black text-night leading-tight">{config.title}</h3>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Zigo Plus</span>
         </div>
       </div>
 
-      <div className="mb-4 space-y-2">
-        <div className="flex items-baseline gap-2">
+      <div className="mb-4 space-y-1">
+        <div className="flex items-baseline gap-1">
           <span className="text-3xl font-black text-night">{monthly.toLocaleString("tr-TR")} ₺</span>
           <span className="text-sm font-bold text-slate-500">/ay</span>
         </div>
@@ -144,9 +142,6 @@ function PlanCard({ role, isCurrentRole, isSelected, onSelect }: {
           <span className="text-lg font-bold text-slate-500 line-through">{monthly * 12} ₺</span>
           <span className="text-2xl font-black text-night">{yearly.toLocaleString("tr-TR")} ₺</span>
           <span className="text-sm font-bold text-slate-500">/yıl</span>
-          <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">
-            %{yearlySavings} kazanç
-          </span>
         </div>
       </div>
 
@@ -160,24 +155,39 @@ function PlanCard({ role, isCurrentRole, isSelected, onSelect }: {
       </ul>
 
       <div className="pt-3 border-t border-slate-100">
-        <p className="text-xs font-bold text-slate-500 mb-2">
-          İlk 7 gün içinde abone olursanız <span className="text-amber-500">%50 indirim</span> (Promo: <span className="font-mono">ZIGO50</span>)
-        </p>
-        <p className="text-[10px] font-bold text-slate-400 mb-3">
-          7 gün sonrası: Tam liste fiyatı (indirim yok)
-        </p>
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onSelect(role);
-            window.location.href = `/billing/havale?planId=zigo-plus-${role === "teacher" ? "teachers" : "student"}-monthly`;
+            onOpenModal(role, "monthly");
           }}
-          className="tap-scale w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black text-xs shadow-md hover:brightness-105 transition flex items-center justify-center gap-1"
+          className="tap-scale w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xs shadow-md hover:brightness-105 transition flex items-center justify-center gap-1.5"
         >
-          <span>✨</span>
-          <span>Zigo Plus'a Abone Ol</span>
+          <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+            <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+          </svg>
+          <span>Google Play ile Abone Ol</span>
         </button>
+        <div className="mt-2.5 flex items-center justify-between text-[11px] font-bold text-slate-500">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(role);
+              onOpenModal(role, "yearly");
+            }}
+            className="hover:text-emerald-700 underline underline-offset-2"
+          >
+            Yıllık Plan (%{yearlySavings} İndirim)
+          </button>
+          <Link
+            href={`/billing/havale?planId=zigo-plus-${role === "teacher" ? "teachers" : "student"}-monthly`}
+            className="hover:text-amber-600 underline underline-offset-2"
+          >
+            Havale / FAST ↗
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -354,48 +364,159 @@ function usePricingSubscription(): SubscriptionState {
 }
 
 export default function PricingPage() {
-  const router = useRouter();
   const { isTrial, trialDaysRemaining, isLoading } = usePricingSubscription();
   const [selectedRole, setSelectedRole] = useState<RoleKey | null>("student");
-  const supabase = createClient();
 
-  const _handleSubscribe = async (role: RoleKey) => {
+  const [modalState, setModalState] = useState<{
+    role: RoleKey;
+    interval: "monthly" | "yearly";
+    priceTry: number;
+    planId: string;
+  } | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const openPlay = params.get("openPlay");
+    const requestedPlan = params.get("planId");
+    const requestedRole = params.get("role") as RoleKey | null;
+
+    if (openPlay || requestedPlan || requestedRole) {
+      const targetRole: RoleKey = requestedRole && requestedRole in ROLE_PLANS ? requestedRole : "student";
+      const isYearly = Boolean(requestedPlan?.includes("yearly"));
+      const interval = isYearly ? "yearly" : "monthly";
+      const priceTry = isYearly ? ROLE_PLANS[targetRole].yearly : ROLE_PLANS[targetRole].monthly;
+      const planId = requestedPlan || (targetRole === "teacher" 
+        ? `zigo-plus-teachers-${interval}` 
+        : `zigo-plus-${targetRole === "student" ? "student" : targetRole}-${interval}`);
+      
+      setModalState({
+        role: targetRole,
+        interval,
+        priceTry,
+        planId,
+      });
+    }
+  }, []);
+
+  function handleOpenModal(role: RoleKey, interval: "monthly" | "yearly") {
+    setModalError(null);
+    const planConfig = ROLE_PLANS[role];
+    const priceTry = interval === "yearly" ? planConfig.yearly : planConfig.monthly;
+    const planId = role === "teacher"
+      ? `zigo-plus-teachers-${interval}`
+      : role === "institution"
+        ? `zigo-plus-educational-institutions-${interval}`
+        : role === "platform"
+          ? `zigo-plus-platform-${interval}`
+          : role === "publisher"
+            ? `zigo-plus-publisher-${interval}`
+            : `zigo-plus-student-${interval}`;
+
+    setModalState({
+      role,
+      interval,
+      priceTry,
+      planId,
+    });
+  }
+
+  async function handleConfirmGooglePlay(isPromoApplied: boolean) {
+    if (!modalState) return;
+    setModalLoading(true);
+    setModalError(null);
+
+    const { planId } = modalState;
+    const productId = planId;
+    let purchaseToken: string | null = null;
+    let orderId: string | null = null;
+    let resolvedProductId = productId;
+    let resolvedPackageName = "com.zigo.education";
+    const offerToken = isPromoApplied ? "zigo_50_offer" : undefined;
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/auth?next=/pricing");
+      const nativePurchase = await purchaseGooglePlaySubscription({ productId, planId, offerToken });
+      purchaseToken = nativePurchase.purchaseToken || null;
+      orderId = nativePurchase.orderId || null;
+      resolvedProductId = nativePurchase.productId || productId;
+      resolvedPackageName = nativePurchase.packageName || "com.zigo.education";
+    } catch (nativeErr) {
+      const errString =
+        nativeErr instanceof Error
+          ? nativeErr.message
+          : typeof nativeErr === "object"
+            ? JSON.stringify(nativeErr)
+            : String(nativeErr);
+      const friendlyError = errString || "Google Play ödeme altyapısı bu cihazda doğrudan çalıştırılamadı.";
+      setModalError(friendlyError);
+      setModalLoading(false);
+      return;
+    }
+
+    if (!purchaseToken) {
+      setModalError("Google Play ödemesinden purchaseToken alınamadı.");
+      setModalLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/billing/google-play", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId,
+          productId: resolvedProductId,
+          purchaseToken,
+          packageName: resolvedPackageName,
+          orderId,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+
+      if (!response.ok) {
+        setModalError(payload?.error ?? "Google Play doğrulaması başarısız.");
+        setModalLoading(false);
         return;
       }
 
-      // planId: teacher -> teachers, others -> student
-      const planId = role === "teacher"
-        ? "zigo-plus-teachers-monthly"
-        : role === "institution"
-          ? "zigo-plus-educational-institutions-monthly"
-          : role === "platform"
-            ? "zigo-plus-platform-monthly"
-            : role === "publisher"
-              ? "zigo-plus-publisher-monthly"
-              : "zigo-plus-student-monthly";
+      setModalState(null);
+      const { triggerConfetti } = await import("@/lib/client/confetti");
+      triggerConfetti();
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      window.location.href = "/billing/success?kind=google_play";
+    } catch {
+      setModalError("Sunucuya bağlanırken bir hata oluştu.");
+      setModalLoading(false);
+    }
+  }
 
+  async function handleFallbackCheckout() {
+    if (!modalState) return;
+    try {
+      setModalLoading(true);
       const response = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId: modalState.planId }),
       });
-
       const result = await response.json();
-      // API returns { data: { url, planId } }
       const checkoutUrl = result?.data?.url ?? result?.checkoutUrl;
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
       } else {
-        console.error("Checkout URL not found in response:", result);
+        setModalError(result?.error || "Ödeme oturumu açılamadı.");
       }
-    } catch (error) {
-      console.error("Checkout error:", error);
+    } catch {
+      setModalError("Ödeme servisine bağlanırken bir hata oluştu.");
+    } finally {
+      setModalLoading(false);
     }
-  };
+  }
 
   if (isLoading) {
     return (
@@ -437,6 +558,7 @@ export default function PricingPage() {
               isCurrentRole={false}
               isSelected={selectedRole === role}
               onSelect={setSelectedRole}
+              onOpenModal={handleOpenModal}
             />
           ))}
         </div>
@@ -448,10 +570,10 @@ export default function PricingPage() {
           <dl className="space-y-4 max-w-3xl mx-auto">
             <div className="border border-slate-200 rounded-xl p-4">
               <dt className="font-black text-night mb-1">7 günlük deneme nasıl çalışıyor?</dt>
-              <dd className="text-slate-600">Kayıt tarihinizden itibaren 7 gün boyunca tüm premium özellikler serbest. 7. gün bitiminde otomatik olarak ücretsiz plana dönersiniz (veri kaybı yok).</dd>
+              <dd className="text-slate-600">Kayıttan sonraki ilk 7 gün boyunca tüm Zigo Plus özelliklerini ücretsiz deneyebilirsiniz. 7 gün dolmadan önce abonelik başlatırsanız %50 indirimli fiyat uygulanır.</dd>
             </div>
             <div className="border border-slate-200 rounded-xl p-4">
-              <dt className="font-black text-night mb-1">%50 indirim nasıl alınır?</dt>
+              <dt className="font-black text-night mb-1">%50 indirim nasıl uygulanır?</dt>
               <dd className="text-slate-600">Kayıttan sonraki ilk 7 gün içinde ödeme sayfasında <strong>ZIGO50</strong> promo kodunu girin. İndirim otomatik uygulanır. 7 gün geçtise kod çalışmaz.</dd>
             </div>
             <div className="border border-slate-200 rounded-xl p-4">
@@ -478,6 +600,23 @@ export default function PricingPage() {
           </p>
         </div>
       </main>
+
+      {modalState && (
+        <GooglePlaySubscriptionModal
+          basePriceTry={modalState.priceTry}
+          errorMessage={modalError}
+          isOpen={Boolean(modalState)}
+          isWithinTrialWindow={isTrial}
+          loading={modalLoading}
+          onClose={() => {
+            if (!modalLoading) setModalState(null);
+          }}
+          onConfirm={handleConfirmGooglePlay}
+          onFallbackCheckout={handleFallbackCheckout}
+          planId={modalState.planId}
+          selectedInterval={modalState.interval}
+        />
+      )}
     </div>
   );
 }

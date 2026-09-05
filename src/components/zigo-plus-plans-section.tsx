@@ -277,6 +277,7 @@ function PlanPriceRow({
   const b = useMessages().billingUi;
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [modalErrorMessage, setModalErrorMessage] = useState<string | null>(null);
   const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
 
   const currentInterval = intervalLabel.toLowerCase().includes("yıllık") || planId.toLowerCase().includes("yearly") ? "yearly" : "monthly";
@@ -284,9 +285,32 @@ function PlanPriceRow({
     ? Math.ceil(Math.abs(new Date().getTime() - new Date(userCreatedAt).getTime()) / (1000 * 60 * 60 * 24)) <= 7
     : true;
 
+  async function handleFallbackCheckout() {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId }),
+      });
+      const data = await res.json();
+      const checkoutUrl = data?.data?.url ?? data?.checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        setMessage(data?.error || "Ödeme oturumu açılamadı.");
+      }
+    } catch {
+      setMessage("Ödeme servisine bağlanırken bir hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function subscribeGooglePlay(isPromoApplied: boolean = false) {
     setLoading(true);
     setMessage("");
+    setModalErrorMessage(null);
 
     const productId = planId;
     let purchaseToken: string | null = null;
@@ -308,13 +332,17 @@ function PlanPriceRow({
           : typeof nativeErr === "object"
             ? JSON.stringify(nativeErr)
             : String(nativeErr);
-      setMessage(errString || "Google Play ödeme bridge kullanılamıyor.");
+      const friendlyError = errString || "Google Play ödeme altyapısı bu cihazda doğrudan çalıştırılamadı.";
+      setMessage(friendlyError);
+      setModalErrorMessage(friendlyError);
       setLoading(false);
       return;
     }
 
     if (!purchaseToken) {
-      setMessage("Google Play ödemesinden purchaseToken alınamadı.");
+      const tokenErr = "Google Play ödemesinden purchaseToken alınamadı.";
+      setMessage(tokenErr);
+      setModalErrorMessage(tokenErr);
       setLoading(false);
       return;
     }
@@ -337,13 +365,16 @@ function PlanPriceRow({
       } | null;
 
       if (!response.ok) {
-        setMessage(payload?.error ?? b.playVerifyFailed);
+        const verifyErr = payload?.error ?? b.playVerifyFailed;
+        setMessage(verifyErr);
+        setModalErrorMessage(verifyErr);
         setLoading(false);
         return;
       }
 
       setMessage(b.playSuccess);
-      
+      setSubscriptionModalOpen(false);
+
       // Dinamik olarak yükleyip confetti patlatıyoruz.
       const { triggerConfetti } = await import("@/lib/client/confetti");
       triggerConfetti();
@@ -351,14 +382,16 @@ function PlanPriceRow({
       await new Promise((resolve) => setTimeout(resolve, 1500));
       window.location.href = "/billing/success?kind=google_play";
     } catch {
-      setMessage(b.connectionFailed);
+      const connErr = b.connectionFailed;
+      setMessage(connErr);
+      setModalErrorMessage(connErr);
       setLoading(false);
     }
   }
 
   return (
     <div className="rounded-lg bg-white/10 px-3 py-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm font-black text-white">{intervalLabel}</p>
@@ -372,25 +405,27 @@ function PlanPriceRow({
             <span className="text-lg font-black text-amber-300">{formatTryPrice(priceTry)}</span>
           </p>
         </div>
-        <div className="flex shrink-0 flex-col gap-2">
-          {playStoreOnly ? (
-            <button
-              className="tap-scale flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-60"
-              disabled={loading}
-              onClick={() => setSubscriptionModalOpen(true)}
-              type="button"
-            >
-              <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
-                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-              </svg>
-              <span>{loading ? b.loading : "Google Play ile Abone Ol"}</span>
-            </button>
-          ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            className="tap-scale flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-60"
+            disabled={loading}
+            onClick={() => {
+              setModalErrorMessage(null);
+              setSubscriptionModalOpen(true);
+            }}
+            type="button"
+          >
+            <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+              <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+            </svg>
+            <span>{loading ? b.loading : "Google Play ile Abone Ol"}</span>
+          </button>
+          {!playStoreOnly && (
             <Link
-              className="tap-scale rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-xs font-black text-slate-950 shadow-md hover:brightness-105"
+              className="tap-scale rounded-lg bg-white/15 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 transition"
               href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
             >
-              🏦 Banka Bilgileri & Dekont Gönder ↗
+              🏦 Havale / FAST ↗
             </Link>
           )}
         </div>
@@ -398,13 +433,18 @@ function PlanPriceRow({
       {message ? <p className="mt-2 text-xs font-bold text-amber-300">{message}</p> : null}
       <GooglePlaySubscriptionModal
         basePriceTry={priceTry}
+        errorMessage={modalErrorMessage}
         isOpen={isSubscriptionModalOpen}
         isWithinTrialWindow={isWithinTrialWindow}
-        onClose={() => setSubscriptionModalOpen(false)}
+        loading={loading}
+        onClose={() => {
+          if (!loading) setSubscriptionModalOpen(false);
+        }}
         onConfirm={async (isPromoApplied) => {
-          setSubscriptionModalOpen(false);
           await subscribeGooglePlay(isPromoApplied);
         }}
+        onFallbackCheckout={handleFallbackCheckout}
+        planId={planId}
         selectedInterval={currentInterval}
       />
     </div>
