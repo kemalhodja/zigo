@@ -121,18 +121,18 @@ export async function activateZigoPlus(
     options?.currentPeriodEnd ??
     new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  // 1. Garantili update: users.is_premium = true
+  // 1. Garantili update: users.is_premium = true (ad_free_until)
   try {
     await (db.from("users") as unknown as {
       update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
     })
-      .update({ is_premium: true, updated_at: now.toISOString() })
+      .update({ is_premium: true, ad_free_until: periodEndIso })
       .eq("id", userId);
   } catch (err) {
     console.warn("activateZigoPlus users.is_premium update notice:", err);
   }
 
-  // 2. Garantili upsert: user_subscriptions tablosu
+  // 2. Garantili upsert: user_subscriptions tablosu (schema: user_id, tier, current_period_end, updated_at)
   try {
     await (db.from("user_subscriptions") as unknown as {
       upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
@@ -140,11 +140,9 @@ export async function activateZigoPlus(
       {
         user_id: userId,
         tier: "zigo_plus",
-        status: "active",
         stripe_customer_id: options?.stripeCustomerId ?? null,
         stripe_subscription_id: options?.stripeSubscriptionId ?? null,
         current_period_end: periodEndIso,
-        expires_at: periodEndIso,
         updated_at: now.toISOString(),
       },
       { onConflict: "user_id" },
@@ -183,7 +181,7 @@ export async function deactivateZigoPlus(supabase: SupabaseClient<Database>, use
     await (db.from("users") as unknown as {
       update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
     })
-      .update({ is_premium: false, updated_at: now })
+      .update({ is_premium: false })
       .eq("id", userId);
   } catch (err) {
     console.warn("deactivateZigoPlus users update notice:", err);
@@ -196,7 +194,6 @@ export async function deactivateZigoPlus(supabase: SupabaseClient<Database>, use
       {
         user_id: userId,
         tier: "free",
-        status: "canceled",
         updated_at: now,
       },
       { onConflict: "user_id" },

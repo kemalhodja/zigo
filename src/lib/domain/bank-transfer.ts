@@ -144,7 +144,7 @@ export async function reviewBankTransferRequest(
       await (db.from("users") as unknown as {
         update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
       })
-        .update({ is_premium: true, updated_at: now.toISOString() })
+        .update({ is_premium: true, ad_free_until: periodEndIso })
         .eq("id", reqData.user_id);
     } catch (err) {
       console.warn("reviewBankTransferRequest users update notice:", err);
@@ -157,10 +157,7 @@ export async function reviewBankTransferRequest(
         {
           user_id: reqData.user_id,
           tier: "zigo_plus",
-          status: "active",
-          provider: "bank_transfer",
           current_period_end: periodEndIso,
-          expires_at: periodEndIso,
           updated_at: now.toISOString(),
         },
         { onConflict: "user_id" },

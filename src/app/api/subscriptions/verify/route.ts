@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     await (dbClient.from("users") as unknown as {
       update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
     })
-      .update({ is_premium: true, updated_at: now.toISOString() })
+      .update({ is_premium: true, ad_free_until: expiresAt.toISOString() })
       .eq("id", user.id);
 
     return NextResponse.json({

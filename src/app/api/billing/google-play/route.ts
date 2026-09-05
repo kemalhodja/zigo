@@ -120,14 +120,13 @@ export async function POST(request: Request) {
       // silent
     }
 
-    // 3. Set users.is_premium = true and ad_free_until
+    // 3. Set users.is_premium = true and ad_free_until (users schema does not have updated_at)
     await (dbClient.from("users") as unknown as {
       update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
     })
       .update({
         is_premium: true,
         ad_free_until: finalExpiryTime,
-        updated_at: now.toISOString(),
       })
       .eq("id", profile.id);
 

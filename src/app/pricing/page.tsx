@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
-import { purchaseGooglePlaySubscription } from "@/lib/client/google-play-billing";
+import { purchaseGooglePlaySubscription, restoreGooglePlayPurchases } from "@/lib/client/google-play-billing";
 import { createClient } from "@/lib/supabase/client";
 
 const ROLE_PLANS = {
@@ -409,6 +409,8 @@ export default function PricingPage() {
   } | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -552,6 +554,52 @@ export default function PricingPage() {
     }
   }
 
+  async function handleRestorePurchases() {
+    setRestoreLoading(true);
+    setRestoreMessage(null);
+    try {
+      const purchases = await restoreGooglePlayPurchases();
+      if (!purchases || purchases.length === 0) {
+        setRestoreMessage("Google Play hesabınızda aktif bir abonelik bulunamadı.");
+        setRestoreLoading(false);
+        return;
+      }
+
+      let activated = false;
+      for (const p of purchases) {
+        if (!p.purchaseToken) continue;
+        const res = await fetch("/api/billing/google-play", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            planId: p.planId || "zigo-plus-student-monthly",
+            productId: p.productId || "zigo-plus-student-monthly",
+            purchaseToken: p.purchaseToken,
+            packageName: p.packageName || "com.zigo.education",
+            orderId: p.orderId,
+          }),
+        });
+        if (res.ok) {
+          activated = true;
+        }
+      }
+
+      if (activated) {
+        const { triggerConfetti } = await import("@/lib/client/confetti");
+        triggerConfetti();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        window.location.href = "/billing/success?kind=google_play";
+      } else {
+        setRestoreMessage("Google Play aboneliği sunucuya aktarılamadı.");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setRestoreMessage(msg || "Geri yükleme başarısız.");
+    } finally {
+      setRestoreLoading(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -579,6 +627,21 @@ export default function PricingPage() {
                 <span>Deneme süreniz: <strong>{trialDaysRemaining} gün</strong> kaldı</span>
               </div>
             )}
+
+            <div className="mt-6 flex flex-col items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={handleRestorePurchases}
+                disabled={restoreLoading}
+                className="tap-scale inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+              >
+                <span>🔄</span>
+                <span>{restoreLoading ? "Google Play Kontrol Ediliyor…" : "Mevcut Google Play Aboneliğimi Senkronize Et"}</span>
+              </button>
+              {restoreMessage && (
+                <p className="text-xs font-bold text-amber-700">{restoreMessage}</p>
+              )}
+            </div>
           </div>
         </div>
       </header>

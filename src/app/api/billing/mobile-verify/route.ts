@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     await (dbClient.from("users") as unknown as { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> } })
       .update({
         is_premium: true,
-        updated_at: now.toISOString(),
+        ad_free_until: expiresAt,
       })
       .eq("id", profile.id);
 

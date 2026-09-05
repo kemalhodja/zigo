@@ -138,6 +138,48 @@ export function GooglePlaySubscriptionModal({
     }
   }
 
+  async function handleRestore() {
+    setInternalLoading(true);
+    setInternalError(null);
+    try {
+      const { restoreGooglePlayPurchases } = await import("@/lib/client/google-play-billing");
+      const purchases = await restoreGooglePlayPurchases();
+      if (!purchases || purchases.length === 0) {
+        throw new Error("Google Play hesabınızda aktif bir abonelik bulunamadı.");
+      }
+      let activated = false;
+      for (const p of purchases) {
+        if (!p.purchaseToken) continue;
+        const res = await fetch("/api/billing/google-play", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            planId: p.planId || planId,
+            productId: p.productId || planId,
+            purchaseToken: p.purchaseToken,
+            packageName: p.packageName || "com.zigo.education",
+            orderId: p.orderId,
+          }),
+        });
+        if (res.ok) {
+          activated = true;
+        }
+      }
+      if (activated) {
+        const { triggerConfetti } = await import("@/lib/client/confetti");
+        triggerConfetti();
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        window.location.href = "/billing/success?kind=google_play";
+      } else {
+        throw new Error("Abonelik doğrulanamadı.");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setInternalError(msg);
+      setInternalLoading(false);
+    }
+  }
+
   return (
     <div
       ref={overlayRef}
@@ -290,7 +332,7 @@ export function GooglePlaySubscriptionModal({
           </button>
 
           {/* Secondary Web / Havale Alternative Bar */}
-          <div className="mt-4 flex items-center justify-center gap-4 text-xs font-bold text-slate-500">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-500">
             {onFallbackCheckout && (
               <button
                 type="button"
@@ -313,6 +355,13 @@ export function GooglePlaySubscriptionModal({
             >
               Havale / FAST ile Öde
             </Link>
+            <button
+              type="button"
+              onClick={handleRestore}
+              className="text-amber-600 hover:text-amber-700 underline underline-offset-2"
+            >
+              Aboneliği Geri Yükle
+            </button>
           </div>
         </div>
       </div>

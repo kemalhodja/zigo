@@ -324,6 +324,8 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
         .setOfferToken(offerToken)
         .build();
 
+    final String finalProductId = details.getProductId();
+
     Activity activity = getActivity();
     if (activity == null) {
       rejectPendingPurchase("Activity bulunamadı.");
@@ -341,6 +343,10 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
           );
 
       if (launchResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+        if (launchResult.getResponseCode() == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+          resolveExistingPurchase(finalProductId, planId);
+          return;
+        }
         rejectPendingPurchase("Google Play ödeme penceresi açılamadı (" + launchResult.getResponseCode() + "): " + launchResult.getDebugMessage());
       }
     });
@@ -388,6 +394,8 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
             return;
           }
 
+          final String inappProdId = inappDetails.getProductId();
+
           activity.runOnUiThread(() -> {
             BillingResult launchResult =
               getBillingClient()
@@ -399,6 +407,10 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
                 );
 
             if (launchResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+              if (launchResult.getResponseCode() == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+                resolveExistingPurchase(inappProdId, planId);
+                return;
+              }
               rejectPendingPurchase("Google Play ödeme penceresi açılamadı: " + launchResult.getDebugMessage());
             }
           });
@@ -477,6 +489,41 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
     );
   }
 
+  private void resolveExistingPurchase(String productId, String planId) {
+    getBillingClient().queryPurchasesAsync(
+      QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build(),
+      (subResult, subPurchases) -> {
+        if (subResult.getResponseCode() == BillingClient.BillingResponseCode.OK && subPurchases != null && !subPurchases.isEmpty()) {
+          for (Purchase p : subPurchases) {
+            if (p.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+              acknowledgeIfNeeded(p);
+              String resolvedProdId = p.getProducts().isEmpty() ? productId : p.getProducts().get(0);
+              resolvePendingPurchase(resolvedProdId, p);
+              return;
+            }
+          }
+        }
+
+        getBillingClient().queryPurchasesAsync(
+          QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),
+          (inappResult, inappPurchases) -> {
+            if (inappResult.getResponseCode() == BillingClient.BillingResponseCode.OK && inappPurchases != null && !inappPurchases.isEmpty()) {
+              for (Purchase p : inappPurchases) {
+                if (p.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+                  acknowledgeIfNeeded(p);
+                  String resolvedProdId = p.getProducts().isEmpty() ? productId : p.getProducts().get(0);
+                  resolvePendingPurchase(resolvedProdId, p);
+                  return;
+                }
+              }
+            }
+            rejectPendingPurchase("Bu Google Play aboneliği hesabınızda zaten aktif ancak cihazda doğrulanamadı.");
+          }
+        );
+      }
+    );
+  }
+
   @Override
   public void onPurchasesUpdated(@NonNull BillingResult billingResult, List<Purchase> purchases) {
     if (pendingPurchaseCall == null) {
@@ -485,6 +532,11 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
 
     if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
       rejectPendingPurchase("Satın alma iptal edildi.");
+      return;
+    }
+
+    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+      resolveExistingPurchase(pendingPlanId != null ? pendingPlanId : "zigo_plus", pendingPlanId);
       return;
     }
 
