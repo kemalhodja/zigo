@@ -98,7 +98,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
             href={`/explore?format=teachers${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}`}
             className={`whitespace-nowrap pb-1.5 text-[0.8rem] font-bold transition border-b-2 ${activeFormat === "teachers" ? "text-night border-night" : "text-slate-400 border-transparent hover:text-slate-700"}`}
           >
-            Öğretmenler
+            Kullanıcılar
           </Link>
         </div>
       </section>
@@ -138,8 +138,8 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
           <span className="text-[0.65rem] font-semibold text-white/80">Oyunları keşfet ve XP kazan</span>
         </Link>
       </div>
-      {/* Teacher results for teachers format */}
-      {activeFormat === "teachers" && creators.length > 0 ? (
+      {/* Creator results for search query or teachers format */}
+      {(activeFormat === "teachers" || (activeFormat === "all" && query.trim().length > 0)) && creators.length > 0 ? (
         <section className="-mx-4 bg-white">
           {creators.map((creator, index) => (
             <Link
@@ -155,7 +155,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-black text-white">{creator.full_name}</p>
                 <p className="text-xs font-bold text-slate-400">
-                  {creator.role === "teacher" ? e.teachers : creator.role}
+                  {creator.role === "teacher" ? e.teachers : creator.role === "student" ? "Öğrenci" : creator.role === "parent" ? "Veli" : creator.role}
                   {creator.is_verified ? e.teacherVerifiedBadge : ""}
                 </p>
               </div>
@@ -172,9 +172,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </span>
-          <h2 className="mt-5 text-xl font-black text-slate-900">{e.noTeachers || "Öğretmen Bulunamadı"}</h2>
+          <h2 className="mt-5 text-xl font-black text-slate-900">{e.noTeachers || "Kullanıcı Bulunamadı"}</h2>
           <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-500">
-            Aradığınız kriterlere uygun doğrulanmış öğretmen bulunamadı.
+            Aradığınız kriterlere uygun kullanıcı bulunamadı.
           </p>
         </div>
       ) : null}
