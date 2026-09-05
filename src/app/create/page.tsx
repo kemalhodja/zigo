@@ -184,18 +184,21 @@ async function getCreatePageData(): Promise<{
         };
       }
 
-      const [areas, userAreaIds] = await Promise.all([
+      const [allAreas, userAreaIds] = await Promise.all([
         getEducationAreas(supabase),
         getUserInterestAreaIds(supabase, profile.id),
       ]);
-      const allowedAreas = userAreaIds.length > 0
-        ? areas.filter((area) => userAreaIds.includes(area.id))
-        : areas; // İlgi alanı seçilmemişse tüm alanları kullanabilir
 
+      // Plus abonesi öğrenci/veli her zaman paylaşım yapabilir.
+      // İlgi alanı seçilmemişse tüm alanlar gösterilir.
+      const allowedAreas = userAreaIds.length > 0
+        ? allAreas.filter((area) => userAreaIds.includes(area.id))
+        : allAreas;
+
+      // Hiç alan yoksa bile erişimi engelleme — kullanıcı alanları onboarding'den ekleyebilir.
       return {
-        areas: allowedAreas,
-        canCreate: allowedAreas.length > 0,
-        lockReason: allowedAreas.length > 0 ? undefined : "areas",
+        areas: allowedAreas.length > 0 ? allowedAreas : allAreas,
+        canCreate: true,
         teacherCreatorPlus: false,
         allowDevActivate: canUseDevBillingBypass(),
       };
