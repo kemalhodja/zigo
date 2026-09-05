@@ -162,18 +162,40 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
     pendingPurchaseCall = call;
     pendingPlanId = planId;
 
-    // Build candidate product list to tolerate both custom and standard subscription product IDs
     List<String> candidateProductIds = new ArrayList<>();
-    if (!candidateProductIds.contains(productId)) candidateProductIds.add(productId);
-    if (!candidateProductIds.contains(planId)) candidateProductIds.add(planId);
-    if (!candidateProductIds.contains("zigo_plus")) candidateProductIds.add("zigo_plus");
+    String[] defaults = new String[]{
+      productId,
+      planId,
+      planId.replace("-", "_"),
+      productId.replace("-", "_"),
+      "zigo_plus",
+      "zigo-plus",
+      "zigo_plus_student_monthly",
+      "zigo-plus-student-monthly",
+      "zigo_plus_student_yearly",
+      "zigo-plus-student-yearly",
+      "zigo_plus_teachers_monthly",
+      "zigo-plus-teachers-monthly",
+      "zigo_plus_teachers_yearly",
+      "zigo-plus-teachers-yearly",
+      "zigo_plus_monthly",
+      "zigo-plus-monthly",
+      "zigo_plus_yearly",
+      "zigo-plus-yearly",
+      "student_monthly",
+      "student_yearly",
+      "teachers_monthly",
+      "teachers_yearly",
+      "monthly",
+      "yearly"
+    };
+    for (String id : defaults) {
+      if (id != null && !id.trim().isEmpty() && !candidateProductIds.contains(id.trim())) {
+        candidateProductIds.add(id.trim());
+      }
+    }
 
     boolean isYearly = planId.toLowerCase().contains("yearly") || planId.toLowerCase().contains("yillik");
-    String intervalProductId = isYearly ? "zigo_plus_yearly" : "zigo_plus_monthly";
-    if (!candidateProductIds.contains(intervalProductId)) candidateProductIds.add(intervalProductId);
-
-    String underscorePlanId = planId.replace("-", "_");
-    if (!candidateProductIds.contains(underscorePlanId)) candidateProductIds.add(underscorePlanId);
 
     List<QueryProductDetailsParams.Product> products = new ArrayList<>();
     for (String id : candidateProductIds) {
@@ -192,7 +214,7 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
             QueryProductDetailsParams.newBuilder().setProductList(products).build(),
             (billingResult, productDetailsResult) -> {
               if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-                rejectPendingPurchase(billingResult.getDebugMessage());
+                rejectPendingPurchase("Google Play sorgu hatası (" + billingResult.getResponseCode() + "): " + billingResult.getDebugMessage());
                 return;
               }
 
@@ -202,158 +224,230 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
                   : Collections.emptyList();
 
               if (productDetailsList.isEmpty()) {
-                rejectPendingPurchase("Google Play mağazasında abonelik paketi bulunamadı (" + productId + "). Lütfen Google Play hesabınızı ve bağlantınızı kontrol edin.");
+                queryInAppFallback(candidateProductIds, planId, isYearly, call);
                 return;
               }
 
-              // Pick best matching ProductDetails
-              ProductDetails details = null;
-              for (ProductDetails pd : productDetailsList) {
-                if (productId.equalsIgnoreCase(pd.getProductId())) {
-                  details = pd;
-                  break;
-                }
-              }
-              if (details == null) {
-                for (ProductDetails pd : productDetailsList) {
-                  if (planId.equalsIgnoreCase(pd.getProductId())) {
-                    details = pd;
-                    break;
-                  }
-                }
-              }
-              if (details == null) {
-                for (ProductDetails pd : productDetailsList) {
-                  if (underscorePlanId.equalsIgnoreCase(pd.getProductId())) {
-                    details = pd;
-                    break;
-                  }
-                }
-              }
-              if (details == null) {
-                for (ProductDetails pd : productDetailsList) {
-                  if (intervalProductId.equalsIgnoreCase(pd.getProductId())) {
-                    details = pd;
-                    break;
-                  }
-                }
-              }
-              if (details == null && !productDetailsList.isEmpty()) {
-                details = productDetailsList.get(0);
-              }
-
-              if (
-                details == null ||
-                details.getSubscriptionOfferDetails() == null ||
-                details.getSubscriptionOfferDetails().isEmpty()
-              ) {
-                rejectPendingPurchase("Abonelik teklifi bulunamadı.");
-                return;
-              }
-
-              String requestedOfferId = call.getString("offerToken");
-              ProductDetails.SubscriptionOfferDetails selectedOffer = null;
-
-              // Pass 1: exact basePlanId match + requested offerId match
-              for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
-                if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
-                  if (requestedOfferId != null && !requestedOfferId.isEmpty() && requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
-                    selectedOffer = offer;
-                    break;
-                  }
-                }
-              }
-
-              // Pass 2: exact basePlanId match + base offer (no offerId / default)
-              if (selectedOffer == null) {
-                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
-                  if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
-                    if (offer.getOfferId() == null || offer.getOfferId().isEmpty() || offer.getOfferId().equals("null")) {
-                      selectedOffer = offer;
-                      break;
-                    }
-                  }
-                }
-              }
-
-              // Pass 3: exact basePlanId match (any offer)
-              if (selectedOffer == null) {
-                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
-                  if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
-                    selectedOffer = offer;
-                    break;
-                  }
-                }
-              }
-
-              // Pass 4: interval match in basePlanId (monthly vs yearly)
-              if (selectedOffer == null) {
-                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
-                  String baseId = offer.getBasePlanId() != null ? offer.getBasePlanId().toLowerCase() : "";
-                  boolean matchesInterval = isYearly
-                    ? (baseId.contains("year") || baseId.contains("yil") || baseId.contains("p1y") || baseId.contains("annual"))
-                    : (baseId.contains("month") || baseId.contains("ay") || baseId.contains("p1m"));
-                  if (matchesInterval) {
-                    if (requestedOfferId != null && requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
-                      selectedOffer = offer;
-                      break;
-                    }
-                    if (selectedOffer == null) {
-                      selectedOffer = offer;
-                    }
-                  }
-                }
-              }
-
-              // Pass 5: requested offerId across any base plan
-              if (selectedOffer == null && requestedOfferId != null && !requestedOfferId.isEmpty()) {
-                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
-                  if (requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
-                    selectedOffer = offer;
-                    break;
-                  }
-                }
-              }
-
-              // Pass 6: fallback to first available offer
-              if (selectedOffer == null && !details.getSubscriptionOfferDetails().isEmpty()) {
-                selectedOffer = details.getSubscriptionOfferDetails().get(0);
-              }
-
-              if (selectedOffer == null) {
-                rejectPendingPurchase("Seçilen abonelik planı (" + planId + ") için aktif teklif bulunamadı.");
-                return;
-              }
-
-              String offerToken = selectedOffer.getOfferToken();
-              BillingFlowParams.ProductDetailsParams productDetailsParams =
-                BillingFlowParams.ProductDetailsParams.newBuilder()
-                  .setProductDetails(details)
-                  .setOfferToken(offerToken)
-                  .build();
-
-              Activity activity = getActivity();
-              if (activity == null) {
-                rejectPendingPurchase("Activity bulunamadı.");
-                return;
-              }
-
-              BillingResult launchResult =
-                getBillingClient()
-                  .launchBillingFlow(
-                    activity,
-                    BillingFlowParams.newBuilder()
-                      .setProductDetailsParamsList(Collections.singletonList(productDetailsParams))
-                      .build()
-                  );
-
-              if (launchResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-                rejectPendingPurchase(launchResult.getDebugMessage());
-              }
+              launchSubscriptionFlow(productDetailsList, candidateProductIds, planId, isYearly, call);
             }
           ),
       call
     );
+  }
+
+  private void launchSubscriptionFlow(
+    List<ProductDetails> productDetailsList,
+    List<String> candidateProductIds,
+    String planId,
+    boolean isYearly,
+    PluginCall call
+  ) {
+    ProductDetails details = null;
+    for (String candidate : candidateProductIds) {
+      for (ProductDetails pd : productDetailsList) {
+        if (candidate.equalsIgnoreCase(pd.getProductId())) {
+          details = pd;
+          break;
+        }
+      }
+      if (details != null) break;
+    }
+    if (details == null && !productDetailsList.isEmpty()) {
+      details = productDetailsList.get(0);
+    }
+
+    if (
+      details == null ||
+      details.getSubscriptionOfferDetails() == null ||
+      details.getSubscriptionOfferDetails().isEmpty()
+    ) {
+      rejectPendingPurchase("Abonelik teklifi bulunamadı.");
+      return;
+    }
+
+    String requestedOfferId = call.getString("offerToken");
+    ProductDetails.SubscriptionOfferDetails selectedOffer = null;
+
+    for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+      if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
+        if (requestedOfferId != null && !requestedOfferId.isEmpty() && requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
+          selectedOffer = offer;
+          break;
+        }
+      }
+    }
+
+    if (selectedOffer == null && requestedOfferId != null && !requestedOfferId.isEmpty()) {
+      for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+        if (requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
+          selectedOffer = offer;
+          break;
+        }
+      }
+    }
+
+    if (selectedOffer == null) {
+      for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+        if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
+          selectedOffer = offer;
+          break;
+        }
+      }
+    }
+
+    if (selectedOffer == null) {
+      for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+        String baseId = offer.getBasePlanId() != null ? offer.getBasePlanId().toLowerCase() : "";
+        boolean matchesInterval = isYearly
+          ? (baseId.contains("year") || baseId.contains("yil") || baseId.contains("p1y") || baseId.contains("annual"))
+          : (baseId.contains("month") || baseId.contains("ay") || baseId.contains("p1m"));
+        if (matchesInterval) {
+          selectedOffer = offer;
+          break;
+        }
+      }
+    }
+
+    if (selectedOffer == null && !details.getSubscriptionOfferDetails().isEmpty()) {
+      selectedOffer = details.getSubscriptionOfferDetails().get(0);
+    }
+
+    if (selectedOffer == null) {
+      rejectPendingPurchase("Seçilen abonelik planı (" + planId + ") için aktif teklif bulunamadı.");
+      return;
+    }
+
+    String offerToken = selectedOffer.getOfferToken();
+    BillingFlowParams.ProductDetailsParams productDetailsParams =
+      BillingFlowParams.ProductDetailsParams.newBuilder()
+        .setProductDetails(details)
+        .setOfferToken(offerToken)
+        .build();
+
+    Activity activity = getActivity();
+    if (activity == null) {
+      rejectPendingPurchase("Activity bulunamadı.");
+      return;
+    }
+
+    activity.runOnUiThread(() -> {
+      BillingResult launchResult =
+        getBillingClient()
+          .launchBillingFlow(
+            activity,
+            BillingFlowParams.newBuilder()
+              .setProductDetailsParamsList(Collections.singletonList(productDetailsParams))
+              .build()
+          );
+
+      if (launchResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+        rejectPendingPurchase("Google Play ödeme penceresi açılamadı (" + launchResult.getResponseCode() + "): " + launchResult.getDebugMessage());
+      }
+    });
+  }
+
+  private void queryInAppFallback(
+    List<String> candidateProductIds,
+    String planId,
+    boolean isYearly,
+    PluginCall call
+  ) {
+    List<QueryProductDetailsParams.Product> inappProducts = new ArrayList<>();
+    for (String id : candidateProductIds) {
+      inappProducts.add(
+        QueryProductDetailsParams.Product.newBuilder()
+          .setProductId(id)
+          .setProductType(BillingClient.ProductType.INAPP)
+          .build()
+      );
+    }
+
+    getBillingClient()
+      .queryProductDetailsAsync(
+        QueryProductDetailsParams.newBuilder().setProductList(inappProducts).build(),
+        (inappBillingResult, inappProductDetailsResult) -> {
+          List<ProductDetails> inappList =
+            inappProductDetailsResult != null && inappProductDetailsResult.getProductDetailsList() != null
+              ? inappProductDetailsResult.getProductDetailsList()
+              : Collections.emptyList();
+
+          if (inappList.isEmpty()) {
+            rejectPendingPurchase("Google Play Console'da aktif abonelik ürünü bulunamadı (" + planId + "). Lütfen ürünün Play Console'da 'Etkin' (Active) durumda ve test kullanıcısının ekli olduğunu doğrulayın.");
+            return;
+          }
+
+          ProductDetails inappDetails = inappList.get(0);
+          BillingFlowParams.ProductDetailsParams inappParams =
+            BillingFlowParams.ProductDetailsParams.newBuilder()
+              .setProductDetails(inappDetails)
+              .build();
+
+          Activity activity = getActivity();
+          if (activity == null) {
+            rejectPendingPurchase("Activity bulunamadı.");
+            return;
+          }
+
+          activity.runOnUiThread(() -> {
+            BillingResult launchResult =
+              getBillingClient()
+                .launchBillingFlow(
+                  activity,
+                  BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(Collections.singletonList(inappParams))
+                    .build()
+                );
+
+            if (launchResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+              rejectPendingPurchase("Google Play ödeme penceresi açılamadı: " + launchResult.getDebugMessage());
+            }
+          });
+        }
+      );
+  }
+
+  @PluginMethod
+  public void openSubscriptionsPage(PluginCall call) {
+    try {
+      android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+      intent.setData(android.net.Uri.parse("https://play.google.com/store/account/subscriptions?package=com.zigo.education"));
+      intent.setPackage("com.android.vending");
+      Activity activity = getActivity();
+      if (activity != null) {
+        activity.startActivity(intent);
+        call.resolve();
+      } else {
+        call.reject("Activity bulunamadı");
+      }
+    } catch (Exception e) {
+      try {
+        android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+        intent.setData(android.net.Uri.parse("https://play.google.com/store/account/subscriptions?package=com.zigo.education"));
+        getActivity().startActivity(intent);
+        call.resolve();
+      } catch (Exception ex) {
+        call.reject("Google Play açılamadı: " + ex.getMessage());
+      }
+    }
+  }
+
+  @PluginMethod
+  public void openPlayStoreApp(PluginCall call) {
+    try {
+      android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+      intent.setData(android.net.Uri.parse("market://details?id=com.zigo.education"));
+      getActivity().startActivity(intent);
+      call.resolve();
+    } catch (Exception e) {
+      try {
+        android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+        intent.setData(android.net.Uri.parse("https://play.google.com/store/apps/details?id=com.zigo.education"));
+        getActivity().startActivity(intent);
+        call.resolve();
+      } catch (Exception ex) {
+        call.reject("Play Store açılamadı: " + ex.getMessage());
+      }
+    }
   }
 
   @PluginMethod

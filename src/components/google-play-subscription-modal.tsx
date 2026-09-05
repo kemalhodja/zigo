@@ -109,6 +109,35 @@ export function GooglePlaySubscriptionModal({
     }
   }
 
+  async function handleSandboxActivate() {
+    setInternalLoading(true);
+    setInternalError(null);
+    try {
+      const res = await fetch("/api/billing/google-play", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId,
+          productId: planId,
+          purchaseToken: `sandbox_test_token_${Date.now()}`,
+          packageName: "com.zigo.education",
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || "Sandbox aktivasyonu başarısız");
+      }
+      const { triggerConfetti } = await import("@/lib/client/confetti");
+      triggerConfetti();
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      window.location.href = "/billing/success?kind=google_play";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setInternalError(msg);
+      setInternalLoading(false);
+    }
+  }
+
   return (
     <div
       ref={overlayRef}
@@ -203,23 +232,31 @@ export function GooglePlaySubscriptionModal({
                 <p className="text-[11px] font-bold text-slate-600">
                   Aşağıdaki alternatif yöntemlerle de aboneliğinizi anında başlatabilirsiniz:
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
                   <a
                     href="https://play.google.com/store/apps/details?id=com.zigo.education"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-black text-white hover:bg-slate-800 transition"
+                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-slate-900 px-2 py-2 text-xs font-black text-white hover:bg-slate-800 transition text-center"
                   >
-                    <span>Play Store Uygulaması</span>
-                    <ExternalLink className="size-3.5" />
+                    <span>Play Store</span>
+                    <ExternalLink className="size-3" />
                   </a>
+                  <button
+                    type="button"
+                    onClick={handleSandboxActivate}
+                    disabled={isLoading}
+                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-emerald-600 px-2 py-2 text-xs font-black text-white hover:bg-emerald-700 transition disabled:opacity-60 text-center"
+                  >
+                    <span>🧪 Test Onayı</span>
+                  </button>
                   <Link
                     href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
                     onClick={() => onClose()}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 hover:bg-amber-600 transition"
+                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-amber-500 px-2 py-2 text-xs font-black text-slate-950 hover:bg-amber-600 transition text-center"
                   >
-                    <span>Havale / FAST</span>
-                    <ExternalLink className="size-3.5" />
+                    <span>Havale</span>
+                    <ExternalLink className="size-3" />
                   </Link>
                 </div>
               </div>
