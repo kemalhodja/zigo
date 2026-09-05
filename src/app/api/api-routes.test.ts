@@ -196,6 +196,80 @@ describe("API route handlers", () => {
     expect(createSocialPost).toHaveBeenCalled();
   });
 
+  it("POST /api/social/posts allows student with Zigo Plus to publish", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue({
+      id: "s1",
+      role: "student",
+      is_verified: false,
+    } as never);
+    vi.mocked(getUserSubscription).mockResolvedValue({ tier: "zigo_plus", isPremium: true });
+    vi.mocked(createSocialPost).mockResolvedValue({ id: "p-student" } as never);
+
+    const response = await socialPostsPost(
+      new Request("http://localhost/api/social/posts", {
+        method: "POST",
+        body: JSON.stringify({ caption: "Öğrenci notu", areaId: 1 }),
+      }),
+    );
+    expect(response.status).toBe(201);
+  });
+
+  it("POST /api/social/posts rejects student without Zigo Plus", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue({
+      id: "s2",
+      role: "student",
+      is_verified: false,
+    } as never);
+    vi.mocked(getUserSubscription).mockResolvedValue({ tier: "free", isPremium: false });
+
+    const response = await socialPostsPost(
+      new Request("http://localhost/api/social/posts", {
+        method: "POST",
+        body: JSON.stringify({ caption: "Öğrenci notu", areaId: 1 }),
+      }),
+    );
+    expect(response.status).toBe(403);
+    const body = await response.json();
+    expect(body.error).toContain("Zigo Plus");
+  });
+
+  it("POST /api/social/posts allows parent with Zigo Plus to publish", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue({
+      id: "par1",
+      role: "parent",
+      is_verified: false,
+    } as never);
+    vi.mocked(getUserSubscription).mockResolvedValue({ tier: "zigo_plus", isPremium: true });
+    vi.mocked(createSocialPost).mockResolvedValue({ id: "p-parent" } as never);
+
+    const response = await socialPostsPost(
+      new Request("http://localhost/api/social/posts", {
+        method: "POST",
+        body: JSON.stringify({ caption: "Veli tavsiyesi", areaId: 1 }),
+      }),
+    );
+    expect(response.status).toBe(201);
+  });
+
+  it("POST /api/social/posts rejects parent without Zigo Plus", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue({
+      id: "par2",
+      role: "parent",
+      is_verified: false,
+    } as never);
+    vi.mocked(getUserSubscription).mockResolvedValue({ tier: "free", isPremium: false });
+
+    const response = await socialPostsPost(
+      new Request("http://localhost/api/social/posts", {
+        method: "POST",
+        body: JSON.stringify({ caption: "Veli tavsiyesi", areaId: 1 }),
+      }),
+    );
+    expect(response.status).toBe(403);
+    const body = await response.json();
+    expect(body.error).toContain("Zigo Plus");
+  });
+
   it("POST /api/learn/quiz requires auth", async () => {
     vi.mocked(getCurrentProfile).mockResolvedValue(null);
     const response = await learnQuizPost(

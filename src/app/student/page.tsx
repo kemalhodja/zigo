@@ -379,7 +379,7 @@ async function getStudentDashboardData(): Promise<{
     city: profileLoc.city ?? null,
     district: profileLoc.district ?? null,
     schoolName: profile.school_name,
-    planGroups: resolveProfilePlanGroups("student", false, parseOrganizationType(profile.organization_type)),
+    planGroups: resolveProfilePlanGroups("student", false, parseOrganizationType(profile.organization_type), profile.created_at),
     leaderboard,
     leaderboardAreaName,
     viewerId: profile.id,

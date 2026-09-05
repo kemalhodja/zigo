@@ -105,6 +105,7 @@ export default async function TeacherPage({
     "teacher",
     false,
     organizationType,
+    profile.created_at,
   );
   const m = await getServerMessages();
   const d = m.dashboard;

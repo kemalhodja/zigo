@@ -276,7 +276,7 @@ async function getParentData(): Promise<{
     district: profileLoc.district ?? null,
     schoolName: profile.school_name,
     classroom: profile.classroom,
-    planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type)),
+    planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type), profile.created_at),
     profileId: profile.id,
     userCreatedAt: profile.created_at ?? undefined,
   };

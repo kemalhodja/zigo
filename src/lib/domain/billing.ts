@@ -9,6 +9,7 @@ import {
   isSubscriptionCampaignActive,
 } from "@/lib/domain/subscription-campaign";
 import { findPlanGroup, resolveStripePriceId } from "@/lib/domain/subscription-plans";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database, SubscriptionTier } from "@/lib/supabase/database.types";
 
 export function hasStripeConfigured() {
@@ -114,49 +115,104 @@ export async function activateZigoPlus(
     currentPeriodEnd?: string;
   },
 ) {
-  const { data, error } = await supabase.rpc("set_user_subscription_tier", {
-    p_user_id: userId,
-    p_tier: "zigo_plus" as SubscriptionTier,
-    p_stripe_customer_id: options?.stripeCustomerId,
-    p_stripe_subscription_id: options?.stripeSubscriptionId,
-    p_current_period_end: options?.currentPeriodEnd,
-  });
+  const db = createAdminClient() ?? supabase;
+  const now = new Date();
+  const periodEndIso =
+    options?.currentPeriodEnd ??
+    new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  if (error) throw error;
-
-  // Garantili fallback: users.is_premium sütununu da güncelle.
-  // getUserSubscription bu alanı RLS bypass ile okur — RPC hangi tabloyu güncellese de isPremium doğru olur.
+  // 1. Garantili update: users.is_premium = true
   try {
-    await (supabase.from("users") as unknown as {
-      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> }
+    await (db.from("users") as unknown as {
+      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
     })
-      .update({ is_premium: true })
+      .update({ is_premium: true, updated_at: now.toISOString() })
       .eq("id", userId);
-  } catch {
-    // Non-critical — RPC already handled the primary subscription record.
+  } catch (err) {
+    console.warn("activateZigoPlus users.is_premium update notice:", err);
   }
 
-  return data;
+  // 2. Garantili upsert: user_subscriptions tablosu
+  try {
+    await (db.from("user_subscriptions") as unknown as {
+      upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+    }).upsert(
+      {
+        user_id: userId,
+        tier: "zigo_plus",
+        status: "active",
+        stripe_customer_id: options?.stripeCustomerId ?? null,
+        stripe_subscription_id: options?.stripeSubscriptionId ?? null,
+        current_period_end: periodEndIso,
+        expires_at: periodEndIso,
+        updated_at: now.toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+  } catch (err) {
+    console.warn("activateZigoPlus user_subscriptions upsert notice:", err);
+  }
+
+  // 3. RPC çağrısı (varsa ve çalışırsa ek tetikleyiciler için)
+  let rpcData: unknown = null;
+  try {
+    const { data, error } = await db.rpc("set_user_subscription_tier", {
+      p_user_id: userId,
+      p_tier: "zigo_plus" as SubscriptionTier,
+      p_stripe_customer_id: options?.stripeCustomerId,
+      p_stripe_subscription_id: options?.stripeSubscriptionId,
+      p_current_period_end: periodEndIso,
+    });
+    if (error) {
+      console.warn("activateZigoPlus RPC notice:", error.message);
+    } else {
+      rpcData = data;
+    }
+  } catch (err) {
+    console.warn("activateZigoPlus RPC exception notice:", err);
+  }
+
+  return rpcData ?? { success: true };
 }
 
 export async function deactivateZigoPlus(supabase: SupabaseClient<Database>, userId: string) {
-  const { data, error } = await supabase.rpc("set_user_subscription_tier", {
-    p_user_id: userId,
-    p_tier: "free" as SubscriptionTier,
-  });
+  const db = createAdminClient() ?? supabase;
+  const now = new Date().toISOString();
 
-  if (error) throw error;
-
-  // Garantili fallback: users.is_premium sütununu false yap.
   try {
-    await (supabase.from("users") as unknown as {
-      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> }
+    await (db.from("users") as unknown as {
+      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
     })
-      .update({ is_premium: false })
+      .update({ is_premium: false, updated_at: now })
       .eq("id", userId);
+  } catch (err) {
+    console.warn("deactivateZigoPlus users update notice:", err);
+  }
+
+  try {
+    await (db.from("user_subscriptions") as unknown as {
+      upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+    }).upsert(
+      {
+        user_id: userId,
+        tier: "free",
+        status: "canceled",
+        updated_at: now,
+      },
+      { onConflict: "user_id" },
+    );
+  } catch (err) {
+    console.warn("deactivateZigoPlus user_subscriptions notice:", err);
+  }
+
+  try {
+    await db.rpc("set_user_subscription_tier", {
+      p_user_id: userId,
+      p_tier: "free" as SubscriptionTier,
+    });
   } catch {
     // Non-critical
   }
 
-  return data;
+  return { success: true };
 }

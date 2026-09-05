@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { activateZigoPlus, canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
@@ -16,7 +17,8 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const data = await activateZigoPlus(supabase, profile.id, {
+    const dbClient = createAdminClient() ?? supabase;
+    const data = await activateZigoPlus(dbClient, profile.id, {
       currentPeriodEnd: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
     });
 

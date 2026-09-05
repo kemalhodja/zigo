@@ -33,20 +33,34 @@ export async function GET(request: Request) {
 
     const { data: usersInWindow } = await admin!
       .from("users")
-      .select("id")
+      .select("id, is_premium")
       .gte("created_at", windowStart.toISOString())
       .lte("created_at", windowEnd.toISOString());
 
     if (!usersInWindow || usersInWindow.length === 0) return;
 
-    const windowIds = usersInWindow.map((u) => u.id);
-    const { data: premiumCheck } = await admin!
-      .from("user_subscriptions")
-      .select("user_id")
-      .in("user_id", windowIds)
-      .eq("tier", "zigo_plus");
+    const alreadyPremiumUserIds = new Set(
+      usersInWindow.filter((u) => u.is_premium === true).map((u) => u.id),
+    );
+    const windowIds = usersInWindow.map((u) => u.id).filter((id) => !alreadyPremiumUserIds.has(id));
+    if (windowIds.length === 0) return;
 
-    const premiumIds = new Set((premiumCheck ?? []).map((s) => s.user_id));
+    const { data: premiumCheck } = await (admin!
+      .from("user_subscriptions") as unknown as {
+      select: (cols: string) => {
+        in: (col: string, vals: string[]) => Promise<{
+          data: Array<{ user_id: string; tier?: string; status?: string }> | null;
+        }>;
+      };
+    })
+      .select("user_id, tier, status")
+      .in("user_id", windowIds);
+
+    const premiumIds = new Set(
+      (premiumCheck ?? [])
+        .filter((s) => s.tier === "zigo_plus" || s.status === "active")
+        .map((s) => s.user_id),
+    );
     const freeIds = windowIds.filter((id) => !premiumIds.has(id));
 
     results[label].found = freeIds.length;

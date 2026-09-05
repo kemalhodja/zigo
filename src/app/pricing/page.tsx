@@ -259,28 +259,58 @@ function usePricingSubscription(): SubscriptionState {
           return;
         }
 
-        const { data, error } = await supabase
-          .from("user_subscriptions")
-          .select("tier, current_period_end")
-          .eq("user_id", user.id)
+        // 1. user_subscriptions kontrolü (multi-row toleranslı)
+        try {
+          const { data: subs } = await (supabase.from("user_subscriptions") as unknown as {
+            select: (cols: string) => {
+              eq: (col: string, val: string) => {
+                order: (col2: string, opts: { ascending: boolean }) => {
+                  limit: (n: number) => Promise<{
+                    data: Array<{
+                      tier?: string | null;
+                      status?: string | null;
+                      current_period_end?: string | null;
+                      expires_at?: string | null;
+                    }> | null;
+                  }>;
+                };
+              };
+            };
+          })
+            .select("tier, status, current_period_end, expires_at")
+            .eq("user_id", user.id)
+            .order("updated_at", { ascending: false })
+            .limit(5);
+
+          if (Array.isArray(subs) && subs.length > 0) {
+            const now = Date.now();
+            const isActive = subs.some((s) => {
+              const isPlus = s.tier === "zigo_plus" || s.status === "active" || s.status === "trialing";
+              if (!isPlus) return false;
+              const end = s.current_period_end || s.expires_at;
+              return !end || new Date(end).getTime() > now;
+            });
+
+            if (isActive) {
+              if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+              return;
+            }
+          }
+        } catch {
+          // silent
+        }
+
+        // 2. users tablosu: is_premium & created_at
+        const { data: userData } = await supabase
+          .from("users")
+          .select("is_premium, created_at")
+          .eq("id", user.id)
           .maybeSingle();
 
-        if (error) throw error;
-
-        const tier = (data?.tier ?? "free") as "free" | "zigo_plus";
-        const periodEnd = data?.current_period_end ? new Date(data.current_period_end) : null;
-        const isActivePaidPremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
-
-        if (isActivePaidPremium) {
+        if (userData?.is_premium === true) {
           if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false });
           return;
         }
-
-        const { data: userData } = await supabase
-          .from("users")
-          .select("created_at")
-          .eq("id", user.id)
-          .maybeSingle();
 
         let isTrialActive = false;
         let trialDaysRemaining = 0;
@@ -289,7 +319,7 @@ function usePricingSubscription(): SubscriptionState {
           const createdTime = new Date(userData.created_at).getTime();
           const diffTime = Date.now() - createdTime;
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays < 7) {
+          if (diffDays >= 0 && diffDays < 7) {
             isTrialActive = true;
             trialDaysRemaining = Math.max(0, 6 - diffDays);
           }

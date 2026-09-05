@@ -6,6 +6,7 @@ import {
   findPlanGroup,
   resolveSubscriptionPeriodEnd,
 } from "@/lib/domain/subscription-plans";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   BankTransferRequestStatus,
   Database,
@@ -118,11 +119,10 @@ export async function reviewBankTransferRequest(
   input: z.infer<typeof reviewBankTransferSchema>,
 ) {
   const parsed = reviewBankTransferSchema.parse(input);
+  const reqData = await getBankTransferRequestById(supabase, parsed.requestId);
   const periodEnd =
     parsed.status === "approved"
-      ? resolveSubscriptionPeriodEnd(
-          (await getBankTransferRequestById(supabase, parsed.requestId)).plan_id,
-        )
+      ? resolveSubscriptionPeriodEnd(reqData.plan_id)
       : null;
 
   const { data, error } = await supabase.rpc("review_bank_transfer_request", {
@@ -133,6 +133,43 @@ export async function reviewBankTransferRequest(
   });
 
   if (error) throw error;
+
+  // Havale onaylandıysa users.is_premium ve user_subscriptions'ı doğrudan senkronize et
+  if (parsed.status === "approved" && reqData.user_id) {
+    const db = createAdminClient() ?? supabase;
+    const now = new Date();
+    const periodEndIso = periodEnd ? new Date(periodEnd).toISOString() : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    try {
+      await (db.from("users") as unknown as {
+        update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
+      })
+        .update({ is_premium: true, updated_at: now.toISOString() })
+        .eq("id", reqData.user_id);
+    } catch (err) {
+      console.warn("reviewBankTransferRequest users update notice:", err);
+    }
+
+    try {
+      await (db.from("user_subscriptions") as unknown as {
+        upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+      }).upsert(
+        {
+          user_id: reqData.user_id,
+          tier: "zigo_plus",
+          status: "active",
+          provider: "bank_transfer",
+          current_period_end: periodEndIso,
+          expires_at: periodEndIso,
+          updated_at: now.toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+    } catch (err) {
+      console.warn("reviewBankTransferRequest user_subscriptions notice:", err);
+    }
+  }
+
   return data;
 }
 

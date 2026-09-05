@@ -24,21 +24,65 @@ async function fetchTrialStatusUncached(): Promise<TrialSubscription> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
 
-  const { data } = await supabase
-    .from("user_subscriptions")
-    .select("tier, current_period_end")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  // 1. user_subscriptions kontrolü (multi-row toleranslı)
+  try {
+    const { data: subs } = await (supabase.from("user_subscriptions") as unknown as {
+      select: (cols: string) => {
+        eq: (col: string, val: string) => {
+          order: (col2: string, opts: { ascending: boolean }) => {
+            limit: (n: number) => Promise<{
+              data: Array<{
+                tier?: string | null;
+                status?: string | null;
+                current_period_end?: string | null;
+                expires_at?: string | null;
+              }> | null;
+            }>;
+          };
+        };
+      };
+    })
+      .select("tier, status, current_period_end, expires_at")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(5);
 
-  const tier = (data?.tier ?? "free") as "free" | "zigo_plus";
-  const periodEnd = data?.current_period_end ? new Date(data.current_period_end) : null;
-  const isActivePaidPremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
-  if (isActivePaidPremium) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
+    if (Array.isArray(subs) && subs.length > 0) {
+      const now = Date.now();
+      const isActive = subs.some((s) => {
+        const isPlus = s.tier === "zigo_plus" || s.status === "active" || s.status === "trialing";
+        if (!isPlus) return false;
+        const end = s.current_period_end || s.expires_at;
+        return !end || new Date(end).getTime() > now;
+      });
+      if (isActive) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
+    }
+  } catch {
+    // silent
+  }
 
-  const { data: userData } = await supabase.from("users").select("created_at").eq("id", user.id).maybeSingle();
-  if (!userData?.created_at) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
-  const diffDays = Math.floor((Date.now() - new Date(userData.created_at).getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays < 7) return { isTrial: true, trialDaysRemaining: Math.max(0, 6 - diffDays), isLoading: false };
+  // 2. users.is_premium ve created_at kontrolü
+  try {
+    const { data: userData } = await supabase
+      .from("users")
+      .select("is_premium, created_at")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (userData?.is_premium === true) {
+      return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
+    }
+
+    if (userData?.created_at) {
+      const diffDays = Math.floor((Date.now() - new Date(userData.created_at).getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays >= 0 && diffDays < 7) {
+        return { isTrial: true, trialDaysRemaining: Math.max(0, 6 - diffDays), isLoading: false };
+      }
+    }
+  } catch {
+    // silent
+  }
+
   return { isTrial: false, trialDaysRemaining: 0, isLoading: false };
 }
 

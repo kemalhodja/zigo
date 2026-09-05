@@ -1,3 +1,4 @@
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -10,16 +11,10 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user has Zigo Plus subscription
-  const { data: subscription } = await supabase
-    .from("user_subscriptions")
-    .select("tier")
-    .eq("user_id", user.id)
-    .single();
+  // Check if user has Zigo Plus subscription (multi-source resilient check)
+  const subscription = await getUserSubscription(supabase, user.id);
 
-  const isPremium = subscription?.tier === "zigo_plus";
-
-  if (!isPremium) {
+  if (!subscription.isPremium) {
     return Response.json(
       { error: "Zigo Plus aboneliği gerektirir", upgradeRequired: true },
       { status: 402 }
@@ -54,15 +49,9 @@ export async function GET() {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: subscription } = await supabase
-    .from("user_subscriptions")
-    .select("tier")
-    .eq("user_id", user.id)
-    .single();
+  const subscription = await getUserSubscription(supabase, user.id);
 
-  const isPremium = subscription?.tier === "zigo_plus";
-
-  if (!isPremium) {
+  if (!subscription.isPremium) {
     return Response.json(
       { error: "Zigo Plus aboneliği gerektirir", upgradeRequired: true },
       { status: 402 }

@@ -26,19 +26,41 @@ function useActivationPoller(skip: boolean): ActivationStatus {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Check user_subscriptions first
-        const { data: sub } = await supabase
-          .from("user_subscriptions")
-          .select("tier, current_period_end")
+        // Check user_subscriptions (multi-row safe)
+        const { data: subs } = await (supabase.from("user_subscriptions") as unknown as {
+          select: (cols: string) => {
+            eq: (col: string, val: string) => {
+              order: (col2: string, opts: { ascending: boolean }) => {
+                limit: (n: number) => Promise<{
+                  data: Array<{
+                    tier?: string | null;
+                    status?: string | null;
+                    current_period_end?: string | null;
+                    expires_at?: string | null;
+                  }> | null;
+                }>;
+              };
+            };
+          };
+        })
+          .select("tier, status, current_period_end, expires_at")
           .eq("user_id", user.id)
-          .maybeSingle();
+          .order("updated_at", { ascending: false })
+          .limit(5);
 
-        const periodEnd = sub?.current_period_end ? new Date(sub.current_period_end) : null;
-        const isActive = sub?.tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
+        if (Array.isArray(subs) && subs.length > 0) {
+          const now = Date.now();
+          const isActive = subs.some((s) => {
+            const isPlus = s.tier === "zigo_plus" || s.status === "active";
+            if (!isPlus) return false;
+            const end = s.current_period_end || s.expires_at;
+            return !end || new Date(end).getTime() > now;
+          });
 
-        if (isActive) {
-          setStatus("active");
-          return;
+          if (isActive) {
+            setStatus("active");
+            return;
+          }
         }
 
         // Fallback: check users.is_premium

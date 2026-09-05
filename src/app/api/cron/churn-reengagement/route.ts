@@ -67,8 +67,17 @@ export async function GET(request: Request) {
 
     if (!churnedUsers || churnedUsers.length === 0) continue;
 
-    const userIds = churnedUsers.map((s) => s.user_id);
+    const rawUserIds = churnedUsers.map((s) => s.user_id);
+    const { data: activeUsers } = await admin
+      .from("users")
+      .select("id")
+      .in("id", rawUserIds)
+      .eq("is_premium", true);
+    const activeSet = new Set((activeUsers ?? []).map((u) => u.id));
+    const userIds = rawUserIds.filter((id) => !activeSet.has(id));
+
     results[campaign.label].found = userIds.length;
+    if (userIds.length === 0) continue;
 
     await sendPushToUsers(userIds, {
       title: campaign.title,
