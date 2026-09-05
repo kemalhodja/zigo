@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { verifyAppleSubscription } from "@/lib/server/apple-iap";
-import { verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, verifyGooglePlaySubscription } from "@/lib/server/google-play";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     const planId = body.planId || body.productId || "zigo-plus-student-monthly";
     const now = new Date();
     let expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    let resolvedOrderId: string | null = body.orderId ?? null;
 
     // ── Enforce Secure Verification ─────────────────────────────────────────
     if (body.platform === "ios") {
@@ -52,41 +53,56 @@ export async function POST(request: Request) {
           { status: 500 },
         );
       }
-    } else if (body.platform === "android") {
-      if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
-        try {
-          const packageName = body.packageName || "com.zigo.app";
-          const verified = await verifyGooglePlaySubscription(
-            body.purchaseToken,
-            body.productId || "zigo_plus",
-            packageName,
-          );
-          type GooglePlayPayload = { expiryTimeMillis?: string | number };
-          const payload = verified as GooglePlayPayload | null;
-          if (payload?.expiryTimeMillis) {
-            expiresAt = new Date(Number(payload.expiryTimeMillis)).toISOString();
-          }
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : "Bilinmeyen hata";
-          return NextResponse.json(
-            { error: `Google Play doğrulama hatası: ${message}` },
-            { status: 400 },
-          );
+    } else {
+      // Android / Google Play (default)
+      try {
+        const packageName = body.packageName || DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+        const verified = await verifyGooglePlaySubscription(
+          body.purchaseToken,
+          body.productId || planId,
+          packageName,
+        );
+
+        if (!verified.isValid) {
+          return NextResponse.json({ error: "Google Play aboneliği doğrulanamadı." }, { status: 400 });
         }
-      } else {
+
+        if (verified.expiryTimeIso) {
+          expiresAt = verified.expiryTimeIso;
+        }
+        if (verified.orderId) {
+          resolvedOrderId = verified.orderId;
+        }
+
+        // Call RPC for google play
+        await supabase.rpc("record_google_play_purchase", {
+          p_user_id: profile.id,
+          p_plan_id: planId,
+          p_product_id: verified.productId || body.productId || planId,
+          p_purchase_token: body.purchaseToken,
+          p_order_id: resolvedOrderId ?? undefined,
+          p_package_name: packageName,
+          p_expiry_time: expiresAt,
+        }).then(({ error }) => {
+          if (error) console.warn("record_google_play_purchase RPC:", error.message);
+        });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Bilinmeyen hata";
         return NextResponse.json(
-          { error: "Sunucu hatası: Google Play servis hesabı yapılandırılmamış." },
-          { status: 500 },
+          { error: `Google Play doğrulama hatası: ${message}` },
+          { status: 400 },
         );
       }
     }
 
-    // Save subscription in database
-    const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as { upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }> }).upsert(
+    // Save subscription in database (user_subscriptions)
+    const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as {
+      upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+    }).upsert(
       {
         user_id: profile.id,
         plan_id: planId,
-        product_id: body.productId || "zigo_plus",
+        product_id: body.productId || planId,
         tier: "zigo_plus",
         status: "active",
         started_at: now.toISOString(),
@@ -94,7 +110,7 @@ export async function POST(request: Request) {
         expires_at: expiresAt,
         provider: body.platform === "ios" ? "apple" : "google_play",
         receipt_token: body.purchaseToken,
-        order_id: body.orderId ?? null,
+        order_id: resolvedOrderId,
       },
       { onConflict: "user_id" },
     );

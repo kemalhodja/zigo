@@ -288,17 +288,19 @@ function PlanPriceRow({
     setLoading(true);
     setMessage("");
 
+    const productId = planId;
     let purchaseToken: string | null = null;
     let orderId: string | null = null;
-    
-    // Use the specific Google Play product ID based on planId
-    const productId = planId;
+    let resolvedProductId = productId;
+    let resolvedPackageName = "com.zigo.education";
     const offerToken = isPromoApplied ? "zigo_50_offer" : undefined;
 
     try {
       const nativePurchase = await purchaseGooglePlaySubscription({ productId, planId, offerToken });
       purchaseToken = nativePurchase.purchaseToken || null;
       orderId = nativePurchase.orderId || null;
+      resolvedProductId = nativePurchase.productId || productId;
+      resolvedPackageName = nativePurchase.packageName || "com.zigo.education";
     } catch (nativeErr) {
       const errString =
         nativeErr instanceof Error
@@ -323,9 +325,9 @@ function PlanPriceRow({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planId,
-          productId,
+          productId: resolvedProductId,
           purchaseToken,
-          packageName: "com.zigo.app",
+          packageName: resolvedPackageName,
           orderId,
         }),
       });

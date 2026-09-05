@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
-import { verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, verifyGooglePlaySubscription } from "@/lib/server/google-play";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,7 +11,7 @@ const googlePlaySchema = z.object({
   planId: z.string().trim().min(3).max(80).default("zigo-plus-student-monthly"),
   productId: z.string().trim().min(3).max(80).default("zigo-plus-student-monthly"),
   purchaseToken: z.string().trim().min(5),
-  packageName: z.string().trim().min(3).default("com.zigo.app"),
+  packageName: z.string().trim().min(3).default(DEFAULT_GOOGLE_PLAY_PACKAGE_NAME),
   orderId: z.string().trim().optional().nullable(),
   expiryTime: z.string().trim().optional().nullable(),
   offerToken: z.string().trim().optional().nullable(),
@@ -38,28 +38,31 @@ export async function POST(request: Request) {
     }
 
     let verifiedExpiryTime: string | null = body.expiryTime ?? null;
+    let verifiedOrderId: string | null = body.orderId ?? null;
+    let isTrial = false;
 
-    // Verify with official Google Play Developer API if credentials are present in env
-    if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
-      try {
-        const verifiedPurchase = await verifyGooglePlaySubscription(
-          body.purchaseToken,
-          body.productId,
-          body.packageName,
-        );
-        type GooglePlayPayload = { expiryTimeMillis?: string | number };
-        const payload = verifiedPurchase as GooglePlayPayload | null;
-        if (payload?.expiryTimeMillis) {
-          verifiedExpiryTime = new Date(Number(payload.expiryTimeMillis)).toISOString();
-        }
-      } catch (gplayErr) {
-        console.warn("Google Play API verification skipped or failed:", gplayErr);
+    // Verify with official Google Play Developer API (with robust sandbox/v2 fallback)
+    try {
+      const verifiedPurchase = await verifyGooglePlaySubscription(
+        body.purchaseToken,
+        body.productId,
+        body.packageName,
+      );
+      if (verifiedPurchase.expiryTimeIso) {
+        verifiedExpiryTime = verifiedPurchase.expiryTimeIso;
       }
+      if (verifiedPurchase.orderId) {
+        verifiedOrderId = verifiedPurchase.orderId;
+      }
+      isTrial = Boolean(verifiedPurchase.isTrial);
+    } catch (gplayErr) {
+      console.warn("Google Play API verification notice:", gplayErr);
     }
 
-    // Default to 7 days trial/subscription period if expiry time is not set
+    // Default expiry if not resolved
     const now = new Date();
-    const defaultExpiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const defaultDays = body.planId.includes("yearly") ? 365 : 30;
+    const defaultExpiry = new Date(now.getTime() + defaultDays * 24 * 60 * 60 * 1000).toISOString();
     const finalExpiryTime = verifiedExpiryTime || defaultExpiry;
 
     // 1. Record Google Play Purchase via RPC
@@ -68,7 +71,7 @@ export async function POST(request: Request) {
       p_plan_id: body.planId,
       p_product_id: body.productId,
       p_purchase_token: body.purchaseToken,
-      p_order_id: body.orderId ?? undefined,
+      p_order_id: verifiedOrderId ?? undefined,
       p_package_name: body.packageName,
       p_expiry_time: finalExpiryTime,
     });
@@ -79,7 +82,9 @@ export async function POST(request: Request) {
 
     // 2. Direct Sync with user_subscriptions table for status='active' & tier='zigo_plus'
     const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
-    const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as { upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }> }).upsert(
+    const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as {
+      upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+    }).upsert(
       {
         user_id: profile.id,
         plan_id: body.planId,
@@ -91,7 +96,7 @@ export async function POST(request: Request) {
         expires_at: finalExpiryTime,
         provider: "google_play",
         receipt_token: body.purchaseToken,
-        order_id: body.orderId ?? null,
+        order_id: verifiedOrderId ?? null,
       },
       { onConflict: "user_id" },
     );
@@ -100,8 +105,10 @@ export async function POST(request: Request) {
       console.warn("user_subscriptions upsert notice:", upsertErr.message);
     }
 
-    // 3. Set users.is_premium = true (is the field getUserSubscription reads as fallback)
-    await (dbClient.from("users") as unknown as { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> } })
+    // 3. Set users.is_premium = true (the field getUserSubscription reads as fallback)
+    await (dbClient.from("users") as unknown as {
+      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
+    })
       .update({
         is_premium: true,
         updated_at: now.toISOString(),
@@ -110,13 +117,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Google Play ZigoPlus aboneliğiniz ve 7 günlük denemeniz aktifleştirildi!",
+      message: isTrial
+        ? "Google Play Zigo Plus 7 günlük denemeniz ve aboneliğiniz aktifleştirildi!"
+        : "Google Play Zigo Plus aboneliğiniz başarıyla aktifleştirildi!",
       data: {
         userId: profile.id,
         productId: body.productId,
         planId: body.planId,
         status: "active",
         tier: "zigo_plus",
+        isTrial,
         expiresAt: finalExpiryTime,
         rpcData,
       },
@@ -129,4 +139,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
-

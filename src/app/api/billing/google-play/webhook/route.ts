@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, verifyGooglePlaySubscription } from "@/lib/server/google-play";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
     const purchaseToken = subNotif.purchaseToken;
     const subscriptionId = subNotif.subscriptionId ?? "zigo_plus";
-    const packageName = notification.packageName ?? "com.zigo.app";
+    const packageName = notification.packageName ?? DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
     const notificationType = subNotif.notificationType ?? 0;
 
     const adminClient = createAdminClient();
@@ -82,10 +82,10 @@ export async function POST(request: Request) {
     if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
       try {
         const verifiedPurchase = await verifyGooglePlaySubscription(purchaseToken, subscriptionId, packageName);
-        type GooglePlayPayload = { expiryTimeMillis?: string | number };
-        const payload = verifiedPurchase as GooglePlayPayload | null;
-        if (payload?.expiryTimeMillis) {
-          expiresAtIso = new Date(Number(payload.expiryTimeMillis)).toISOString();
+        if (verifiedPurchase.expiryTimeIso) {
+          expiresAtIso = verifiedPurchase.expiryTimeIso;
+        } else if (verifiedPurchase.expiryTimeMillis) {
+          expiresAtIso = new Date(Number(verifiedPurchase.expiryTimeMillis)).toISOString();
         }
       } catch (err) {
         console.warn("[GOOGLE_PLAY_WEBHOOK] API verify error:", err);

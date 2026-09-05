@@ -43,7 +43,7 @@ export async function verifyGooglePlayPurchase(payload: {
         productId: payload.productId ?? IAP_PRODUCT_IDS.ZIGO_PLUS,
         purchaseToken: payload.purchaseToken,
         orderId: payload.orderId ?? null,
-        packageName: payload.packageName ?? "com.zigo.app",
+        packageName: payload.packageName ?? "com.zigo.education",
       }),
     });
 

@@ -162,12 +162,28 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
     pendingPurchaseCall = call;
     pendingPlanId = planId;
 
-    List<QueryProductDetailsParams.Product> products = Collections.singletonList(
-      QueryProductDetailsParams.Product.newBuilder()
-        .setProductId(productId)
-        .setProductType(BillingClient.ProductType.SUBS)
-        .build()
-    );
+    // Build candidate product list to tolerate both custom and standard subscription product IDs
+    List<String> candidateProductIds = new ArrayList<>();
+    if (!candidateProductIds.contains(productId)) candidateProductIds.add(productId);
+    if (!candidateProductIds.contains(planId)) candidateProductIds.add(planId);
+    if (!candidateProductIds.contains("zigo_plus")) candidateProductIds.add("zigo_plus");
+
+    boolean isYearly = planId.toLowerCase().contains("yearly") || planId.toLowerCase().contains("yillik");
+    String intervalProductId = isYearly ? "zigo_plus_yearly" : "zigo_plus_monthly";
+    if (!candidateProductIds.contains(intervalProductId)) candidateProductIds.add(intervalProductId);
+
+    String underscorePlanId = planId.replace("-", "_");
+    if (!candidateProductIds.contains(underscorePlanId)) candidateProductIds.add(underscorePlanId);
+
+    List<QueryProductDetailsParams.Product> products = new ArrayList<>();
+    for (String id : candidateProductIds) {
+      products.add(
+        QueryProductDetailsParams.Product.newBuilder()
+          .setProductId(id)
+          .setProductType(BillingClient.ProductType.SUBS)
+          .build()
+      );
+    }
 
     ensureConnected(
       () ->
@@ -186,12 +202,48 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
                   : Collections.emptyList();
 
               if (productDetailsList.isEmpty()) {
-                rejectPendingPurchase("Google Play ürünü bulunamadı: " + productId);
+                rejectPendingPurchase("Google Play mağazasında abonelik paketi bulunamadı (" + productId + "). Lütfen Google Play hesabınızı ve bağlantınızı kontrol edin.");
                 return;
               }
 
-              ProductDetails details = productDetailsList.get(0);
+              // Pick best matching ProductDetails
+              ProductDetails details = null;
+              for (ProductDetails pd : productDetailsList) {
+                if (productId.equalsIgnoreCase(pd.getProductId())) {
+                  details = pd;
+                  break;
+                }
+              }
+              if (details == null) {
+                for (ProductDetails pd : productDetailsList) {
+                  if (planId.equalsIgnoreCase(pd.getProductId())) {
+                    details = pd;
+                    break;
+                  }
+                }
+              }
+              if (details == null) {
+                for (ProductDetails pd : productDetailsList) {
+                  if (underscorePlanId.equalsIgnoreCase(pd.getProductId())) {
+                    details = pd;
+                    break;
+                  }
+                }
+              }
+              if (details == null) {
+                for (ProductDetails pd : productDetailsList) {
+                  if (intervalProductId.equalsIgnoreCase(pd.getProductId())) {
+                    details = pd;
+                    break;
+                  }
+                }
+              }
+              if (details == null && !productDetailsList.isEmpty()) {
+                details = productDetailsList.get(0);
+              }
+
               if (
+                details == null ||
                 details.getSubscriptionOfferDetails() == null ||
                 details.getSubscriptionOfferDetails().isEmpty()
               ) {
@@ -202,33 +254,74 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
               String requestedOfferId = call.getString("offerToken");
               ProductDetails.SubscriptionOfferDetails selectedOffer = null;
 
+              // Pass 1: exact basePlanId match + requested offerId match
               for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
-                if (planId.equals(offer.getBasePlanId())) {
-                  if (requestedOfferId != null && !requestedOfferId.isEmpty()) {
-                    if (requestedOfferId.equals(offer.getOfferId())) {
-                      selectedOffer = offer;
-                      break;
-                    }
-                  } else {
-                    if (offer.getOfferId() == null || offer.getOfferId().equals("null") || offer.getOfferId().isEmpty()) {
-                      selectedOffer = offer;
-                      break;
-                    }
-                  }
-                }
-              }
-
-              if (selectedOffer == null) {
-                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
-                  if (planId.equals(offer.getBasePlanId())) {
+                if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
+                  if (requestedOfferId != null && !requestedOfferId.isEmpty() && requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
                     selectedOffer = offer;
                     break;
                   }
                 }
               }
 
+              // Pass 2: exact basePlanId match + base offer (no offerId / default)
               if (selectedOffer == null) {
-                rejectPendingPurchase("Seçilen abonelik planı (" + planId + ") bulunamadı.");
+                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+                  if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
+                    if (offer.getOfferId() == null || offer.getOfferId().isEmpty() || offer.getOfferId().equals("null")) {
+                      selectedOffer = offer;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              // Pass 3: exact basePlanId match (any offer)
+              if (selectedOffer == null) {
+                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+                  if (planId.equalsIgnoreCase(offer.getBasePlanId())) {
+                    selectedOffer = offer;
+                    break;
+                  }
+                }
+              }
+
+              // Pass 4: interval match in basePlanId (monthly vs yearly)
+              if (selectedOffer == null) {
+                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+                  String baseId = offer.getBasePlanId() != null ? offer.getBasePlanId().toLowerCase() : "";
+                  boolean matchesInterval = isYearly
+                    ? (baseId.contains("year") || baseId.contains("yil") || baseId.contains("p1y") || baseId.contains("annual"))
+                    : (baseId.contains("month") || baseId.contains("ay") || baseId.contains("p1m"));
+                  if (matchesInterval) {
+                    if (requestedOfferId != null && requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
+                      selectedOffer = offer;
+                      break;
+                    }
+                    if (selectedOffer == null) {
+                      selectedOffer = offer;
+                    }
+                  }
+                }
+              }
+
+              // Pass 5: requested offerId across any base plan
+              if (selectedOffer == null && requestedOfferId != null && !requestedOfferId.isEmpty()) {
+                for (ProductDetails.SubscriptionOfferDetails offer : details.getSubscriptionOfferDetails()) {
+                  if (requestedOfferId.equalsIgnoreCase(offer.getOfferId())) {
+                    selectedOffer = offer;
+                    break;
+                  }
+                }
+              }
+
+              // Pass 6: fallback to first available offer
+              if (selectedOffer == null && !details.getSubscriptionOfferDetails().isEmpty()) {
+                selectedOffer = details.getSubscriptionOfferDetails().get(0);
+              }
+
+              if (selectedOffer == null) {
+                rejectPendingPurchase("Seçilen abonelik planı (" + planId + ") için aktif teklif bulunamadı.");
                 return;
               }
 
@@ -308,7 +401,9 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
 
     for (Purchase purchase : purchases) {
       if (purchase.getProducts().isEmpty()) continue;
-      acknowledgeIfNeeded(purchase);
+      if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+        acknowledgeIfNeeded(purchase);
+      }
       resolvePendingPurchase(purchase.getProducts().get(0), purchase);
       return;
     }
@@ -317,7 +412,7 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
   }
 
   private void acknowledgeIfNeeded(Purchase purchase) {
-    if (purchase.isAcknowledged()) return;
+    if (purchase.isAcknowledged() || purchase.getPurchaseState() != Purchase.PurchaseState.PURCHASED) return;
     getBillingClient()
       .acknowledgePurchase(
         AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.getPurchaseToken()).build(),
@@ -331,7 +426,7 @@ public class ZigoPlayBillingPlugin extends Plugin implements PurchasesUpdatedLis
     payload.put("planId", planId);
     payload.put("purchaseToken", purchase.getPurchaseToken());
     payload.put("orderId", purchase.getOrderId() == null ? "" : purchase.getOrderId());
-    payload.put("packageName", purchase.getPackageName());
+    payload.put("packageName", purchase.getPackageName() == null ? "com.zigo.education" : purchase.getPackageName());
     return payload;
   }
 
