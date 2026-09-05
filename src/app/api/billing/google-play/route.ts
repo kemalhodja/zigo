@@ -100,10 +100,10 @@ export async function POST(request: Request) {
       console.warn("user_subscriptions upsert notice:", upsertErr.message);
     }
 
-    // 3. Update profile subscription_tier to 'zigo_plus'
+    // 3. Set users.is_premium = true (is the field getUserSubscription reads as fallback)
     await (dbClient.from("users") as unknown as { update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> } })
       .update({
-        subscription_tier: "zigo_plus",
+        is_premium: true,
         updated_at: now.toISOString(),
       })
       .eq("id", profile.id);

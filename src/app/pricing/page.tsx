@@ -289,9 +289,9 @@ function usePricingSubscription(): SubscriptionState {
           const createdTime = new Date(userData.created_at).getTime();
           const diffTime = Date.now() - createdTime;
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays <= 7) {
+          if (diffDays < 7) {
             isTrialActive = true;
-            trialDaysRemaining = Math.max(0, 7 - diffDays);
+            trialDaysRemaining = Math.max(0, 6 - diffDays);
           }
         }
 
@@ -337,15 +337,30 @@ export default function PricingPage() {
         return;
       }
 
+      // planId: teacher -> teachers, others -> student
+      const planId = role === "teacher"
+        ? "zigo-plus-teachers-monthly"
+        : role === "institution"
+          ? "zigo-plus-educational-institutions-monthly"
+          : role === "platform"
+            ? "zigo-plus-platform-monthly"
+            : role === "publisher"
+              ? "zigo-plus-publisher-monthly"
+              : "zigo-plus-student-monthly";
+
       const response = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, interval: "monthly" }),
+        body: JSON.stringify({ planId }),
       });
 
-      const data = await response.json();
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      const result = await response.json();
+      // API returns { data: { url, planId } }
+      const checkoutUrl = result?.data?.url ?? result?.checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        console.error("Checkout URL not found in response:", result);
       }
     } catch (error) {
       console.error("Checkout error:", error);

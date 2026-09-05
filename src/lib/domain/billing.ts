@@ -123,6 +123,19 @@ export async function activateZigoPlus(
   });
 
   if (error) throw error;
+
+  // Garantili fallback: users.is_premium sütununu da güncelle.
+  // getUserSubscription bu alanı RLS bypass ile okur — RPC hangi tabloyu güncellese de isPremium doğru olur.
+  try {
+    await (supabase.from("users") as unknown as {
+      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> }
+    })
+      .update({ is_premium: true })
+      .eq("id", userId);
+  } catch {
+    // Non-critical — RPC already handled the primary subscription record.
+  }
+
   return data;
 }
 
@@ -133,5 +146,17 @@ export async function deactivateZigoPlus(supabase: SupabaseClient<Database>, use
   });
 
   if (error) throw error;
+
+  // Garantili fallback: users.is_premium sütununu false yap.
+  try {
+    await (supabase.from("users") as unknown as {
+      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> }
+    })
+      .update({ is_premium: false })
+      .eq("id", userId);
+  } catch {
+    // Non-critical
+  }
+
   return data;
 }
