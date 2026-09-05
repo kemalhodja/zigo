@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
 import type { SubscriptionTier } from "@/lib/supabase/database.types";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type UserSubscription = {
   tier: SubscriptionTier;
@@ -10,14 +11,26 @@ export type UserSubscription = {
   trialDaysRemaining?: number;
 };
 
+/**
+ * Kullanıcının abonelik durumunu döndürür.
+ *
+ * Kritik: user_subscriptions ve users tablolarını RLS'yi devre dışı bırakan
+ * Admin (Service Role) istemciyle okur. RLS politikaları bazen sessizce
+ * data: null döndürür (hata fırlatmaz) ve isPremium yanlışlıkla false olur.
+ * Admin client bu sorunu köklü olarak çözer.
+ *
+ * Eğer admin env yoksa (geliştirme/preview), normal supabase client'a düşer.
+ */
 export async function getUserSubscription(
   supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<UserSubscription> {
-  // ── Step 1: Check paid subscription ──────────────────────────────────────
-  let isActivePaidPremium = false;
+  // Admin client: RLS'yi tamamen bypass eder — abonelik hiçbir zaman yanlış okunmaz.
+  const db = createAdminClient() ?? supabase;
+
+  // ── Step 1: Paid subscription kontrolü ───────────────────────────────────
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("user_subscriptions")
       .select("tier, current_period_end")
       .eq("user_id", userId)
@@ -26,7 +39,8 @@ export async function getUserSubscription(
     if (!error && data) {
       const tier = (data.tier ?? "free") as SubscriptionTier;
       const periodEnd = data.current_period_end ? new Date(data.current_period_end) : null;
-      isActivePaidPremium = tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
+      const isActivePaidPremium =
+        tier === "zigo_plus" && (!periodEnd || periodEnd.getTime() > Date.now());
 
       if (isActivePaidPremium) {
         return {
@@ -38,33 +52,35 @@ export async function getUserSubscription(
       }
     }
   } catch {
-    // RLS or network error — fall through to trial check
+    // DB veya ağ hatası — trial kontrolüne geç
   }
 
-  // ── Step 2: Check 7-day trial via users.created_at ───────────────────────
+  // ── Step 2: 7 Günlük Ücretsiz Trial kontrolü ─────────────────────────────
   let isTrialActive = false;
   let trialDaysRemaining = 0;
   try {
-    const { data: user } = await supabase
+    const { data: user } = await db
       .from("users")
       .select("created_at")
       .eq("id", userId)
       .maybeSingle();
 
     if (user?.created_at) {
-      const createdTime = new Date(user.created_at).getTime();
-      const diffDays = Math.floor((Date.now() - createdTime) / (1000 * 60 * 60 * 24));
-      // 7-day full trial: days 0-6 inclusive (< 7)
+      const diffDays = Math.floor(
+        (Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24),
+      );
+      // 7 günlük trial: kayıt gününden itibaren 0-6. gün (< 7)
       if (diffDays < 7) {
         isTrialActive = true;
         trialDaysRemaining = Math.max(0, 6 - diffDays);
       }
     }
   } catch {
-    // Fail open — do not block user just because we can't verify trial status
+    // Fail-open: trial durumu okunamazsa kullanıcıyı bloklama
   }
 
-  const isPremium = isActivePaidPremium || isTrialActive;
+  // Step 1'de isPremium bulunduysa zaten döndük. Buraya geldiysek ödeme yoktu.
+  const isPremium = isTrialActive;
 
   return {
     tier: isPremium ? "zigo_plus" : "free",
