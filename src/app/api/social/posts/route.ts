@@ -80,9 +80,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Gönderi paylaşmak için öğretmen, yayıncı/kurum, veya Zigo Plus abonesi öğrenci/veli hesabı gereklidir." }, { status: 403 });
     }
 
+    const subscription = await getUserSubscription(supabase, profile.id);
+    const isSubscribed = Boolean(subscription?.isPremium || profile.is_premium === true);
+
     if (profile.role === "student" || profile.role === "parent") {
-      const subscription = await getUserSubscription(supabase, profile.id);
-      if (!subscription || !subscription.isPremium) {
+      if (!isSubscribed) {
         console.warn("[SERVER_POST_REJECTED] Unsubscribed student/parent attempted post creation:", profile.id);
         return NextResponse.json(
           { error: "Öğrenciler ve Veliler gönderi paylaşabilmek için aktif bir Zigo Plus abonesi olmalıdır." },
@@ -118,7 +120,6 @@ export async function POST(request: Request) {
       dailyPostCount = 0;
     }
 
-    const subscription = await getUserSubscription(supabase, profile.id);
     const isStudentOrParent = profile.role === "student" || profile.role === "parent";
     const isCreator = !isStudentOrParent; // teacher, education_institution, education_platform, publisher
 
@@ -131,7 +132,7 @@ export async function POST(request: Request) {
     if (isStudentOrParent) {
       MAX_DAILY_POSTS = 2;
     } else if (isCreator) {
-      MAX_DAILY_POSTS = subscription.isPremium ? Infinity : 1;
+      MAX_DAILY_POSTS = isSubscribed ? Infinity : 1;
     }
 
     if (dailyPostCount >= MAX_DAILY_POSTS) {

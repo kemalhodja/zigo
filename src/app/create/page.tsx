@@ -19,6 +19,9 @@ const demoAreas: ComposerArea[] = [
   { id: 6, area_name: "YKS Fizik", age_group: "9-12. Sınıf" },
 ];
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type CreatePageProps = {
   searchParams: Promise<{ mode?: string; pack?: string }>;
 };
@@ -171,10 +174,11 @@ async function getCreatePageData(): Promise<{
     }
 
     const subscription = await getUserSubscription(supabase, profile.id);
+    const isSubscribed = Boolean(subscription.isPremium || profile.is_premium === true);
 
     // Öğrenci ve Veliler Zigo Plus abonesi ise paylaşım yapabilir:
     if (profile.role === "student" || profile.role === "parent") {
-      if (!subscription.isPremium) {
+      if (!isSubscribed) {
         return {
           areas: [],
           canCreate: false,
@@ -191,13 +195,13 @@ async function getCreatePageData(): Promise<{
 
       // Plus abonesi öğrenci/veli her zaman paylaşım yapabilir.
       // İlgi alanı seçilmemişse tüm alanlar gösterilir.
+      const resolvedAreas = allAreas.length > 0 ? allAreas : demoAreas;
       const allowedAreas = userAreaIds.length > 0
-        ? allAreas.filter((area) => userAreaIds.includes(area.id))
-        : allAreas;
+        ? resolvedAreas.filter((area) => userAreaIds.includes(area.id))
+        : resolvedAreas;
 
-      // Hiç alan yoksa bile erişimi engelleme — kullanıcı alanları onboarding'den ekleyebilir.
       return {
-        areas: allowedAreas.length > 0 ? allowedAreas : allAreas,
+        areas: allowedAreas.length > 0 ? allowedAreas : resolvedAreas,
         canCreate: true,
         teacherCreatorPlus: false,
         allowDevActivate: canUseDevBillingBypass(),
