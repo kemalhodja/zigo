@@ -41,9 +41,6 @@ export async function checkRateLimitAsync(key: string, limit: number, windowMs: 
   const isRestRedis = Boolean(redisUrl?.startsWith("https://") && redisToken);
 
   if (!isRestRedis) {
-    if (process.env.NODE_ENV === "production") {
-      return { allowed: false, retryAfterSeconds: 60 };
-    }
     return checkLocalRateLimit(key, limit, windowMs);
   }
 
@@ -74,9 +71,6 @@ export async function checkRateLimitAsync(key: string, limit: number, windowMs: 
     };
   } catch (error) {
     console.error("[RATE_LIMIT_REDIS_ERROR]", error);
-    if (process.env.NODE_ENV === "production") {
-      return { allowed: false, retryAfterSeconds: 60 };
-    }
     return checkLocalRateLimit(key, limit, windowMs);
   }
 }
