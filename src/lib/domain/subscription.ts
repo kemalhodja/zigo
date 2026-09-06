@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 import type { SubscriptionTier } from "@/lib/supabase/database.types";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export type UserSubscription = {
   tier: SubscriptionTier;

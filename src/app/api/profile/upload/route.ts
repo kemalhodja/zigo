@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,9 +12,6 @@ const ALLOWED_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
-  "image/heic",
-  "image/heif",
-  "image/svg+xml",
 ]);
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 const EXTENSION_BY_TYPE = new Map([
@@ -22,10 +20,27 @@ const EXTENSION_BY_TYPE = new Map([
   ["image/png", "png"],
   ["image/webp", "webp"],
   ["image/gif", "gif"],
-  ["image/heic", "heic"],
-  ["image/heif", "heif"],
-  ["image/svg+xml", "svg"],
 ]);
+
+async function hasValidImageSignature(file: File) {
+  const header = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const ascii = (start: number, length: number) => String.fromCharCode(...header.slice(start, start + length));
+  const startsWith = (...bytes: number[]) => bytes.every((byte, index) => header[index] === byte);
+
+  switch (file.type) {
+    case "image/jpeg":
+    case "image/jpg":
+      return startsWith(0xff, 0xd8, 0xff);
+    case "image/png":
+      return startsWith(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    case "image/gif":
+      return ascii(0, 6) === "GIF87a" || ascii(0, 6) === "GIF89a";
+    case "image/webp":
+      return ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP";
+    default:
+      return false;
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -36,6 +51,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rateLimit = await checkRateLimitAsync(`profile-upload:${profile.id}`, 20, 60 * 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla görsel yükledin. Lütfen daha sonra tekrar dene." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file");
     const kind = String(formData.get("kind") ?? "avatar");
@@ -44,13 +67,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File is required." }, { status: 400 });
     }
 
-    const isImageType = file.type.startsWith("image/") || ALLOWED_TYPES.has(file.type);
-    if (!isImageType) {
+    if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json({ error: "Lütfen geçerli bir görsel dosyası seçin (JPG, PNG, WEBP)." }, { status: 400 });
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
       return NextResponse.json({ error: "Görsel en fazla 10 MB olabilir." }, { status: 400 });
+    }
+
+    if (!(await hasValidImageSignature(file))) {
+      return NextResponse.json({ error: "Dosya içeriği bildirilen görsel türüyle eşleşmiyor." }, { status: 400 });
     }
 
     const extension = EXTENSION_BY_TYPE.get(file.type) ?? "jpg";
@@ -70,22 +96,10 @@ export async function POST(request: Request) {
     if (!primaryError) {
       imageUrl = supabase.storage.from("avatars").getPublicUrl(objectPath).data.publicUrl;
     } else {
-      // 2. Fallback to 'social-media' storage bucket if 'avatars' bucket is missing or restricted
-      const fallbackPath = isCover ? `covers/${objectPath}` : `avatars/${objectPath}`;
-      const { error: fallbackError } = await supabase.storage.from("social-media").upload(fallbackPath, file, {
-        contentType: file.type || "image/jpeg",
-        upsert: true,
-      });
-
-      if (!fallbackError) {
-        imageUrl = supabase.storage.from("social-media").getPublicUrl(fallbackPath).data.publicUrl;
-      } else {
-        // 3. Resilient fallback: convert to base64 Data URL so photo NEVER fails to save
-        const arrayBuffer = await file.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString("base64");
-        const mime = file.type || "image/jpeg";
-        imageUrl = `data:${mime};base64,${base64}`;
-      }
+      return NextResponse.json(
+        { error: primaryError.message ?? "Görsel yüklenemedi. Profil storage alanını kontrol edin." },
+        { status: 400 },
+      );
     }
 
     if (!imageUrl) {

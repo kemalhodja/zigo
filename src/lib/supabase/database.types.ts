@@ -149,6 +149,50 @@ export type Database = {
           },
         ]
       }
+      user_feedback: {
+        Row: {
+          admin_note: string | null
+          category: string
+          content: string
+          created_at: string
+          id: string
+          resolved_at: string | null
+          status: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          category: string
+          content: string
+          created_at?: string
+          id?: string
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_mentor_logs: {
         Row: {
           advice_text: string

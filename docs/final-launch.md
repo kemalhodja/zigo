@@ -46,7 +46,7 @@ npm run test:ci
 | --- | --- |
 | `test:repo:fast` | Green locally before push |
 | `test:acceptance` | ≥95/100 |
-| `/api/setup/health` | `migrationTarget: 91`, `readyCount === totalCount` |
+| `/api/setup/health` | `migrationTarget: 118`, `readyCount === totalCount` |
 | Role QA | Student, parent, teacher, admin paths on hosted URL |
 | Legal | External review of `/legal/*` (non-automated) |
 

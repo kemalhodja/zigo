@@ -13,7 +13,7 @@ import {
   hasBankTransferConfigured,
   resolveBankTransferPlan,
 } from "@/lib/domain/bank-transfer";
-import { getBillingPlatformMessage, isAndroidCapacitorUserAgent } from "@/lib/domain/billing-platform";
+import { isAndroidCapacitorUserAgent } from "@/lib/domain/billing-platform";
 import {
   buildOrganizationSalesWhatsAppUrl,
   shouldBlockSelfServeOrgCheckout,

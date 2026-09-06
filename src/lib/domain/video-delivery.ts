@@ -24,6 +24,7 @@ export function isMuxEnabled() {
 
 export function getVideoPlaybackUrl(storagePath: string) {
   if (!storagePath) return storagePath;
+  if (storagePath.startsWith("/api/social/media?")) return storagePath;
   const normalized = storagePath.replace(/^\//, "");
   if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("blob:") || normalized.startsWith("data:")) {
     // Already absolute: if it's a Supabase storage URL and Bunny is enabled, rewrite to Bunny pull zone
@@ -31,6 +32,10 @@ export function getVideoPlaybackUrl(storagePath: string) {
       const bunnyBase = `https://${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE!.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
       const pathPart = normalized.split("/storage/v1/object/public/social-media/")[1] ?? normalized;
       return `${bunnyBase}/${pathPart}`;
+    }
+    if (normalized.includes("/storage/v1/object/public/social-media/")) {
+      const pathPart = normalized.split("/storage/v1/object/public/social-media/")[1] ?? "";
+      if (pathPart) return getPrivateSocialMediaUrl(pathPart);
     }
     return storagePath;
   }
@@ -57,7 +62,11 @@ export function getVideoPlaybackUrl(storagePath: string) {
   // 4) Fallback: Supabase public URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, "");
   if (!supabaseUrl) return storagePath;
-  return `${supabaseUrl}/storage/v1/object/public/social-media/${normalized}`;
+  return getPrivateSocialMediaUrl(normalized);
+}
+
+export function getPrivateSocialMediaUrl(storagePath: string) {
+  return `/api/social/media?path=${encodeURIComponent(storagePath.replace(/^\//, ""))}`;
 }
 
 function generateBunnyToken(_path: string): string {

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createComment, getPostComments } from "@/lib/domain/social";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Yorum yapmak için lütfen giriş yapın." }, { status: 401 });
     }
 
-    const rateLimit = checkRateLimit(`comment:${profile.id}`, 10, 60_000);
+    const rateLimit = await checkRateLimitAsync(`comment:${profile.id}`, 10, 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         `Çok fazla yorum gönderdiniz. Lütfen ${rateLimit.retryAfterSeconds} saniye sonra tekrar deneyin.`,

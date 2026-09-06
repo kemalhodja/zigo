@@ -2,6 +2,26 @@
 
 export const DEFAULT_GOOGLE_PLAY_PACKAGE_NAME = "com.zigo.education";
 
+/** The Android package is a server configuration, never caller-controlled. */
+export function getGooglePlayPackageName() {
+  return process.env.GOOGLE_PLAY_PACKAGE_NAME?.trim()
+    || process.env.NEXT_PUBLIC_GOOGLE_PLAY_PACKAGE_NAME?.trim()
+    || DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+}
+
+function getGooglePlayServiceAccount() {
+  // Accept the old deployment name during the migration, but use one canonical
+  // name in new environments.
+  return process.env.GOOGLE_PLAY_SERVICE_ACCOUNT?.trim()
+    || process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON?.trim()
+    || "";
+}
+
+function allowTestPurchaseFallback() {
+  return process.env.NODE_ENV === "test"
+    || (process.env.NODE_ENV !== "production" && process.env.GOOGLE_PLAY_ALLOW_TEST_PURCHASES === "true");
+}
+
 export type GooglePlayVerificationResult = {
   isValid: boolean;
   orderId?: string | null;
@@ -64,14 +84,18 @@ export async function verifyGooglePlaySubscription(
   productId?: string,
   packageName?: string,
 ): Promise<GooglePlayVerificationResult> {
-  const targetPackageName = packageName || process.env.NEXT_PUBLIC_GOOGLE_PLAY_PACKAGE_NAME || DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+  const configuredPackageName = getGooglePlayPackageName();
+  if (packageName && packageName !== configuredPackageName) {
+    throw new Error("Google Play paket adı yapılandırılmış Android uygulamasıyla eşleşmiyor.");
+  }
+  const targetPackageName = configuredPackageName;
   const targetProductId = productId || "zigo-plus-student-monthly";
 
-  const rawEnv = process.env.GOOGLE_PLAY_SERVICE_ACCOUNT?.trim();
+  const rawEnv = getGooglePlayServiceAccount();
 
   // If service account is not configured in this environment (preview, local dev, or staging before credentials added)
-  if (!rawEnv) {
-    console.warn("[GOOGLE_PLAY_VERIFY] GOOGLE_PLAY_SERVICE_ACCOUNT is not configured. Running in sandbox/fallback mode.");
+  if (!rawEnv && allowTestPurchaseFallback()) {
+    console.warn("[GOOGLE_PLAY_VERIFY] Using explicitly non-production test purchase fallback.");
     const now = Date.now();
     const expiryMs = now + 30 * 24 * 60 * 60 * 1000;
     return {
@@ -87,6 +111,10 @@ export async function verifyGooglePlaySubscription(
       autoRenewing: true,
       raw: { sandbox: true },
     };
+  }
+
+  if (!rawEnv) {
+    throw new Error("Google Play doğrulama servisi yapılandırılmamış. Satın alma onaylanamadı.");
   }
 
   const credentials = parseServiceAccountJson(rawEnv);

@@ -1,6 +1,8 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 
+import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
+
 type SocialAvatarProps = {
   accent?: string;
   className?: string;
@@ -29,7 +31,7 @@ export function SocialAvatar({
     <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} ${ring ? "p-0.5" : ""} ${className}`}>
       <span className="relative flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white text-[0.68rem] font-black text-night">
         {imageUrl ? (
-          <Image alt={label} className="object-cover" fill sizes="48px" src={imageUrl} />
+          <Image alt={label} className="object-cover" fill sizes="48px" src={getMediaPlaybackUrl(imageUrl)} />
         ) : (
           getInitials(label)
         )}

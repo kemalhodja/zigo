@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { getDistrictsForCity } from "@/lib/domain/turkey-cities-districts";
+import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
 import { useMessages } from "@/lib/i18n/locale-context";
 
 type CreateAdCampaignModalProps = {
@@ -371,7 +372,7 @@ export function CreateAdCampaignModal({
                               }`}
                             >
                               {post.media_url ? (
-                                <Image src={post.media_url} alt="" width={40} height={40} className="size-10 rounded-md object-cover" />
+                                <Image src={getMediaPlaybackUrl(post.media_url)} alt="" width={40} height={40} className="size-10 rounded-md object-cover" />
                               ) : (
                                 <div className="size-10 flex items-center justify-center rounded-md bg-slate-700 text-xs">📝</div>
                               )}
@@ -705,9 +706,9 @@ export function CreateAdCampaignModal({
                     {mediaUrl ? (
                       <div className="mt-2.5 overflow-hidden rounded-xl bg-slate-900 border border-slate-800">
                         {isVideoMedia ? (
-                          <video src={mediaUrl} controls autoPlay muted={false} className="max-h-48 w-full object-cover" />
+                          <video src={getMediaPlaybackUrl(mediaUrl)} controls autoPlay muted={false} className="max-h-48 w-full object-cover" />
                         ) : (
-                          <Image src={mediaUrl} alt="Reklam Afişi" width={400} height={192} className="h-48 w-full object-cover" />
+                          <Image src={getMediaPlaybackUrl(mediaUrl)} alt="Reklam Afişi" width={400} height={192} className="h-48 w-full object-cover" />
                         )}
                       </div>
                     ) : (

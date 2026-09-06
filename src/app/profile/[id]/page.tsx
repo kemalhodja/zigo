@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 
 import { BackButton } from "@/components/back-button";
 import { FollowButton } from "@/components/follow-button";
-import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileCover } from "@/components/profile-cover";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { ProfileSocialLinks } from "@/components/profile-social-links";

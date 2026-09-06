@@ -12,7 +12,7 @@ const resendSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const rateLimit = enforceAuthRateLimit(request, "resend-verification", 4, 15 * 60_000);
+    const rateLimit = await enforceAuthRateLimit(request, "resend-verification", 4, 15 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         "Çok sık denedin. Birkaç dakika sonra tekrar dene.",

@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const rawBody = await request.json();
     const body = resetSchema.parse(rawBody);
 
-    const rateLimit = enforceAuthRateLimit(request, "reset-password", 8, 15 * 60_000);
+    const rateLimit = await enforceAuthRateLimit(request, "reset-password", 8, 15 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         "Çok fazla deneme. Bir süre bekleyip tekrar dene.",

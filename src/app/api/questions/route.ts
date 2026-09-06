@@ -4,7 +4,7 @@ import { z } from "zod";
 import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { createQuestion, getMatchedQuestions } from "@/lib/domain/questions";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Teachers answer questions instead of asking them." }, { status: 403 });
     }
 
-    const rateLimit = checkRateLimit(`question:${profile.id}`, 8, 60 * 60_000);
+    const rateLimit = await checkRateLimitAsync(`question:${profile.id}`, 8, 60 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         "Çok fazla soru gönderdin. Bir süre bekleyip tekrar dene.",

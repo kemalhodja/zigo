@@ -8,7 +8,7 @@ import {
 } from "@/lib/domain/lesson-requests";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const rateLimit = checkRateLimit(`lesson-request:${profile.id}`, 6, 60 * 60_000);
+    const rateLimit = await checkRateLimitAsync(`lesson-request:${profile.id}`, 6, 60 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         "Çok fazla ders talebi gönderdin. Bir süre bekleyip tekrar dene.",

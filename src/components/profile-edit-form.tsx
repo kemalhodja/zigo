@@ -257,7 +257,7 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
           <input
             ref={cameraInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             capture="user"
             className="hidden"
             onChange={(e) => {
@@ -269,7 +269,7 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
           <input
             ref={galleryInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];

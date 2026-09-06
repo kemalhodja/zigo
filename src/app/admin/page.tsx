@@ -9,6 +9,7 @@ const AdminAnalyticsDashboard = dynamic(() =>
 import { AdminBankTransferActions } from '@/components/admin-bank-transfer-actions';
 import { AdminBillingGrantLedger } from '@/components/admin-billing-grant-ledger';
 import { AdminBroadcastButton } from '@/components/admin-broadcast-button';
+import { AdminFeedbackQueue } from '@/components/admin-feedback-queue';
 import { AdminLivePulse } from '@/components/admin-live-pulse';
 import { AdminRedemptionStatus } from '@/components/admin-redemption-status';
 import { AdminRoleRequests } from '@/components/admin-role-requests';
@@ -22,6 +23,7 @@ import {
   getAdminStoreProducts,
   getAdminStoreRedemptions,
   getStudentDocumentQueue,
+  getUserFeedbackQueue,
   getUserVerificationQueue,
   isCurrentUserPlatformAdmin,
 } from '@/lib/domain/admin';
@@ -130,6 +132,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     redemptions,
     areas,
     studentDocuments,
+    feedbackQueue,
     bankTransfers,
     densityReport,
     inactiveTeachers,
@@ -144,6 +147,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     getAdminStoreRedemptions(supabase),
     getEducationAreas(supabase),
     getStudentDocumentQueue(supabase),
+    getUserFeedbackQueue(supabase),
     getPendingBankTransferQueue(supabase),
     getAreaFeedDensityMetrics(metricsClient, { ageGroups: densityAgeGroups, sinceDays: 7 }),
     getVerifiedInactiveTeachers(metricsClient, { sinceDays: 7 }),
@@ -195,6 +199,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     },
     { label: a.queueInactiveTeachers, value: inactiveTeachers.length },
     { label: a.queueStudentDocs, value: studentDocuments.length },
+    { label: a.queueFeedback, value: feedbackQueue.length },
     { label: a.queueBankTransfers, value: bankTransfers.length },
     { label: a.queueStoreOrders, value: redemptions.length },
     { label: a.queueStock, value: products.length },
@@ -335,6 +340,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       {currentTab === 'users' && (
         <>
+          <AdminFeedbackQueue items={feedbackQueue} />
+
           <section className="-mx-4 bg-white px-4 py-6">
             <h3 className="text-sm font-black text-night">Rol Değişikliği İstekleri</h3>
             <p className="mt-1 text-xs font-bold leading-5 text-slate-500">

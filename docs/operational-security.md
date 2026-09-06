@@ -53,6 +53,10 @@ Rotate on schedule (**every 90 days**) or immediately after suspected leak.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → API | Rotate anon key → update Vercel + local `.env.local` → redeploy (users re-auth if needed) |
 | `STRIPE_SECRET_KEY` | Stripe Dashboard | Roll key → update Vercel → verify checkout + webhook → delete old key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks | Roll signing secret → update Vercel → `npm run test:stripe-webhook` |
+| `GOOGLE_PLAY_WEBHOOK_SECRET` | Vercel + Google Pub/Sub push header | Generate a random secret → set the same value as `x-google-play-webhook-secret` on the Pub/Sub push subscription → redeploy → send a signed staging notification |
+| `GOOGLE_PLAY_PUBSUB_AUDIENCE` | Vercel + Google Pub/Sub OIDC audience | Set the exact HTTPS webhook URL as the audience; configure Pub/Sub to attach an OIDC token |
+| `GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT` | Vercel + Google Pub/Sub OIDC service account | Set the Pub/Sub push service-account email; requests with another principal are rejected |
+| `REDIS_URL` / `REDIS_TOKEN` | Upstash-compatible REST Redis | Required in production for shared auth/social/lesson rate limits; missing or unavailable Redis fails closed |
 | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA admin | Create new key pair → update env → deploy → disable old site key |
 | `ZIGO_AI_MODERATION_KEY` | Your AI provider | Issue new API key → update env → smoke one moderated comment path |
 | Database password | Supabase → Database | Reset password → update `SUPABASE_DB_URL` if used for `migrations:cloud` |

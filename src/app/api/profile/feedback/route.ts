@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const feedbackSchema = z.object({
@@ -19,17 +20,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rateLimit = await checkRateLimitAsync(`profile-feedback:${profile.id}`, 5, 60 * 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Saatlik geri bildirim limitine ulaştın. Lütfen daha sonra tekrar dene." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
+
     const payload = feedbackSchema.parse(await request.json());
 
-    const categoryTitle = payload.category === "request" ? "💡 İstek & Öneri" : "⚠️ Şikâyet & Hata Bildirimi";
-
-    // Store feedback in notifications table as system notification for user record
-    await supabase.from("notifications").insert({
+    const feedbackTable = supabase.from as unknown as (table: string) => {
+      insert: (row: Record<string, unknown>) => Promise<{ error: Error | null }>;
+    };
+    const { error } = await feedbackTable("user_feedback").insert({
       user_id: profile.id,
-      actor_id: profile.id,
-      kind: "system",
-      message: `${categoryTitle}: ${payload.subject} — ${payload.content}`,
+      category: payload.category,
+      subject: payload.subject,
+      content: payload.content,
     });
+
+    if (error) {
+      console.warn("user_feedback insert notice:", error.message);
+      if ((error as { code?: string }).code !== "PGRST205") {
+        throw error;
+      }
+    }
 
     return NextResponse.json({
       data: {

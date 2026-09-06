@@ -26,7 +26,7 @@ const required = [
   [packageJson.includes('"uptime:probe"'), "uptime:probe script wired"],
   [packageJson.includes('"test:release"'), "test:release gate wired"],
   [packageJson.includes('"staging:preflight"'), "staging:preflight wired"],
-  [prodDoc.includes("migrationTarget: 91") || prodDoc.includes("migrationTarget: 86") || prodDoc.includes("migrationTarget: 66") || prodDoc.includes("migrationTarget: 55") || prodDoc.includes("migrationTarget: 49"), "production-readiness doc references migration target"],
+  [prodDoc.includes("migrationTarget: 118") || prodDoc.includes("migrationTarget: 117") || prodDoc.includes("migrationTarget: 91") || prodDoc.includes("migrationTarget: 86") || prodDoc.includes("migrationTarget: 66") || prodDoc.includes("migrationTarget: 55") || prodDoc.includes("migrationTarget: 49"), "production-readiness doc references migration target"],
   [prodChecklist.includes("091") || prodChecklist.includes("086") || prodChecklist.includes("077") || prodChecklist.includes("066") || prodChecklist.includes("055") || prodChecklist.includes("049") || prodChecklist.includes("55"), "production-checklist references current migrations"],
   [launchChecklist.includes("staging:preflight"), "launch-checklist references staging preflight"],
   [stagingPreflight.includes("Migration bundle"), "staging preflight checks migration bundle"],

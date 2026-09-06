@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";

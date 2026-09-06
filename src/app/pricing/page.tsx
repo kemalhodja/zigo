@@ -2,7 +2,6 @@
 
 import { BookOpen, Building2, CheckCircle2, Crown, GraduationCap, MonitorPlay, Sparkles, Users, XCircle } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
@@ -278,7 +277,9 @@ function usePricingSubscription(): SubscriptionState {
                   limit: (n: number) => Promise<{
                     data: Array<{
                       tier?: string | null;
+                      status?: string | null;
                       current_period_end?: string | null;
+                      expires_at?: string | null;
                     }> | null;
                   }>;
                 };
@@ -293,9 +294,9 @@ function usePricingSubscription(): SubscriptionState {
           if (Array.isArray(subs) && subs.length > 0) {
             const now = Date.now();
             const isActive = subs.some((s) => {
-              const isPlus = s.tier === "zigo_plus" || (s as any).status === "active" || (s as any).status === "trialing";
+              const isPlus = s.tier === "zigo_plus" || s.status === "active" || s.status === "trialing";
               if (!isPlus) return false;
-              const end = s.current_period_end || (s as any).expires_at;
+              const end = s.current_period_end || s.expires_at;
               return !end || new Date(end).getTime() > now;
             });
 

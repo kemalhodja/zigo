@@ -5,7 +5,7 @@ import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { reportSocialPost, updateContentReportStatus } from "@/lib/domain/social";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateLimit = checkRateLimit(`report:${profile.id}`, 5, 60 * 60_000);
+    const rateLimit = await checkRateLimitAsync(`report:${profile.id}`, 5, 60 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         "Çok fazla bildirim gönderdin. Bir süre bekleyip tekrar dene.",

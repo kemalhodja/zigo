@@ -98,6 +98,8 @@
     "teacher-analytics-card.tsx",
     "teacher-home-insights.tsx",
     "trial-banner.tsx",
-    "SubscriptionModal.tsx"
+    "SubscriptionModal.tsx",
+    "game-2048.tsx",
+    "sudoku-game.tsx"
   ]
 }

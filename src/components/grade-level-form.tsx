@@ -47,7 +47,7 @@ export function GradeLevelForm({
       });
       const payload = (await response.json().catch(() => null)) as {
         error?: string;
-        details?: any;
+        details?: unknown;
         autoAssigned?: boolean;
         areaIds?: number[];
       } | null;

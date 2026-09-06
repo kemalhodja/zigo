@@ -1,6 +1,6 @@
 "use client";
 
-import { animate,motion, useMotionValue, useTransform } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import { 
   Anchor, Atom, Bell,
  Bird,   Brain,

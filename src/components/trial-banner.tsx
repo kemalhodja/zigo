@@ -33,7 +33,9 @@ async function fetchTrialStatusUncached(): Promise<TrialSubscription> {
             limit: (n: number) => Promise<{
               data: Array<{
                 tier?: string | null;
+                status?: string | null;
                 current_period_end?: string | null;
+                expires_at?: string | null;
               }> | null;
             }>;
           };
@@ -48,9 +50,9 @@ async function fetchTrialStatusUncached(): Promise<TrialSubscription> {
     if (Array.isArray(subs) && subs.length > 0) {
       const now = Date.now();
       const isActive = subs.some((s) => {
-        const isPlus = s.tier === "zigo_plus" || (s as any).status === "active" || (s as any).status === "trialing";
+        const isPlus = s.tier === "zigo_plus" || s.status === "active" || s.status === "trialing";
         if (!isPlus) return false;
-        const end = s.current_period_end || (s as any).expires_at;
+        const end = s.current_period_end || s.expires_at;
         return !end || new Date(end).getTime() > now;
       });
       if (isActive) return { isTrial: false, trialDaysRemaining: 0, isLoading: false };

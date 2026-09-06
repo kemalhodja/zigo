@@ -23,6 +23,7 @@ const eslintConfig = [
       "next-env.d.ts",
       "coverage/**",
       "test-results/**",
+      "test-schema.ts",
       ".playwright-godaddy/**",
       "meta-webhook-service/**",
       "*.js",

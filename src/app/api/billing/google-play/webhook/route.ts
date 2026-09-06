@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -30,6 +31,44 @@ type SubscriptionNotification = {
 
 export async function POST(request: Request) {
   try {
+    // Pub/Sub must be configured with this secret as a header. Never process
+    // unauthenticated notifications: a forged notification can revoke access.
+    const webhookSecret = process.env.GOOGLE_PLAY_WEBHOOK_SECRET?.trim();
+    if (!webhookSecret) {
+      return NextResponse.json({ error: "Google Play webhook secret missing." }, { status: 503 });
+    }
+    const suppliedSecret = request.headers.get("x-google-play-webhook-secret") ?? "";
+    const expected = Buffer.from(webhookSecret, "utf8");
+    const supplied = Buffer.from(suppliedSecret, "utf8");
+    if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const oidcAudience = process.env.GOOGLE_PLAY_PUBSUB_AUDIENCE?.trim();
+    if (oidcAudience) {
+      const authorization = request.headers.get("authorization") ?? "";
+      const match = authorization.match(/^Bearer\s+(.+)$/i);
+      if (!match) {
+        return NextResponse.json({ error: "Pub/Sub OIDC token missing." }, { status: 401 });
+      }
+
+      const googleapis = await import("googleapis");
+      const authClient = new googleapis.google.auth.OAuth2();
+      let ticket;
+      try {
+        ticket = await authClient.verifyIdToken({ idToken: match[1], audience: oidcAudience });
+      } catch {
+        return NextResponse.json({ error: "Invalid Pub/Sub OIDC token." }, { status: 401 });
+      }
+
+      const payload = ticket.getPayload();
+      const expectedServiceAccount = process.env.GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT?.trim();
+      const issuerValid = payload?.iss === "https://accounts.google.com" || payload?.iss === "accounts.google.com";
+      if (!payload || !issuerValid || (expectedServiceAccount && payload.email !== expectedServiceAccount)) {
+        return NextResponse.json({ error: "Unauthorized Pub/Sub principal." }, { status: 403 });
+      }
+    }
+
     const rawBody = await request.json().catch(() => null);
     if (!rawBody) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -58,6 +97,9 @@ export async function POST(request: Request) {
     const purchaseToken = subNotif.purchaseToken;
     const subscriptionId = subNotif.subscriptionId ?? "zigo_plus";
     const packageName = notification.packageName ?? DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+    if (packageName !== process.env.GOOGLE_PLAY_PACKAGE_NAME && process.env.GOOGLE_PLAY_PACKAGE_NAME) {
+      return NextResponse.json({ error: "Invalid Google Play package name" }, { status: 400 });
+    }
     const notificationType = subNotif.notificationType ?? 0;
 
     const adminClient = createAdminClient();

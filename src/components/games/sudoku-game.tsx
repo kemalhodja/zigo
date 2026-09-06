@@ -80,7 +80,9 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
     if (typeof window !== "undefined") {
       try {
         localStorage.removeItem(STORAGE_KEY);
-      } catch {}
+      } catch {
+        // Local persistence is optional.
+      }
     }
   }, [STORAGE_KEY]);
 
@@ -111,9 +113,11 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
           return;
         }
       }
-    } catch {}
+    } catch {
+      // Ignore malformed or unavailable saved state and start a new game.
+    }
     startNewGame(difficulty);
-  }, [STORAGE_KEY, startNewGame]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [STORAGE_KEY, startNewGame]);
 
   // Auto save progress to localStorage
   useEffect(() => {
@@ -136,7 +140,9 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
           notes: serializableNotes,
         })
       );
-    } catch {}
+    } catch {
+      // Local persistence is best effort.
+    }
   }, [STORAGE_KEY, difficulty, initialBoard, board, solution, mistakes, seconds, hintsRemaining, notes, isTimerRunning, isGameOver, hasWon]);
 
   // Timer

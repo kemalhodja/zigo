@@ -159,7 +159,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const profileLoc = profile as unknown as { city?: string | null; district?: string | null };
     const postPayload = {
       authorId: profile.id,
       caption: body.caption,
@@ -309,4 +308,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-

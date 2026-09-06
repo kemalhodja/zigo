@@ -7,7 +7,7 @@ import {
   isRecaptchaRequired,
   verifyRecaptchaToken,
 } from "@/lib/domain/recaptcha";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { getClientIp } from "@/lib/server/request-client";
 
 export const authEmailSchema = z
@@ -55,7 +55,7 @@ export function shouldBypassAuthRateLimit(request: Request) {
   return ip === "127.0.0.1" || ip === "::1" || ip === "unknown" || ip.startsWith("127.");
 }
 
-export function enforceAuthRateLimit(
+export async function enforceAuthRateLimit(
   request: Request,
   scope: "sign-in" | "sign-up" | "resend-verification" | "forgot-password" | "reset-password",
   limit: number,
@@ -65,5 +65,5 @@ export function enforceAuthRateLimit(
     return { allowed: true, retryAfterSeconds: 0 };
   }
 
-  return checkRateLimit(`${scope}:${getClientIp(request)}`, limit, windowMs);
+  return checkRateLimitAsync(`${scope}:${getClientIp(request)}`, limit, windowMs);
 }

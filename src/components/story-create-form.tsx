@@ -8,7 +8,6 @@ import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/types";
-import { createClient } from "@/lib/supabase/client";
 
 type Status = "idle" | "saving" | "saved" | "error";
 type PublishStep = "idle" | "uploading" | "publishing" | "done";
@@ -107,31 +106,6 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
     let mediaUrl = "";
     let uploadedObjectPath = "";
     if (selectedFile) {
-      let directSuccess = false;
-      try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          const extension = selectedFile.name.split(".").pop() || (selectedFile.type.startsWith("video/") ? "mp4" : "jpg");
-          const objectPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
-          const { error: directErr } = await supabase.storage
-            .from("social-media")
-            .upload(objectPath, selectedFile, { contentType: selectedFile.type, upsert: false });
-
-          if (!directErr) {
-            const { data: publicData } = supabase.storage.from("social-media").getPublicUrl(objectPath);
-            if (publicData?.publicUrl) {
-              mediaUrl = publicData.publicUrl;
-              uploadedObjectPath = objectPath;
-              directSuccess = true;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("[STORY_DIRECT_UPLOAD_EXCEPTION]", err);
-      }
-
-      if (!directSuccess) {
         const uploadData = new FormData();
         uploadData.set("file", selectedFile);
 
@@ -159,7 +133,6 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
         const payload = (await uploadResponse.json()) as { data: { mediaUrl: string; objectPath: string } };
         mediaUrl = payload.data.mediaUrl;
         uploadedObjectPath = payload.data.objectPath;
-      }
     }
 
     setStep("publishing");

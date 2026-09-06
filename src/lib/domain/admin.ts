@@ -49,6 +49,18 @@ export const reviewStudentDocumentSchema = z.object({
   status: z.enum(["approved", "rejected"]),
 });
 
+export type UserFeedbackQueueItem = {
+  id: string;
+  user_id: string;
+  category: "request" | "complaint";
+  subject: string;
+  content: string;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  admin_note: string | null;
+  created_at: string;
+  user: { full_name: string; email: string } | null;
+};
+
 export async function isCurrentUserPlatformAdmin(supabase: SupabaseClient<Database>) {
   const { data, error } = await supabase.rpc("current_user_is_platform_admin");
 
@@ -277,6 +289,28 @@ export async function getStudentDocumentQueue(supabase: SupabaseClient<Database>
 
   if (error) throw error;
   return data;
+}
+
+export async function getUserFeedbackQueue(supabase: SupabaseClient<Database>) {
+  const fromTable = supabase.from as unknown as (table: string) => unknown;
+  const feedbackTable = fromTable("user_feedback") as {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        order: (column: string, options: { ascending: boolean }) => {
+          limit: (count: number) => Promise<{ data: unknown[] | null; error: Error | null }>;
+        };
+      };
+    };
+  };
+
+  const { data, error } = await feedbackTable
+    .select("id, user_id, category, subject, content, status, admin_note, created_at, user:users!user_feedback_user_id_fkey(full_name, email)")
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) throw error;
+  return (data ?? []) as UserFeedbackQueueItem[];
 }
 
 export async function reviewStudentDocument(

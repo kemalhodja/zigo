@@ -4,7 +4,6 @@ import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
 import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
-import { ProfileAdvertiseModal } from "@/components/profile-advertise-modal";
 import { ProfileHighlights } from "@/components/profile-highlights";
 import { ProfileSocialLinks } from "@/components/profile-social-links";
 import { ProfileSocialStats as ProfileSocialStatsSection } from "@/components/profile-social-stats";

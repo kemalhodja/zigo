@@ -56,7 +56,9 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
         if (type === "error") navigator.vibrate([40, 60, 40]);
         else if (type === "heavy") navigator.vibrate(30);
         else navigator.vibrate(15);
-      } catch {}
+      } catch {
+        // Vibration is optional and may be blocked by the browser.
+      }
     }
   }, []);
 
@@ -83,7 +85,9 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
           setContinueAfterWin(data.continueAfterWin || false);
         }
       }
-    } catch {}
+    } catch {
+      // Saved game state may be unavailable in private browsing mode.
+    }
   }, [STORAGE_KEY]);
 
   // Save state on change
@@ -99,7 +103,9 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
           continueAfterWin,
         })
       );
-    } catch {}
+    } catch {
+      // Local persistence is best effort.
+    }
   }, [STORAGE_KEY, board, score, hasWon2048, continueAfterWin, isGameOver]);
 
   const maxTile = getMaxTile(board);
@@ -239,7 +245,9 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
     if (typeof window !== "undefined") {
       try {
         localStorage.removeItem(STORAGE_KEY);
-      } catch {}
+      } catch {
+        // Saved game state may already be absent.
+      }
     }
   };
 

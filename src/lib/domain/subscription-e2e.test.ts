@@ -36,7 +36,7 @@ describe("Subscription End-to-End Resolution Engine", () => {
           }),
         };
       }),
-    } as any;
+    } as unknown as Parameters<typeof getUserSubscription>[0];
 
     const sub = await getUserSubscription(mockSupabase, "user-1");
     expect(sub.isPremium).toBe(true);
@@ -81,7 +81,7 @@ describe("Subscription End-to-End Resolution Engine", () => {
           }),
         };
       }),
-    } as any;
+    } as unknown as Parameters<typeof getUserSubscription>[0];
 
     const sub = await getUserSubscription(mockSupabase, "user-multi");
     expect(sub.isPremium).toBe(true);
@@ -121,7 +121,7 @@ describe("Subscription End-to-End Resolution Engine", () => {
           }),
         };
       }),
-    } as any;
+    } as unknown as Parameters<typeof getUserSubscription>[0];
 
     const sub = await getUserSubscription(mockSupabase, "user-mobile");
     expect(sub.isPremium).toBe(true);
@@ -160,7 +160,7 @@ describe("Subscription End-to-End Resolution Engine", () => {
         }
         return {};
       }),
-    } as any;
+    } as unknown as Parameters<typeof getUserSubscription>[0];
 
     const sub = await getUserSubscription(mockSupabase, "user-admin-grant");
     expect(sub.isPremium).toBe(true);
@@ -200,7 +200,7 @@ describe("Subscription End-to-End Resolution Engine", () => {
         }
         return {};
       }),
-    } as any;
+    } as unknown as Parameters<typeof getUserSubscription>[0];
 
     const sub = await getUserSubscription(mockSupabase, "user-trial");
     expect(sub.isPremium).toBe(true);
@@ -241,7 +241,7 @@ describe("Subscription End-to-End Resolution Engine", () => {
         }
         return {};
       }),
-    } as any;
+    } as unknown as Parameters<typeof getUserSubscription>[0];
 
     const sub = await getUserSubscription(mockSupabase, "user-expired");
     expect(sub.isPremium).toBe(false);

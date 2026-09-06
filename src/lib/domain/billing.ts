@@ -23,6 +23,9 @@ export function hasStripeConfigured() {
 }
 
 export function canUseDevBillingBypass() {
+  // A production deployment must never grant paid access through this route,
+  // even when a configuration value was accidentally copied from development.
+  if (process.env.NODE_ENV === "production") return false;
   return isLocalDemoSupabase() || process.env.ZIGO_BILLING_DEV_BYPASS === "true";
 }
 

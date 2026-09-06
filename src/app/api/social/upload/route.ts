@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { extractErrorMessage } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_TYPES = new Set([
@@ -27,53 +28,26 @@ const cleanupUploadSchema = z.object({
   objectPath: z.string().min(3).max(500),
 });
 
-export async function GET(request: Request) {
-  try {
-    const supabase = await createClient();
-    const profile = await getCurrentProfile(supabase);
+async function hasValidFileSignature(file: File) {
+  const header = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const ascii = (start: number, length: number) => String.fromCharCode(...header.slice(start, start + length));
+  const startsWith = (...bytes: number[]) => bytes.every((byte, index) => header[index] === byte);
 
-    if (!profile) {
-      return NextResponse.json({ error: "İmza adresi almak için lütfen giriş yapın." }, { status: 401 });
-    }
-
-    if (profile.account_status === "closed" || profile.account_status === "suspended") {
-      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya yükleyemez." }, { status: 403 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const fileType = searchParams.get("fileType") || "image/jpeg";
-    const filename = searchParams.get("filename") || "media.bin";
-
-    if (!ALLOWED_TYPES.has(fileType)) {
-      return NextResponse.json({ error: "Desteklenmeyen dosya türü." }, { status: 400 });
-    }
-
-    const extension = EXTENSION_BY_TYPE.get(fileType) ?? (filename.split(".").pop() || "bin");
-    const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
-
-    const { data, error } = await supabase.storage
-      .from("social-media")
-      .createSignedUploadUrl(objectPath);
-
-    if (error || !data?.signedUrl) {
-      return NextResponse.json({ error: error?.message || "İmza adresi oluşturulamadı." }, { status: 400 });
-    }
-
-    const { data: publicData } = supabase.storage.from("social-media").getPublicUrl(objectPath);
-
-    return NextResponse.json({
-      data: {
-        signedUrl: data.signedUrl,
-        token: data.token,
-        path: data.path,
-        objectPath,
-        mediaUrl: publicData.publicUrl,
-        mediaType: fileType.startsWith("video/") ? "video" : "image",
-      },
-    });
-  } catch (error) {
-    const message = extractErrorMessage(error, "Yükleme adresi oluşturulamadı.");
-    return NextResponse.json({ error: message }, { status: 400 });
+  switch (file.type) {
+    case "image/jpeg":
+      return startsWith(0xff, 0xd8, 0xff);
+    case "image/png":
+      return startsWith(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    case "image/gif":
+      return ascii(0, 6) === "GIF87a" || ascii(0, 6) === "GIF89a";
+    case "image/webp":
+      return ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP";
+    case "video/mp4":
+      return ascii(4, 4) === "ftyp";
+    case "video/webm":
+      return startsWith(0x1a, 0x45, 0xdf, 0xa3);
+    default:
+      return false;
   }
 }
 
@@ -88,6 +62,14 @@ export async function POST(request: Request) {
 
     if (profile.account_status === "closed" || profile.account_status === "suspended") {
       return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya yükleyemez." }, { status: 403 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`social-upload:${profile.id}`, 30, 60 * 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla medya yükledin. Lütfen daha sonra tekrar dene." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const formData = await request.formData();
@@ -105,6 +87,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Medya boyutu en fazla 100 MB olabilir." }, { status: 400 });
     }
 
+    if (!(await hasValidFileSignature(file))) {
+      return NextResponse.json({ error: "Dosya içeriği bildirilen medya türüyle eşleşmiyor." }, { status: 400 });
+    }
+
     const extension = EXTENSION_BY_TYPE.get(file.type) ?? "bin";
     const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
     const mediaType = file.type.startsWith("video/") ? "video" : "image";
@@ -118,30 +104,12 @@ export async function POST(request: Request) {
     });
 
     if (!primaryError) {
-      const { data } = supabase.storage.from("social-media").getPublicUrl(objectPath);
-      mediaUrl = data.publicUrl;
+      mediaUrl = `/api/social/media?path=${encodeURIComponent(objectPath)}`;
     } else {
-      // 2. Fallback: try uploading to 'avatars' storage bucket
-      const fallbackPath = `social/${objectPath}`;
-      const { error: fallbackError } = await supabase.storage.from("avatars").upload(fallbackPath, file, {
-        contentType: file.type,
-        upsert: true,
-      });
-
-      if (!fallbackError) {
-        const { data } = supabase.storage.from("avatars").getPublicUrl(fallbackPath);
-        mediaUrl = data.publicUrl;
-      } else if (mediaType === "image" && file.size <= 10 * 1024 * 1024) {
-        // 3. Resilient fallback for images: convert to base64 Data URL so photo upload never fails
-        const arrayBuffer = await file.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString("base64");
-        mediaUrl = `data:${file.type};base64,${base64}`;
-      } else {
-        return NextResponse.json(
-          { error: primaryError?.message ?? fallbackError?.message ?? "Medya yüklenemedi. Depolama alanını kontrol edin." },
-          { status: 400 },
-        );
-      }
+      return NextResponse.json(
+        { error: primaryError.message ?? "Medya yüklenemedi. Depolama alanını kontrol edin." },
+        { status: 400 },
+      );
     }
 
     return NextResponse.json({

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 
-import { useMessages } from "@/lib/i18n/locale-context";
 import { useRecaptcha } from "@/lib/hooks/use-recaptcha";
+import { useMessages } from "@/lib/i18n/locale-context";
 
 type Status = "idle" | "loading" | "success" | "error";
 

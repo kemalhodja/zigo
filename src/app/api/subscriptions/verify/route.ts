@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 
-import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { getGooglePlayPackageName, verifyGooglePlaySubscription } from "@/lib/server/google-play";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,20 +34,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
     }
 
-    const packageName = body.packageName || process.env.NEXT_PUBLIC_GOOGLE_PLAY_PACKAGE_NAME || DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+    const packageName = getGooglePlayPackageName();
+    if (body.packageName && body.packageName !== packageName) {
+      return NextResponse.json({ error: "Geçersiz Android paket adı." }, { status: 400 });
+    }
 
     // Verify with Google Play (supports Subscriptions v2 + v1 + sandbox fallback)
     const verification = await verifyGooglePlaySubscription(token, productId, packageName);
 
-    if (!verification.isValid) {
+    if (!verification.isValid || !verification.expiryTimeIso || (verification.productId && verification.productId !== productId)) {
       return NextResponse.json({ error: "Google Play aboneliği doğrulanamadı veya geçerli değil." }, { status: 400 });
     }
 
     const now = new Date();
-    const defaultDays = productId.includes("yearly") ? 365 : 30;
-    const expiresAt = verification.expiryTimeIso
-      ? new Date(verification.expiryTimeIso)
-      : new Date(now.getTime() + defaultDays * 24 * 60 * 60 * 1000);
+    const expiresAt = new Date(verification.expiryTimeIso);
+    if (expiresAt <= now) {
+      return NextResponse.json({ error: "Google Play aboneliğinin süresi dolmuş." }, { status: 400 });
+    }
 
     // 1. RPC to record the purchase
     await supabase.rpc("record_google_play_purchase", {

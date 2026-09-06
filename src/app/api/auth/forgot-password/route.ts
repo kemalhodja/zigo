@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const rawBody = await request.json();
     const body = forgotSchema.parse(rawBody);
 
-    const rateLimit = enforceAuthRateLimit(request, "forgot-password", 4, 15 * 60_000);
+    const rateLimit = await enforceAuthRateLimit(request, "forgot-password", 4, 15 * 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(FORGOT_PASSWORD_RATE_LIMIT, rateLimit.retryAfterSeconds);
     }

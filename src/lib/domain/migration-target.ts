@@ -1,5 +1,5 @@
-/** Highest numbered migration prefix currently shipped (gaps 057–062 intentionally absent). */
-export const MIGRATION_TARGET = 91;
+/** Highest numbered migration currently shipped (gaps 057–062 intentionally absent). */
+export const MIGRATION_TARGET = 118;
 
 /** Ordered migration files present under supabase/migrations (must stay in sync with disk). */
 export const MIGRATION_FILES = [
@@ -88,6 +88,34 @@ export const MIGRATION_FILES = [
   "089_explore_discover_posts.sql",
   "090_role_change_requests.sql",
   "091_push_subscriptions.sql",
+  "092_daily_post_limit_trigger.sql",
+  "093_materialized_feed_view.sql",
+  "094_leaderboard_materialized.sql",
+  "095_storage_size_limits.sql",
+  "096_teacher_gamification.sql",
+  "097_user_streaks.sql",
+  "0981_refresh_explore_feed_trigger.sql",
+  "098_drop_mv_use_standard_view.sql",
+  "099_performance_indexes.sql",
+  "100_private_lesson_marketplace.sql",
+  "101_parental_consent.sql",
+  "102_focus_metrics.sql",
+  "103_user_quizzes.sql",
+  "104_spaced_repetition.sql",
+  "105_weekly_league.sql",
+  "106_video_compression_webhook.sql",
+  "107_post_shares.sql",
+  "108_verified_teacher_answers_rls.sql",
+  "109_fix_social_post_matches_current_user.sql",
+  "110_user_website_url.sql",
+  "111_auto_hide_post_rpc.sql",
+  "112_add_followers_only_to_posts.sql",
+  "113_advanced_followers_features.sql",
+  "114_phase_2_optimizations.sql",
+  "115_phase_2_deep_indexes_and_auth_hooks.sql",
+  "116_user_social_urls.sql",
+  "117_private_social_media.sql",
+  "118_user_feedback.sql",
 ] as const;
 
 export const LATEST_MIGRATION_FILE = MIGRATION_FILES[MIGRATION_FILES.length - 1];

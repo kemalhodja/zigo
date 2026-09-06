@@ -32,9 +32,11 @@ function useActivationPoller(skip: boolean): ActivationStatus {
             eq: (col: string, val: string) => {
               order: (col2: string, opts: { ascending: boolean }) => {
                 limit: (n: number) => Promise<{
-                  data: Array<{
-                    tier?: string | null;
-                    current_period_end?: string | null;
+                    data: Array<{
+                      tier?: string | null;
+                      status?: string | null;
+                      current_period_end?: string | null;
+                      expires_at?: string | null;
                   }> | null;
                 }>;
               };
@@ -49,9 +51,9 @@ function useActivationPoller(skip: boolean): ActivationStatus {
         if (Array.isArray(subs) && subs.length > 0) {
           const now = Date.now();
           const isActive = subs.some((s) => {
-            const isPlus = s.tier === "zigo_plus" || (s as any).status === "active";
+            const isPlus = s.tier === "zigo_plus" || s.status === "active";
             if (!isPlus) return false;
-            const end = s.current_period_end || (s as any).expires_at;
+            const end = s.current_period_end || s.expires_at;
             return !end || new Date(end).getTime() > now;
           });
 

@@ -50,6 +50,15 @@ export async function generateMetadata(
       mediaUrl = [post.media_url];
     }
   }
+
+  // Social-media objects are private and require an authenticated signed-URL
+  // proxy; anonymous crawlers cannot fetch them, so do not advertise broken OG images.
+  const publicMetadataMedia = mediaUrl.filter(
+    (url) =>
+      /^https?:\/\//i.test(url) &&
+      !url.includes("/storage/v1/object/public/social-media/") &&
+      !url.startsWith("/api/social/media?"),
+  );
   
   return {
     title: `${authorName} | Zigo`,
@@ -57,14 +66,14 @@ export async function generateMetadata(
     openGraph: {
       title: `${authorName} | Zigo`,
       description: caption,
-      images: mediaUrl,
+      images: publicMetadataMedia,
       type: "article",
     },
     twitter: {
-      card: mediaUrl.length > 0 ? "summary_large_image" : "summary",
+      card: publicMetadataMedia.length > 0 ? "summary_large_image" : "summary",
       title: `${authorName} | Zigo`,
       description: caption,
-      images: mediaUrl,
+      images: publicMetadataMedia,
     }
   };
 }

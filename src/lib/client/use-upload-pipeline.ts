@@ -19,7 +19,6 @@ import { useRef, useState } from "react";
 import { compressVideo, validateVideoLimits, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
-import { createClient } from "@/lib/supabase/client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -174,52 +173,7 @@ export function useUploadPipeline() {
         setMessage(isCarousel ? `Medya ${i + 1}/${input.files.length} yükleniyor…` : "Medya yükleniyor…");
 
         let currentMediaUrl = "";
-        let directSuccess = false;
-        try {
-          const supabase = createClient();
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.id) {
-            const extension = fileToUpload.name.split(".").pop() || (fileToUpload.type.startsWith("video/") ? "mp4" : "jpg");
-            const randomId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
-            const objectPath = `${user.id}/${randomId}.${extension}`;
-            const { error: directErr } = await supabase.storage
-              .from("social-media")
-              .upload(objectPath, fileToUpload, { contentType: fileToUpload.type, upsert: false });
-
-            if (!directErr) {
-              const { data: publicData } = supabase.storage.from("social-media").getPublicUrl(objectPath);
-              if (publicData?.publicUrl) {
-                currentMediaUrl = publicData.publicUrl;
-                mediaType = fileToUpload.type.startsWith("video/") ? "video" : "image";
-                uploadedObjectPaths.push(objectPath);
-                directSuccess = true;
-              }
-            } else {
-              console.warn("[POST_PIPELINE_DIRECT_UPLOAD_FALLBACK] Direct upload warning, trying signed upload URL fallback:", directErr.message);
-              // Attempt 2: Fetch Signed Upload URL from server
-              const signedRes = await fetch(`/api/social/upload?fileType=${encodeURIComponent(fileToUpload.type)}&filename=${encodeURIComponent(fileToUpload.name)}`);
-              if (signedRes.ok) {
-                const signedBody = await signedRes.json();
-                if (signedBody?.data?.signedUrl && signedBody?.data?.path && signedBody?.data?.token) {
-                  const { error: signedUploadErr } = await supabase.storage
-                    .from("social-media")
-                    .uploadToSignedUrl(signedBody.data.path, signedBody.data.token, fileToUpload);
-
-                  if (!signedUploadErr) {
-                    currentMediaUrl = signedBody.data.mediaUrl;
-                    mediaType = signedBody.data.mediaType;
-                    uploadedObjectPaths.push(signedBody.data.objectPath);
-                    directSuccess = true;
-                  }
-                }
-              }
-            }
-          }
-        } catch (err) {
-          console.warn("[POST_PIPELINE_DIRECT_UPLOAD_EXCEPTION] Falling back to /api/social/upload:", err);
-        }
-
-        if (!directSuccess) {
+        {
           const uploadData = new FormData();
           uploadData.set("file", fileToUpload);
 

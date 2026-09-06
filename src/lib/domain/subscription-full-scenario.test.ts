@@ -131,7 +131,7 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
           }
           return {};
         }),
-      } as any;
+      } as unknown as Parameters<typeof getUserSubscription>[0];
 
       const sub = await getUserSubscription(mockDb, userId);
       expect(sub.isPremium).toBe(true);

@@ -3,17 +3,15 @@ import { z } from "zod";
 
 import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
-import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, verifyGooglePlaySubscription } from "@/lib/server/google-play";
-import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
+import { getGooglePlayPackageName, verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const googlePlaySchema = z.object({
   planId: z.string().trim().min(3).max(80).default("zigo-plus-student-monthly"),
   productId: z.string().trim().min(3).max(80).default("zigo-plus-student-monthly"),
   purchaseToken: z.string().trim().min(5),
-  packageName: z.string().trim().min(3).default(DEFAULT_GOOGLE_PLAY_PACKAGE_NAME),
-  orderId: z.string().trim().optional().nullable(),
-  expiryTime: z.string().trim().optional().nullable(),
+  packageName: z.string().trim().min(3).optional(),
   offerToken: z.string().trim().optional().nullable(),
 });
 
@@ -37,33 +35,39 @@ export async function POST(request: Request) {
       );
     }
 
-    let verifiedExpiryTime: string | null = body.expiryTime ?? null;
-    let verifiedOrderId: string | null = body.orderId ?? null;
-    let isTrial = false;
-
-    // Verify with official Google Play Developer API (with robust sandbox/v2 fallback)
-    try {
-      const verifiedPurchase = await verifyGooglePlaySubscription(
-        body.purchaseToken,
-        body.productId,
-        body.packageName,
-      );
-      if (verifiedPurchase.expiryTimeIso) {
-        verifiedExpiryTime = verifiedPurchase.expiryTimeIso;
-      }
-      if (verifiedPurchase.orderId) {
-        verifiedOrderId = verifiedPurchase.orderId;
-      }
-      isTrial = Boolean(verifiedPurchase.isTrial);
-    } catch (gplayErr) {
-      console.warn("Google Play API verification notice:", gplayErr);
+    const packageName = getGooglePlayPackageName();
+    if (body.packageName && body.packageName !== packageName) {
+      return NextResponse.json({ error: "Geçersiz Android paket adı." }, { status: 400 });
     }
 
-    // Default expiry if not resolved
+    const verifiedPurchase = await verifyGooglePlaySubscription(body.purchaseToken, body.productId, packageName);
+    if (!verifiedPurchase.isValid || !verifiedPurchase.expiryTimeIso) {
+      return NextResponse.json({ error: "Google Play satın alımı doğrulanamadı." }, { status: 400 });
+    }
+    if (verifiedPurchase.productId && verifiedPurchase.productId !== body.productId) {
+      return NextResponse.json({ error: "Satın alınan ürün seçilen planla eşleşmiyor." }, { status: 400 });
+    }
+
     const now = new Date();
-    const defaultDays = body.planId.includes("yearly") ? 365 : 30;
-    const defaultExpiry = new Date(now.getTime() + defaultDays * 24 * 60 * 60 * 1000).toISOString();
-    const finalExpiryTime = verifiedExpiryTime || defaultExpiry;
+    const finalExpiryTime = verifiedPurchase.expiryTimeIso;
+    if (new Date(finalExpiryTime).getTime() <= now.getTime()) {
+      return NextResponse.json({ error: "Google Play aboneliğinin süresi dolmuş." }, { status: 400 });
+    }
+    const verifiedOrderId = verifiedPurchase.orderId ?? null;
+    const isTrial = Boolean(verifiedPurchase.isTrial);
+
+    const adminDb = createAdminClient();
+    if (!adminDb) {
+      return NextResponse.json({ error: "Satın alma kaydı için sunucu yapılandırması eksik." }, { status: 503 });
+    }
+    const { data: existingPurchase } = await adminDb
+      .from("google_play_purchases")
+      .select("user_id")
+      .eq("purchase_token", body.purchaseToken)
+      .maybeSingle();
+    if (existingPurchase && existingPurchase.user_id !== profile.id) {
+      return NextResponse.json({ error: "Bu satın alma başka bir hesaba bağlı." }, { status: 409 });
+    }
 
     // 1. Record Google Play Purchase via RPC
     const { data: rpcData, error: rpcError } = await supabase.rpc("record_google_play_purchase", {
@@ -72,7 +76,7 @@ export async function POST(request: Request) {
       p_product_id: body.productId,
       p_purchase_token: body.purchaseToken,
       p_order_id: verifiedOrderId ?? undefined,
-      p_package_name: body.packageName,
+      p_package_name: packageName,
       p_expiry_time: finalExpiryTime,
     });
 
@@ -81,8 +85,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Direct Sync with user_subscriptions table (valid schema: user_id, tier, current_period_end, updated_at)
-    const adminDb = createAdminClient();
-    const dbClient = adminDb ?? supabase;
+    const dbClient = adminDb;
     const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as {
       upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
     }).upsert(
@@ -110,7 +113,7 @@ export async function POST(request: Request) {
           product_id: body.productId,
           purchase_token: body.purchaseToken,
           order_id: verifiedOrderId ?? null,
-          package_name: body.packageName,
+          package_name: packageName,
           expiry_time: finalExpiryTime,
           verified_at: now.toISOString(),
         },

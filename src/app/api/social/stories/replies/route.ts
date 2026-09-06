@@ -4,7 +4,7 @@ import { z } from "zod";
 import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createStoryReply } from "@/lib/domain/social";
-import { checkRateLimit } from "@/lib/server/rate-limit";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateLimit = checkRateLimit(`story-reply:${profile.id}`, 10, 60_000);
+    const rateLimit = await checkRateLimitAsync(`story-reply:${profile.id}`, 10, 60_000);
     if (!rateLimit.allowed) {
       throw new RateLimitExceededError(
         `Too many replies. Try again in ${rateLimit.retryAfterSeconds} seconds.`,

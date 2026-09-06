@@ -6,7 +6,7 @@ Use this after local gates pass (`npm run test:repo`) and migrations **001–091
 
 - [ ] Create production project (EU region recommended for KVKK)
 - [ ] Run `supabase/zigo-full-migrations.sql` in SQL Editor (or `npm run migrations:cloud`)
-- [ ] Confirm `/api/setup/health` reports `migrationTarget: 91`
+- [ ] Confirm `/api/setup/health` reports `migrationTarget: 118`
 - [ ] Enable email auth + set site URL and redirect URLs (`/auth/callback`, `/auth/verify-email`)
 - [ ] Create `social-media` storage bucket (public read if using direct URLs)
 - [ ] Set `SUPABASE_SERVICE_ROLE_KEY` only on server (Vercel env, never client)
