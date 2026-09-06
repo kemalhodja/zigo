@@ -146,6 +146,8 @@ export function SocialMediaFrame({
                     loop={!controls}
                     muted={!controls}
                     onLoadedMetadata={() => setVideoReady(true)}
+                    onLoadedData={() => setVideoReady(true)}
+                    onPlay={() => setVideoReady(true)}
                     onClick={(e) => {
                       e.stopPropagation();
                       const video = e.currentTarget;
@@ -188,6 +190,7 @@ export function SocialMediaFrame({
                   priority={priority && idx === 0}
                   fetchPriority={fetchPriority}
                   src={url}
+                  unoptimized={url.startsWith("/api/")}
                   style={combinedStyle}
                 />
               )}
@@ -216,6 +219,8 @@ export function SocialMediaFrame({
               loop={!controls}
               muted={!controls}
               onLoadedMetadata={() => setVideoReady(true)}
+              onLoadedData={() => setVideoReady(true)}
+              onPlay={() => setVideoReady(true)}
               onClick={(e) => {
                 e.stopPropagation();
                 const video = e.currentTarget;
@@ -258,6 +263,7 @@ export function SocialMediaFrame({
             priority={priority}
             fetchPriority={fetchPriority}
             src={items[0]}
+            unoptimized={items[0]?.startsWith("/api/")}
             style={combinedStyle}
           />
         )

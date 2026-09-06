@@ -82,7 +82,7 @@ export async function createPrivateLessonPost(
       district: input.district || null,
       description: input.description,
       budget_try: input.budgetTry || null,
-      status: "open",
+      status: "pending_review",
     })
     .select(
       `

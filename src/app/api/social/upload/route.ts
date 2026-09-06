@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { extractErrorMessage } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
@@ -64,10 +65,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya yükleyemez." }, { status: 403 });
     }
 
-    const rateLimit = await checkRateLimitAsync(`social-upload:${profile.id}`, 30, 60 * 60_000);
+    const publisherRoles = new Set([
+      "teacher",
+      "education_institution",
+      "education_platform",
+      "publisher",
+      "student",
+      "parent",
+    ]);
+    if (!publisherRoles.has(profile.role)) {
+      return NextResponse.json({ error: "Bu hesap türü medya paylaşamaz." }, { status: 403 });
+    }
+
+    const isStudentOrParent = profile.role === "student" || profile.role === "parent";
+    if (isStudentOrParent) {
+      const subscription = await getUserSubscription(supabase, profile.id);
+      const hasZigoPlus = Boolean(subscription?.isPremium || profile.is_premium);
+      if (!hasZigoPlus) {
+        return NextResponse.json(
+          { error: "Öğrenciler ve veliler medya paylaşabilmek için aktif bir Zigo Plus abonesi olmalıdır." },
+          { status: 403 },
+        );
+      }
+    }
+
+    if (profile.role === "teacher" && !profile.is_verified) {
+      return NextResponse.json({ error: "Medya paylaşımı için öğretmen hesabınızın doğrulanmış olması gerekir." }, { status: 403 });
+    }
+
+    // A carousel may contain up to 10 assets. Keep a meaningful abuse guard while
+    // allowing two daily posts plus normal retries or a replacement upload.
+    const rateLimit = await checkRateLimitAsync(`social-upload:v2:${profile.id}`, 60, 60 * 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: "Çok fazla medya yükledin. Lütfen daha sonra tekrar dene." },
+        { error: "Bu saat için medya yükleme sınırına ulaştınız. Lütfen daha sonra tekrar deneyin." },
         { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
       );
     }
@@ -112,6 +143,25 @@ export async function POST(request: Request) {
       );
     }
 
+    const lifecycle = supabase as unknown as {
+      from: (table: "media_uploads") => {
+        insert: (value: Record<string, unknown>) => Promise<{ error: { message?: string } | null }>;
+      };
+    };
+    const { error: lifecycleError } = await lifecycle.from("media_uploads").insert({
+      owner_id: profile.id,
+      object_path: objectPath,
+      media_type: mediaType,
+      byte_size: file.size,
+    });
+    if (lifecycleError) {
+      await supabase.storage.from("social-media").remove([objectPath]);
+      return NextResponse.json(
+        { error: "Medya kaydı oluşturulamadı. Lütfen tekrar deneyin." },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json({
       data: {
         mediaUrl,
@@ -149,6 +199,23 @@ export async function DELETE(request: Request) {
     const { error } = await supabase.storage.from("social-media").remove([body.objectPath]);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    const lifecycle = supabase as unknown as {
+      from: (table: "media_uploads") => {
+        update: (value: Record<string, unknown>) => {
+          eq: (column: string, value: string) => {
+            eq: (column: string, value: string) => Promise<{ error: { message?: string } | null }>;
+          };
+        };
+      };
+    };
+    const { error: lifecycleError } = await lifecycle.from("media_uploads")
+      .update({ status: "deleted", deleted_at: new Date().toISOString() })
+      .eq("object_path", body.objectPath)
+      .eq("owner_id", profile.id);
+    if (lifecycleError) {
+      console.error("[MEDIA_LIFECYCLE_CLEANUP_ERROR]", lifecycleError.message);
     }
 
     return NextResponse.json({ data: { cleaned: true } });

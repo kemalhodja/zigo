@@ -22,6 +22,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
   }
 
+  const rpc = supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => Promise<{
+    data: boolean | null;
+    error: { message: string } | null;
+  }>;
+  const { data: canView, error: accessError } = await rpc("can_view_social_media", { target_path: parsed.data });
+  if (accessError || !canView) {
+    return NextResponse.json({ error: "Bu medyayı görüntüleme yetkiniz yok." }, { status: 403 });
+  }
+
   const { data, error } = await supabase.storage
     .from("social-media")
     .createSignedUrl(parsed.data, 300);

@@ -12,6 +12,26 @@ import { assertTeacherCreatorPlus, socialPostRequiresTeacherCreatorPlus } from "
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+function uploadedObjectPaths(mediaUrl: string | undefined) {
+  if (!mediaUrl) return [];
+  let values: string[];
+  try {
+    values = mediaUrl.trim().startsWith("[")
+      ? (JSON.parse(mediaUrl) as unknown[]).filter((value): value is string => typeof value === "string")
+      : [mediaUrl];
+  } catch {
+    return [];
+  }
+  return values.flatMap((value) => {
+    try {
+      const path = new URL(value, "https://zigo.local").searchParams.get("path");
+      return path ? [path] : [];
+    } catch {
+      return [];
+    }
+  });
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
@@ -182,6 +202,24 @@ export async function POST(request: Request) {
 
     const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
     const post = await createSocialPost(dbClient, postPayload);
+
+    const paths = uploadedObjectPaths(body.mediaUrl ?? undefined);
+    if (paths.length > 0) {
+      const mediaDb = dbClient as unknown as {
+        from: (table: "media_uploads") => {
+          update: (value: Record<string, unknown>) => {
+            eq: (column: string, value: string) => {
+              in: (column: string, values: string[]) => Promise<{ error: unknown }>;
+            };
+          };
+        };
+      };
+      const { error: lifecycleError } = await mediaDb.from("media_uploads")
+        .update({ status: "attached", post_id: post.id, attached_at: new Date().toISOString() })
+        .eq("owner_id", profile.id)
+        .in("object_path", paths);
+      if (lifecycleError) console.error("[MEDIA_LIFECYCLE_ATTACH_ERROR]", lifecycleError);
+    }
 
     safeRevalidateTag(SOCIAL_FEED_CACHE_TAG);
     safeRevalidateTag(socialFeedCacheTag(profile.id));

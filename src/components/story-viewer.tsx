@@ -151,7 +151,7 @@ export function StoryViewer({ stories }: StoryViewerProps) {
           <video ref={videoRef} className="absolute inset-0 size-full object-cover" autoPlay loop muted playsInline preload="metadata" src={storyMediaUrl} />
         ) : null}
         {storyMediaUrl && !story.isVideo ? (
-          <Image alt={`${story.creator} Spark media`} className="object-cover" fill priority sizes="100vw" src={storyMediaUrl} />
+          <Image alt={`${story.creator} Spark media`} className="object-cover" fill priority sizes="100vw" src={storyMediaUrl} unoptimized={storyMediaUrl.startsWith("/api/")} />
         ) : null}
         {!storyMediaUrl ? <SocialMediaScene scene={story.scene ?? "math"} /> : null}
         {!storyMediaUrl ? <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.24),transparent_18rem)]" /> : null}
