@@ -126,6 +126,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const metricsClient = adminClient ?? supabase;
   const serviceRoleReady = hasServiceRoleEnv();
 
+  const emptyDensityReport = { sinceDays: 7, ageGroups: densityAgeGroups, metrics: [], priorityAreaCount: 0, areasWithWeeklyCreator: 0, coverageRatio: 0 };
+  const emptyFunnel = { pendingVerification: 0, verifiedMissingAreas: 0, verifiedNoPosts: 0, activated: 0 };
+  const emptyRetention = { cohortStartDaysAgo: 7, cohortEndDaysAgo: 14, returnWithinDays: 7, retentionRatio: 0, cohortSize: 0, retainedCount: 0, onTarget: false };
+  const emptySla = { slaHours: 24, openReports: 0, breachedReports: 0, pendingSafety: 0, breachedSafety: 0, resolvedSampleSize: 0, medianResolveHours: null, onTarget: true };
+  const emptyRevenue = { activePremiumCount: 0, orgPremiumCount: 0, individualPremiumCount: 0, activeSponsorCampaigns: 0, expiringSponsorsSoon: 0, pendingBankTransfers: 0, sponsorsReconciled: 0 };
+
   const [
     users,
     products,
@@ -142,19 +148,19 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     revenueOps,
     billingGrants,
   ] = await Promise.all([
-    getUserVerificationQueue(supabase),
-    getAdminStoreProducts(supabase),
-    getAdminStoreRedemptions(supabase),
-    getEducationAreas(supabase),
-    getStudentDocumentQueue(supabase),
-    getUserFeedbackQueue(supabase),
-    getPendingBankTransferQueue(supabase),
-    getAreaFeedDensityMetrics(metricsClient, { ageGroups: densityAgeGroups, sinceDays: 7 }),
-    getVerifiedInactiveTeachers(metricsClient, { sinceDays: 7 }),
-    getTeacherActivationFunnel(metricsClient),
-    getLearningActionRetention(metricsClient),
-    getModerationSlaReport(supabase),
-    getRevenueOpsSnapshot(metricsClient),
+    getUserVerificationQueue(supabase).catch(() => []),
+    getAdminStoreProducts(supabase).catch(() => []),
+    getAdminStoreRedemptions(supabase).catch(() => []),
+    getEducationAreas(supabase).catch(() => []),
+    getStudentDocumentQueue(supabase).catch(() => []),
+    getUserFeedbackQueue(supabase).catch(() => []),
+    getPendingBankTransferQueue(supabase).catch(() => []),
+    getAreaFeedDensityMetrics(metricsClient, { ageGroups: densityAgeGroups, sinceDays: 7 }).catch(() => emptyDensityReport),
+    getVerifiedInactiveTeachers(metricsClient, { sinceDays: 7 }).catch(() => []),
+    getTeacherActivationFunnel(metricsClient).catch(() => emptyFunnel),
+    getLearningActionRetention(metricsClient).catch(() => emptyRetention),
+    getModerationSlaReport(supabase).catch(() => emptySla),
+    getRevenueOpsSnapshot(metricsClient).catch(() => emptyRevenue),
     adminClient
       ? listRecentAdminBillingGrants(adminClient, 12).catch(() => [])
       : Promise.resolve([]),

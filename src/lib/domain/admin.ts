@@ -309,7 +309,11 @@ export async function getUserFeedbackQueue(supabase: SupabaseClient<Database>) {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) throw error;
+  // Tablo henüz migrate edilmemişse sessizce boş dizi döndür
+  if (error) {
+    console.warn("[getUserFeedbackQueue] user_feedback tablosu mevcut değil veya erişilemiyor:", error.message);
+    return [] as UserFeedbackQueueItem[];
+  }
   return (data ?? []) as UserFeedbackQueueItem[];
 }
 
