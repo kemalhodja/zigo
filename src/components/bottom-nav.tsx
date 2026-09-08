@@ -45,11 +45,11 @@ export function BottomNav({
 
   return (
     <nav
-      className={`safe-bottom safe-x fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md grid grid-cols-5 px-1 py-0.5 text-center zigo-nav-label ${roleNavClass} ${
+      className={`safe-bottom safe-x md:hidden fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-md grid grid-cols-5 px-1 py-0.5 text-center zigo-nav-label ${roleNavClass} ${
         variant === "overlay"
           ? "border-t border-white/10 bg-black/35 text-white backdrop-blur-md"
           : "zigo-bottom-bar text-slate-500"
-      } md:z-50`}
+      }`}
       style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
     >
       {navItems.map((item) => {

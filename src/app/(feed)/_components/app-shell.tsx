@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 
 /**
- * AppShell manages the responsive three-column grid layout for the feed.
- * Features sticky side panels on desktop and a fixed bottom tab bar on mobile.
+ * AppShell manages the responsive three-column layout for the feed.
+ * Mobile: single column with bottom tab bar (handled by root AppShell)
+ * Tablet (md): left nav + feed (2 columns)
+ * Desktop (lg): left nav + feed + right panel (3 columns, centered, max-w-7xl)
  */
 export function AppShell({
   leftNav,
@@ -14,30 +16,32 @@ export function AppShell({
   rightPanel: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-white md:bg-slate-100 dark:md:bg-slate-950">
-      <div className="mx-auto max-w-7xl px-0 md:px-4 lg:px-8">
-        <div className="flex justify-center md:grid md:grid-cols-[240px_minmax(0,640px)] lg:grid-cols-[240px_minmax(0,640px)_280px] md:gap-6 lg:gap-8 pt-0 md:pt-8 pb-20 md:pb-8">
-          
-          {/* Left Nav: Sticky behavior with scrollbar hidden if content exceeds height */}
-          <aside className="hidden md:block sticky top-24 h-[calc(100vh-7rem)] overflow-y-auto overflow-x-hidden scrollbar-hide">
+    <div className="min-h-screen bg-[#f8fafc]">
+      <div className="mx-auto max-w-7xl">
+        {/* Desktop & Tablet: Flex row side-by-side */}
+        <div className="hidden md:flex flex-row justify-center items-start gap-6 lg:gap-8 px-4 lg:px-8 pt-6 pb-12">
+          {/* Left Nav: sticky sidebar */}
+          <aside className="sticky top-20 w-[220px] lg:w-[240px] shrink-0 self-start">
             {leftNav}
           </aside>
-          
-          {/* Main Feed Content */}
-          <main className="w-full max-w-full md:max-w-[640px] flex-shrink-0">
+
+          {/* Main Feed: centered, generous width */}
+          <main className="w-full max-w-[620px] min-w-0" id="main-content">
             {children}
           </main>
-          
-          {/* Right Panel: Sticky behavior with scrollbar hidden if content exceeds height */}
-          <aside className="hidden lg:block sticky top-24 h-[calc(100vh-7rem)] overflow-y-auto overflow-x-hidden scrollbar-hide">
+
+          {/* Right Panel: sticky widgets */}
+          <aside className="hidden lg:block sticky top-20 w-[300px] xl:w-[320px] shrink-0 self-start">
             {rightPanel}
           </aside>
         </div>
-      </div>
-      
-      {/* Mobile Bottom Bar wrapper */}
-      <div className="block md:hidden fixed bottom-0 left-0 right-0 z-50">
-        {leftNav}
+
+        {/* Mobile: clean single column */}
+        <div className="md:hidden pb-20">
+          <main id="main-content" className="w-full max-w-lg mx-auto">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

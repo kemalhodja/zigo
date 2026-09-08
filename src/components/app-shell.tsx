@@ -153,7 +153,7 @@ export function AppShell({
   }, [_router, pathname]);
 
   useEffect(() => {
-    const isDarkPage = pathname === "/";
+    const isDarkPage = pathname.startsWith("/sparks") || pathname.startsWith("/micro");
 
     if (isDarkPage) {
       document.documentElement.classList.add("dark-theme");
@@ -180,11 +180,11 @@ export function AppShell({
 
   return (
     <div
-      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 flex-col overflow-x-hidden ${getRoleThemeClass(viewerRole)} ${
-        pathname === "/" 
-          ? "max-w-full" 
-          : `max-w-md md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-white/8 md:shadow-[0_32px_80px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,71,255,0.08)] ${isImmersive ? "relative bg-night" : ""}`
-      }`}
+      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 flex-col ${
+        pathname === "/"
+          ? "max-w-full"
+          : `max-w-md overflow-x-hidden md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-white/8 md:shadow-[0_32px_80px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,71,255,0.08)] ${isImmersive ? "relative bg-night" : ""}`
+      } ${getRoleThemeClass(viewerRole)}`}
     >
       {isPreviewMode ? <PreviewModeBanner /> : null}
       {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} isPlatformAdmin={isPlatformAdmin} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
@@ -201,14 +201,20 @@ export function AppShell({
 
       <main
         key={pathname}
-        className={`min-w-0 flex-1 page-transition-fade ${isImmersive ? "overflow-hidden p-0" : `px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-[4.5rem] ${pathname === "/" ? "pt-0" : "py-3"}`}`}
+        className={`min-w-0 flex-1 page-transition-fade ${
+          isImmersive
+            ? "overflow-hidden p-0"
+            : pathname === "/"
+              ? "p-0"
+              : `px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-[4.5rem] py-3`
+        }`}
         id="main-content"
       >
-        {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin ? (
+        {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin && pathname !== "/" ? (
           <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
         ) : null}
         {children}
-        {hideQuickDock || isPlatformAdmin ? null : (
+        {hideQuickDock || isPlatformAdmin || pathname === "/" ? null : (
           <div className="-mx-1 mt-6">
             <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
           </div>
@@ -220,7 +226,7 @@ export function AppShell({
       {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
 
       {isStories || isPost ? null : (
-        <div className={isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}>
+        <div className={`md:hidden ${isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}`}>
           <BottomNav
             canCreateSocialPost={canCreateSocialPost}
             isPlatformAdmin={isPlatformAdmin}
@@ -344,7 +350,7 @@ function Header({
   const _router = useRouter();
   const primaryAction = getHeaderPrimaryAction(viewerRole, canCreateSocialPost, { isPlatformAdmin });
   const isHomePage = pathname === "/";
-  const isDarkPage = isHomePage;
+  const isDarkPage = pathname.startsWith("/sparks") || pathname.startsWith("/micro");
 
   return (
     <header className={`safe-top zigo-topbar sticky top-0 z-10 min-w-0 px-4 py-2 backdrop-blur-xl border-b shadow-sm transition-all duration-300 ${
