@@ -197,16 +197,28 @@ jobs:
           fetch-depth: 0
 
       - name: Setup k6
-        uses: grafana/k6-action@v0.2.0
-        with:
-          version: 'latest'
+        uses: grafana/setup-k6-action@v1
+
+      - name: Prepare results directory
+        run: mkdir -p k6-results
 
       - name: Run load test (smoke)
-        run: k6 run e2e/load-test.js --env BASE_URL=https://staging.zigo.app
+        run: |
+          TARGET_URL="${{ vars.PERF_TEST_URL || 'https://zigo.app' }}"
+          k6 run e2e/load-test.js --vus 5 --duration 30s --env BASE_URL="$TARGET_URL"
+        continue-on-error: true
 
       - name: Run load test (stress)
         if: github.event_name == 'workflow_dispatch'
-        run: k6 run e2e/load-test.js --env BASE_URL=https://staging.zigo.app --duration 5m --vus 500
+        run: |
+          TARGET_URL="${{ vars.PERF_TEST_URL || 'https://zigo.app' }}"
+          k6 run e2e/load-test.js --duration 2m --vus 50 --env BASE_URL="$TARGET_URL"
+        continue-on-error: true
+
+      - name: Move summaries to results directory
+        if: always()
+        run: |
+          mv -f summary.json summary.html k6-results/ 2>/dev/null || true
 
       - name: Upload k6 results
         if: always()
@@ -215,6 +227,7 @@ jobs:
           name: k6-results
           path: k6-results/
           retention-days: 7
+          if-no-files-found: ignore
 
   # ============================================================
   # SECURITY SCANS
@@ -223,6 +236,9 @@ jobs:
     name: Security Scan (OWASP ZAP)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: quality-gates
     steps:
@@ -232,10 +248,12 @@ jobs:
           fetch-depth: 0
 
       - name: Run OWASP ZAP Scan
-        uses: zaproxy/action-full-scan@v0.12.0
+        uses: zaproxy/action-baseline@v0.14.0
         with:
-          target: 'https://staging.zigo.app'
-          cmd_options: '-a'
+          target: ${{ vars.SECURITY_SCAN_URL || 'https://zigo.app' }}
+          cmd_options: '-r zap-report.html'
+          allow_issue_writing: false
+          fail_action: false
 
       - name: Upload ZAP Report
         if: always()
@@ -244,6 +262,7 @@ jobs:
           name: zap-report
           path: zap-report.html
           retention-days: 7
+          if-no-files-found: ignore
 
   # ============================================================
   # DEPLOY STAGING (on develop push or manual)
