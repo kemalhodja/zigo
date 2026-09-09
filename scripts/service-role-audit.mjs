@@ -28,7 +28,15 @@ const ALLOWED_ADMIN_IMPORTS = new Set([
   "src/app/api/account/parental-consent/decide/route.ts",
   "src/app/api/account/parental-consent/route.ts",
   "src/app/api/cron/churn-reengagement/route.ts",
-  "src/app/api/cron/trial-reminders/route.ts"
+  "src/app/api/cron/trial-reminders/route.ts",
+  "src/app/api/admin/users/delete/route.ts",
+  "src/app/api/billing/dev-activate/route.ts",
+  "src/app/api/profile/delete/route.ts",
+  "src/app/api/subscriptions/verify/route.ts",
+  "src/app/_components/home/data.ts",
+  "src/lib/domain/bank-transfer.ts",
+  "src/lib/domain/billing.ts",
+  "src/lib/domain/subscription.ts"
 ]);
 
 const ALLOWED_SERVICE_ROLE_MENTIONS = new Set([

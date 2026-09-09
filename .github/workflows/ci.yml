@@ -53,16 +53,16 @@ jobs:
       - name: ESLint
         run: npm run lint
 
-      - name: Audit: TypeScript strict
+      - name: "Audit: TypeScript strict"
         run: npm run audit:typescript
 
-      - name: Audit: Security (auth, CORS, env leak, service-role, RLS)
+      - name: "Audit: Security (auth, CORS, env leak, service-role, RLS)"
         run: npm run audit:security
 
-      - name: Audit: Moderation pipeline
+      - name: "Audit: Moderation pipeline"
         run: node scripts/moderation-pipeline-audit.mjs
 
-      - name: Audit: Product scope
+      - name: "Audit: Product scope"
         run: npm run audit:product-scope
 
       - name: Unit tests
