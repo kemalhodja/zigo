@@ -238,7 +238,6 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-      issues: write
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: quality-gates
     steps:
@@ -247,13 +246,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run OWASP ZAP Scan
-        uses: zaproxy/action-baseline@v0.14.0
-        with:
-          target: ${{ vars.SECURITY_SCAN_URL || 'https://zigo.app' }}
-          cmd_options: '-r zap-report.html'
-          allow_issue_writing: false
-          fail_action: false
+      - name: Run OWASP ZAP Baseline Scan
+        run: |
+          docker run --rm -v $(pwd):/zap/wrk/:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t ${{ vars.SECURITY_SCAN_URL || 'https://zigo.app' }} \
+            -r zap-report.html \
+            -J report_json.json \
+            -w report_md.md || true
+          sudo chmod 644 zap-report.html 2>/dev/null || true
 
       - name: Upload ZAP Report
         if: always()
