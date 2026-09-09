@@ -51,16 +51,21 @@ export function SocialMediaFrame({
   filterPreset = "normal",
 }: SocialMediaFrameProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [videoReady, setVideoReady] = useState(false);
+  const [videoReady, setVideoReady] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Consolidate single url or array into items array
   const rawUrls = mediaUrls && mediaUrls.length > 0 ? mediaUrls : mediaUrl ? [mediaUrl] : [];
   const items = rawUrls.map((url) => getMediaPlaybackUrl(url)).filter(Boolean) as string[];
   const isCarousel = items.length > 1;
   const hasMedia = items.length > 0;
-  const isVideo = Boolean(hasMedia && mediaType === "video");
+  
+  // Eğer mediaType belirtilmemişse, URL'den video olduğunu anlamaya çalış.
+  const firstUrl = items[0] || "";
+  const isVideoUrl = firstUrl.includes(".mp4") || firstUrl.includes(".webm") || firstUrl.includes(".mov");
+  const isVideo = Boolean(hasMedia && (mediaType === "video" || (!mediaType && isVideoUrl)));
 
   React.useEffect(() => {
     if (!isVideo || !videoRef.current) return;
@@ -70,17 +75,16 @@ export function SocialMediaFrame({
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) {
-            if (entry.intersectionRatio >= 0.5) {
-              video.play().catch(() => {});
-            }
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.2) {
+            video.play().then(() => setIsPlaying(true)).catch(() => {});
           } else {
             video.pause();
+            setIsPlaying(false);
           }
         }
       },
       {
-        threshold: [0.1, 0.5, 0.8],
+        threshold: [0.1, 0.2, 0.6],
       }
     );
 
@@ -130,7 +134,7 @@ export function SocialMediaFrame({
                 <>
                   {/* Video loading skeleton */}
                   <div
-                    className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500 ${videoReady ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                    className={`absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500 ${videoReady ? 'opacity-0' : 'opacity-100'}`}
                   >
                     <div className="relative flex size-16 items-center justify-center rounded-full bg-white/10 ring-2 ring-white/20">
                       <svg className="size-7 translate-x-0.5 text-white/80" fill="currentColor" viewBox="0 0 24 24">
@@ -190,7 +194,7 @@ export function SocialMediaFrame({
                   priority={priority && idx === 0}
                   fetchPriority={fetchPriority}
                   src={url}
-                  unoptimized={url.startsWith("/api/")}
+                  unoptimized={true}
                   style={combinedStyle}
                 />
               )}
@@ -199,10 +203,24 @@ export function SocialMediaFrame({
         </div>
       ) : hasMedia ? (
         isVideo ? (
-          <div className="group relative flex size-full items-center justify-center">
+          <div
+            className="group relative flex size-full items-center justify-center cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const v = videoRef.current;
+              if (!v) return;
+              if (v.paused) {
+                v.play().then(() => setIsPlaying(true)).catch(() => {});
+              } else {
+                v.pause();
+                setIsPlaying(false);
+              }
+            }}
+          >
             {/* Video loading skeleton */}
             <div
-              className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500 ${videoReady ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+              className={`absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-500 ${videoReady ? 'opacity-0' : 'opacity-100'}`}
             >
               <div className="relative flex size-16 items-center justify-center rounded-full bg-white/10 ring-2 ring-white/20">
                 <svg className="size-7 translate-x-0.5 text-white/80" fill="currentColor" viewBox="0 0 24 24">
@@ -211,47 +229,59 @@ export function SocialMediaFrame({
               </div>
               <div className="mt-3 h-1.5 w-20 animate-pulse rounded-full bg-white/20" />
             </div>
+
             <video
               ref={videoRef}
               aria-label={alt || "Video preview"}
-              className={`size-full transition-all duration-500 ${fitClass} ${videoReady ? 'opacity-100' : 'opacity-0'}`}
+              className={`size-full transition-all duration-300 ${fitClass} ${videoReady ? 'opacity-100' : 'opacity-0'}`}
               controls={controls}
-              loop={!controls}
-              muted={!controls}
-              onLoadedMetadata={() => setVideoReady(true)}
-              onLoadedData={() => setVideoReady(true)}
-              onPlay={() => setVideoReady(true)}
-              onClick={(e) => {
-                e.stopPropagation();
-                const video = e.currentTarget;
-                if (video.paused) {
-                  video.play().catch(() => {});
-                } else {
-                  video.pause();
-                }
-              }}
+              autoPlay
+              loop
+              muted={isMuted}
               playsInline
-              preload="metadata"
+              preload="auto"
               src={items[0]}
+              onLoadedMetadata={() => setVideoReady(true)}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
               style={combinedStyle}
             />
+
+            {/* Play overlay when paused */}
+            {!isPlaying && (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/25">
+                <div className="flex size-16 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md shadow-xl ring-2 ring-white/30 transition-transform">
+                  <svg className="size-8 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+            )}
+
+            {/* Mute / Unmute Button */}
             <button
-              aria-label="Tam Ekran"
-              className="absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity hover:bg-black/70 group-hover:opacity-100"
+              aria-label={isMuted ? "Sesi Aç" : "Sesi Kapat"}
+              className="absolute bottom-3 right-3 z-30 flex size-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-all hover:bg-black/80 hover:scale-110 active:scale-95 shadow-md"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const v = videoRef.current;
-                if (v) {
-                  if (v.requestFullscreen) v.requestFullscreen().catch(() => {});
-                  else if ("webkitRequestFullscreen" in v) (v as HTMLVideoElement & { webkitRequestFullscreen: () => void }).webkitRequestFullscreen();
-                }
+                if (!videoRef.current) return;
+                const newMuted = !videoRef.current.muted;
+                videoRef.current.muted = newMuted;
+                setIsMuted(newMuted);
               }}
               type="button"
             >
-              <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              </svg>
+              {isMuted ? (
+                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+              ) : (
+                <svg className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+              )}
             </button>
           </div>
         ) : (
@@ -263,7 +293,7 @@ export function SocialMediaFrame({
             priority={priority}
             fetchPriority={fetchPriority}
             src={items[0]}
-            unoptimized={items[0]?.startsWith("/api/")}
+            unoptimized={true}
             style={combinedStyle}
           />
         )

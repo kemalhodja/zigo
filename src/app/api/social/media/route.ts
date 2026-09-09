@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createClient } from "@/lib/supabase/server";
-
 const pathSchema = z.string().trim().min(3).max(500).refine(
   (value) => !value.includes("..") && !value.startsWith("/") && !value.includes("\\"),
   "Invalid media path",
 );
 
-/** Redirect an authenticated viewer to a short-lived private Storage URL. */
+/** Redirect a media request to the public Storage URL. */
 export async function GET(request: Request) {
   const path = new URL(request.url).searchParams.get("path") ?? "";
   const parsed = pathSchema.safeParse(path);
@@ -16,30 +14,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid media path." }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
-  }
+  const supabaseUrl = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    "https://fuqnjxcoxopomzgbifve.supabase.co"
+  )
+    .trim()
+    .replace(/\/$/, "");
 
-  const rpc = supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => Promise<{
-    data: boolean | null;
-    error: { message: string } | null;
-  }>;
-  const { data: canView, error: accessError } = await rpc("can_view_social_media", { target_path: parsed.data });
-  if (accessError || !canView) {
-    return NextResponse.json({ error: "Bu medyayı görüntüleme yetkiniz yok." }, { status: 403 });
-  }
+  const publicUrl = `${supabaseUrl}/storage/v1/object/public/social-media/${parsed.data}`;
 
-  const { data, error } = await supabase.storage
-    .from("social-media")
-    .createSignedUrl(parsed.data, 300);
-  if (error || !data?.signedUrl) {
-    return NextResponse.json({ error: "Medya adresi oluşturulamadı." }, { status: 404 });
-  }
-
-  return NextResponse.redirect(data.signedUrl, {
-    status: 307,
-    headers: { "Cache-Control": "private, no-store" },
+  return NextResponse.redirect(publicUrl, {
+    status: 302,
+    headers: {
+      "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+    },
   });
 }

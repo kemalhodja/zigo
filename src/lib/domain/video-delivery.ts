@@ -24,7 +24,32 @@ export function isMuxEnabled() {
 
 export function getVideoPlaybackUrl(storagePath: string) {
   if (!storagePath) return storagePath;
-  if (storagePath.startsWith("/api/social/media?")) return storagePath;
+  if (storagePath.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(storagePath);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return getVideoPlaybackUrl(parsed[0]);
+      }
+    } catch {
+      // ignore JSON parse errors and continue
+    }
+  }
+
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://fuqnjxcoxopomzgbifve.supabase.co").trim().replace(/\/$/, "");
+
+  // If path is an internal /api/social/media link, resolve directly to public storage
+  if (storagePath.includes("/api/social/media")) {
+    try {
+      const match = storagePath.match(/path=([^&]+)/);
+      if (match && match[1]) {
+        const decoded = decodeURIComponent(match[1]);
+        return `${supabaseUrl}/storage/v1/object/public/social-media/${decoded.replace(/^\//, "")}`;
+      }
+    } catch {
+      // ignore parse error
+    }
+  }
+
   const normalized = storagePath.replace(/^\//, "");
   if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("blob:") || normalized.startsWith("data:")) {
     // Already absolute: if it's a Supabase storage URL and Bunny is enabled, rewrite to Bunny pull zone
@@ -32,10 +57,6 @@ export function getVideoPlaybackUrl(storagePath: string) {
       const bunnyBase = `https://${process.env.NEXT_PUBLIC_BUNNY_PULL_ZONE!.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
       const pathPart = normalized.split("/storage/v1/object/public/social-media/")[1] ?? normalized;
       return `${bunnyBase}/${pathPart}`;
-    }
-    if (normalized.includes("/storage/v1/object/public/social-media/")) {
-      const pathPart = normalized.split("/storage/v1/object/public/social-media/")[1] ?? "";
-      if (pathPart) return getPrivateSocialMediaUrl(pathPart);
     }
     return storagePath;
   }
@@ -59,19 +80,16 @@ export function getVideoPlaybackUrl(storagePath: string) {
     return `${muxBase}/${normalized.replace(/^mux:/, "")}/playlist.m3u8`;
   }
 
-  // 4) Fallback: Supabase public URL
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, "");
-  if (!supabaseUrl) return storagePath;
-  return getPrivateSocialMediaUrl(normalized);
+  // 4) Direct Supabase public storage URL
+  return `${supabaseUrl}/storage/v1/object/public/social-media/${normalized}`;
 }
 
 export function getPrivateSocialMediaUrl(storagePath: string) {
-  return `/api/social/media?path=${encodeURIComponent(storagePath.replace(/^\//, ""))}`;
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || "https://fuqnjxcoxopomzgbifve.supabase.co").trim().replace(/\/$/, "");
+  return `${supabaseUrl}/storage/v1/object/public/social-media/${storagePath.replace(/^\//, "")}`;
 }
 
 function generateBunnyToken(_path: string): string {
-  // Bunny token auth: ?token=md5(tokenKey + _path + expires) - server should sign, client only appends if enabled
-  // MVP: client-side unsigned (pull zone with no token). Prod: use /api/video/bunny-token
   const tokenKey = process.env.NEXT_PUBLIC_BUNNY_TOKEN_KEY?.trim();
   const expires = process.env.NEXT_PUBLIC_BUNNY_TOKEN_EXPIRES?.trim();
   if (!tokenKey || !expires) return "";
@@ -84,7 +102,6 @@ export function getHlsUrl(storagePath: string): string | null {
   if (muxBase && storagePath.startsWith("mux:")) {
     return `${muxBase}/${storagePath.replace(/^mux:/, "")}/playlist.m3u8`;
   }
-  // Bunny Stream HLS is also via pull zone with /playlist.m3u8
   if (isBunnyEnabled() && storagePath.endsWith(".m3u8")) {
     return getVideoPlaybackUrl(storagePath);
   }
@@ -94,7 +111,6 @@ export function getHlsUrl(storagePath: string): string | null {
 export function isAdaptiveStreamingEnabled() {
   return Boolean(process.env.NEXT_PUBLIC_VIDEO_HLS_ENABLED === "true" || isMuxEnabled());
 }
-
 /** Alias for images and video paths stored in social-media bucket. */
 export function getMediaPlaybackUrl(storagePath: string) {
   return getVideoPlaybackUrl(storagePath);

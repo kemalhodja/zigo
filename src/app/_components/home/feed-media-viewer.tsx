@@ -14,10 +14,17 @@ export function FeedMediaViewer({
   let parsedMediaUrls: string[] | undefined = undefined;
   let singleMediaUrl: string | null | undefined = post.mediaUrl;
 
-  if (post.mediaType === "carousel" && post.mediaUrl) {
+  if (post.mediaUrl && post.mediaUrl.trim().startsWith("[")) {
     try {
-      parsedMediaUrls = JSON.parse(post.mediaUrl);
-      singleMediaUrl = undefined;
+      const parsed = JSON.parse(post.mediaUrl);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        if (post.mediaType === "carousel" || parsed.length > 1) {
+          parsedMediaUrls = parsed;
+          singleMediaUrl = undefined;
+        } else {
+          singleMediaUrl = parsed[0];
+        }
+      }
     } catch {
       console.warn("Failed to parse carousel mediaUrl", post.mediaUrl);
     }
@@ -44,12 +51,22 @@ export function FeedMediaViewer({
     );
   }
 
+  const isVideo =
+    post.mediaType === "video" ||
+    Boolean(
+      singleMediaUrl &&
+        (singleMediaUrl.includes(".mp4") ||
+          singleMediaUrl.includes(".webm") ||
+          singleMediaUrl.includes(".mov")),
+    );
+
   return (
     <DoubleTapLikeLink
       className="flex h-full w-full items-center justify-center"
       href={post.postId ? `/post/${post.postId}` : "/micro"}
       initialLiked={post.isLiked}
       postId={post.postId}
+      disableNavigation={Boolean(isVideo)}
     >
       <SocialMediaFrame
         alt={post.caption.slice(0, 80)}
