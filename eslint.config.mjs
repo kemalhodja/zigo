@@ -27,6 +27,7 @@ const eslintConfig = [
       ".playwright-godaddy/**",
       "meta-webhook-service/**",
       "*.js",
+      "e2e/load-test.js",
       "public/OneSignalSDKWorker.js",
     ],
   },

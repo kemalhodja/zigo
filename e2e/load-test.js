@@ -1,6 +1,9 @@
 // k6 Load Test for ZIGO
 // Run: k6 run e2e/load-test.js
 
+/* global __ENV */
+
+
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
@@ -33,7 +36,7 @@ export const options = {
 };
 
 // Test data
-const BASE_URL = (__ENV && __ENV.BASE_URL) || 'https://zigo.app';
+const BASE_URL = (typeof __ENV !== 'undefined' && __ENV && __ENV.BASE_URL) || 'https://zigo.app';
 const TEST_USERS = [
   { email: 'loadtest1@zigo.test', password: 'LoadTest123!' },
   { email: 'loadtest2@zigo.test', password: 'LoadTest123!' },
