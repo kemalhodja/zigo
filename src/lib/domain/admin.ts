@@ -92,7 +92,7 @@ export async function getUserVerificationQueue(supabase: SupabaseClient<Database
 export async function getAdminStoreProducts(supabase: SupabaseClient<Database>) {
   const { data, error } = await supabase
     .from("store_products")
-    .select("*")
+    .select("id, name, category, price_points, description, image_url, stock_count, is_active, created_at, requires_parent_approval")
     .order("created_at", { ascending: false });
 
   if (error) throw error;

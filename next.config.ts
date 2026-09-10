@@ -74,7 +74,9 @@ async function withOptionalBundleAnalyzer(config: NextConfig): Promise<NextConfi
   if (process.env.ANALYZE !== "true") return config;
 
   try {
-    const { default: bundleAnalyzer } = await import("@next/bundle-analyzer");
+    const pkg = "@next/bundle-analyzer";
+    // @ts-ignore - optional package
+    const { default: bundleAnalyzer } = await import(pkg);
     return bundleAnalyzer({ enabled: true })(config);
   } catch {
     console.warn("ANALYZE=true but @next/bundle-analyzer is not installed; continuing without analyzer.");

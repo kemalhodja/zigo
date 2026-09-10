@@ -139,11 +139,11 @@
     "tailwindcss": "4.1.7",
     "typescript": "6.0.3",
     "zod": "4.4.3",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "@next/bundle-analyzer": "^16.3.4"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.8.0",
-    "@next/bundle-analyzer": "^16.3.4",
     "@playwright/test": "^1.61.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@vitest/coverage-v8": "^4.1.9",

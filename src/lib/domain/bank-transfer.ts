@@ -190,13 +190,9 @@ export async function getPendingBankTransferQueue(supabase: SupabaseClient<Datab
     .from("bank_transfer_requests")
     .select(
       `
-      *,
-      user:user_id (
-        full_name,
-        email,
-        role
-      )
-    `,
+      id, user_id, plan_id, amount_try, status, created_at, reviewed_at, reference_code, receipt_storage_path,
+      user:user_id ( full_name, email, role )
+      `
     )
     .eq("status", "pending")
     .order("created_at", { ascending: true });
@@ -211,7 +207,7 @@ export async function getUserBankTransferRequests(
 ) {
   const { data, error } = await supabase
     .from("bank_transfer_requests")
-    .select("*")
+    .select("id, plan_id, amount_try, status, created_at, reviewed_at, receipt_storage_path, admin_note, reference_code, period_end")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(10);

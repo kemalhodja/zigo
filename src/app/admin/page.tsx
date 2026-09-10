@@ -471,8 +471,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       {currentTab === 'approvals' && (
         <AdminApprovalHub
-          bankTransfers={bankTransfers}
-          pendingUsers={pendingUsers}
+          bankTransfers={bankTransfers as any}
+          pendingUsers={pendingUsers as any}
           studentDocuments={studentDocuments}
         />
       )}
