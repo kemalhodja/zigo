@@ -11,7 +11,8 @@ import { Directory,Filesystem } from '@capacitor/filesystem';
 
 import { NativeVideoCompressor } from './capacitor/native-video-compressor';
 
-export const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB limit
+export const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB üst limit
+export const VIDEO_COMPRESS_THRESHOLD_BYTES = 25 * 1024 * 1024; // 25 MB üzeri videoları sıkıştır
 export const VIDEO_MIN_DURATION_SECONDS = 5;
 export const VIDEO_MAX_DURATION_SECONDS = 90; // 90 saniye süre sınırı
 
@@ -74,7 +75,7 @@ export async function compressVideo(
   file: File,
   options: CompressVideoOptions = {},
 ): Promise<File> {
-  const { onProgress, thresholdBytes = VIDEO_MAX_SIZE_BYTES } = options;
+  const { onProgress, thresholdBytes = VIDEO_COMPRESS_THRESHOLD_BYTES } = options;
   
   if (!file.type.startsWith("video/")) return file;
   if (file.size <= thresholdBytes) {

@@ -8,6 +8,7 @@ import { ProfileFeedbackBox } from "@/components/profile-feedback-box";
 import { RegistrationAccountPicker } from "@/components/registration-account-picker";
 import { SocialAvatar } from "@/components/social-primitives";
 import { isCapacitorClient } from "@/lib/client/capacitor-runtime";
+import { compressImage } from "@/lib/client/compress-image";
 import { pickProfilePhoto } from "@/lib/client/pick-profile-photo";
 import { type RegistrationAccountKind, type RequiredSignupOptionId } from "@/lib/domain/registration-account";
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -107,7 +108,12 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
     if (!file) return;
     const localPreview = URL.createObjectURL(file);
     setPreviewUrl(localPreview);
-    await uploadFile(file);
+
+    let fileToUpload = file;
+    if (file.type.startsWith("image/")) {
+      fileToUpload = await compressImage(file, 800, 0.85);
+    }
+    await uploadFile(fileToUpload);
   }
 
   async function handlePick(source: "camera" | "gallery") {

@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { SocialMediaFrame } from "@/components/social-media-frame";
+import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
+import { validateVideoLimits } from "@/lib/client/compress-video";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -12,7 +14,6 @@ import type { Messages } from "@/lib/i18n/types";
 type Status = "idle" | "saving" | "saved" | "error";
 type PublishStep = "idle" | "uploading" | "publishing" | "done";
 const allowedMediaTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"]);
-const maxFileSizeBytes = 100 * 1024 * 1024;
 const draftKey = "zigo:story-draft";
 
 type StoryArea = {
@@ -60,7 +61,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
     }
   }, [caption, selectedAreaId]);
 
-  function setFilePreview(file?: File) {
+  async function setFilePreview(file?: File) {
     if (preview?.url.startsWith("blob:")) {
       URL.revokeObjectURL(preview.url);
     }
@@ -79,12 +80,24 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       return;
     }
 
-    if (file.size > maxFileSizeBytes) {
-      setStatus("error");
-      setMessage(sc.mediaSizeError);
-      setPreview(null);
-      setSelectedFile(null);
-      return;
+    if (file.type.startsWith("image/")) {
+      const imgVal = validateImageLimits(file);
+      if (!imgVal.valid) {
+        setStatus("error");
+        setMessage(imgVal.error ?? sc.mediaSizeError);
+        setPreview(null);
+        setSelectedFile(null);
+        return;
+      }
+    } else if (file.type.startsWith("video/")) {
+      const videoVal = await validateVideoLimits(file);
+      if (!videoVal.valid) {
+        setStatus("error");
+        setMessage(videoVal.error ?? sc.mediaSizeError);
+        setPreview(null);
+        setSelectedFile(null);
+        return;
+      }
     }
 
     setSelectedFile(file);
@@ -106,8 +119,13 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
     let mediaUrl = "";
     let uploadedObjectPath = "";
     if (selectedFile) {
+        let fileToUpload = selectedFile;
+        if (fileToUpload.type.startsWith("image/")) {
+          fileToUpload = await compressImage(fileToUpload);
+        }
+
         const uploadData = new FormData();
-        uploadData.set("file", selectedFile);
+        uploadData.set("file", fileToUpload);
 
         let uploadResponse: Response;
         try {

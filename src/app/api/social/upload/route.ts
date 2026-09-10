@@ -16,7 +16,8 @@ const ALLOWED_TYPES = new Set([
   "video/mp4",
   "video/webm",
 ]);
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
 const EXTENSION_BY_TYPE = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
@@ -114,8 +115,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Desteklenmeyen dosya türü. Lütfen JPG, PNG, WEBP, GIF, MP4 veya WEBM kullanın." }, { status: 400 });
     }
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      return NextResponse.json({ error: "Medya boyutu en fazla 100 MB olabilir." }, { status: 400 });
+    const isVideo = file.type.startsWith("video/");
+    const maxBytes = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+    if (file.size > maxBytes) {
+      const limitLabel = isVideo ? "100 MB" : "5 MB";
+      const mediaLabel = isVideo ? "Video" : "Görsel";
+      return NextResponse.json({ error: `${mediaLabel} boyutu en fazla ${limitLabel} olabilir.` }, { status: 400 });
     }
 
     if (!(await hasValidFileSignature(file))) {

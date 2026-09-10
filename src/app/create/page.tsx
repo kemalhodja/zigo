@@ -132,7 +132,14 @@ function CreateStudioHero({
   );
 }
 
-type CreateLockReason = "areas" | "auth" | "not-teacher" | "not-premium" | "setup" | "unverified";
+type CreateLockReason =
+  | "areas"
+  | "auth"
+  | "not-teacher"
+  | "not-premium"
+  | "setup"
+  | "unverified"
+  | "blocked";
 
 async function getCreatePageData(): Promise<{
   areas: ComposerArea[];
@@ -168,6 +175,16 @@ async function getCreatePageData(): Promise<{
         areas: [],
         canCreate: false,
         lockReason: "auth",
+        teacherCreatorPlus: false,
+        allowDevActivate: false,
+      };
+    }
+
+    if (profile.social_interactions_blocked) {
+      return {
+        areas: [],
+        canCreate: false,
+        lockReason: "blocked",
         teacherCreatorPlus: false,
         allowDevActivate: false,
       };
@@ -294,6 +311,12 @@ const createLockedCopy = (c: Messages["createPage"], common: Messages["common"],
       description: c.unverifiedDesc,
       href: "/teacher",
       title: c.unverifiedTitle,
+    },
+    blocked: {
+      action: "Destek ve Kurallar",
+      description: "Topluluk kurallarını ihlal ettiğiniz için içerik paylaşımınız kısıtlanmıştır.",
+      href: "/support",
+      title: "Paylaşım Yetkiniz Kısıtlandı 🚫",
     },
   }) as const;
 

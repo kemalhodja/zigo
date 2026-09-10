@@ -4,6 +4,7 @@ import { isNightBanActive, turkeyHourAndDate } from "@/lib/domain/game-limits";
 import { resolveStudentGameLimits } from "@/lib/domain/game-limits-server";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { requireRole } from "@/lib/server/role-guard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -27,7 +28,7 @@ export async function GET() {
       }, { status: 403 });
     }
 
-    const admin = supabase;
+    const admin = createAdminClient() ?? supabase;
 
     const limits = await resolveStudentGameLimits();
     const { turkeyHour, todayTR } = turkeyHourAndDate();

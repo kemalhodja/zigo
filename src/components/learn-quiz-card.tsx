@@ -139,6 +139,13 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
       if (currentIndex < questions.length - 1) {
         setCurrentIndex((value) => value + 1);
         setMessage(l.nextQuestion);
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+          try {
+            navigator.vibrate?.(15);
+          } catch {
+            // Ignore
+          }
+        }
         return;
       }
 
@@ -290,7 +297,16 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
               }`}
               disabled={Boolean(result)}
               key={`${quiz.id}-${currentIndex}-${index}`}
-              onClick={() => setSelectedOption(index)}
+              onClick={() => {
+                setSelectedOption(index);
+                if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+                  try {
+                    navigator.vibrate?.(10);
+                  } catch {
+                    // Ignore if not supported
+                  }
+                }
+              }}
               role="radio"
               type="button"
             >
@@ -322,22 +338,46 @@ export function LearnQuizCard({ quiz, childProfileId }: LearnQuizCardProps) {
         </div>
       ) : null}
 
-      <button
-        className="w-full zigo-cta tap-scale rounded-lg px-4 py-3 text-sm font-black text-white disabled:opacity-60"
-        disabled={
-          selectedOption === null || isSubmitting || Boolean(result) || loadingQuestions || questionsError
-        }
-        onClick={submitQuiz}
-        type="button"
-      >
-        {isSubmitting
-          ? l.submitting
-          : result
-            ? l.resultSaved
-            : isMultiQuestion && currentIndex < questions.length - 1
-              ? l.nextQuestion
-              : l.submitAnswer}
-      </button>
+      <div className="flex gap-2">
+        {isMultiQuestion && currentIndex > 0 && !result ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (selectedOption !== null && activeQuestion) {
+                setAnswers((prev) => ({ ...prev, [activeQuestion.id]: selectedOption }));
+              }
+              setCurrentIndex((value) => value - 1);
+              if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+                try {
+                  navigator.vibrate?.(10);
+                } catch {
+                  // Ignore
+                }
+              }
+            }}
+            className="tap-scale rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-100 transition whitespace-nowrap"
+          >
+            ← Önceki Soru
+          </button>
+        ) : null}
+
+        <button
+          className="flex-1 zigo-cta tap-scale rounded-lg px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+          disabled={
+            selectedOption === null || isSubmitting || Boolean(result) || loadingQuestions || questionsError
+          }
+          onClick={submitQuiz}
+          type="button"
+        >
+          {isSubmitting
+            ? l.submitting
+            : result
+              ? l.resultSaved
+              : isMultiQuestion && currentIndex < questions.length - 1
+                ? l.nextQuestion
+                : l.submitAnswer}
+        </button>
+      </div>
 
       {result ? (
         <div className="flex flex-col gap-2 mt-1">

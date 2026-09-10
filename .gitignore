@@ -35,6 +35,8 @@ android/**/build/
 android/local.properties
 Zigo-debug.apk
 Zigo-release.aab
+Zigo-YENI-release.aab
+*.aab
 
 # test artifacts
 coverage/

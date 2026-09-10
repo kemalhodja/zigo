@@ -70,12 +70,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-function withOptionalBundleAnalyzer(config: NextConfig): NextConfig {
+async function withOptionalBundleAnalyzer(config: NextConfig): Promise<NextConfig> {
   if (process.env.ANALYZE !== "true") return config;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const bundleAnalyzer = require("@next/bundle-analyzer").default;
+    const { default: bundleAnalyzer } = await import("@next/bundle-analyzer");
     return bundleAnalyzer({ enabled: true })(config);
   } catch {
     console.warn("ANALYZE=true but @next/bundle-analyzer is not installed; continuing without analyzer.");

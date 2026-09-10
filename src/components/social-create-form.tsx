@@ -6,8 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import type { ComposerArea } from "@/components/create-mode-composer";
 import { type MediaFilterPreset,SocialMediaFrame } from "@/components/social-media-frame";
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
-import { compressImage } from "@/lib/client/compress-image";
-import { compressVideo, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
+import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
+import {
+  compressVideo,
+  validateVideoLimits,
+  VIDEO_COMPRESS_THRESHOLD_BYTES,
+  VIDEO_MAX_SIZE_BYTES,
+} from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
@@ -18,7 +23,6 @@ import type { Messages } from "@/lib/i18n/server";
 type Status = "idle" | "saving" | "saved" | "error";
 type PublishStep = "idle" | "compressing" | "uploading" | "publishing" | "done";
 const allowedMediaTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"]);
-const maxFileSizeBytes = 15 * 1024 * 1024;
 const draftKey = "zigo:composer-draft";
 
 type SocialCreateFormProps = {
@@ -130,14 +134,6 @@ export function SocialCreateForm({
       return;
     }
 
-    if (file.size > maxFileSizeBytes) {
-      setStatus("error");
-      setMessage(`Dosya 15 MB'dan büyük olamaz. (${sc.mediaSizeError})`);
-      setPreview(null);
-      setSelectedFile(null);
-      return;
-    }
-
     if (file.type.startsWith("video/")) {
       const blobUrl = URL.createObjectURL(file);
       setSelectedFile(file);
@@ -150,21 +146,24 @@ export function SocialCreateForm({
       });
 
       setIsValidating(true);
-      const video = document.createElement("video");
-      video.preload = "metadata";
-      video.onloadedmetadata = () => {
+      validateVideoLimits(file).then((result) => {
         setIsValidating(false);
-        if (video.duration > 45) {
+        if (!result.valid) {
           setStatus("error");
-          setMessage("Video süresi 45 saniyeden uzun olamaz.");
+          setMessage(result.error ?? "Video süresi veya boyutu sınırları aşıyor.");
           setSelectedFile(null);
           setPreview(null);
         }
-      };
-      video.onerror = () => {
-        setIsValidating(false);
-      };
-      video.src = blobUrl;
+      });
+      return;
+    }
+
+    const imgVal = validateImageLimits(file);
+    if (!imgVal.valid) {
+      setStatus("error");
+      setMessage(imgVal.error ?? sc.mediaSizeError);
+      setPreview(null);
+      setSelectedFile(null);
       return;
     }
 
@@ -206,7 +205,7 @@ export function SocialCreateForm({
     if (selectedFile) {
       // ── Video compression (client-side, before upload) ─────────────────────
       let fileToUpload = selectedFile;
-      if (selectedFile.type.startsWith("video/") && selectedFile.size > VIDEO_MAX_SIZE_BYTES) {
+      if (selectedFile.type.startsWith("video/") && selectedFile.size > VIDEO_COMPRESS_THRESHOLD_BYTES) {
         setStep("compressing");
         setMessage("Video sıkıştırılıyor… 0%");
         const abortCtrl = new AbortController();
@@ -234,16 +233,16 @@ export function SocialCreateForm({
             setMessage("");
             return;
           }
-          // Non-fatal: fall back to original file (server will reject if > 15 MB).
+          // Non-fatal: fall back to original file.
           fileToUpload = selectedFile;
         } finally {
           compressAbortRef.current = null;
         }
       }
       // ── Image compression (client-side, before upload) ─────────────────────
-      if (selectedFile.type.startsWith("image/") && selectedFile.size > 1.5 * 1024 * 1024) {
+      if (selectedFile.type.startsWith("image/")) {
         setStep("compressing");
-        setMessage("Görsel sıkıştırılıyor…");
+        setMessage("Görsel optimize ediliyor…");
         try {
           fileToUpload = await compressImage(selectedFile);
         } catch {

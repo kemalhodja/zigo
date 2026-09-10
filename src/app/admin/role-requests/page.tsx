@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
@@ -47,8 +48,19 @@ export default async function RoleRequestsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-8">
-      <h1 className="mb-8 text-2xl font-black text-night">Rol Değiştirme Talepleri (Onay Bekleyenler)</h1>
+    <div className="mx-auto max-w-6xl p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-night">Rol Değiştirme Talepleri</h1>
+          <p className="mt-1 text-sm text-slate-500 font-medium">Kullanıcıların onay bekleyen rol yükseltme başvuruları</p>
+        </div>
+        <Link
+          href="/admin?tab=approvals"
+          className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-200"
+        >
+          ← Onay Merkezine Dön
+        </Link>
+      </div>
       
       <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
         <table className="w-full text-left">

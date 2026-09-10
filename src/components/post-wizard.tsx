@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import type { ComposerArea } from "@/components/create-mode-composer";
+import { validateImageLimits } from "@/lib/client/compress-image";
 import { validateVideoLimits } from "@/lib/client/compress-video";
 import { type UploadPhase,useUploadPipeline } from "@/lib/client/use-upload-pipeline";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
@@ -31,11 +32,9 @@ const ALLOWED_TYPES = new Set([
   "video/mp4",
   "video/webm",
 ]);
-const MAX_IMAGE_BYTES = 100 * 1024 * 1024;
-
 const OVERLAY_STEPS: { id: UploadPhase; label: string }[] = [
   { id: "validating", label: "Doğrulanıyor" },
-  { id: "compressing", label: "Video Optimize Ediliyor" },
+  { id: "compressing", label: "Medya Optimize Ediliyor" },
   { id: "uploading", label: "Medya Yükleniyor" },
   { id: "publishing", label: "Paylaşılıyor" },
   { id: "done", label: "Tamamlandı" },
@@ -144,9 +143,12 @@ export function PostWizard({
           setMediaError(result.error ?? "Video geçersiz.");
           return;
         }
-      } else if (file.size > MAX_IMAGE_BYTES) {
-        setMediaError("Seçilen bir görsel 100 MB sınırını aşıyor.");
-        return;
+      } else {
+        const result = validateImageLimits(file);
+        if (!result.valid) {
+          setMediaError(result.error ?? "Görsel geçersiz.");
+          return;
+        }
       }
 
       validFiles.push(file);

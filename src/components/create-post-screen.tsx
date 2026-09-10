@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 
-const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB Limit
+import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
+import { validateVideoLimits } from "@/lib/client/compress-video";
 
 export interface CreatePostScreenProps {
   onSuccess?: () => void;
@@ -27,13 +28,22 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
       return;
     }
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      const errorMsg = `Dosya boyutu 100 MB sınırını aşıyor (${sizeMB} MB). Lütfen daha küçük bir dosya seçin.`;
-      setError(errorMsg);
-      setMediaFile(null);
-      event.target.value = "";
-      return;
+    if (file.type.startsWith("image/")) {
+      const imgVal = validateImageLimits(file);
+      if (!imgVal.valid) {
+        setError(imgVal.error ?? "Görsel boyutu 15 MB sınırını aşıyor.");
+        setMediaFile(null);
+        event.target.value = "";
+        return;
+      }
+    } else if (file.type.startsWith("video/")) {
+      validateVideoLimits(file).then((videoVal) => {
+        if (!videoVal.valid) {
+          setError(videoVal.error ?? "Video doğrulanamadı.");
+          setMediaFile(null);
+          event.target.value = "";
+        }
+      });
     }
 
     setMediaFile(file);
@@ -61,11 +71,15 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
       let mediaUrl = "";
       let mediaType: "image" | "video" = "image";
 
-      // 1. Medya dosyası varsa önce yükleme API'sine gönder
+      // 1. Medya dosyası varsa önce optimize et ve yükleme API'sine gönder
       if (mediaFile) {
-        mediaType = mediaFile.type.startsWith("video/") ? "video" : "image";
+        let fileToUpload = mediaFile;
+        if (fileToUpload.type.startsWith("image/")) {
+          fileToUpload = await compressImage(fileToUpload);
+        }
+        mediaType = fileToUpload.type.startsWith("video/") ? "video" : "image";
         const formData = new FormData();
-        formData.append("file", mediaFile);
+        formData.append("file", fileToUpload);
 
         const uploadRes = await fetch("/api/social/upload", {
           method: "POST",

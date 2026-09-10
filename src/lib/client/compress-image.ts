@@ -2,24 +2,51 @@
  * compress-image.ts
  *
  * Lightweight browser-native image compression and resizing utility.
- * resizes heavy images down to a maximum side of 1280px and compresses to JPEG.
+ * Resizes heavy images down to a maximum side of 1600px and compresses to WebP.
  */
 
-export async function compressImage(file: File): Promise<File> {
+export const IMAGE_MAX_INPUT_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
+export const IMAGE_COMPRESS_THRESHOLD_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
+
+/**
+ * Validates image input file size before upload/processing.
+ */
+export function validateImageLimits(file: File): { valid: boolean; error?: string } {
+  if (!file.type.startsWith("image/")) return { valid: true };
+
+  if (file.size > IMAGE_MAX_INPUT_SIZE_BYTES) {
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    return {
+      valid: false,
+      error: `Görsel boyutu 15 MB sınırını aşamaz (${sizeMb} MB). Lütfen daha küçük bir görsel seçin.`,
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Compresses an image file if it exceeds the threshold (1.5 MB).
+ * Resizes max side to 1600px and outputs optimized WebP format.
+ */
+export async function compressImage(file: File, maxSide = 1600, quality = 0.82): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
 
-  // Only compress if the file size is larger than 1.5 MB
-  if (file.size <= 1.5 * 1024 * 1024) return file;
+  // Skip GIFs (to avoid breaking animated frames) and small files under 1.5 MB
+  if (file.type === "image/gif" || file.size <= IMAGE_COMPRESS_THRESHOLD_BYTES) {
+    return file;
+  }
 
   return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      try {
         const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
-        const maxSide = 1280;
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
 
         if (width > maxSide || height > maxSide) {
           if (width > height) {
@@ -48,21 +75,29 @@ export async function compressImage(file: File): Promise<File> {
               resolve(file);
               return;
             }
-            const compressedFile = new File([blob], file.name, {
-              type: "image/jpeg",
+            const newName = file.name.replace(/\.[^/.]+$/, ".webp");
+            const compressedFile = new File([blob], newName, {
+              type: "image/webp",
               lastModified: Date.now(),
             });
-            // Return compressed file if it is actually smaller, otherwise fallback to original
+
+            // Return compressed file only if it is actually smaller
             resolve(compressedFile.size < file.size ? compressedFile : file);
           },
-          "image/jpeg",
-          0.85
+          "image/webp",
+          quality,
         );
-      };
-      img.onerror = () => resolve(file);
-      img.src = e.target?.result as string;
+      } catch (err) {
+        console.warn("[COMPRESS_IMAGE] Canvas compression failed, using original file:", err);
+        resolve(file);
+      }
     };
-    reader.onerror = () => resolve(file);
-    reader.readAsDataURL(file);
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file);
+    };
+
+    img.src = objectUrl;
   });
 }

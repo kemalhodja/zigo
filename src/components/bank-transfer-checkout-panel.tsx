@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import type { BankTransferConfig } from "@/lib/domain/bank-transfer";
+import { compressImage } from "@/lib/client/compress-image";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { BankTransferRequestRow } from "@/lib/supabase/database.types";
@@ -305,9 +306,14 @@ export function BankTransferCheckoutPanel({
     setUploading(true);
     setMessage("");
     try {
+      let fileToUpload = selectedFile;
+      if (fileToUpload.type.startsWith("image/")) {
+        fileToUpload = await compressImage(fileToUpload, 1600, 0.85);
+      }
+
       const formData = new FormData();
       formData.set("requestId", String((request as { id?: string }).id));
-      formData.set("file", selectedFile);
+      formData.set("file", fileToUpload);
 
       const response = await fetch("/api/billing/bank-transfer/receipt", {
         method: "POST",

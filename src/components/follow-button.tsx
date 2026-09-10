@@ -90,6 +90,14 @@ export function FollowButton({
       if (typeof payload.data.followers_count === "number") {
         setFollowersCount(payload.data.followers_count);
       }
+
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try {
+          navigator.vibrate?.(15);
+        } catch {
+          // Ignore
+        }
+      }
       
       // Dispatch global event to sync all other buttons of the same author immediately
       if (typeof window !== "undefined") {

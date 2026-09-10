@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 
 import { AdminAdApprovalQueue } from "@/components/admin-ad-approval-queue";
+import { AdminApprovalHub } from "@/components/admin-approval-hub";
 
 const AdminAnalyticsDashboard = dynamic(() =>
   import('@/components/admin-analytics-dashboard').then(mod => mod.AdminAnalyticsDashboard)
@@ -211,12 +212,21 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     { label: a.queueStock, value: products.length },
   ];
 
+  const totalPendingApprovals =
+    pendingUsers.length +
+    studentDocuments.length +
+    bankTransfers.filter((t) => t.status === "pending").length;
+
   const tabs = [
-    { id: 'overview', label: '📊 Genel Bakış' },
-    { id: 'users', label: '👥 Kullanıcı & Onaylar' },
-    { id: 'finance', label: '💰 Finans & Mağaza' },
-    { id: 'growth', label: '📈 Büyüme & Sağlık' },
-    { id: 'moderation', label: '🛡️ Moderasyon' },
+    { id: "overview", label: "📊 Genel Bakış" },
+    {
+      id: "approvals",
+      label: `🛡️ Onay & Takip${totalPendingApprovals > 0 ? ` (${totalPendingApprovals})` : ""}`,
+    },
+    { id: "users", label: "👥 Kullanıcı Yönetimi" },
+    { id: "finance", label: "💰 Finans & Mağaza" },
+    { id: "growth", label: "📈 Büyüme & Sağlık" },
+    { id: "moderation", label: "🛡️ Moderasyon" },
   ];
 
   return (
@@ -251,6 +261,30 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             initialPendingBankTransfers={bankTransfers.length}
             initialPendingUsers={pendingUsers.length}
           />
+
+          {totalPendingApprovals > 0 && (
+            <div className="-mx-4 flex items-center justify-between rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500 text-white font-black text-lg shadow-sm">
+                  ⚡
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-amber-950">
+                    Bekleyen {totalPendingApprovals} Onay / İnceleme İşlemi Var
+                  </h4>
+                  <p className="text-xs font-semibold text-amber-800">
+                    Hesap doğrulama, öğrenci belgeleri, havale dekontları ve rol başvuruları yönetici onayı bekliyor.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/admin?tab=approvals"
+                className="tap-scale rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-black text-white shadow-md shadow-amber-600/20 hover:bg-amber-700 whitespace-nowrap"
+              >
+                İncele & Onayla →
+              </Link>
+            </div>
+          )}
 
           <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-4">
             <div className="flex items-start justify-between gap-3">
@@ -296,6 +330,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <section className="-mx-4 bg-white px-4 py-4">
             <h3 className="text-sm font-black text-night">{a.quickLinksTitle}</h3>
             <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                className="rounded-lg bg-crystal/10 px-3 py-2 text-xs font-black text-crystal hover:bg-crystal hover:text-white transition"
+                href="/admin?tab=approvals"
+              >
+                🛡️ Onay & Takip Merkezi ({totalPendingApprovals})
+              </Link>
+              <Link
+                className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night hover:bg-slate-200 transition"
+                href="/admin?tab=users"
+              >
+                👥 Kullanıcı Özellikleri
+              </Link>
               <Link
                 className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night"
                 href="/moderation"
@@ -344,47 +390,30 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </>
       )}
 
+      {currentTab === 'approvals' && (
+        <AdminApprovalHub
+          bankTransfers={bankTransfers}
+          pendingUsers={pendingUsers}
+          studentDocuments={studentDocuments}
+        />
+      )}
+
       {currentTab === 'users' && (
         <>
-          <AdminFeedbackQueue items={feedbackQueue} />
-
-          <section className="-mx-4 bg-white px-4 py-6">
-            <h3 className="text-sm font-black text-night">Rol Değişikliği İstekleri</h3>
-            <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
-              Kullanıcıların rol yükseltme (Örn: Öğrenci -&gt; Öğretmen) ve onay bekleyen talepleri.
-            </p>
-            <div className="mt-4">
-              <AdminRoleRequests />
-            </div>
-          </section>
-
-          <section className="-mx-4 bg-white">
-            <div className="border-b border-slate-100 px-4 py-3">
-              <h3 className="text-lg font-black text-night">{a.studentDocSectionTitle}</h3>
-              <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
-                {a.studentDocSectionDesc}
-              </p>
-            </div>
-            {studentDocuments.length === 0 ? (
-              <div className="px-4 py-8 text-center">
-                <p className="text-sm font-black text-night">{a.noStudentDocsTitle}</p>
-                <p className="mx-auto mt-1 max-w-64 text-sm font-bold leading-6 text-slate-500">
-                  {a.noStudentDocsDesc}
-                </p>
+          {totalPendingApprovals > 0 && (
+            <div className="-mx-4 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-amber-900 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <span className="flex size-2 rounded-full bg-amber-500 animate-ping" />
+                <span>Bekleyen <strong>{totalPendingApprovals} adet</strong> onay ve takip işlemi bulunmaktadır.</span>
               </div>
-            ) : (
-              studentDocuments.map(student => (
-                <div className="border-b border-slate-100 px-4 py-4" key={student.id}>
-                  <AdminStudentDocumentActions
-                    documentUrl={student.student_document_url}
-                    fullName={student.full_name}
-                    gradeLevel={student.grade_level}
-                    studentId={student.id}
-                  />
-                </div>
-              ))
-            )}
-          </section>
+              <Link
+                href="/admin?tab=approvals"
+                className="tap-scale rounded-xl bg-amber-600 px-3.5 py-1.5 text-xs font-black text-white hover:bg-amber-700"
+              >
+                Onay Merkezine Git →
+              </Link>
+            </div>
+          )}
 
           <AdminUserDirectory
             areas={areas}
@@ -394,6 +423,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             studentDocumentUserIds={studentDocuments.map(s => s.id)}
             users={users}
           />
+
+          <AdminFeedbackQueue items={feedbackQueue} />
         </>
       )}
 

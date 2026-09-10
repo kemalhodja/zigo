@@ -16,7 +16,13 @@
 
 import { useRef, useState } from "react";
 
-import { compressVideo, validateVideoLimits, VIDEO_MAX_SIZE_BYTES } from "@/lib/client/compress-video";
+import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
+import {
+  compressVideo,
+  validateVideoLimits,
+  VIDEO_COMPRESS_THRESHOLD_BYTES,
+  VIDEO_MAX_SIZE_BYTES,
+} from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 
@@ -113,58 +119,76 @@ export function useUploadPipeline() {
       for (let i = 0; i < input.files.length; i++) {
         let fileToUpload = input.files[i];
         
-        // ── Validate (size + duration for videos) ──────────────────────────
-        const validation = await validateVideoLimits(fileToUpload);
-        if (!validation.valid) {
-          console.error(`[POST_PIPELINE] Media validation failed for file ${i + 1}:`, validation.error);
-          setPhase("error");
-          setError(validation.error ?? `Dosya ${i + 1} doğrulanamadı. Lütfen farklı bir dosya seçin.`);
-          runningRef.current = false;
-          return;
+        // ── Validate & Compress Images ─────────────────────────────────────
+        if (fileToUpload.type.startsWith("image/")) {
+          const imgValidation = validateImageLimits(fileToUpload);
+          if (!imgValidation.valid) {
+            console.error(`[POST_PIPELINE] Image validation failed for file ${i + 1}:`, imgValidation.error);
+            setPhase("error");
+            setError(imgValidation.error ?? `Görsel ${i + 1} doğrulanamadı.`);
+            runningRef.current = false;
+            return;
+          }
+
+          setPhase("compressing");
+          setMessage(isCarousel ? `Görsel ${i + 1} optimize ediliyor…` : "Görsel optimize ediliyor…");
+          fileToUpload = await compressImage(fileToUpload);
         }
 
-        // ── Compress large videos before upload ────────────────────────────
-        if (fileToUpload.type.startsWith("video/") && fileToUpload.size > VIDEO_MAX_SIZE_BYTES) {
-          setPhase("compressing");
-          setProgress(10 + (i * 20)); // Approximate progress
-          setMessage(isCarousel ? `Video ${i + 1} optimize ediliyor…` : "Video optimize ediliyor… 0%");
+        // ── Validate & Compress Videos ─────────────────────────────────────
+        if (fileToUpload.type.startsWith("video/")) {
+          const videoValidation = await validateVideoLimits(fileToUpload);
+          if (!videoValidation.valid) {
+            console.error(`[POST_PIPELINE] Video validation failed for file ${i + 1}:`, videoValidation.error);
+            setPhase("error");
+            setError(videoValidation.error ?? `Video ${i + 1} doğrulanamadı. Lütfen farklı bir video seçin.`);
+            runningRef.current = false;
+            return;
+          }
 
-          const ctrl = new AbortController();
-          abortCtrlRef.current = ctrl;
+          // Compress large videos (> 25 MB) before upload
+          if (fileToUpload.size > VIDEO_COMPRESS_THRESHOLD_BYTES) {
+            setPhase("compressing");
+            setProgress(10 + (i * 20)); // Approximate progress
+            setMessage(isCarousel ? `Video ${i + 1} optimize ediliyor…` : "Video optimize ediliyor… 0%");
 
-          try {
-            fileToUpload = await compressVideo(fileToUpload, {
-              signal: ctrl.signal,
-              onProgress: (ratio) => {
-                if (!isCarousel) {
-                  setProgress(10 + Math.round(ratio * 40));
-                  setMessage(`Video optimize ediliyor… ${Math.round(ratio * 100)}%`);
-                }
-              },
-            });
+            const ctrl = new AbortController();
+            abortCtrlRef.current = ctrl;
 
-            if (fileToUpload.size > VIDEO_MAX_SIZE_BYTES) {
-              console.error("[POST_PIPELINE] Post-compression size exceeds limit:", fileToUpload.size);
-              setPhase("error");
-              setError(
-                `Video sıkıştırıldıktan sonra hâlâ ${Math.round(fileToUpload.size / 1024 / 1024)} MB. ` +
-                "Lütfen daha kısa veya düşük çözünürlüklü bir video seçin.",
-              );
-              runningRef.current = false;
-              return;
+            try {
+              fileToUpload = await compressVideo(fileToUpload, {
+                signal: ctrl.signal,
+                onProgress: (ratio) => {
+                  if (!isCarousel) {
+                    setProgress(10 + Math.round(ratio * 40));
+                    setMessage(`Video optimize ediliyor… ${Math.round(ratio * 100)}%`);
+                  }
+                },
+              });
+
+              if (fileToUpload.size > VIDEO_MAX_SIZE_BYTES) {
+                console.error("[POST_PIPELINE] Post-compression size exceeds limit:", fileToUpload.size);
+                setPhase("error");
+                setError(
+                  `Video sıkıştırıldıktan sonra hâlâ ${Math.round(fileToUpload.size / 1024 / 1024)} MB. ` +
+                  "Lütfen daha kısa veya düşük çözünürlüklü bir video seçin.",
+                );
+                runningRef.current = false;
+                return;
+              }
+            } catch (err) {
+              if (err instanceof DOMException && err.name === "AbortError") {
+                runningRef.current = false;
+                setPhase("idle");
+                setProgress(0);
+                setMessage("");
+                return;
+              }
+              console.warn("[POST_PIPELINE] Video compression failed, falling back to original file:", err);
+              fileToUpload = input.files[i];
+            } finally {
+              abortCtrlRef.current = null;
             }
-          } catch (err) {
-            if (err instanceof DOMException && err.name === "AbortError") {
-              runningRef.current = false;
-              setPhase("idle");
-              setProgress(0);
-              setMessage("");
-              return;
-            }
-            console.warn("[POST_PIPELINE] Video compression failed, falling back to original file:", err);
-            fileToUpload = input.files[i];
-          } finally {
-            abortCtrlRef.current = null;
           }
         }
 

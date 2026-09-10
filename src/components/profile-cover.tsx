@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { compressImage } from "@/lib/client/compress-image";
+
 type ProfileCoverProps = {
   initialCoverUrl?: string | null;
   isEditable?: boolean;
@@ -34,8 +36,13 @@ export function ProfileCover({
     setIsUploading(true);
     setError(null);
 
+    let fileToUpload = file;
+    if (file.type.startsWith("image/")) {
+      fileToUpload = await compressImage(file, 1600, 0.85);
+    }
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", fileToUpload);
     formData.append("kind", "cover");
 
     try {

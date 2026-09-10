@@ -116,15 +116,35 @@ describe("Detailed Post Creation Pipeline & Schema Tests", () => {
     expect(validPrep.premiumPrepUrl).toBe("https://zigo.app/prep/math-exam-1.pdf");
   });
 
-  it("9. Correctly evaluates 100MB file size limit guard", () => {
-    const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+  it("9. Correctly evaluates media limits (Video 100MB, Image Server 5MB, Client Input 15MB, Compress Threshold 25MB)", () => {
+    const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+    const MAX_IMAGE_SERVER_BYTES = 5 * 1024 * 1024; // 5 MB
+    const MAX_IMAGE_INPUT_BYTES = 15 * 1024 * 1024; // 15 MB
+    const VIDEO_COMPRESS_THRESHOLD_BYTES = 25 * 1024 * 1024; // 25 MB
 
-    const validFileSize = 95 * 1024 * 1024; // 95 MB
-    const isUnderLimit = validFileSize <= MAX_FILE_SIZE_BYTES;
-    expect(isUnderLimit).toBe(true);
+    // Video tests
+    const validVideo = 95 * 1024 * 1024; // 95 MB
+    expect(validVideo <= MAX_VIDEO_SIZE_BYTES).toBe(true);
 
-    const overFileSize = 105 * 1024 * 1024; // 105 MB
-    const isOverLimit = overFileSize > MAX_FILE_SIZE_BYTES;
-    expect(isOverLimit).toBe(true);
+    const overVideo = 105 * 1024 * 1024; // 105 MB
+    expect(overVideo > MAX_VIDEO_SIZE_BYTES).toBe(true);
+
+    // Video compression trigger
+    const needsCompressionVideo = 30 * 1024 * 1024; // 30 MB
+    expect(needsCompressionVideo > VIDEO_COMPRESS_THRESHOLD_BYTES).toBe(true);
+
+    const smallVideo = 15 * 1024 * 1024; // 15 MB
+    expect(smallVideo > VIDEO_COMPRESS_THRESHOLD_BYTES).toBe(false);
+
+    // Image server & client limits
+    const validOptimizedImage = 2 * 1024 * 1024; // 2 MB
+    expect(validOptimizedImage <= MAX_IMAGE_SERVER_BYTES).toBe(true);
+
+    const rawCameraImage = 12 * 1024 * 1024; // 12 MB (valid client input, requires compression)
+    expect(rawCameraImage <= MAX_IMAGE_INPUT_BYTES).toBe(true);
+    expect(rawCameraImage > MAX_IMAGE_SERVER_BYTES).toBe(true); // Must be compressed before reaching server
+
+    const excessiveImage = 20 * 1024 * 1024; // 20 MB (rejected at client)
+    expect(excessiveImage > MAX_IMAGE_INPUT_BYTES).toBe(true);
   });
 });

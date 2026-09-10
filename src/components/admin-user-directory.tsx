@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { getOrganizationOption } from "@/lib/domain/education-organization";
 import { parseOrganizationType } from "@/lib/domain/profiles";
@@ -10,8 +10,9 @@ import type { Database } from "@/lib/supabase/database.types";
 import { AdminBillingGrantActions } from "./admin-billing-grant-actions";
 import { AdminTeacherAreaForm } from "./admin-teacher-area-form";
 import { AdminUserActions } from "./admin-user-actions";
+import { AdminUserEditModal, type AdminEditableUser } from "./admin-user-edit-modal";
 
-type User = Database["public"]["Tables"]["users"]["Row"];
+type User = AdminEditableUser;
 type Area = { id: number; area_name: string; age_group: string | null };
 
 type AdminUserDirectoryProps = {
@@ -30,6 +31,15 @@ export function AdminUserDirectory({
   const {
     ops: { admin: a },
   } = useMessages();
+
+  const [userList, setUserList] = useState<User[]>(users);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Sync when prop updates
+  useEffect(() => {
+    setUserList(users);
+  }, [users]);
 
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -103,39 +113,39 @@ export function AdminUserDirectory({
   }
 
   const filteredUsers = useMemo(() => {
-    return users.filter(
+    return userList.filter(
       (user) =>
         matchesRole(user, roleFilter) &&
         matchesStatus(user, statusFilter) &&
         matchesSearch(user, searchQuery)
     );
-  }, [users, roleFilter, statusFilter, searchQuery, studentDocumentUserIds, pendingBankTransferUserIds]);
+  }, [userList, roleFilter, statusFilter, searchQuery, studentDocumentUserIds, pendingBankTransferUserIds]);
 
   // Counts for badge numbers
   const counts = useMemo(() => {
     const roleCounts = {
-      all: users.length,
-      teacher: users.filter((u) => matchesRole(u, "teacher")).length,
-      student: users.filter((u) => matchesRole(u, "student")).length,
-      parent: users.filter((u) => matchesRole(u, "parent")).length,
-      education_platform: users.filter((u) => matchesRole(u, "education_platform")).length,
-      education_institution: users.filter((u) => matchesRole(u, "education_institution")).length,
-      publisher: users.filter((u) => matchesRole(u, "publisher")).length,
+      all: userList.length,
+      teacher: userList.filter((u) => matchesRole(u, "teacher")).length,
+      student: userList.filter((u) => matchesRole(u, "student")).length,
+      parent: userList.filter((u) => matchesRole(u, "parent")).length,
+      education_platform: userList.filter((u) => matchesRole(u, "education_platform")).length,
+      education_institution: userList.filter((u) => matchesRole(u, "education_institution")).length,
+      publisher: userList.filter((u) => matchesRole(u, "publisher")).length,
     };
 
     const statusCounts = {
-      all: users.length,
-      pending: users.filter((u) => !u.is_verified).length,
-      active: users.filter((u) => u.is_verified && u.account_status === "active").length,
-      has_document: users.filter(
+      all: userList.length,
+      pending: userList.filter((u) => !u.is_verified).length,
+      active: userList.filter((u) => u.is_verified && u.account_status === "active").length,
+      has_document: userList.filter(
         (u) => Boolean(u.student_document_url) || studentDocumentUserIds.includes(u.id)
       ).length,
-      billing_request: users.filter((u) => pendingBankTransferUserIds.includes(u.id)).length,
-      restricted: users.filter((u) => u.account_status !== "active").length,
+      billing_request: userList.filter((u) => pendingBankTransferUserIds.includes(u.id)).length,
+      restricted: userList.filter((u) => u.account_status !== "active").length,
     };
 
     return { role: roleCounts, status: statusCounts };
-  }, [users, studentDocumentUserIds, pendingBankTransferUserIds]);
+  }, [userList, studentDocumentUserIds, pendingBankTransferUserIds]);
 
   const displayedUsers = filteredUsers.slice(0, displayLimit);
 
@@ -304,6 +314,30 @@ export function AdminUserDirectory({
                         {user.is_verified ? `✓ ${a.verified}` : `⏳ ${a.pendingVerification}`}
                       </span>
 
+                      {user.is_premium ? (
+                        <span className="rounded bg-amber-50 px-2 py-0.5 text-[0.65rem] font-black text-amber-700">
+                          ★ Zigo Plus
+                        </span>
+                      ) : null}
+
+                      {user.teacher_creator_plus ? (
+                        <span className="rounded bg-violet-50 px-2 py-0.5 text-[0.65rem] font-black text-violet-700">
+                          🚀 Creator+
+                        </span>
+                      ) : null}
+
+                      {Boolean(user.social_safety_strike_count && user.social_safety_strike_count > 0) ? (
+                        <span className="rounded bg-rose-50 px-2 py-0.5 text-[0.65rem] font-black text-rose-700">
+                          ⚠️ {user.social_safety_strike_count} Ceza
+                        </span>
+                      ) : null}
+
+                      {user.social_interactions_blocked ? (
+                        <span className="rounded bg-rose-600 px-2 py-0.5 text-[0.65rem] font-black text-white">
+                          🚫 Etkileşim Engelli
+                        </span>
+                      ) : null}
+
                       {user.account_status !== "active" ? (
                         <span className="rounded bg-red-50 px-2 py-0.5 text-[0.65rem] font-black text-red-600 uppercase">
                           {user.account_status}
@@ -324,12 +358,24 @@ export function AdminUserDirectory({
                     </div>
                   </div>
 
-                  <AdminUserActions
-                    accountStatus={user.account_status}
-                    isVerified={user.is_verified}
-                    userId={user.id}
-                    userName={user.full_name}
-                  />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingUser(user);
+                        setIsEditModalOpen(true);
+                      }}
+                      className="tap-scale rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-black text-white hover:bg-slate-800 transition shadow-sm"
+                    >
+                      ⚙️ Özellikleri Yönet
+                    </button>
+                    <AdminUserActions
+                      accountStatus={user.account_status}
+                      isVerified={user.is_verified}
+                      userId={user.id}
+                      userName={user.full_name}
+                    />
+                  </div>
                 </div>
 
                 <AdminBillingGrantActions role={user.role} userId={user.id} userName={user.full_name} />
@@ -355,6 +401,17 @@ export function AdminUserDirectory({
           </button>
         </div>
       ) : null}
+      {/* Admin User Edit Modal */}
+      <AdminUserEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUserUpdated={(updated) => {
+          setUserList((prev) =>
+            prev.map((u) => (u.id === updated.id ? { ...u, ...updated } : u))
+          );
+        }}
+        user={editingUser}
+      />
     </section>
   );
 }

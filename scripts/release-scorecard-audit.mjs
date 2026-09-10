@@ -1,5 +1,6 @@
 /* global console, process */
 
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -30,8 +31,17 @@ const scorecard = read("scripts/test-scorecard.mjs");
 const acceptance = read("scripts/test-acceptance.mjs");
 const completion = read("docs/completion-status.md");
 const packageJson = read("package.json");
-const bundle = existsSync(join(root, "supabase/zigo-full-migrations.sql"))
-  ? readFileSync(join(root, "supabase/zigo-full-migrations.sql"), "utf8")
+
+const bundlePath = join(root, "supabase/zigo-full-migrations.sql");
+if (!existsSync(bundlePath)) {
+  spawnSync(process.execPath, [join(root, "scripts/bundle-migrations.mjs")], {
+    cwd: root,
+    stdio: "ignore",
+    env: process.env,
+  });
+}
+const bundle = existsSync(bundlePath)
+  ? readFileSync(bundlePath, "utf8")
   : "";
 
 const required = [

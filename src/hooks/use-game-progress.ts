@@ -27,7 +27,31 @@ type UseGameProgressOptions = {
  * - Yeni rekorda liderlik tablosunu açar
  */
 export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressOptions) {
-  const [highScore, setHighScore] = useState(0);
+  const [highScore, setHighScoreState] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const cached = localStorage.getItem(`zigo_high_score_${gameType}`);
+      return cached ? parseInt(cached, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const setHighScore = useCallback(
+    (val: number | ((prev: number) => number)) => {
+      setHighScoreState((prev) => {
+        const next = typeof val === "function" ? val(prev) : val;
+        try {
+          localStorage.setItem(`zigo_high_score_${gameType}`, String(next));
+        } catch {
+          // localStorage may be full or disabled
+        }
+        return next;
+      });
+    },
+    [gameType],
+  );
+
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const isGuest = userId === "guest";
   const isSavingRef = useRef(false);
@@ -41,12 +65,14 @@ export function useGameProgress({ gameType, userId = "guest" }: UseGameProgressO
         return r.json();
       })
       .then((data) => {
-        if (data.high_score) setHighScore(data.high_score);
+        if (data.high_score != null) {
+          setHighScore((prev) => Math.max(prev, data.high_score));
+        }
       })
       .catch((err) => {
         console.warn("[game-progress] Rekor yüklenemedi:", err);
       });
-  }, [gameType, isGuest]);
+  }, [gameType, isGuest, setHighScore]);
 
   const saveProgress = useCallback(
     async (

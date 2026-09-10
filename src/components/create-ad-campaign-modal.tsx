@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import { compressImage } from "@/lib/client/compress-image";
 import { getDistrictsForCity } from "@/lib/domain/turkey-cities-districts";
 import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -162,8 +163,13 @@ export function CreateAdCampaignModal({
     else setIsUploading(true);
     setError(null);
 
+    let fileToUpload = file;
+    if (!isAudio && file.type.startsWith("image/")) {
+      fileToUpload = await compressImage(file, 1600, 0.85);
+    }
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", fileToUpload);
 
     try {
       const res = await fetch("/api/profile/upload", {
