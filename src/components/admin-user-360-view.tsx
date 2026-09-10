@@ -7,7 +7,7 @@ import { useState } from "react";
 import type { User360Data } from "@/lib/domain/admin-user-details";
 
 import { AdminStudentReportModal } from "./admin-student-report-modal";
-import { AdminUserEditModal, type AdminEditableUser } from "./admin-user-edit-modal";
+import { type AdminEditableUser,AdminUserEditModal } from "./admin-user-edit-modal";
 
 type AdminUser360ViewProps = {
   initialData: User360Data;
@@ -441,7 +441,7 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
                     </span>
                   )}
 
-                  {Boolean(data.user.social_safety_strike_count > 0) ? (
+                  {data.user.social_safety_strike_count > 0 ? (
                     <span className="rounded-lg bg-red-600 px-2.5 py-0.5 text-xs font-black text-white shadow-sm">
                       ⚠️ {data.user.social_safety_strike_count} Ceza Puanı
                     </span>

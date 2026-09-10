@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+export const runtime = "edge";
+
 import { RateLimitExceededError } from "@/lib/domain/api-errors";
 import { authEmailSchema, enforceAuthRateLimit, verifyAuthRecaptcha } from "@/lib/server/auth-request";
 import {

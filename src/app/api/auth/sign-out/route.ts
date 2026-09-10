@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 import { createAuthActionClient } from "@/lib/supabase/server";
 
 export async function POST() {

@@ -23,7 +23,11 @@ export async function GET(_request: Request, context: RouteContext) {
     }
 
     const questions = await getQuizQuestionsForPlay(supabase, quizId);
-    return NextResponse.json({ data: questions });
+    return NextResponse.json({ data: questions }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Quiz questions could not be loaded.";
     return NextResponse.json({ error: message }, { status: 400 });

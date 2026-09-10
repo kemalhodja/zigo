@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import type { BankTransferConfig } from "@/lib/domain/bank-transfer";
 import { compressImage } from "@/lib/client/compress-image";
+import type { BankTransferConfig } from "@/lib/domain/bank-transfer";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { BankTransferRequestRow } from "@/lib/supabase/database.types";

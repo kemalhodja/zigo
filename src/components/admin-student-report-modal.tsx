@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Award, BookOpen, Clock, ShieldCheck, Printer, X } from "lucide-react";
+import { Award, BookOpen, CheckCircle2, Clock, Printer, ShieldCheck, X } from "lucide-react";
 
 import type { User360Data } from "@/lib/domain/admin-user-details";
 

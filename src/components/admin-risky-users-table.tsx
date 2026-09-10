@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { AdminUserEditModal, type AdminEditableUser } from "@/components/admin-user-edit-modal";
+import { type AdminEditableUser,AdminUserEditModal } from "@/components/admin-user-edit-modal";
 
 type AdminRiskyUsersTableProps = {
   initialUsers: AdminEditableUser[];

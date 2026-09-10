@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { DailyMissionsCard } from "@/components/daily-missions-card";
 import { LearnQuizCard } from "@/components/learn-quiz-card";
@@ -15,6 +16,31 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import { buildDemoLessons } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+
+function LearnSkeleton() {
+  return (
+    <div className="space-y-5 animate-pulse">
+      <div className="-mx-4 border-b border-violet-100 bg-white px-4 py-6">
+        <div className="h-32 bg-gradient-to-br from-violet-100 to-pink-100 rounded-xl" />
+      </div>
+      <div className="-mx-4 bg-white px-4 py-4">
+        <div className="h-24 bg-slate-100 rounded-xl" />
+      </div>
+      <div className="space-y-4">
+        <div className="h-8 bg-slate-100 rounded" />
+        <div className="grid gap-3">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl" />)}
+        </div>
+      </div>
+      <div className="space-y-4">
+        <div className="h-8 bg-slate-100 rounded" />
+        <div className="grid gap-3">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-slate-100 rounded-xl" />)}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type LearnPageProps = {
   searchParams: Promise<{ from?: string; areaId?: string; quizId?: string }>;
@@ -83,68 +109,18 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
   }
 
   if (profile.role === "student") {
-    const l = messages.learnPage;
-    const d = messages.dashboard;
-    const [quizzesRaw, feed] = await Promise.all([
-      getMatchedQuizzes(supabase),
-      getPersonalizedFeed(supabase, profile.id),
-    ]);
-    const quizzes = orderQuizzesForHabitLoop(quizzesRaw ?? [], {
-      preferredAreaId: Number.isFinite(preferredAreaId) ? preferredAreaId : null,
-      preferredQuizId,
-    });
-    const videos = feed.filter((post) => Boolean(post.media_url));
-
     return (
       <div className="space-y-5">
-        <LearnQuestHero
-          messages={messages}
-          mode="student"
-          points={profile.total_points}
-          quizCount={quizzes.length}
-          videoCount={videos.length}
-        />
-
-        {fromMicro ? (
-          <section className="-mx-4 border-b border-mint/30 bg-mint/10 px-4 py-3">
-            <p className="text-sm font-black text-night">{l.habitFromMicro}</p>
-          </section>
-        ) : null}
-
-        <DailyMissionsCard completedMissions={[]} />
-
-        <section className="-mx-4 bg-white px-4 py-4">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">
-                {l.balance}
-              </p>
-              <h3 className="mt-2 text-4xl font-black text-night">{profile.total_points}</h3>
-              <p className="text-xs font-bold text-slate-500">{l.zigoPoints}</p>
-            </div>
-            <Link className="tap-scale zigo-cta tap-scale rounded-lg px-4 py-3 text-sm font-black text-white" href="/store">
-              {d.student.store}
-            </Link>
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <h3 className="text-xl font-black text-night">{l.miniQuizzes}</h3>
-          {quizzes.length === 0 ? (
-            <StateCard title={l.noQuizzes} description={l.noQuizzesDesc} action={<Link className="font-black text-crystal" href="/onboarding">{messages.common.updateAreas}</Link>} />
-          ) : (
-            quizzes.map((quiz) => <LearnQuizCard key={quiz.id} quiz={quiz} />)
-          )}
-        </section>
-
-        <section className="space-y-4">
-          <h3 className="text-xl font-black text-night">{l.microVideos}</h3>
-          {videos.length === 0 ? (
-            <StateCard title={l.noVideos} description={l.noVideosDesc} action={<Link className="font-black text-crystal" href="/micro">{l.openMicro}</Link>} />
-          ) : (
-            videos.map((post) => <LearnVideoCard key={post.id} post={post} />)
-          )}
-        </section>
+        <Suspense fallback={<LearnSkeleton />}>
+          <StudentLearnContent 
+            supabase={supabase} 
+            profile={profile} 
+            messages={messages} 
+            preferredAreaId={preferredAreaId}
+            preferredQuizId={preferredQuizId}
+            fromMicro={fromMicro}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -424,3 +400,84 @@ function LearnHubSummary({
 }
 
 // zigo-quick-action-primary text-white
+
+async function StudentLearnContent({
+  supabase,
+  profile,
+  messages,
+  preferredAreaId,
+  preferredQuizId,
+  fromMicro,
+}: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  profile: NonNullable<Awaited<ReturnType<typeof getCurrentProfile>>>;
+  messages: Awaited<ReturnType<typeof getServerMessages>>;
+  preferredAreaId: number | null;
+  preferredQuizId: string | null;
+  fromMicro: boolean;
+}) {
+  const l = messages.learnPage;
+  const d = messages.dashboard;
+  const [quizzesRaw, feed] = await Promise.all([
+    getMatchedQuizzes(supabase),
+    getPersonalizedFeed(supabase, profile.id),
+  ]);
+  const quizzes = orderQuizzesForHabitLoop(quizzesRaw ?? [], {
+    preferredAreaId: Number.isFinite(preferredAreaId) ? preferredAreaId : null,
+    preferredQuizId,
+  });
+  const videos = feed.filter((post) => Boolean(post.media_url));
+
+  return (
+    <div className="space-y-5">
+      <LearnQuestHero
+        messages={messages}
+        mode="student"
+        points={profile.total_points}
+        quizCount={quizzes.length}
+        videoCount={videos.length}
+      />
+
+      {fromMicro ? (
+        <section className="-mx-4 border-b border-mint/30 bg-mint/10 px-4 py-3">
+          <p className="text-sm font-black text-night">{l.habitFromMicro}</p>
+        </section>
+      ) : null}
+
+      <DailyMissionsCard completedMissions={[]} />
+
+      <section className="-mx-4 bg-white px-4 py-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">
+              {l.balance}
+            </p>
+            <h3 className="mt-2 text-4xl font-black text-night">{profile.total_points}</h3>
+            <p className="text-xs font-bold text-slate-500">{l.zigoPoints}</p>
+          </div>
+          <Link className="tap-scale zigo-cta tap-scale rounded-lg px-4 py-3 text-sm font-black text-white" href="/store">
+            {d.student.store}
+          </Link>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-xl font-black text-night">{l.miniQuizzes}</h3>
+        {quizzes.length === 0 ? (
+          <StateCard title={l.noQuizzes} description={l.noQuizzesDesc} action={<Link className="font-black text-crystal" href="/onboarding">{messages.common.updateAreas}</Link>} />
+        ) : (
+          quizzes.map((quiz) => <LearnQuizCard key={quiz.id} quiz={quiz} />)
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-xl font-black text-night">{l.microVideos}</h3>
+        {videos.length === 0 ? (
+          <StateCard title={l.noVideos} description={l.noVideosDesc} action={<Link className="font-black text-crystal" href="/micro">{l.openMicro}</Link>} />
+        ) : (
+          videos.map((post) => <LearnVideoCard key={post.id} post={post} />)
+        )}
+      </section>
+    </div>
+  );
+}

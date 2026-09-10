@@ -11,7 +11,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { AdminBillingGrantActions } from "./admin-billing-grant-actions";
 import { AdminTeacherAreaForm } from "./admin-teacher-area-form";
 import { AdminUserActions } from "./admin-user-actions";
-import { AdminUserEditModal, type AdminEditableUser } from "./admin-user-edit-modal";
+import { type AdminEditableUser,AdminUserEditModal } from "./admin-user-edit-modal";
 
 type User = AdminEditableUser;
 type Area = { id: number; area_name: string; age_group: string | null };
@@ -327,7 +327,7 @@ export function AdminUserDirectory({
                         </span>
                       ) : null}
 
-                      {Boolean(user.social_safety_strike_count && user.social_safety_strike_count > 0) ? (
+                      {user.social_safety_strike_count && user.social_safety_strike_count > 0 ? (
                         <span className="rounded bg-rose-50 px-2 py-0.5 text-[0.65rem] font-black text-rose-700">
                           ⚠️ {user.social_safety_strike_count} Ceza
                         </span>

@@ -7,6 +7,18 @@ import { AdminApprovalHub } from "@/components/admin-approval-hub";
 const AdminAnalyticsDashboard = dynamic(() =>
   import('@/components/admin-analytics-dashboard').then(mod => mod.AdminAnalyticsDashboard)
 );
+const AdminNotificationCenter = dynamic(() =>
+  import('@/components/admin-notification-center').then(mod => mod.AdminNotificationCenter)
+);
+const AdminBillingDashboard = dynamic(() =>
+  import('@/components/admin-billing-dashboard').then(mod => mod.AdminBillingDashboard)
+);
+const AdminGameMonitor = dynamic(() =>
+  import('@/components/admin-game-monitor').then(mod => mod.AdminGameMonitor)
+);
+const AdminContentModerationQueue = dynamic(() =>
+  import('@/components/admin-content-moderation-queue').then(mod => mod.AdminContentModerationQueue)
+);
 import { AdminBankTransferActions } from '@/components/admin-bank-transfer-actions';
 import { AdminBillingGrantLedger } from '@/components/admin-billing-grant-ledger';
 import { AdminBroadcastButton } from '@/components/admin-broadcast-button';
@@ -28,7 +40,25 @@ import {
   getUserVerificationQueue,
   isCurrentUserPlatformAdmin,
 } from '@/lib/domain/admin';
+import {
+  computePlatformHealthScore,
+  getDailySignups,
+  getRevenueBreakdown,
+  getRoleDistribution,
+} from '@/lib/domain/admin-analytics';
+import {
+  getActiveSubscriptions,
+  getRecentChurns,
+  getRevenueKpi,
+} from '@/lib/domain/admin-billing';
 import { listRecentAdminBillingGrants } from '@/lib/domain/admin-billing-grant';
+import {
+  getActiveGameSessions,
+  getDailyLimitAlerts,
+  getGameTypeStats,
+  getNightCurfewViolations,
+  getXpFarmSuspects,
+} from '@/lib/domain/admin-games';
 import { getPendingBankTransferQueue } from '@/lib/domain/bank-transfer';
 import { evaluateExpansionReadiness } from '@/lib/domain/expansion-readiness';
 import {
@@ -56,7 +86,7 @@ import { createAdminClient, hasServiceRoleEnv } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 
 type AdminPageProps = {
-  searchParams: Promise<{ densityGroups?: string; tab?: string }>;
+  searchParams: Promise<{ densityGroups?: string; tab?: string; billingDays?: string }>;
 };
 
 function densityBandClass(band: DensityBand) {
@@ -148,6 +178,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     moderationSla,
     revenueOps,
     billingGrants,
+    // New module data
+    dailySignups,
+    roleDistribution,
+    billingKpi,
+    activeSubscriptions,
+    recentChurns,
+    activeSessions,
+    nightViolations,
+    limitAlerts,
+    xpFarmSuspects,
+    gameTypeStats,
+    notificationHistory,
+    notificationTemplates,
+    contentModerationItems,
   ] = await Promise.all([
     getUserVerificationQueue(supabase).catch(() => []),
     getAdminStoreProducts(supabase).catch(() => []),
@@ -165,6 +209,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     adminClient
       ? listRecentAdminBillingGrants(adminClient, 12).catch(() => [])
       : Promise.resolve([]),
+    // New module fetches
+    getDailySignups(metricsClient, 30).catch(() => []),
+    getRoleDistribution(metricsClient).catch(() => []),
+    getRevenueKpi(metricsClient).catch(() => ({ activeSubscriberCount: 0, trialCount: 0, mrr: 0, arr: 0, expiringIn7Days: 0, expiringIn30Days: 0, churnedLast7Days: 0, churnedLast30Days: 0 })),
+    getActiveSubscriptions(metricsClient, 100).catch(() => []),
+    getRecentChurns(metricsClient, 30).catch(() => []),
+    getActiveGameSessions(supabase).catch(() => []),
+    getNightCurfewViolations(supabase, 1).catch(() => []),
+    getDailyLimitAlerts(supabase, 80).catch(() => []),
+    getXpFarmSuspects(supabase).catch(() => []),
+    getGameTypeStats(metricsClient, 7).catch(() => []),
+    (supabase as any).from('notification_schedules').select('id,title,body,target_role,status,sent_count,created_at,sent_at').order('created_at', { ascending: false }).limit(20).then((r: any) => r.data ?? []).catch(() => []),
+    (supabase as any).from('notification_templates').select('key,label,title,body,emoji').order('sort_order').then((r: any) => r.data ?? []).catch(() => []),
+    (supabase as any).from('social_posts').select('id,post_type,author_id,content,media_url,ai_flagged,ai_flag_reason,moderation_priority,is_visible,created_at,users!inner(full_name,role)').or('ai_flagged.eq.true,moderation_priority.in.(high,critical)').order('moderation_priority').order('created_at', { ascending: false }).limit(50).then((r: any) => (r.data ?? []).map((p: Record<string, unknown>) => { const u = Array.isArray(p.users) ? p.users[0] : p.users; return { id: p.id as string, type: ((p.post_type as string) ?? 'post') as 'post' | 'story' | 'reel', authorId: p.author_id as string, authorName: (u as { full_name?: string })?.full_name ?? '—', authorRole: (u as { role?: string })?.role ?? '—', content: (p.content as string) ?? '', mediaUrl: (p.media_url as string | null) ?? null, aiFlagged: (p.ai_flagged as boolean) ?? false, aiFlagReason: (p.ai_flag_reason as string | null) ?? null, moderationPriority: ((p.moderation_priority as string) ?? 'normal') as 'low' | 'normal' | 'high' | 'critical', reportCount: 0, isVisible: (p.is_visible as boolean) ?? true, createdAt: p.created_at as string }; })).catch(() => []),
   ]);
 
   const pendingUsers = users.filter(u => !u.is_verified);
@@ -212,6 +270,20 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     { label: a.queueStock, value: products.length },
   ];
 
+  const revenueSplit = await getRevenueBreakdown(metricsClient).catch(() => []);
+
+  const avgDailySignups = dailySignups.length > 0
+    ? Math.round(dailySignups.slice(-7).reduce((s, d) => s + d.count, 0) / Math.min(7, dailySignups.slice(-7).length))
+    : 0;
+
+  const platformHealth = computePlatformHealthScore({
+    retentionRatio: learningRetention.retentionRatio,
+    moderationOnTarget: moderationSla.onTarget,
+    moderationBreaches: moderationSla.breachedReports + moderationSla.breachedSafety,
+    coverageRatio: densityReport.coverageRatio,
+    dailySignups: avgDailySignups,
+  });
+
   const totalPendingApprovals =
     pendingUsers.length +
     studentDocuments.length +
@@ -225,8 +297,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     },
     { id: "users", label: "👥 Kullanıcı Yönetimi" },
     { id: "finance", label: "💰 Finans & Mağaza" },
+    { id: "billing", label: `💳 Abonelikler (${billingKpi.activeSubscriberCount})` },
     { id: "growth", label: "📈 Büyüme & Sağlık" },
-    { id: "moderation", label: "🛡️ Moderasyon" },
+    { id: "games", label: `🎮 Oyun Monitörü${activeSessions.length > 0 ? ` (${activeSessions.length})` : ""}` },
+    { id: "notifications", label: "🔔 Bildirimler" },
+    { id: "moderation", label: `🛡️ Moderasyon${contentModerationItems.length > 0 ? ` (${contentModerationItems.length})` : ""}` },
   ];
 
   return (
@@ -324,6 +399,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 { month: 'Aktif Reklam', amount: revenueOps.activeSponsorCampaigns },
                 { month: 'Bekleyen Havale', amount: revenueOps.pendingBankTransfers },
               ]}
+              dailySignups={dailySignups}
+              roleDistribution={roleDistribution}
+              platformHealth={platformHealth}
+              revenueSplit={revenueSplit}
             />
           </section>
 
@@ -604,6 +683,16 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </>
       )}
 
+      {currentTab === 'billing' && (
+        <div className="-mx-4 bg-white px-4 py-4">
+          <AdminBillingDashboard
+            kpi={billingKpi}
+            activeSubscriptions={activeSubscriptions}
+            recentChurns={recentChurns}
+          />
+        </div>
+      )}
+
       {currentTab === 'growth' && (
         <>
           <section className="-mx-4 bg-white px-4 py-4">
@@ -821,6 +910,27 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </>
       )}
 
+      {currentTab === 'games' && (
+        <div className="-mx-4 bg-white px-4 py-4">
+          <AdminGameMonitor
+            activeSessions={activeSessions}
+            nightViolations={nightViolations}
+            limitAlerts={limitAlerts}
+            xpFarmSuspects={xpFarmSuspects}
+            gameTypeStats={gameTypeStats}
+          />
+        </div>
+      )}
+
+      {currentTab === 'notifications' && (
+        <div className="-mx-4 bg-white px-4 py-4">
+          <AdminNotificationCenter
+            templates={notificationTemplates as Array<{ key: string; label: string; title: string; body: string; emoji: string }>}
+            history={notificationHistory as Array<{ id: string; title: string; body: string; target_role: string; status: string; sent_count: number; created_at: string; sent_at: string | null }>}
+          />
+        </div>
+      )}
+
       {currentTab === 'moderation' && (
         <>
           <section className="-mx-4 bg-white px-4 py-4">
@@ -892,6 +1002,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </section>
           <div className="mt-4">
             <AdminAdApprovalQueue />
+          </div>
+          <div className="mt-6">
+            <AdminContentModerationQueue items={contentModerationItems} />
           </div>
         </>
       )}

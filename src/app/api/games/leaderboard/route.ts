@@ -69,5 +69,9 @@ async function handleLeaderboard(req: NextRequest) {
     };
   });
 
-  return NextResponse.json(leaderboard);
+  return NextResponse.json(leaderboard, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+    },
+  });
 }

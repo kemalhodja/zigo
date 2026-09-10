@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 import { sendPushToUsers } from "@/lib/server/onesignal";
 import { createAdminClient } from "@/lib/supabase/admin";
 
