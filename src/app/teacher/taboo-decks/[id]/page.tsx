@@ -2,6 +2,7 @@
 
 import { ArrowLeft,Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useEffect,useState } from "react";
 
 import { useToast } from "@/components/ui/toast-system";
@@ -24,7 +25,9 @@ export interface TabooCustomCard {
   ai_descriptions: string[];
 }
 
-export default function TabooDeckCards({ params }: { params: { id: string } }) {
+export default function TabooDeckCards() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id || "";
   const [deck, setDeck] = useState<TabooDeck | null>(null);
   const [cards, setCards] = useState<TabooCustomCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,12 +42,12 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     fetchDeckAndCards();
-  }, [params.id]);
+  }, [id]);
 
   const fetchDeckAndCards = async () => {
     const { data: deckData, error: deckError } = await looseFrom<TabooDeck>(supabase, "taboo_custom_decks")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (deckError || !deckData) {
@@ -56,7 +59,7 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
 
     const { data: cardsData, error: cardsError } = await looseFrom<TabooCustomCard>(supabase, "taboo_custom_cards")
       .select("*")
-      .eq("deck_id", params.id)
+      .eq("deck_id", id)
       .order("created_at", { ascending: false });
 
     if (!cardsError && cardsData) {
@@ -79,7 +82,7 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
 
     const { error } = await looseFrom(supabase, "taboo_custom_cards")
       .insert({
-        deck_id: params.id,
+        deck_id: id,
         word: newWord.trim().toUpperCase(),
         forbidden_words: forbiddenList,
         ai_descriptions: [newDesc.trim()] // For simplicity, we just use one custom description typed by teacher
@@ -99,10 +102,10 @@ export default function TabooDeckCards({ params }: { params: { id: string } }) {
     }
   };
 
-  const deleteCard = async (id: string) => {
+  const deleteCard = async (cardId: string) => {
     if (!confirm("Bu kartı silmek istediğinize emin misiniz?")) return;
     
-    const { error } = await looseFrom(supabase, "taboo_custom_cards").delete().eq("id", id);
+    const { error } = await looseFrom(supabase, "taboo_custom_cards").delete().eq("id", cardId);
     if (error) {
       toast.error("Silme işlemi başarısız.");
     } else {

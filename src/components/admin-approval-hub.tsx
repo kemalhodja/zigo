@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Clock, ExternalLink, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { AdminAdApprovalQueue } from "@/components/admin-ad-approval-queue";
@@ -153,6 +154,12 @@ export function AdminApprovalHub({
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/users/${u.id}`}
+                        className="tap-scale rounded-xl bg-violet-50 px-3 py-1.5 text-xs font-black text-violet-700 hover:bg-violet-100 transition border border-violet-200"
+                      >
+                        360° Detay ↗
+                      </Link>
                       {onEditUser && (
                         <button
                           type="button"

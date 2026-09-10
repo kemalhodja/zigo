@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { getOrganizationOption } from "@/lib/domain/education-organization";
@@ -359,6 +360,12 @@ export function AdminUserDirectory({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/admin/users/${user.id}`}
+                      className="tap-scale inline-flex items-center gap-1 rounded-xl bg-violet-600 px-3 py-1.5 text-xs font-black text-white hover:bg-violet-700 transition shadow-sm"
+                    >
+                      👤 360° Sayfa ↗
+                    </Link>
                     <button
                       type="button"
                       onClick={() => {

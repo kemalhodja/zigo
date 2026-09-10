@@ -1,12 +1,14 @@
 "use client";
 
 import { Check, Copy, ExternalLink, ShieldAlert, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { Database, UserRole } from "@/lib/supabase/database.types";
 
-export type AdminEditableUser = Database["public"]["Tables"]["users"]["Row"] & {
+export type AdminEditableUser = Omit<Database["public"]["Tables"]["users"]["Row"], "role"> & {
+  role: string;
   social_safety_strike_count?: number;
   social_interactions_blocked?: boolean;
   teacher_creator_plus?: boolean;
@@ -197,13 +199,21 @@ export function AdminUserEditModal({ user, isOpen, onClose, onUserUpdated }: Adm
               </div>
             </div>
           </div>
-          <button
-            className="tap-scale flex size-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
-            onClick={onClose}
-            type="button"
-          >
-            <X className="size-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/admin/users/${user.id}`}
+              className="tap-scale inline-flex items-center gap-1 rounded-xl bg-violet-50 px-3 py-1.5 text-xs font-black text-violet-700 hover:bg-violet-100 transition border border-violet-200"
+            >
+              360° Sayfası ↗
+            </Link>
+            <button
+              className="tap-scale flex size-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+              onClick={onClose}
+              type="button"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         </div>
 
         {/* Form Body */}
