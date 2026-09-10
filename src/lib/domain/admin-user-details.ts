@@ -148,6 +148,24 @@ export type User360ParentConsent = {
   decided_at: string | null;
 };
 
+export type User360Feedback = {
+  id: string;
+  category: "request" | "complaint" | string;
+  subject: string;
+  content: string;
+  status: "open" | "in_progress" | "resolved" | "closed" | string;
+  admin_note: string | null;
+  created_at: string;
+};
+
+export type User360RelatedUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  role: string;
+  reason: string;
+};
+
 export type User360Data = {
   user: User360Core;
   subscription: User360Subscription;
@@ -162,6 +180,8 @@ export type User360Data = {
   reports: User360Report[];
   adminMessages: User360AdminMessage[];
   adminNotes: User360AdminNote[];
+  feedback: User360Feedback[];
+  relatedUsers: User360RelatedUser[];
   posts: User360Post[];
   roleSpecific: {
     gameMinutesToday: number;
@@ -274,6 +294,8 @@ export async function getUser360Details(
     reportsRes,
     messagesRes,
     notesRes,
+    feedbackRes,
+    relatedUsersRes,
     postsRes,
     gameLimitsRes,
     gameProgressRes,
@@ -346,6 +368,26 @@ export async function getUser360Details(
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(20),
+
+    // User feedback & support tickets
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (client as any)
+      .from("user_feedback")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10),
+
+    // Related users (same school or family)
+    rawUser.school_name
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (client as any)
+          .from("users")
+          .select("id, full_name, email, role, classroom, school_name")
+          .eq("school_name", rawUser.school_name)
+          .neq("id", userId)
+          .limit(5)
+      : Promise.resolve({ data: [] }),
 
     // Social posts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -495,6 +537,32 @@ export async function getUser360Details(
         }))
       : [];
 
+  const feedback: User360Feedback[] =
+    feedbackRes.status === "fulfilled" && feedbackRes.value.data
+      ? feedbackRes.value.data.map((f: Record<string, unknown>) => ({
+          id: String(f.id),
+          category: String(f.category || "request"),
+          subject: String(f.subject || "Destek Talebi"),
+          content: String(f.content || ""),
+          status: String(f.status || "open"),
+          admin_note: f.admin_note ? String(f.admin_note) : null,
+          created_at: String(f.created_at),
+        }))
+      : [];
+
+  const relatedUsers: User360RelatedUser[] =
+    relatedUsersRes.status === "fulfilled" && relatedUsersRes.value.data
+      ? relatedUsersRes.value.data.map((ru: Record<string, unknown>) => ({
+          id: String(ru.id),
+          full_name: String(ru.full_name || "Kullanıcı"),
+          email: String(ru.email || ""),
+          role: String(ru.role || "student"),
+          reason: ru.classroom
+            ? `Aynı Okul & Sınıf (${ru.classroom})`
+            : `Aynı Okul (${ru.school_name || "Kayıtlı"})`,
+        }))
+      : [];
+
   const posts: User360Post[] =
     postsRes.status === "fulfilled" && postsRes.value.data
       ? postsRes.value.data.map((p: Record<string, unknown>) => ({
@@ -598,6 +666,8 @@ export async function getUser360Details(
     reports,
     adminMessages,
     adminNotes,
+    feedback,
+    relatedUsers,
     posts,
     roleSpecific: {
       gameMinutesToday,

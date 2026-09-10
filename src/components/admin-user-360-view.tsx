@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import type { User360Data } from "@/lib/domain/admin-user-details";
 
+import { AdminStudentReportModal } from "./admin-student-report-modal";
 import { AdminUserEditModal, type AdminEditableUser } from "./admin-user-edit-modal";
 
 type AdminUser360ViewProps = {
@@ -21,6 +22,7 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isGrantModalOpen, setIsGrantModalOpen] = useState(false);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Grant plus state
   const [grantDays, setGrantDays] = useState(30);
@@ -276,6 +278,33 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
     }
   }
 
+  // Update feedback ticket status
+  async function handleUpdateFeedbackStatus(feedbackId: string, status: string, adminNote?: string) {
+    try {
+      const res = await fetch("/api/admin/feedback", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          feedbackId,
+          status,
+          adminNote: adminNote ?? null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Güncelleme başarısız");
+
+      setData((prev) => ({
+        ...prev,
+        feedback: prev.feedback.map((f) =>
+          f.id === feedbackId ? { ...f, status, admin_note: adminNote ?? f.admin_note } : f
+        ),
+      }));
+      showToast("✓ Talep durumu güncellendi.");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Hata oluştu");
+    }
+  }
+
   // Export JSON dossier
   function handleExportJson() {
     const jsonStr = JSON.stringify(data, null, 2);
@@ -321,13 +350,27 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
         >
           ← Yönetim Paneline Dön
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsReportModalOpen(true)}
+            className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-black text-white shadow-sm hover:bg-slate-800 transition"
+          >
+            🖨️ Karne Yazdır (PDF)
+          </button>
+          <Link
+            href={`/profile/${data.user.id}`}
+            target="_blank"
+            className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-black text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50 transition"
+          >
+            👁️ Profili Önizle ↗
+          </Link>
           <button
             type="button"
             onClick={handleExportJson}
             className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-black text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50 transition"
           >
-            📥 JSON Verisini İndir
+            📥 JSON İndir
           </button>
         </div>
       </div>
@@ -417,6 +460,14 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
+                onClick={() => setIsReportModalOpen(true)}
+                className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-crystal px-4 py-2.5 text-xs font-black text-white hover:bg-crystal/90 transition shadow-md"
+              >
+                🖨️ Gelişim Karnesi
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsGrantModalOpen(true)}
                 className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-slate-950 hover:bg-amber-300 transition shadow-md"
               >
@@ -438,6 +489,14 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
               >
                 ✉️ Bildirim Gönder
               </button>
+
+              <Link
+                href={`/profile/${data.user.id}`}
+                target="_blank"
+                className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3.5 py-2.5 text-xs font-black text-white hover:bg-white/20 transition backdrop-blur border border-white/20"
+              >
+                👁️ Önizle ↗
+              </Link>
 
               <button
                 type="button"
@@ -708,6 +767,39 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
               ) : (
                 <p className="text-xs font-bold text-slate-400 py-4 text-center">
                   Herhangi bir öğrenci/doğrulama belgesi yüklenmemiş.
+                </p>
+              )}
+            </div>
+
+            {/* Related users / School & Classroom mates */}
+            <div className="rounded-3xl bg-white p-6 border border-slate-200 shadow-sm space-y-4">
+              <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                İlişkili Profiller ({data.relatedUsers.length})
+              </h2>
+
+              {data.relatedUsers.length > 0 ? (
+                <div className="space-y-2.5">
+                  {data.relatedUsers.map((ru) => (
+                    <div
+                      key={ru.id}
+                      className="flex items-center justify-between rounded-2xl bg-slate-50 p-3 border border-slate-100 text-xs"
+                    >
+                      <div>
+                        <p className="font-black text-slate-900">{ru.full_name}</p>
+                        <p className="text-[0.65rem] font-bold text-slate-400">{ru.email} • {ru.reason}</p>
+                      </div>
+                      <Link
+                        href={`/admin/users/${ru.id}`}
+                        className="tap-scale rounded-xl bg-violet-50 px-2.5 py-1 text-[0.65rem] font-black text-violet-700 hover:bg-violet-100 transition border border-violet-200"
+                      >
+                        360° Sayfa ↗
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs font-bold text-slate-400 py-3 text-center">
+                  Aynı okul veya sınıftan ilişkili kullanıcı bulunamadı.
                 </p>
               )}
             </div>
@@ -1363,6 +1455,83 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
               </p>
             )}
           </div>
+
+          {/* User Feedback & Support Tickets */}
+          <div className="rounded-3xl bg-white p-6 border border-slate-200 shadow-sm space-y-4">
+            <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+              Destek Talepleri & Geri Bildirimler ({data.feedback.length})
+            </h2>
+
+            {data.feedback.length > 0 ? (
+              <div className="divide-y divide-slate-100 text-xs">
+                {data.feedback.map((f) => (
+                  <div key={f.id} className="py-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-slate-900 text-sm">{f.subject}</span>
+                        <span className="rounded bg-slate-100 px-2 py-0.5 text-[0.65rem] font-bold uppercase text-slate-600">
+                          {f.category}
+                        </span>
+                      </div>
+                      <span
+                        className={`rounded px-2.5 py-0.5 text-[0.65rem] font-black ${
+                          f.status === "resolved"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : f.status === "in_progress"
+                            ? "bg-amber-100 text-amber-800"
+                            : f.status === "closed"
+                            ? "bg-slate-100 text-slate-600"
+                            : "bg-rose-100 text-rose-800"
+                        }`}
+                      >
+                        {f.status}
+                      </span>
+                    </div>
+
+                    <p className="text-slate-700 font-medium whitespace-pre-wrap">{f.content}</p>
+                    {f.admin_note && (
+                      <p className="text-violet-700 bg-violet-50 p-2 rounded-xl text-[0.7rem] font-bold">
+                        Admin Notu: {f.admin_note}
+                      </p>
+                    )}
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-slate-400 font-bold text-[0.65rem]">
+                        {new Date(f.created_at).toLocaleDateString("tr-TR")}
+                      </span>
+                      <div className="ml-auto flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateFeedbackStatus(f.id, "in_progress")}
+                          className="rounded-lg bg-amber-50 px-2.5 py-1 text-[0.65rem] font-bold text-amber-800 hover:bg-amber-100 transition"
+                        >
+                          İnceleniyor Yap
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateFeedbackStatus(f.id, "resolved")}
+                          className="rounded-lg bg-emerald-50 px-2.5 py-1 text-[0.65rem] font-bold text-emerald-800 hover:bg-emerald-100 transition"
+                        >
+                          ✓ Çözüldü
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateFeedbackStatus(f.id, "closed")}
+                          className="rounded-lg bg-slate-100 px-2.5 py-1 text-[0.65rem] font-bold text-slate-600 hover:bg-slate-200 transition"
+                        >
+                          Kapat
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs font-bold text-slate-400 py-4 text-center">
+                Kullanıcı tarafından açılmış bir destek talebi bulunmamaktadır.
+              </p>
+            )}
+          </div>
         </div>
       ) : null}
 
@@ -1517,6 +1686,13 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
           }));
           showToast("✓ Kullanıcı özellikleri güncellendi!");
         }}
+      />
+
+      {/* Official Student Performance Report Dossier Modal */}
+      <AdminStudentReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        data={data}
       />
     </div>
   );
