@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { LiveFocusPulse } from "@/components/live-focus-pulse";
 import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
 import { createClient } from "@/lib/supabase/client";
@@ -215,11 +216,14 @@ export default function FocusPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <header className="mb-8">
+        <header className="mb-6">
           <h1 className="text-3xl font-black text-slate-800 flex items-center gap-2">
             🍅 Odaklanma & Pomodoro
           </h1>
           <p className="text-slate-500 mt-1">Zigo Plus ile haftalık çalışma planı ve analitikler</p>
+          <div className="mt-3">
+            <LiveFocusPulse />
+          </div>
         </header>
 
         {/* Active Session / Timer */}

@@ -13,6 +13,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherLessonMarketplaceTab } from "@/components/teacher-lesson-marketplace-tab";
+import { TeacherReviewsSection } from "@/components/teacher-reviews-section";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
@@ -35,6 +36,7 @@ import {
   type ProfileSocialStats,
   type SuggestedCreator,
 } from "@/lib/domain/social";
+import { getTeacherReviews, getTeacherReviewSummary } from "@/lib/domain/teacher-reviews";
 import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import type { SocialPostRow } from "@/lib/supabase/database.types";
@@ -71,6 +73,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   let parentLessonPosts: Awaited<ReturnType<typeof getParentPrivateLessonPosts>> = [];
   let parentChildProfiles: { id: string; name: string }[] = [];
   let teacherMatchedPosts: Awaited<ReturnType<typeof getMatchedLessonPostsForTeacher>> = [];
+  let teacherReviewSummary = { total_reviews: 0, avg_rating: 5, avg_clarity: 5, avg_communication: 5, avg_pedagogy: 5, recommendation_rate: 100 };
+  let teacherReviewsList: any[] = [];
 
   if (hasSupabaseEnv() && !profile.isSignedOut) {
     const supabase = await createClient();
@@ -84,7 +88,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       parentLessonPosts = posts;
       parentChildProfiles = (children ?? []).map((c) => ({ id: c.id, name: c.display_name || "Çocuk" }));
     } else if (profile.role === "teacher") {
-      teacherMatchedPosts = await getMatchedLessonPostsForTeacher(supabase, profile.id).catch(() => []);
+      const [matched, summary, reviews] = await Promise.all([
+        getMatchedLessonPostsForTeacher(supabase, profile.id).catch(() => []),
+        getTeacherReviewSummary(supabase, profile.id).catch(() => ({ total_reviews: 0, avg_rating: 5, avg_clarity: 5, avg_communication: 5, avg_pedagogy: 5, recommendation_rate: 100 })),
+        getTeacherReviews(supabase, profile.id, 5).catch(() => []),
+      ]);
+      teacherMatchedPosts = matched;
+      teacherReviewSummary = summary;
+      teacherReviewsList = reviews;
     }
   }
 
@@ -238,6 +249,16 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 />
               </div>
             ) : null}
+
+            {profile.role === "teacher" && (
+              <TeacherReviewsSection
+                teacherId={profile.id}
+                teacherName={profile.name}
+                summary={teacherReviewSummary}
+                initialReviews={teacherReviewsList}
+                canReview={false}
+              />
+            )}
 
             {orgDashboard ? (
               <div className="mt-4">

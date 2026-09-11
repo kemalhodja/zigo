@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { DailyMissionsCard } from "@/components/daily-missions-card";
 import { LearnQuizCard } from "@/components/learn-quiz-card";
 import { LearnVideoCard } from "@/components/learn-video-card";
+import { LiveFocusPulse } from "@/components/live-focus-pulse";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getChildPersonalizedFeed, getChildProfiles } from "@/lib/domain/children";
@@ -210,6 +211,8 @@ function LearnPreview({
         quizCount={demoLessons.filter((lesson) => lesson.reward === "+10").length}
         videoCount={demoLessons.length}
       />
+
+      <LiveFocusPulse />
 
       {mode === "signed-out" ? (
         <StateCard
@@ -440,6 +443,8 @@ async function StudentLearnContent({
         quizCount={quizzes.length}
         videoCount={videos.length}
       />
+
+      <LiveFocusPulse />
 
       {fromMicro ? (
         <section className="-mx-4 border-b border-mint/30 bg-mint/10 px-4 py-3">

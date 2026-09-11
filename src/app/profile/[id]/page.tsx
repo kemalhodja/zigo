@@ -11,6 +11,7 @@ import { ProfileSocialLinks } from "@/components/profile-social-links";
 import { ProfileSocialStats } from "@/components/profile-social-stats";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
+import { TeacherReviewsSection } from "@/components/teacher-reviews-section";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile, getUserInterestAreaNames } from "@/lib/domain/profiles";
@@ -22,6 +23,7 @@ import {
   isFollowing,
   isFollowRequested,
 } from "@/lib/domain/social";
+import { getTeacherReviews, getTeacherReviewSummary } from "@/lib/domain/teacher-reviews";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -95,18 +97,22 @@ export default async function PublicProfilePage({ params, searchParams }: Public
   const branches =
     profile.role === "teacher" ? await getUserInterestAreaNames(dbClient, profile.id) : [];
 
-  const [stats, posts, following, followRequested] = await Promise.all([
+  const isTeacher = profile.role === "teacher";
+  const [stats, posts, following, followRequested, reviewSummary, teacherReviews] = await Promise.all([
     getProfileSocialStats(dbClient, profile.id),
     activeTab === "reels"
       ? getUserSocialReels(dbClient, profile.id)
       : getUserSocialPosts(dbClient, profile.id),
     viewer ? isFollowing(supabase, viewer.id, profile.id) : Promise.resolve(false),
     viewer ? isFollowRequested(supabase, viewer.id, profile.id) : Promise.resolve(false),
+    isTeacher ? getTeacherReviewSummary(dbClient, profile.id) : Promise.resolve({ total_reviews: 0, avg_rating: 5, avg_clarity: 5, avg_communication: 5, avg_pedagogy: 5, recommendation_rate: 100 }),
+    isTeacher ? getTeacherReviews(dbClient, profile.id, 5) : Promise.resolve([]),
   ]);
   const isOwnProfile = viewer?.id === profile.id;
   const isPrivateAccount = Boolean((profile as unknown as { is_private?: boolean }).is_private);
   const isLockedPrivate = isPrivateAccount && !following && !isOwnProfile;
   const handle = profile.full_name.toLowerCase().replaceAll(" ", "");
+  const canReview = Boolean(viewer && viewer.role === "parent" && !isOwnProfile);
 
   return (
     <div className="space-y-0 pb-3">
@@ -228,8 +234,17 @@ export default async function PublicProfilePage({ params, searchParams }: Public
               role={profile.role}
               isVerified={profile.is_verified}
             />
-          </div>
 
+            {isTeacher && (
+              <TeacherReviewsSection
+                teacherId={profile.id}
+                teacherName={profile.full_name}
+                summary={reviewSummary}
+                initialReviews={teacherReviews}
+                canReview={canReview}
+              />
+            )}
+          </div>
 
           <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold leading-5 text-slate-500" data-invariant="Public creator profile. Follow actions are visible; saved posts remain private to each viewer.">
             Açık üretici profili. Takip hareketleri görünürdür; kaydedilen gönderiler ise her izleyiciye özel gizli kalır.
