@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, ExternalLink, Loader2, X } from "lucide-reac
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { isGooglePlayBillingAvailable } from "@/lib/client/google-play-billing";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
 
 export type GooglePlaySubscriptionModalProps = {
@@ -39,6 +40,11 @@ export function GooglePlaySubscriptionModal({
 
   const [internalLoading, setInternalLoading] = useState(false);
   const [internalError, setInternalError] = useState<string | null>(null);
+  const [isNativePlay, setIsNativePlay] = useState(false);
+
+  useEffect(() => {
+    setIsNativePlay(isGooglePlayBillingAvailable());
+  }, []);
 
   const isLoading = externalLoading || internalLoading;
   const activeError = externalError || internalError;
@@ -196,9 +202,13 @@ export function GooglePlaySubscriptionModal({
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-6 py-4">
           <div className="flex items-center gap-2.5">
             <span className="flex size-7 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm">
-              <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
-                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-              </svg>
+              {isNativePlay ? (
+                <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+                </svg>
+              ) : (
+                <span className="text-xs font-black text-amber-300">✦</span>
+              )}
             </span>
             <h2 id="google-play-modal-title" className="text-xl font-bold text-slate-900">
               Abonelik Özeti
@@ -224,7 +234,9 @@ export function GooglePlaySubscriptionModal({
                 <h3 className="text-lg font-bold text-slate-900">
                   Zigo Plus ({selectedInterval === "monthly" ? "Aylık" : "Yıllık"})
                 </h3>
-                <p className="text-xs font-semibold text-slate-500">Google Play & Web Resmi Aboneliği</p>
+                <p className="text-xs font-semibold text-slate-500">
+                  {isNativePlay ? "Google Play Resmi Aboneliği" : "Web & Güvenli Ödeme Altyapısı"}
+                </p>
               </div>
               <div className="text-right">
                 {isWithinTrialWindow && (
@@ -310,26 +322,71 @@ export function GooglePlaySubscriptionModal({
           </p>
 
           {/* Primary Action Button */}
-          <button
-            className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3.5 px-4 text-base font-black text-white shadow-md transition hover:from-emerald-700 hover:to-teal-700 flex items-center justify-center gap-2 disabled:opacity-60"
-            disabled={isLoading}
-            onClick={handleConfirm}
-            type="button"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="size-5 animate-spin" />
-                <span>Google Play Başlatılıyor…</span>
-              </>
-            ) : (
-              <>
-                <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-                </svg>
-                <span>{formatTryPrice(basePriceTry)} ile Abone Ol</span>
-              </>
-            )}
-          </button>
+          {isNativePlay ? (
+            <button
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3.5 px-4 text-base font-black text-white shadow-md transition hover:from-emerald-700 hover:to-teal-700 flex items-center justify-center gap-2 disabled:opacity-60"
+              disabled={isLoading}
+              onClick={handleConfirm}
+              type="button"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" />
+                  <span>Google Play Başlatılıyor…</span>
+                </>
+              ) : (
+                <>
+                  <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+                  </svg>
+                  <span>Google Play ile {formatTryPrice(basePriceTry)} / Abone Ol</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {onFallbackCheckout && (
+                <button
+                  className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 px-4 text-base font-black text-white shadow-md transition hover:from-violet-700 hover:to-indigo-700 flex items-center justify-center gap-2 disabled:opacity-60"
+                  disabled={isLoading}
+                  onClick={() => {
+                    onClose();
+                    onFallbackCheckout();
+                  }}
+                  type="button"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="size-5 animate-spin" />
+                      <span>Güvenli Ödeme Açılıyor…</span>
+                    </>
+                  ) : (
+                    <span>💳 Kredi / Banka Kartı ile {formatTryPrice(basePriceTry)} / Abone Ol</span>
+                  )}
+                </button>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
+                  onClick={() => {
+                    if (onFallbackHavale) onFallbackHavale();
+                    onClose();
+                  }}
+                  className="rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-center text-xs font-bold text-slate-800 transition hover:bg-slate-100 flex items-center justify-center gap-1.5"
+                >
+                  <span>🏦 Havale / FAST</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleSandboxActivate}
+                  disabled={isLoading}
+                  className="rounded-xl border border-emerald-200 bg-emerald-50 py-2.5 px-3 text-center text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  <span>🧪 Test Onayı (Demo)</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Secondary Web / Havale Alternative Bar */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-500">

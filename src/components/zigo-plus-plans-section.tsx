@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 
 import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
 import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
-import { purchaseGooglePlaySubscription } from "@/lib/client/google-play-billing";
+import {
+  isGooglePlayBillingAvailable,
+  purchaseGooglePlaySubscription,
+} from "@/lib/client/google-play-billing";
 import type { EducationOrganizationType } from "@/lib/domain/education-organization";
 import { buildOrganizationSalesWhatsAppUrl } from "@/lib/domain/organization-sales";
 import {
@@ -282,6 +285,11 @@ function PlanPriceRow({
   const [message, setMessage] = useState("");
   const [modalErrorMessage, setModalErrorMessage] = useState<string | null>(null);
   const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  const [isNativePlay, setIsNativePlay] = useState(false);
+
+  useEffect(() => {
+    setIsNativePlay(isGooglePlayBillingAvailable());
+  }, []);
 
   const currentInterval = intervalLabel.toLowerCase().includes("yıllık") || planId.toLowerCase().includes("yearly") ? "yearly" : "monthly";
   const isWithinTrialWindow = userCreatedAt
@@ -410,7 +418,11 @@ function PlanPriceRow({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
-            className="tap-scale flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-60"
+            className={`tap-scale flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-xs font-black text-white shadow-md transition disabled:opacity-60 ${
+              isNativePlay
+                ? "bg-emerald-500 hover:bg-emerald-600"
+                : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black"
+            }`}
             disabled={loading}
             onClick={() => {
               setModalErrorMessage(null);
@@ -418,10 +430,20 @@ function PlanPriceRow({
             }}
             type="button"
           >
-            <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
-              <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-            </svg>
-            <span>{loading ? b.loading : "Google Play ile Abone Ol"}</span>
+            {isNativePlay ? (
+              <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+              </svg>
+            ) : (
+              <span className="text-xs">✦</span>
+            )}
+            <span>
+              {loading
+                ? b.loading
+                : isNativePlay
+                  ? "Google Play ile Abone Ol"
+                  : "Zigo Plus'a Katıl"}
+            </span>
           </button>
           {!playStoreOnly && (
             <Link

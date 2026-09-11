@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
-import { purchaseGooglePlaySubscription, restoreGooglePlayPurchases } from "@/lib/client/google-play-billing";
+import {
+  isGooglePlayBillingAvailable,
+  purchaseGooglePlaySubscription,
+  restoreGooglePlayPurchases,
+} from "@/lib/client/google-play-billing";
 import { createClient } from "@/lib/supabase/client";
 
 const ROLE_PLANS = {
@@ -116,6 +120,11 @@ function PlanCard({
   const monthly = config.monthly;
   const yearly = config.yearly;
   const yearlySavings = Math.round(((monthly * 12 - yearly) / (monthly * 12)) * 100);
+  const [isNativePlay, setIsNativePlay] = useState(false);
+
+  useEffect(() => {
+    setIsNativePlay(isGooglePlayBillingAvailable());
+  }, []);
 
   return (
     <div
@@ -162,12 +171,20 @@ function PlanCard({
             onSelect(role);
             onOpenModal(role, "monthly");
           }}
-          className="tap-scale w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xs shadow-md hover:brightness-105 transition flex items-center justify-center gap-1.5"
+          className={`tap-scale w-full py-2.5 px-4 rounded-xl text-white font-black text-xs shadow-md hover:brightness-105 transition flex items-center justify-center gap-1.5 ${
+            isNativePlay
+              ? "bg-gradient-to-r from-emerald-500 to-teal-600"
+              : "bg-gradient-to-r from-violet-600 to-indigo-600"
+          }`}
         >
-          <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
-            <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-          </svg>
-          <span>Google Play ile Abone Ol</span>
+          {isNativePlay ? (
+            <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+              <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+            </svg>
+          ) : (
+            <span className="text-xs">✦</span>
+          )}
+          <span>{isNativePlay ? "Google Play ile Abone Ol" : "Zigo Plus'a Katıl"}</span>
         </button>
         <div className="mt-2.5 flex items-center justify-between text-[11px] font-bold text-slate-500">
           <button
