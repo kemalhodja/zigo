@@ -146,7 +146,7 @@ export function SocialCreateForm({
       });
 
       setIsValidating(true);
-      validateVideoLimits(file).then((result) => {
+      validateVideoLimits(file, { isReel: shareAsReel || forceReel }).then((result) => {
         setIsValidating(false);
         if (!result.valid) {
           setStatus("error");

@@ -278,18 +278,21 @@ function LearnQuestHero({
 
   return (
     <section className="-mx-4 overflow-hidden border-b border-violet-100 bg-white">
-      <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-6 text-white">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-white/60">{lp.dailyQuest}</p>
-        <h2 className="mt-2 text-3xl font-black leading-tight">
-          {mode === "student" ? lp.streakAlive : lp.microEnergy}
-        </h2>
-        <p className="mt-2 text-sm font-bold leading-6 text-white/75">
-          {lp.questDesc}
-        </p>
-        <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-          <QuestStat label={lp.questStatPoints} value={points} />
-          <QuestStat label={lp.questStatQuizzes} value={quizCount} />
-          <QuestStat label={lp.questStatMicro} value={videoCount} />
+      <div className="relative overflow-hidden bg-gradient-to-br from-night via-slate-900 to-indigo-950 px-5 py-7 text-white shadow-md">
+        <div className="aurora-glow" />
+        <div className="relative">
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-amber-300">{lp.dailyQuest}</p>
+          <h2 className="mt-2 text-3xl font-black leading-tight tracking-tight">
+            {mode === "student" ? lp.streakAlive : lp.microEnergy}
+          </h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-white/80">
+            {lp.questDesc}
+          </p>
+          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+            <QuestStat label={lp.questStatPoints} value={points} />
+            <QuestStat label={lp.questStatQuizzes} value={quizCount} />
+            <QuestStat label={lp.questStatMicro} value={videoCount} />
+          </div>
         </div>
       </div>
     </section>

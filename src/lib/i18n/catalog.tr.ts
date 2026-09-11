@@ -1090,7 +1090,7 @@ export const catalogTr = {
     mediaReady: "Medya hazır",
     change: "Değiştir",
     chooseMedia: "Medya seç",
-    chooseMediaHint: "Fotoğraf veya video, en fazla 50 MB",
+    chooseMediaHint: "Fotoğraf veya video (Kısa ders: 90 sn, Uzun ders: 15 dk, maks 100 MB)",
     captionPlaceholder: "Bir açıklama yaz…",
     image: "Görsel",
     video: "Video",

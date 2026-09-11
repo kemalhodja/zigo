@@ -1091,7 +1091,7 @@ export const catalogEn = {
     mediaReady: "Media ready",
     change: "Change",
     chooseMedia: "Choose media",
-    chooseMediaHint: "Photo or video, max 50 MB",
+    chooseMediaHint: "Photo or video (Micro: 90s, Lesson: 15 min, max 100 MB)",
     captionPlaceholder: "Write a caption...",
     image: "Image",
     video: "Video",
