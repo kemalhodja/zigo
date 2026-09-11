@@ -4,7 +4,11 @@
 const CACHE_NAME = "zigo-games-offline-v1";
 
 const OFFLINE_URLS = [
-  "/salon",
+  "/games",
+  "/games/math",
+  "/games/word",
+  "/games/blocks",
+  "/games/2048",
   "/favicon.ico",
 ];
 

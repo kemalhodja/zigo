@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
+import { WeeklyLeagueCard } from "@/components/weekly-league-card";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { ROLE_BACK } from "@/lib/domain/role-navigation";
 import { getUserSubscription } from "@/lib/domain/subscription";
@@ -52,6 +53,8 @@ export default async function ArcadePage() {
           isPremium={isPremium}
           isStudent={isStudent}
         />
+
+        <WeeklyLeagueCard />
       </div>
     </div>
   );

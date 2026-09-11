@@ -10,6 +10,7 @@ import { RecentLearningCard } from "@/components/recent-learning-card";
 import { StateCard } from "@/components/state-card";
 import { StudentLeaderboardCard } from "@/components/student-leaderboard-card";
 import { SubscribeButton } from "@/components/SubscribeButton";
+import { WeeklyLeagueCard } from "@/components/weekly-league-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
@@ -153,6 +154,8 @@ export default async function StudentPage() {
         streakDays={data.streakDays}
         labels={d.student}
       />
+
+      <WeeklyLeagueCard />
 
       {data.leaderboardAreaName ? (
         <StudentLeaderboardCard
