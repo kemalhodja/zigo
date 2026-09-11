@@ -256,35 +256,22 @@ function TeacherSetup({
   selectedAreaIds,
   messages,
   role,
-  gradeLevel,
 }: {
   areas: Awaited<ReturnType<typeof getEducationAreas>>;
   selectedAreaIds: number[];
   messages: Messages["onboardingPage"];
   role: string;
-  gradeLevel: string | null;
+  gradeLevel?: string | null;
 }) {
   return (
     <div className="space-y-6">
-      <div className="-mx-4 bg-white px-4 py-4">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Hedef Sınıf / Seviye</p>
-        <p className="mt-2 text-sm leading-6 text-slate-600">İçerik ürettiğiniz veya ders verdiğiniz sınıf seviyesini seçin.</p>
-        <div className="mt-4">
-          <GradeLevelForm
-            initialGradeLevel={gradeLevel}
-            title="Hedef Sınıf Seviyeniz"
-            description="Akışta ve quizlerde öncelikli gösterilecek sınıf seviyenizi seçin."
-          />
-        </div>
-      </div>
-
       <div className="-mx-4 bg-white px-4 py-4">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{messages.subjects}</p>
         <p className="mt-2 text-sm leading-6 text-slate-600">{messages.teacherSubjectsDesc}</p>
         <div className="mt-4">
           <InterestSelector
             areas={areas}
-            gradeLevel={gradeLevel}
+            gradeLevel={null}
             initialSelectedAreaIds={selectedAreaIds}
             role={role as "teacher"}
             multiple
