@@ -4,7 +4,9 @@ import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
 import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
+import { ProfileCover } from "@/components/profile-cover";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { ProfileOrgBadge } from "@/components/profile-org-badge";
 import { ProfileSocialLinks } from "@/components/profile-social-links";
 import { ProfileSocialStats as ProfileSocialStatsSection } from "@/components/profile-social-stats";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -124,138 +126,160 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   };
   return (
     <div className="space-y-0 pb-3">
-      <section className="-mx-4 bg-white px-4 pb-4">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            <h1 className="truncate text-xl font-black text-night">@{profile.handle}</h1>
-            {profile.isVerified ? <VerifiedBadge className="size-4" /> : null}
-          </div>
-        </div>
-        <div className="flex items-center gap-5">
-          <SocialAvatar
-            accent="from-crystal via-fuchsia-500 to-rose-400"
-            className="story-ring size-[5.25rem] text-3xl"
-            label={profile.name}
-            imageUrl={profile.avatarUrl}
-          />
-          <ProfileSocialStatsSection
-            followersCount={profile.stats.followers}
-            followersLabel={m.common.followers}
-            followingCount={profile.stats.following}
-            followingLabel={m.common.following}
-            postsCount={profile.stats.posts}
-            postsLabel={m.common.posts}
-            targetUserId={profile.id}
-            viewerId={profile.id}
-          />
-        </div>
+      {/* Cover banner */}
+      <section className="-mx-4 bg-white">
+        <ProfileCover
+          initialCoverUrl={profile.cover_url}
+          isEditable={!profile.isSignedOut}
+          isVerified={profile.isVerified}
+        />
 
-        <div className="mt-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-black text-night">{profile.name}</h2>
-          </div>
-          {profile.bio ? (
-            <p className="mt-1.5 text-sm leading-5 text-slate-600">
-              {profile.bio}
-            </p>
-          ) : null}
-          <ProfileSocialLinks 
-            bio={profile.bio} 
-            websiteUrl={profile.website_url} 
-            youtubeUrl={profile.youtube_url} 
-            instagramUrl={profile.instagram_url} 
-          />
-          
-          {/* Instagram-style Highlights */}
-          <div className="mt-6 -mx-4 px-4 overflow-x-auto hide-scrollbar flex gap-4 pb-2">
-            {[
-              { id: 1, title: profile.role === "student" ? "Notlarım" : "Derslerim", emoji: "📚", color: "from-blue-400 to-cyan-300" },
-              { id: 2, title: "Çözümler", emoji: "✍️", color: "from-violet-400 to-fuchsia-300" },
-              { id: 3, title: "Başarılar", emoji: "🏆", color: "from-amber-400 to-orange-300" },
-              { id: 4, title: "Sertifikalar", emoji: "🎓", color: "from-emerald-400 to-teal-300" },
-            ].map(highlight => (
-              <div key={highlight.id} className="flex flex-col items-center gap-1.5 cursor-pointer group">
-                <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-slate-200 to-slate-300 group-hover:from-crystal group-hover:to-berry transition-all">
-                  <div className={`w-full h-full rounded-full bg-gradient-to-br ${highlight.color} border-2 border-white flex items-center justify-center text-2xl shadow-inner`}>
-                    {highlight.emoji}
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-slate-700">{highlight.title}</span>
-              </div>
-            ))}
-          </div>
-          {profile.role === "student" && (
-            <div className="mt-4 rounded-xl bg-gradient-to-r from-fuchsia-50 to-pink-50 p-4 border border-fuchsia-100">
-              <h3 className="font-black text-fuchsia-900 text-sm mb-2">Öğrenci Gelişimi</h3>
-              <div className="flex gap-2">
-                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">🏆 Gümüş Lig</span>
-                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">⭐ {profile.stats.followers * 10} Puan</span>
-              </div>
-            </div>
-          )}
-
-          {profile.role === "parent" && (
-            <div className="mt-4 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 p-4 border border-cyan-100">
-              <h3 className="font-black text-cyan-900 text-sm mb-2">Veli Özeti</h3>
-              <div className="flex gap-2">
-                <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">👨‍👩‍👧 {profile.childrenCount ?? 0} Bağlı Profil</span>
-              </div>
-            </div>
-          )}
-
-          {profile.role === "teacher" && (profile.isVerified || profile.branches.length > 0) ? (
-            <div className="mt-3">
-              <TeacherTrustBadges
-                branches={profile.branches}
-                moreLabel={m.teacherBadges.moreAreas}
-                verified={profile.isVerified}
-                verifiedLabel={m.teacherBadges.verifiedTeacher}
-                showVerified={false}
+        <div className="px-4 pb-4">
+          <div className="flex items-end justify-between">
+            <div className="-mt-10 shrink-0">
+              <SocialAvatar
+                accent="from-crystal via-fuchsia-500 to-rose-400"
+                className="size-20 text-3xl ring-4 ring-white shadow-md"
+                label={profile.name}
+                imageUrl={profile.avatarUrl}
               />
             </div>
-          ) : null}
+          </div>
 
-          {orgDashboard ? (
-            <div className="mt-4">
-              <OrgDashboardPanel copy={orgCopy} embedded snapshot={orgDashboard} />
+          <div className="mt-3 flex items-center justify-between">
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="truncate text-xl font-black text-night">@{profile.handle}</h1>
+              {profile.isVerified ? <VerifiedBadge className="size-4" /> : null}
             </div>
-          ) : null}
-        </div>
+          </div>
 
-        <div className="zigo-action-grid mt-4">
-          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/profile/edit"}>
-            {profile.isSignedOut ? m.common.signIn : m.common.edit}
-          </Link>
-          {!profile.isSignedOut && (
-            <SignOutButton className="zigo-action-chip rounded-lg border border-slate-200 bg-white text-night" />
-          )}
-          {profile.role === "teacher" ? (
-            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/setup" : "/create"}>
-              {profile.isSignedOut ? m.common.setup : m.header.create}
-            </Link>
-          ) : profile.role === "student" ? (
-            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/student"}>
-              {m.dashboard.student.mode}
-            </Link>
-          ) : profile.role === "parent" ? (
-            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/parent"}>
-              {m.dashboard.parent.mode}
-            </Link>
-          ) : (
-            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/questions"}>
-              {m.nav.ask}
-            </Link>
-          )}
-          <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
-            {profile.isSignedOut ? p.feed : p.saved}
-          </Link>
-          {profile.role === "parent" && !profile.isSignedOut ? (
-            <CreatePrivateLessonModal
-              areas={educationAreas}
-              children={parentChildProfiles}
+          <div className="mt-3">
+            <ProfileSocialStatsSection
+              followersCount={profile.stats.followers}
+              followersLabel={m.common.followers}
+              followingCount={profile.stats.following}
+              followingLabel={m.common.following}
+              postsCount={profile.stats.posts}
+              postsLabel={m.common.posts}
+              targetUserId={profile.id}
+              viewerId={profile.id}
             />
-          ) : null}
+          </div>
 
+          <div className="mt-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-black text-night">{profile.name}</h2>
+            </div>
+            {profile.bio ? (
+              <p className="mt-1.5 text-sm leading-5 text-slate-600">
+                {profile.bio}
+              </p>
+            ) : null}
+            <ProfileSocialLinks 
+              bio={profile.bio} 
+              websiteUrl={profile.website_url} 
+              youtubeUrl={profile.youtube_url} 
+              instagramUrl={profile.instagram_url} 
+            />
+
+            {/* Institutional / Educator Distinguished Badge */}
+            <ProfileOrgBadge
+              organizationType={profile.organization_type}
+              role={profile.role}
+              isVerified={profile.isVerified}
+            />
+            
+            {/* Instagram-style Highlights */}
+            <div className="mt-5 -mx-4 px-4 overflow-x-auto hide-scrollbar flex gap-4 pb-2">
+              {[
+                { id: 1, title: profile.role === "student" ? "Notlarım" : "Derslerim", emoji: "📚", color: "from-blue-400 to-cyan-300" },
+                { id: 2, title: "Çözümler", emoji: "✍️", color: "from-violet-400 to-fuchsia-300" },
+                { id: 3, title: "Başarılar", emoji: "🏆", color: "from-amber-400 to-orange-300" },
+                { id: 4, title: "Sertifikalar", emoji: "🎓", color: "from-emerald-400 to-teal-300" },
+              ].map(highlight => (
+                <div key={highlight.id} className="flex flex-col items-center gap-1.5 cursor-pointer group">
+                  <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-slate-200 to-slate-300 group-hover:from-crystal group-hover:to-berry transition-all">
+                    <div className={`w-full h-full rounded-full bg-gradient-to-br ${highlight.color} border-2 border-white flex items-center justify-center text-2xl shadow-inner`}>
+                      {highlight.emoji}
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-700">{highlight.title}</span>
+                </div>
+              ))}
+            </div>
+
+            {profile.role === "student" && (
+              <div className="mt-4 rounded-xl bg-gradient-to-r from-fuchsia-50 to-pink-50 p-4 border border-fuchsia-100">
+                <h3 className="font-black text-fuchsia-900 text-sm mb-2">Öğrenci Gelişimi</h3>
+                <div className="flex gap-2">
+                  <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">🏆 Gümüş Lig</span>
+                  <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">⭐ {profile.stats.followers * 10} Puan</span>
+                </div>
+              </div>
+            )}
+
+            {profile.role === "parent" && (
+              <div className="mt-4 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 p-4 border border-cyan-100">
+                <h3 className="font-black text-cyan-900 text-sm mb-2">Veli Özeti</h3>
+                <div className="flex gap-2">
+                  <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">👨‍👩‍👧 {profile.childrenCount ?? 0} Bağlı Profil</span>
+                </div>
+              </div>
+            )}
+
+            {profile.role === "teacher" && (profile.isVerified || profile.branches.length > 0) ? (
+              <div className="mt-3">
+                <TeacherTrustBadges
+                  branches={profile.branches}
+                  moreLabel={m.teacherBadges.moreAreas}
+                  verified={profile.isVerified}
+                  verifiedLabel={m.teacherBadges.verifiedTeacher}
+                  showVerified={false}
+                />
+              </div>
+            ) : null}
+
+            {orgDashboard ? (
+              <div className="mt-4">
+                <OrgDashboardPanel copy={orgCopy} embedded snapshot={orgDashboard} />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="zigo-action-grid mt-4">
+            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/profile/edit"}>
+              {profile.isSignedOut ? m.common.signIn : m.common.edit}
+            </Link>
+            {!profile.isSignedOut && (
+              <SignOutButton className="zigo-action-chip rounded-lg border border-slate-200 bg-white text-night" />
+            )}
+            {profile.role === "teacher" ? (
+              <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/setup" : "/teacher"}>
+                👨‍🏫 Öğretmen Stüdyosu
+              </Link>
+            ) : profile.role === "student" ? (
+              <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/student"}>
+                {m.dashboard.student.mode}
+              </Link>
+            ) : profile.role === "parent" ? (
+              <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/parent"}>
+                {m.dashboard.parent.mode}
+              </Link>
+            ) : (
+              <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/auth" : "/questions"}>
+                {m.nav.ask}
+              </Link>
+            )}
+            <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
+              {profile.isSignedOut ? p.feed : p.saved}
+            </Link>
+            {profile.role === "parent" && !profile.isSignedOut ? (
+              <CreatePrivateLessonModal
+                areas={educationAreas}
+                children={parentChildProfiles}
+              />
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -671,7 +695,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
   handle: string;
   bio: string;
   role: UserProfile["role"] | "guest";
-  organization_type?: string | null;
+  organization_type: string | null;
   isVerified: boolean;
   branches: string[];
   stats: ProfileSocialStats;
@@ -680,11 +704,12 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
   isPreview: boolean;
   isSignedOut: boolean;
   avatarUrl: string | null;
-  userCreatedAt?: string;
+  cover_url: string | null;
+  userCreatedAt?: string | undefined;
   website_url?: string | null;
   youtube_url?: string | null;
   instagram_url?: string | null;
-  childrenCount?: number;
+  childrenCount: number;
 }> {
   const signedOutMessages = await getServerMessages();
   const pf = signedOutMessages.profile;
@@ -724,6 +749,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
     isPreview: true,
     isSignedOut: false,
     avatarUrl: null as string | null,
+    cover_url: null as string | null,
     userCreatedAt: undefined as string | undefined,
     website_url: null as string | null,
     youtube_url: null as string | null,
@@ -749,6 +775,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       isPreview: false,
       isSignedOut: true,
       avatarUrl: null as string | null,
+      cover_url: null as string | null,
       userCreatedAt: undefined as string | undefined,
       website_url: null as string | null,
       youtube_url: null as string | null,
@@ -774,6 +801,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
         isPreview: false,
         isSignedOut: true,
         avatarUrl: null as string | null,
+        cover_url: null as string | null,
         userCreatedAt: undefined as string | undefined,
         website_url: null as string | null,
         youtube_url: null as string | null,
@@ -801,6 +829,7 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
       isPreview: false,
       isSignedOut: true,
       avatarUrl: null as string | null,
+      cover_url: null as string | null,
       userCreatedAt: undefined as string | undefined,
       website_url: null as string | null,
       youtube_url: null as string | null,
@@ -899,6 +928,7 @@ function toProfileData(
     isPreview: false,
     isSignedOut: false,
     avatarUrl: profile.avatar_url || null,
+    cover_url: (profile as unknown as { cover_url?: string | null }).cover_url ?? null,
     userCreatedAt: profile.created_at ?? undefined,
     website_url: (profile as unknown as { website_url?: string | null }).website_url ?? null,
     youtube_url: (profile as unknown as { youtube_url?: string | null }).youtube_url ?? null,

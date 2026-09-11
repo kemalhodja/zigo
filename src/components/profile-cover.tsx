@@ -105,6 +105,8 @@ export function ProfileCover({
           alt="Kapak fotoğrafı"
           fill
           sizes="100vw"
+          unoptimized
+          onError={() => setCoverUrl(null)}
           className="object-cover transition-opacity duration-300"
         />
       ) : null}

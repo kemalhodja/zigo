@@ -6,6 +6,7 @@ import { BackButton } from "@/components/back-button";
 import { FollowButton } from "@/components/follow-button";
 import { ProfileCover } from "@/components/profile-cover";
 import { ProfileHighlights } from "@/components/profile-highlights";
+import { ProfileOrgBadge } from "@/components/profile-org-badge";
 import { ProfileSocialLinks } from "@/components/profile-social-links";
 import { ProfileSocialStats } from "@/components/profile-social-stats";
 import { SocialMediaFrame } from "@/components/social-media-frame";
@@ -221,6 +222,12 @@ export default async function PublicProfilePage({ params, searchParams }: Public
                 />
               </div>
             ) : null}
+
+            <ProfileOrgBadge
+              organizationType={profile.organization_type}
+              role={profile.role}
+              isVerified={profile.is_verified}
+            />
           </div>
 
 

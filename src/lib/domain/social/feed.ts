@@ -241,12 +241,12 @@ export async function getPublicProfile(
 ) {
   const { data, error } = await supabase
     .from("users")
-    .select("id, full_name, bio, avatar_url, role, is_verified, total_points, avatar_assets, created_at, organization_type, website_url, is_private" as unknown as "id")
+    .select("id, full_name, bio, avatar_url, cover_url, role, is_verified, total_points, avatar_assets, created_at, organization_type, website_url, youtube_url, instagram_url, is_private" as unknown as "id")
     .eq("id", userId)
     .maybeSingle();
 
   if (error) throw error;
-  return data as unknown as Database["public"]["Tables"]["users"]["Row"] & { is_private?: boolean };
+  return data as unknown as Database["public"]["Tables"]["users"]["Row"] & { is_private?: boolean; cover_url?: string | null };
 }
 
 export async function isFollowing(
