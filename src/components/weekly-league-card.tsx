@@ -207,7 +207,7 @@ export function WeeklyLeagueCard() {
       <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[0.7rem] text-slate-400 font-bold">
         <span>30 Kişilik Haftalık Grup</span>
         <Link
-          href="/salon"
+          href="/games"
           className="text-crystal hover:underline font-black flex items-center gap-1"
         >
           Oyun Oyna & Puan Topla →

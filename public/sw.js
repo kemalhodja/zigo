@@ -41,7 +41,7 @@ self.addEventListener("fetch", (event) => {
   // Cache first for game static chunks and assets
   const isGameAsset =
     url.pathname.startsWith("/_next/static/") ||
-    url.pathname.startsWith("/salon") ||
+    url.pathname.startsWith("/games") ||
     url.pathname.includes("games");
 
   if (request.method === "GET" && isGameAsset) {
@@ -68,9 +68,9 @@ self.addEventListener("fetch", (event) => {
             return networkResponse;
           })
           .catch(() => {
-            // If completely offline and fetching a document, serve /salon from cache
+            // If completely offline and fetching a document, serve /games from cache
             if (request.destination === "document") {
-              return caches.match("/salon");
+              return caches.match("/games");
             }
           });
       })
