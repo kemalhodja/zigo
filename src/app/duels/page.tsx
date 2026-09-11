@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Swords, Trophy, Zap, Clock, CheckCircle2, XCircle, RotateCcw, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useAudio } from "@/hooks/use-audio";
+import { createClient } from "@/lib/supabase/client";
 
 type DuelQuestion = {
   id: number;
@@ -79,6 +80,14 @@ export default function DuelsPage() {
   const [opponentAnswered, setOpponentAnswered] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    void supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.id) setCurrentUserId(data.user.id);
+    });
+  }, []);
 
   function startDuel() {
     setGameState("searching");
@@ -179,11 +188,38 @@ export default function DuelsPage() {
     setGameState("finished");
     if (timerRef.current) clearInterval(timerRef.current);
 
-    confetti({
-      particleCount: 80,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+    const isWinner = userScore > opponent.score;
+    if (isWinner) {
+      playSound("success");
+      confetti({
+        particleCount: 100,
+        spread: 80,
+        origin: { y: 0.6 },
+      });
+    } else {
+      playSound("pop");
+    }
+
+    if (currentUserId) {
+      const earnedXP = isWinner ? 250 : 100; // 250 / 10 = 25 puan, 100 / 10 = 10 puan
+      void fetch("/api/games/finish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: currentUserId,
+          score: earnedXP,
+          game_type: "duel_1v1",
+          played_seconds: 75,
+          stats: {
+            userScore,
+            opponentScore: opponent.score,
+            isWinner,
+          },
+        }),
+      }).catch(() => {
+        // Safe error fallback
+      });
+    }
   }
 
   const currentQ = DUEL_QUESTIONS[currentIndex];
