@@ -43,6 +43,9 @@ export async function POST(request: Request) {
       teacherId: profile.id,
       questionId: body.questionId,
       content: body.content,
+      videoUrl: body.videoUrl || null,
+      audioUrl: body.audioUrl || null,
+      mediaDurationSec: typeof body.mediaDurationSec === "number" ? body.mediaDurationSec : null,
     });
 
     return NextResponse.json({ data: answer }, { status: 201 });

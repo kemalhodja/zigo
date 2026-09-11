@@ -7,13 +7,31 @@ import { createQuestion, getMatchedQuestions } from "@/lib/domain/questions";
 import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const snapMode = searchParams.get("snap");
+
+    if (snapMode === "1" || snapMode === "true") {
+      const areaParam = searchParams.get("areaId");
+      const areaId = areaParam ? Number(areaParam) : null;
+      const { data, error } = await (supabase as any).rpc("get_snap_questions", {
+        p_area_id: areaId,
+        p_limit: 30,
+      });
+
+      if (error) {
+        return NextResponse.json({ error: "Sorular alınamadı." }, { status: 500 });
+      }
+
+      return NextResponse.json({ data });
     }
 
     const questions = await getMatchedQuestions(supabase, profile.id);
@@ -61,6 +79,7 @@ export async function POST(request: Request) {
       areaId,
       title: body.title,
       description: body.description,
+      imageUrl: body.imageUrl || null,
     });
 
     return NextResponse.json({ data: question }, { status: 201 });
@@ -69,7 +88,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Choose a valid education area, add a title of at least 3 characters and details of at least 10 characters.",
+            "Choose a valid education area, add a title of at least 3 characters and details of at least 5 characters.",
         },
         { status: 400 },
       );

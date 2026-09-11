@@ -32,6 +32,9 @@ export function QuestionForm({ areas }: { areas: EducationArea[] }) {
   const [description, setDescription] = useState("");
   const [message, setMessage] = useState("");
   const [title, setTitle] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     try {
@@ -58,13 +61,48 @@ export function QuestionForm({ areas }: { areas: EducationArea[] }) {
     }
   }, [areaId, description, title]);
 
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const url = URL.createObjectURL(file);
+    setImagePreview(url);
+  }
+
   async function submitQuestion(formData: FormData) {
-    if (status === "saving") return;
+    if (status === "saving" || uploadingImage) return;
 
     setStatus("saving");
     setMessage("");
 
     try {
+      let uploadedImageUrl: string | null = null;
+
+      // 1. Upload photo if selected
+      if (imageFile) {
+        setUploadingImage(true);
+        const uploadData = new FormData();
+        uploadData.append("file", imageFile);
+
+        const uploadRes = await fetch("/api/social/upload", {
+          method: "POST",
+          body: uploadData,
+        });
+
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => null);
+          setStatus("error");
+          setMessage(errData?.error || "Fotoğraf yüklenemedi. Lütfen tekrar deneyin.");
+          setUploadingImage(false);
+          return;
+        }
+
+        const uploadJson = await uploadRes.json();
+        uploadedImageUrl = uploadJson.url || null;
+        setUploadingImage(false);
+      }
+
+      // 2. Submit Question
       const response = await fetch("/api/questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,15 +110,18 @@ export function QuestionForm({ areas }: { areas: EducationArea[] }) {
           areaId: formData.get("areaId"),
           title: formData.get("title"),
           description: formData.get("description"),
+          imageUrl: uploadedImageUrl,
         }),
       });
 
       if (response.ok) {
         setStatus("saved");
-        setMessage(f.questionSent);
+        setMessage("Sorun başarıyla yüklendi! Öğretmenler en kısa sürede çözümü paylaşacak 🚀");
         window.localStorage.removeItem(questionDraftKey);
         setDescription("");
         setTitle("");
+        setImageFile(null);
+        setImagePreview(null);
         return;
       }
 
@@ -90,6 +131,8 @@ export function QuestionForm({ areas }: { areas: EducationArea[] }) {
     } catch {
       setStatus("error");
       setMessage(m.actions.connectionFailedTryAgain);
+    } finally {
+      setUploadingImage(false);
     }
   }
 
@@ -163,6 +206,51 @@ export function QuestionForm({ areas }: { areas: EducationArea[] }) {
           required
           value={description}
         />
+      </div>
+
+      {/* Snap & Solve Photo Upload */}
+      <div className="rounded-xl border border-dashed border-indigo-200 bg-indigo-50/50 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📸</span>
+            <div>
+              <p className="text-xs font-black text-indigo-950">Sorunun Fotoğrafı (Snap & Solve)</p>
+              <p className="text-[0.7rem] font-medium text-slate-500">
+                Test kitabındaki soruyu çek ve anında yükle
+              </p>
+            </div>
+          </div>
+          <label className="tap-scale cursor-pointer rounded-xl bg-indigo-600 px-3 py-2 text-xs font-black text-white hover:bg-indigo-700">
+            Fotoğraf Çek / Seç
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
+          </label>
+        </div>
+
+        {imagePreview && (
+          <div className="relative mt-3 inline-block">
+            <img
+              src={imagePreview}
+              alt="Soru önizleme"
+              className="h-32 w-auto max-w-full rounded-lg border border-indigo-200 object-contain shadow-sm"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setImageFile(null);
+                setImagePreview(null);
+              }}
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white shadow"
+            >
+              ✕
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-2">

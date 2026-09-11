@@ -19,9 +19,22 @@ export async function getMatchedQuestions(
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("questions")
-    .select("*")
+    .select(`
+      *,
+      author:users!author_id(full_name, avatar_url),
+      answers(
+        id,
+        teacher_id,
+        content,
+        video_url,
+        audio_url,
+        media_duration_sec,
+        created_at,
+        teacher:users!teacher_id(full_name, avatar_url, is_verified)
+      )
+    `)
     .in("area_id", areaIds)
     .order("created_at", { ascending: false });
 
