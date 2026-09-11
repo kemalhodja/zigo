@@ -30,8 +30,8 @@ export function VirtualFeedClient({
 
   const virtualizer = useWindowVirtualizer({
     count: posts.length,
-    estimateSize: (index) => index === 0 ? 900 : 700,
-    overscan: 2,
+    estimateSize: (index) => index === 0 ? 800 : 650,
+    overscan: 3,
   });
 
   if (posts.length === 0) {

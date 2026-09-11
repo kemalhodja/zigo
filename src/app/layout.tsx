@@ -27,11 +27,15 @@ import { createClient } from "@/lib/supabase/server";
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
   variable: "--font-jakarta",
+  display: "swap",
+  preload: true,
 });
 
 const interTight = Inter_Tight({
   subsets: ["latin", "latin-ext"],
   variable: "--font-inter-tight",
+  display: "swap",
+  preload: true,
 });
 
 export async function generateMetadata(): Promise<Metadata> {

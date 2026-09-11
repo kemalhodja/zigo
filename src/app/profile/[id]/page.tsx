@@ -19,6 +19,7 @@ import {
   getUserSocialPosts,
   getUserSocialReels,
   isFollowing,
+  isFollowRequested,
 } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
@@ -93,14 +94,17 @@ export default async function PublicProfilePage({ params, searchParams }: Public
   const branches =
     profile.role === "teacher" ? await getUserInterestAreaNames(dbClient, profile.id) : [];
 
-  const [stats, posts, following] = await Promise.all([
+  const [stats, posts, following, followRequested] = await Promise.all([
     getProfileSocialStats(dbClient, profile.id),
     activeTab === "reels"
       ? getUserSocialReels(dbClient, profile.id)
       : getUserSocialPosts(dbClient, profile.id),
     viewer ? isFollowing(supabase, viewer.id, profile.id) : Promise.resolve(false),
+    viewer ? isFollowRequested(supabase, viewer.id, profile.id) : Promise.resolve(false),
   ]);
   const isOwnProfile = viewer?.id === profile.id;
+  const isPrivateAccount = Boolean((profile as unknown as { is_private?: boolean }).is_private);
+  const isLockedPrivate = isPrivateAccount && !following && !isOwnProfile;
   const handle = profile.full_name.toLowerCase().replaceAll(" ", "");
 
   return (
@@ -110,6 +114,11 @@ export default async function PublicProfilePage({ params, searchParams }: Public
         <div className="flex min-w-0 items-center gap-2">
           <h1 className="truncate text-lg font-black text-night">@{handle}</h1>
           {profile.is_verified ? <VerifiedBadge className="size-4" /> : null}
+          {isPrivateAccount ? (
+            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-600">
+              🔒 Gizli
+            </span>
+          ) : null}
         </div>
         <Link className="tap-scale flex size-9 items-center justify-center text-night" href="/questions">
           <svg aria-hidden="true" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -149,6 +158,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
               <FollowButton
                 followingId={profile.id}
                 initialFollowing={following}
+                initialIsRequested={followRequested}
                 initialFollowersCount={stats.followers}
                 showCount={false}
               />
@@ -250,7 +260,30 @@ export default async function PublicProfilePage({ params, searchParams }: Public
         </Link>
       </section>
 
-      <section className="-mx-4 grid grid-cols-3 gap-0.5 bg-white">
+      {isLockedPrivate ? (
+        <section className="-mx-4 border-t border-slate-100 bg-white px-6 py-16 text-center">
+          <div className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 shadow-inner">
+            <svg aria-hidden="true" className="size-9" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <rect height="11" rx="2" ry="2" width="18" x="3" y="11" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <h2 className="mt-5 text-lg font-black text-night">Bu Hesap Gizli</h2>
+          <p className="mx-auto mt-2 max-w-xs text-xs font-semibold leading-relaxed text-slate-500">
+            Fotoğraf, video ve paylaşımları görebilmek için takip isteği gönder ve onaylanmasını bekle.
+          </p>
+          <div className="mx-auto mt-6 max-w-xs">
+            <FollowButton
+              followingId={profile.id}
+              initialFollowing={following}
+              initialIsRequested={followRequested}
+              initialFollowersCount={stats.followers}
+              showCount={false}
+            />
+          </div>
+        </section>
+      ) : (
+        <section className="-mx-4 grid grid-cols-3 gap-0.5 bg-white">
         {posts.length === 0 ? (
           <div className="col-span-3 bg-white px-6 py-14 text-center">
             <span className="mx-auto flex size-16 items-center justify-center rounded-lg border-2 border-night text-night">
@@ -320,6 +353,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
           })
         )}
       </section>
+      )}
     </div>
   );
 }

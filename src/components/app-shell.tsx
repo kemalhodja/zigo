@@ -22,6 +22,7 @@ import {
 } from "@/lib/domain/role-navigation";
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
+import { clearAppBadgeCount, setAppBadgeCount } from "@/lib/client/app-badge";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;
@@ -54,22 +55,22 @@ export function AppShell({
 
   useEffect(() => {
     setUnreadCount(initialUnreadCount);
+    void setAppBadgeCount(initialUnreadCount);
   }, [initialUnreadCount]);
 
   useEffect(() => {
     if (pathname === "/notifications") {
       setUnreadCount(0);
+      void clearAppBadgeCount();
     }
   }, [pathname]);
 
   useEffect(() => {
     const handleUnreadUpdate = (event: Event) => {
       const customEvent = event as CustomEvent<{ count?: number }>;
-      if (typeof customEvent.detail?.count === "number") {
-        setUnreadCount(customEvent.detail.count);
-      } else {
-        setUnreadCount(0);
-      }
+      const nextCount = typeof customEvent.detail?.count === "number" ? customEvent.detail.count : 0;
+      setUnreadCount(nextCount);
+      void setAppBadgeCount(nextCount);
     };
 
     window.addEventListener("zigo:unread-count-updated", handleUnreadUpdate);

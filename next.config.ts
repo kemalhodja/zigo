@@ -44,14 +44,16 @@ const nextConfig: NextConfig = {
       "lucide-react",
       "recharts",
       "zod",
+      "framer-motion",
+      "date-fns",
     ],
     ppr: false,
   },
   images: {
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 86400,
+    minimumCacheTTL: 86400 * 7, // 7 days cache for optimized images
     deviceSizes: [390, 430, 768, 1080, 1280],
-    imageSizes: [64, 128, 256, 384],
+    imageSizes: [48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",
@@ -60,6 +62,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "**.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.b-cdn.net",
       },
     ],
   },

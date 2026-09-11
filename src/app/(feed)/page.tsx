@@ -4,9 +4,9 @@ import Link from "next/link";
 const AiMentorCard = dynamic(() => import("@/components/ai-mentor-card").then(mod => mod.AiMentorCard));
 import { PublicPreviewFeed } from "@/components/public-preview-feed";
 import { allowDemoContent } from "@/lib/domain/demo-env";
+import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import { buildDemoPosts } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
-import { createClient } from "@/lib/supabase/server";
 
 import {
   buildReelSpotlights,
@@ -24,11 +24,8 @@ export default async function HomePage() {
   const m = await getServerMessages();
   const viewer = await getHomeViewerContext();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  const profile = await getCachedUserProfile();
+  if (!profile) {
     return <PublicPreviewFeed />;
   }
 

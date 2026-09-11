@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AutoMarkNotificationsRead } from "@/components/auto-mark-notifications-read";
+import { FollowRequestActions } from "@/components/follow-request-actions";
 import { MarkNotificationsReadButton } from "@/components/mark-notifications-read-button";
 import { NotificationItemLink } from "@/components/notification-item-link";
 import { PushNotificationPanel } from "@/components/push-notification-panel";
@@ -65,6 +66,8 @@ type NotificationItem = {
   href: string;
   isRead: boolean;
   category: "learning" | "rewards" | "safety" | "social";
+  isFollowRequest?: boolean;
+  requesterId?: string;
 };
 
 type NotificationFilter = NotificationItem["category"] | "all" | "unread";
@@ -192,9 +195,13 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
                 </p>
                 <p className="mt-0.5 text-xs font-semibold text-slate-400">{notification.time}</p>
               </div>
-              <span className="rounded-lg bg-white px-3 py-2 text-xs font-black text-crystal">
-                {notification.action}
-              </span>
+              {notification.isFollowRequest && notification.requesterId ? (
+                <FollowRequestActions requesterId={notification.requesterId} />
+              ) : (
+                <span className="rounded-lg bg-white px-3 py-2 text-xs font-black text-crystal">
+                  {notification.action}
+                </span>
+              )}
             </NotificationItemLink>
           ))
         )}
@@ -376,20 +383,28 @@ function toNotificationItem(notification: SocialNotification, m: Messages, profi
         ? "gönderine yorum yaptı."
         : notification.kind === "follow"
           ? "seni takip etmeye başladı."
-          : notification.kind === "lesson_bid"
-            ? "özel ders talebine bir teklif sundu 🎯"
-            : isLessonRequest
-              ? "yeni bir ders talebi gönderdi."
-              : notification.message;
+          : notification.kind === "follow_request"
+            ? "sana takip isteği gönderdi."
+            : notification.kind === "follow_accept"
+              ? "takip isteğini onayladı."
+              : notification.kind === "lesson_bid"
+                ? "özel ders talebine bir teklif sundu 🎯"
+                : isLessonRequest
+                  ? "yeni bir ders talebi gönderdi."
+                  : notification.message;
+
+  const isFollowReq = notification.kind === "follow_request";
 
   return {
     id: notification.id,
     title: `${actor} ${formattedMessage}`,
     detail: isLessonRequest
       ? m.common.open
-      : isFollow
-        ? m.notifications.newFollower
-        : m.notifications.openPost,
+      : isFollowReq
+        ? "Onay bekliyor"
+        : isFollow
+          ? m.notifications.newFollower
+          : m.notifications.openPost,
     time: new Intl.RelativeTimeFormat("tr", { numeric: "auto" }).format(
       Math.round((new Date(notification.created_at).getTime() - Date.now()) / 60000),
       "minute",
@@ -398,6 +413,8 @@ function toNotificationItem(notification: SocialNotification, m: Messages, profi
     category: getNotificationCategory(notification.kind, notification.message),
     href,
     isRead: notification.is_read,
+    isFollowRequest: isFollowReq,
+    requesterId: notification.actor?.id,
   };
 }
 

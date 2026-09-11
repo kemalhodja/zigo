@@ -25,6 +25,7 @@ type ProfileEditFormProps = {
     email: string | null;
     role: UserRole;
     accountKind: RegistrationAccountKind;
+    isPrivate?: boolean;
   };
 };
 
@@ -51,6 +52,7 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
   const [youtubeUrl, setYoutubeUrl] = useState(initialProfile.youtubeUrl || "");
   const [instagramUrl, setInstagramUrl] = useState(initialProfile.instagramUrl || "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initialProfile.avatarUrl);
+  const [isPrivate, setIsPrivate] = useState<boolean>(initialProfile.isPrivate ?? false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [accountKind, setAccountKind] = useState<RequiredSignupOptionId>(
     toRequiredId(initialProfile.accountKind),
@@ -162,6 +164,7 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
           youtubeUrl: youtubeUrl.trim(),
           instagramUrl: instagramUrl.trim(),
           avatarUrl,
+          isPrivate,
         }),
       });
 
@@ -392,6 +395,50 @@ export function ProfileEditForm({ initialProfile }: ProfileEditFormProps) {
             </p>
           </div>
         )}
+
+        {/* Gizli Hesap Toggle */}
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-night">Gizli Hesap</span>
+              {isPrivate ? (
+                <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700">
+                  Gizli
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+                  Herkese Açık
+                </span>
+              )}
+            </div>
+            <p className="text-xs font-semibold leading-relaxed text-slate-500">
+              {isPrivate
+                ? "Hesabın gizli olduğunda yalnızca onayladığın takipçiler gönderilerini ve aktivitelerini görebilir."
+                : "Hesabın herkese açıkken tüm Zigo kullanıcıları gönderilerini ve profilini görüntüleyebilir."}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isPrivate}
+            disabled={isSaving}
+            onClick={() => {
+              if (typeof window !== "undefined" && "vibrate" in navigator) {
+                navigator.vibrate(12);
+              }
+              setIsPrivate((prev) => !prev);
+            }}
+            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-crystal focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+              isPrivate ? "bg-crystal" : "bg-slate-200"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                isPrivate ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
 
         <div className="space-y-2 rounded-lg bg-slate-50 px-4 py-3">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{pe.emailLabel}</p>

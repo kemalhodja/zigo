@@ -45,6 +45,7 @@ export const updateUserProfileSchema = z
     instagramUrl: z.union([z.string().trim().url(), z.literal(""), z.null()]).optional(),
     avatarUrl: z.string().trim().max(250000).optional().nullable(),
     coverUrl: z.string().trim().max(250000).optional().nullable(),
+    isPrivate: z.boolean().optional(),
   })
   .refine(
     (value) =>
@@ -54,9 +55,10 @@ export const updateUserProfileSchema = z
       value.youtubeUrl !== undefined ||
       value.instagramUrl !== undefined ||
       value.avatarUrl !== undefined ||
-      value.coverUrl !== undefined,
+      value.coverUrl !== undefined ||
+      value.isPrivate !== undefined,
     {
-      message: "Provide fullName, bio, websiteUrl, youtubeUrl, instagramUrl, avatarUrl or coverUrl to update.",
+      message: "Provide fullName, bio, websiteUrl, youtubeUrl, instagramUrl, avatarUrl, coverUrl or isPrivate to update.",
     },
   );
 
@@ -215,12 +217,15 @@ export async function updateUserProfile(
 
   if (error) throw error;
 
-  if (parsed.coverUrl !== undefined) {
+  if (parsed.coverUrl !== undefined || parsed.isPrivate !== undefined) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      await supabase.from("users").update({ cover_url: parsed.coverUrl } as unknown as Partial<Database["public"]["Tables"]["users"]["Update"]>).eq("id", user.id);
+      const updatePayload: Record<string, unknown> = {};
+      if (parsed.coverUrl !== undefined) updatePayload.cover_url = parsed.coverUrl;
+      if (parsed.isPrivate !== undefined) updatePayload.is_private = parsed.isPrivate;
+      await supabase.from("users").update(updatePayload as unknown as Partial<Database["public"]["Tables"]["users"]["Update"]>).eq("id", user.id);
     }
   }
 

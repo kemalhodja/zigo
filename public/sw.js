@@ -1,15 +1,15 @@
-// Service Worker for Offline Game Support
-// Caches game assets, salon pages, and static JS bundles.
-
-const CACHE_NAME = "zigo-games-offline-v1";
+const CACHE_NAME = "zigo-offline-shell-v2";
 
 const OFFLINE_URLS = [
+  "/",
   "/games",
   "/games/math",
   "/games/word",
   "/games/blocks",
   "/games/2048",
   "/favicon.ico",
+  "/icon.svg",
+  "/icon-maskable.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -38,17 +38,19 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Cache first for game static chunks and assets
-  const isGameAsset =
+  // Cache first for static chunks, fonts, icons and app shell assets
+  const isStaticCacheable =
     url.pathname.startsWith("/_next/static/") ||
-    url.pathname.startsWith("/games") ||
-    url.pathname.includes("games");
+    url.pathname.startsWith("/images/") ||
+    url.pathname.endsWith(".svg") ||
+    url.pathname.endsWith(".ico") ||
+    url.pathname.startsWith("/games");
 
-  if (request.method === "GET" && isGameAsset) {
+  if (request.method === "GET" && isStaticCacheable) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         if (cachedResponse) {
-          // Return cache and fetch in background to update
+          // Return cache and fetch in background to update (Stale-While-Revalidate)
           fetch(request)
             .then((networkResponse) => {
               if (networkResponse && networkResponse.status === 200) {
@@ -68,7 +70,6 @@ self.addEventListener("fetch", (event) => {
             return networkResponse;
           })
           .catch(() => {
-            // If completely offline and fetching a document, serve /games from cache
             if (request.destination === "document") {
               return caches.match("/games");
             }

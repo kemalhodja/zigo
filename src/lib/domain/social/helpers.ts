@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { SocialFeedPost, SuggestedCreator } from "@/lib/domain/social/types";
 import { isSponsoredAdActive, isSponsoredAdConfigured } from "@/lib/domain/sponsored-ads";
+import { getCachedProfileById } from "@/lib/domain/profiles.server";
 import type {
   Database,
   EducationAreaRow,
@@ -78,14 +79,7 @@ export async function hydrateSocialPosts(
   let allowedPosts = posts;
   let viewerContext: { role?: string | null; city?: string | null; district?: string | null } | null = null;
   if (viewerId) {
-    const rawProfile = await supabase
-      .from("users")
-      .select("id, role, grade_level, city, district")
-      .eq("id", viewerId)
-      .maybeSingle()
-      .then((r) => r.data as unknown);
-
-    const profile = rawProfile as { id: string; role: string; grade_level?: string | null; city?: string | null; district?: string | null } | null;
+    const profile = await getCachedProfileById(viewerId).catch(() => null);
 
     if (profile) {
       viewerContext = { role: profile.role, city: profile.city, district: profile.district };
@@ -423,6 +417,35 @@ export async function hasFollow(
     .maybeSingle();
 
   if (error) throw error;
+  return Boolean(data);
+}
+
+export async function hasFollowRequest(
+  supabase: SupabaseClient<Database>,
+  requesterId: string,
+  targetId: string,
+) {
+  const { data, error } = await (supabase as unknown as {
+    from: (table: string) => {
+      select: (cols: string) => {
+        eq: (col: string, val: string) => {
+          eq: (col2: string, val2: string) => {
+            eq: (col3: string, val3: string) => {
+              maybeSingle: () => Promise<{ data: unknown; error: unknown }>;
+            };
+          };
+        };
+      };
+    };
+  })
+    .from("follow_requests")
+    .select("id")
+    .eq("requester_id", requesterId)
+    .eq("target_id", targetId)
+    .eq("status", "pending")
+    .maybeSingle();
+
+  if (error) return false;
   return Boolean(data);
 }
 

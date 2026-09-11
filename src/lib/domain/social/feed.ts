@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { resolvePremiumPrepAccess } from "@/lib/domain/premium-prep";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { getCachedProfileById } from "@/lib/domain/profiles.server";
 import { decodeFeedCursor, encodeFeedCursor } from "@/lib/domain/social/feed-cursor";
 import {
   countFollowers,
@@ -43,7 +44,7 @@ async function resolveViewerCanOpenPremiumPrep(
   viewerId?: string,
 ) {
   if (!viewerId) return false;
-  const profile = await getCurrentProfile(supabase);
+  const profile = await getCachedProfileById(viewerId).catch(() => null);
   if (!profile) return false;
   const access = await resolvePremiumPrepAccess(supabase, viewerId, profile.role);
   return access.canOpen;
@@ -121,7 +122,7 @@ export async function getSocialFeed(
   const posts = (data ?? []) as unknown as RawSocialPost[];
   if (posts.length === 0) return { posts: [], nextCursor: null };
 
-  const profile = viewerId ? await getCurrentProfile(supabase) : null;
+  const profile = viewerId ? await getCachedProfileById(viewerId).catch(() => null) : null;
   const premiumAccess = await resolvePremiumPrepAccess(supabase, viewerId, profile?.role ?? null);
   const canOpenSponsored = Boolean(viewerId);
 
@@ -240,12 +241,12 @@ export async function getPublicProfile(
 ) {
   const { data, error } = await supabase
     .from("users")
-    .select("id, full_name, bio, avatar_url, role, is_verified, total_points, avatar_assets, created_at, organization_type, website_url")
+    .select("id, full_name, bio, avatar_url, role, is_verified, total_points, avatar_assets, created_at, organization_type, website_url, is_private" as unknown as "id")
     .eq("id", userId)
     .maybeSingle();
 
   if (error) throw error;
-  return data;
+  return data as unknown as Database["public"]["Tables"]["users"]["Row"] & { is_private?: boolean };
 }
 
 export async function isFollowing(
@@ -254,6 +255,15 @@ export async function isFollowing(
   followingId: string,
 ) {
   return hasFollow(supabase, followerId, followingId);
+}
+
+export async function isFollowRequested(
+  supabase: SupabaseClient<Database>,
+  requesterId: string,
+  targetId: string,
+) {
+  const { hasFollowRequest } = await import("@/lib/domain/social/helpers");
+  return hasFollowRequest(supabase, requesterId, targetId);
 }
 
 export async function getSocialPostById(

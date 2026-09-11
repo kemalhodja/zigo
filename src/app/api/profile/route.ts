@@ -61,6 +61,7 @@ export async function PATCH(request: Request) {
       instagramUrl: body.instagramUrl,
       avatarUrl: body.avatarUrl,
       coverUrl: body.coverUrl,
+      isPrivate: typeof body.isPrivate === "boolean" ? body.isPrivate : undefined,
     });
 
     return NextResponse.json({ data: profile });

@@ -67,6 +67,7 @@ export default async function ProfileEditPage() {
             email: user?.email ?? null,
             role: profile.role,
             accountKind,
+            isPrivate: Boolean((profile as unknown as { is_private?: boolean }).is_private),
           }}
         />
 

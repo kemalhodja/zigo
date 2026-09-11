@@ -3,7 +3,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
-import { followSchema, getUserFollowersList, getUserFollowingList, toggleFollow } from "@/lib/domain/social";
+import {
+  acceptFollowRequest,
+  followSchema,
+  getUserFollowersList,
+  getUserFollowingList,
+  rejectFollowRequest,
+  toggleFollow,
+} from "@/lib/domain/social";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -38,10 +45,42 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
 
     if (!profile) {
-      return NextResponse.json({ error: "Takip etmek için lütfen giriş yapın." }, { status: 401 });
+      return NextResponse.json({ error: "İşlem yapmak için lütfen giriş yapın." }, { status: 401 });
     }
 
-    const body = followSchema.parse(await request.json());
+    const rawJson = await request.json();
+    const action = (rawJson as { action?: string }).action;
+
+    // Follow Request Accept
+    if (action === "accept") {
+      const requesterId = (rawJson as { requesterId?: string }).requesterId;
+      if (!requesterId) {
+        return NextResponse.json({ error: "requesterId gereklidir." }, { status: 400 });
+      }
+      await acceptFollowRequest(supabase, {
+        targetUserId: profile.id,
+        requesterId,
+      });
+      revalidatePath("/notifications");
+      return NextResponse.json({ success: true, meta: { action: "accept-follow-request" } });
+    }
+
+    // Follow Request Reject
+    if (action === "reject") {
+      const requesterId = (rawJson as { requesterId?: string }).requesterId;
+      if (!requesterId) {
+        return NextResponse.json({ error: "requesterId gereklidir." }, { status: 400 });
+      }
+      await rejectFollowRequest(supabase, {
+        targetUserId: profile.id,
+        requesterId,
+      });
+      revalidatePath("/notifications");
+      return NextResponse.json({ success: true, meta: { action: "reject-follow-request" } });
+    }
+
+    // Standard Toggle Follow (or Request Follow if private)
+    const body = followSchema.parse(rawJson);
     const data = await toggleFollow(supabase, {
       followerId: profile.id,
       followingId: body.followingId,
@@ -54,10 +93,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ data, meta: { action: "toggle-follow" } });
   } catch (error) {
     const message = error instanceof z.ZodError
-      ? "Lütfen takip etmek için geçerli bir profil seçin."
+      ? "Lütfen geçerli bir profil seçin."
       : error instanceof Error
         ? error.message
-        : "Takip işlemi tamamlanamadı. Lütfen tekrar deneyin.";
+        : "İşlem tamamlanamadı. Lütfen tekrar deneyin.";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

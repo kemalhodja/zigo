@@ -11,6 +11,7 @@ type OneSignalNotificationPayload = {
   message: string;
   url?: string;
   data?: Record<string, string>;
+  badgeCount?: number;
 };
 
 function isConfigured(): boolean {
@@ -31,23 +32,35 @@ export async function sendPushToUser(
   }
 
   try {
+    const postBody: Record<string, unknown> = {
+      app_id: ONESIGNAL_APP_ID,
+      include_aliases: { external_id: [userId] },
+      target_channel: "push",
+      headings: { en: payload.title, tr: payload.title },
+      contents: { en: payload.message, tr: payload.message },
+      url: payload.url || undefined,
+      data: payload.data || undefined,
+      chrome_web_icon: "/icon-192.png",
+      chrome_web_badge: "/icon.svg",
+      // Mobile Heads-up (Top Banner) & Sound
+      priority: 10,
+      android_visibility: 1, // VISIBILITY_PUBLIC
+      android_sound: "default",
+      ios_sound: "default",
+    };
+
+    if (typeof payload.badgeCount === "number" && payload.badgeCount >= 0) {
+      postBody.ios_badgeType = "SetTo";
+      postBody.ios_badgeCount = payload.badgeCount;
+    }
+
     const response = await fetch(`${ONESIGNAL_API_URL}/notifications`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Key ${ONESIGNAL_REST_API_KEY}`,
       },
-      body: JSON.stringify({
-        app_id: ONESIGNAL_APP_ID,
-        include_aliases: { external_id: [userId] },
-        target_channel: "push",
-        headings: { en: payload.title, tr: payload.title },
-        contents: { en: payload.message, tr: payload.message },
-        url: payload.url || undefined,
-        data: payload.data || undefined,
-        chrome_web_icon: "/icon-192.png",
-        chrome_web_badge: "/icon.svg",
-      }),
+      body: JSON.stringify(postBody),
     });
 
     const result = await response.json();
@@ -162,13 +175,15 @@ export async function sendSocialNotification(
   supabase: SupabaseClient<Database>,
   targetUserId: string,
   actorId: string,
-  kind: "like" | "comment" | "follow" | "post",
+  kind: "like" | "comment" | "follow" | "follow_request" | "follow_accept" | "post",
   postId?: string,
 ): Promise<void> {
   const messages: Record<string, string> = {
     like: "gönderini beğendi ❤️",
     comment: "gönderine yorum yaptı 💬",
     follow: "seni takip etti 🔔",
+    follow_request: "seni takip etmek istiyor 🔒",
+    follow_accept: "takip isteğini kabul etti ✅",
     post: "yeni bir gönderi paylaştı 📸",
   };
 
@@ -183,10 +198,18 @@ export async function sendSocialNotification(
   const actorName = actor?.full_name || "Birisi";
   const url = postId ? `/post/${postId}` : "/notifications";
 
+  // Calculate unread notification count for the recipient's phone badge
+  const { count: unreadCount } = await supabase
+    .from("notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", targetUserId)
+    .eq("is_read", false);
+
   await sendPushToUser(targetUserId, {
     title: "Zigo",
     message: `${actorName} ${msg}`,
     url,
     data: { kind, postId: postId || "", actorId },
+    badgeCount: typeof unreadCount === "number" ? unreadCount : 1,
   });
 }

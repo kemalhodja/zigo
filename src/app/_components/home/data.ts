@@ -186,9 +186,11 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
       return [];
     });
 
+    let isColdStart = false;
     // Cold Start Çözümü: Henüz kimseyi takip etmeyen kullanıcıya boş ekran göstermek yerine
     // ilgi alanına ve popülerliğe göre önerilen keşif gönderilerini getir
     if (followingPosts.length === 0) {
+      isColdStart = true;
       const fallbackPage = await getSocialFeed(feedClient, profile.id, { limit: 20 }).catch(() => ({ posts: [] }));
       followingPosts = fallbackPage.posts;
     }
@@ -199,12 +201,16 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
     const slicedPosts = followingPosts.slice(0, 20);
 
     // Single batch query for following status — avoids N individual round-trips
+    // If posts came from getFollowingFeed, all authors (except viewer themselves) are already followed.
+    const isFromFollowingFeed = isColdStart === false;
     const followedAuthorIds = slicedPosts
       .map((post) => post.author?.id)
       .filter((id): id is string => Boolean(id) && id !== profile?.id);
 
     let followedSet = new Set<string>();
-    if (profile && followedAuthorIds.length > 0) {
+    if (isFromFollowingFeed) {
+      followedSet = new Set(followedAuthorIds);
+    } else if (profile && followedAuthorIds.length > 0) {
       const { data: followRows } = await supabase
         .from("follows")
         .select("following_id")

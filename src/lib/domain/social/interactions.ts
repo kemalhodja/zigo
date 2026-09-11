@@ -16,6 +16,7 @@ import {
   countPostSaves,
   countPostShares,
   hasFollow,
+  hasFollowRequest,
   hasRow,
   notifyPostAuthor,
 } from "@/lib/domain/social/helpers";
@@ -505,6 +506,87 @@ export async function toggleFollow(
       followers_count: await countFollowers(supabase, parsed.followingId),
       following_count: await countFollowing(supabase, input.followerId),
       is_following: false,
+      is_requested: false,
+    };
+  }
+
+  // Check if target account is private
+  const { data: targetUser } = await supabase
+    .from("users")
+    .select("is_private" as unknown as "id")
+    .eq("id", parsed.followingId)
+    .maybeSingle();
+
+  const isTargetPrivate = Boolean(
+    (targetUser as unknown as { is_private?: boolean } | null)?.is_private
+  );
+
+  if (isTargetPrivate) {
+    // Check if there is already a pending request
+    const existingReq = await hasFollowRequest(supabase, input.followerId, parsed.followingId);
+    const requestsTable = (supabase as unknown as {
+      from: (table: string) => {
+        delete: () => {
+          eq: (col1: string, val1: string) => {
+            eq: (col2: string, val2: string) => Promise<{ error: unknown }>;
+          };
+        };
+        insert: (row: Record<string, unknown>) => Promise<{ error: unknown }>;
+      };
+    }).from("follow_requests");
+
+    if (existingReq) {
+      // Cancel follow request
+      await requestsTable
+        .delete()
+        .eq("requester_id", input.followerId)
+        .eq("target_id", parsed.followingId);
+
+      // Also clean up pending notification if present
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("user_id", parsed.followingId)
+        .eq("actor_id", input.followerId)
+        .eq("kind", "follow_request");
+
+      return {
+        followers_count: await countFollowers(supabase, parsed.followingId),
+        following_count: await countFollowing(supabase, input.followerId),
+        is_following: false,
+        is_requested: false,
+      };
+    }
+
+    // Create pending follow request
+    const { error: reqError } = await requestsTable.insert({
+      requester_id: input.followerId,
+      target_id: parsed.followingId,
+      status: "pending",
+    });
+
+    if (reqError) throw reqError;
+
+    // Send notification and push
+    await supabase.from("notifications").insert({
+      user_id: parsed.followingId,
+      actor_id: input.followerId,
+      kind: "follow_request",
+      message: "sana takip isteği gönderdi",
+    });
+
+    try {
+      const { sendSocialNotification } = await import("@/lib/server/onesignal");
+      await sendSocialNotification(supabase, parsed.followingId, input.followerId, "follow_request");
+    } catch (err) {
+      console.error("[ONESIGNAL_PUSH_ERROR]", err);
+    }
+
+    return {
+      followers_count: await countFollowers(supabase, parsed.followingId),
+      following_count: await countFollowing(supabase, input.followerId),
+      is_following: false,
+      is_requested: true,
     };
   }
 
@@ -532,11 +614,106 @@ export async function toggleFollow(
     message: "started following you",
   });
 
+  try {
+    const { sendSocialNotification } = await import("@/lib/server/onesignal");
+    await sendSocialNotification(supabase, parsed.followingId, input.followerId, "follow");
+  } catch (err) {
+    console.error("[ONESIGNAL_PUSH_ERROR]", err);
+  }
+
   return {
     followers_count: await countFollowers(supabase, parsed.followingId),
     following_count: await countFollowing(supabase, input.followerId),
     is_following: true,
+    is_requested: false,
   };
+}
+
+export async function acceptFollowRequest(
+  supabase: SupabaseClient<Database>,
+  input: { targetUserId: string; requesterId: string },
+) {
+  // targetUserId is the current user receiving the request
+  // requesterId is the user who asked to follow
+  const requestsTable = (supabase as unknown as {
+    from: (table: string) => {
+      delete: () => {
+        eq: (col1: string, val1: string) => {
+          eq: (col2: string, val2: string) => Promise<{ error: unknown }>;
+        };
+      };
+    };
+  }).from("follow_requests");
+
+  await requestsTable
+    .delete()
+    .eq("requester_id", input.requesterId)
+    .eq("target_id", input.targetUserId);
+
+  // Add to follows
+  const { error: followError } = await supabase.from("follows").insert({
+    follower_id: input.requesterId,
+    following_id: input.targetUserId,
+  });
+
+  if (followError && !followError.message?.includes("duplicate")) {
+    throw followError;
+  }
+
+  // Notify requester that request was accepted
+  await supabase.from("notifications").insert({
+    user_id: input.requesterId,
+    actor_id: input.targetUserId,
+    kind: "follow_accept",
+    message: "takip isteğini kabul etti",
+  });
+
+  // Mark the original follow_request notification as read
+  await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", input.targetUserId)
+    .eq("actor_id", input.requesterId)
+    .eq("kind", "follow_request");
+
+  try {
+    const { sendSocialNotification } = await import("@/lib/server/onesignal");
+    await sendSocialNotification(supabase, input.requesterId, input.targetUserId, "follow_accept");
+  } catch (err) {
+    console.error("[ONESIGNAL_PUSH_ERROR]", err);
+  }
+
+  return { success: true };
+}
+
+export async function rejectFollowRequest(
+  supabase: SupabaseClient<Database>,
+  input: { targetUserId: string; requesterId: string },
+) {
+  const requestsTable = (supabase as unknown as {
+    from: (table: string) => {
+      delete: () => {
+        eq: (col1: string, val1: string) => {
+          eq: (col2: string, val2: string) => Promise<{ error: unknown }>;
+        };
+      };
+    };
+  }).from("follow_requests");
+
+  await requestsTable
+    .delete()
+    .eq("requester_id", input.requesterId)
+    .eq("target_id", input.targetUserId);
+
+  // Mark the follow_request notification as read or delete
+  await supabase
+    .from("notifications")
+    .delete()
+    .eq("user_id", input.targetUserId)
+    .eq("actor_id", input.requesterId)
+    .eq("kind", "follow_request");
+
+  return { success: true };
 }
 
 export type FollowUserItem = {
