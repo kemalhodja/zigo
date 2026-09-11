@@ -302,14 +302,10 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
   }, [timeLeft, isGameOver, isPaused, question, currentLevel]);
 
   const handleWrongAnswer = () => {
-    playSound("error");
+    playSound("wrong");
     setStreak(0);
     setIsShaking(true);
     setTimeout(() => setIsShaking(false), 500);
-    
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([40, 40, 40]); // Heavy double vibrate
-    }
     
     const newLives = livesRef.current - 1;
     livesRef.current = newLives;
@@ -330,31 +326,38 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     setSelectedAnswer(selected);
 
     if (selected === question.answer) {
-      playSound("pop");
+      const newStreakCount = streak + 1;
+      // Streak milestone sesleri: 3, 5, 10 üst üste doğru
+      if (newStreakCount === 3 || newStreakCount === 5 || newStreakCount === 10) {
+        playSound("streak");
+      } else {
+        playSound("coin");
+      }
+
       const timeBonus = Math.floor(timeLeft / 10);
       const streakBonus = streak * 2;
       const points = 10 + timeBonus + streakBonus + (currentLevel * 2);
-      
+
       // Uçan Puan Ekleme
       const btn = document.getElementById(`btn-${selected}`);
       if (btn) {
         const rect = btn.getBoundingClientRect();
-        const newFloat = { 
-          id: floatIdRef.current++, 
-          x: rect.left + rect.width / 2, 
-          y: rect.top - 20, 
-          text: `+${points}` 
+        const newFloat = {
+          id: floatIdRef.current++,
+          x: rect.left + rect.width / 2,
+          y: rect.top - 20,
+          text: `+${points}`,
         };
-        setFloatingText(prev => [...prev, newFloat]);
+        setFloatingText((prev) => [...prev, newFloat]);
         setTimeout(() => {
-          setFloatingText(prev => prev.filter(f => f.id !== newFloat.id));
+          setFloatingText((prev) => prev.filter((f) => f.id !== newFloat.id));
         }, 800);
       }
 
       const newScore = score + points;
       setScore(newScore);
       scoreRef.current = newScore;
-      setStreak((prev) => prev + 1);
+      setStreak(newStreakCount);
       const newCorrect = correctAnswers + 1;
       setCorrectAnswers(newCorrect);
       correctRef.current = newCorrect;
@@ -363,7 +366,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
 
       setTimeout(() => {
         if (newLevel > currentLevel) {
-          playSound("success");
+          playSound("level_up");
           setCurrentLevel(newLevel);
           confetti({
             particleCount: 50,
@@ -379,7 +382,7 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
         answeringRef.current = false;
       }, 250);
     } else {
-      playSound("error");
+      playSound("wrong");
       setTimeout(() => {
         setSelectedAnswer(null);
         answeringRef.current = false;
@@ -392,7 +395,12 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     if (endedRef.current) return;
     endedRef.current = true;
     setIsGameOver(true);
-    playSound("error");
+    // Hatasız bitirdiyse mükemmel skor sesi; aksi halde yanlış
+    if (livesRef.current >= 3) {
+      playSound("perfect");
+    } else {
+      playSound("wrong");
+    }
     if (timerRef.current) clearInterval(timerRef.current);
 
     const finalScore = scoreRef.current;

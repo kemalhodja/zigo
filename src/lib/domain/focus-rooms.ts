@@ -74,3 +74,13 @@ export function formatCountdown(totalSeconds: number): string {
 export function getRoomBySlug(slug: string): FocusRoomDef | undefined {
   return FOCUS_ROOMS.find((room) => room.slug === slug);
 }
+
+export type RoomCompetitor = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  blocks_completed: number;
+  total_points: number;
+  rank: number;
+};
+

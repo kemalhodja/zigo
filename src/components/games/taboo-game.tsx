@@ -273,34 +273,37 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     if (!isPlaying || !currentCard || !guessInput.trim()) return;
 
     if (checkTabooGuess(guessInput, currentCard.word)) {
-      // Correct guess
-      playSound("success");
+      // Doğru tahmin — combo'ya göre ses seç
       const newCombo = combo + 1;
       setCombo(newCombo);
-      
+      // 3, 5, 10 combo'da streak sesi; ilk doğru ve diğerlerinde coin
+      if (newCombo === 3 || newCombo === 5 || newCombo === 10) {
+        playSound("streak");
+      } else {
+        playSound("coin");
+      }
+
       const earned = pointsForTaboo(newCombo);
       scoreRef.current += earned;
       setScore(scoreRef.current);
-      
+
       // Add bonus time (+3 seconds)
       setTimeLeft((prev) => Math.min(prev + 3, 90)); // cap at 90s
-      
+
       confetti({
         particleCount: 50 + newCombo * 5,
         spread: 60,
         origin: { y: 0.8 },
         colors: ["#8b5cf6", "#ec4899", "#3b82f6"],
       });
-      
+
       nextCard();
     } else {
-      // Wrong guess
-      playSound("error");
+      // Yanlış tahmin
+      playSound("wrong");
       setCombo(0);
       setIsError(true);
       setTimeout(() => setIsError(false), 400);
-      // Briefly flash input red or just clear it
-      // For a smoother experience, don't clear immediately, let user edit
     }
   };
 

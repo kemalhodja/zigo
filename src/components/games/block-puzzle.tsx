@@ -158,7 +158,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
     const hasMove = options.some((opt) => opt !== null && canFitAnywhere(opt, board));
     if (!hasMove) {
-      playSound("error");
+      playSound("wrong");
       setIsGameOver(true);
       confetti({
         particleCount: 80,
@@ -212,9 +212,6 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     setTimeout(() => setJustDropped([]), 400);
 
     playSound("pop");
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(15);
-    }
 
     const newOptions = [...options];
     newOptions[shapeIdx] = null;
@@ -235,7 +232,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     }
 
     const linesCleared = rowsToClear.length + colsToClear.length;
-    if (linesCleared > 0) {
+      if (linesCleared > 0) {
       playSound("clear");
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate([30, 50, 30, 50, 40]);
@@ -245,11 +242,11 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
 
       const newTotalLines = linesClearedTotal + linesCleared;
       setLinesClearedTotal(newTotalLines);
-      
+
       // Seviye hesaplama (Her 5 satırda bir seviye atlar)
       const calculatedLevel = Math.floor(newTotalLines / 5) + 1;
       if (calculatedLevel > currentLevel) {
-        playSound("success");
+        playSound("level_up");
         currentLevel = calculatedLevel;
         setLevel(currentLevel);
         confetti({

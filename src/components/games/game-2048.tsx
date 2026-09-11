@@ -142,7 +142,8 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
       const currentMax = getMaxTile(nextBoard);
       if (currentMax >= 2048 && !hasWon2048 && !continueAfterWin) {
         setHasWon2048(true);
-        playSound("success");
+        // 2048 taşına ulaşınca mükemmel skor sesi
+        playSound("perfect");
         triggerHaptic("heavy");
         confetti({
           particleCount: 150,
@@ -158,7 +159,7 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
       // Check game over
       if (!hasMovesRemaining(nextBoard)) {
         setIsGameOver(true);
-        playSound("error");
+        playSound("wrong");
         triggerHaptic("error");
         void saveProgress(newScore, currentMax, { maxTile: currentMax });
         if (onGameEnd) onGameEnd(newScore, { maxTile: currentMax });

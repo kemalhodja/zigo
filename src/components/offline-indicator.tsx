@@ -30,10 +30,12 @@ export function OfflineIndicator() {
   if (!isOffline) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center bg-rose-600 px-4 py-2 text-xs font-black text-white shadow-lg animate-in slide-in-from-top duration-300">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center bg-gradient-to-r from-amber-600 via-rose-600 to-amber-600 px-4 py-2 text-xs font-black text-white shadow-lg animate-in slide-in-from-top duration-300">
       <div className="flex items-center gap-2">
         <span className="size-2 rounded-full bg-white animate-ping" />
-        <span>📶 İnternet Bağlantınız Kesildi · Çevrimdışı Modasınız (Yeniden Bağlanılıyor...)</span>
+        <span>
+          🎮 Çevrimdışısın · Oyunlar kesintisiz çalışır, puanların internet gelince otomatik kaydedilir!
+        </span>
       </div>
     </div>
   );

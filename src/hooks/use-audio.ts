@@ -55,8 +55,10 @@ export function haptic(pattern: HapticPattern) {
 function getAudioContext() {
   if (typeof window === "undefined") return null;
   if (!audioCtx) {
-    const Ctor = window.AudioContext ??
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const Ctor =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
     if (!Ctor) return null;
     audioCtx = new Ctor();
   }
@@ -66,7 +68,18 @@ function getAudioContext() {
   return audioCtx;
 }
 
-export type SoundType = "pop" | "success" | "error" | "clear" | "water" | "click";
+export type SoundType =
+  | "pop"
+  | "click"
+  | "error"
+  | "success"
+  | "clear"
+  | "water"
+  | "wrong"
+  | "streak"
+  | "level_up"
+  | "perfect"
+  | "coin";
 
 const HAPTIC_BY_SOUND: Record<SoundType, HapticPattern> = {
   pop: 8,
@@ -75,6 +88,11 @@ const HAPTIC_BY_SOUND: Record<SoundType, HapticPattern> = {
   success: [20, 40, 20],
   clear: 12,
   water: 12,
+  wrong: [40, 0, 40],
+  streak: [10, 20, 15, 20, 20, 20, 25, 20, 30, 20, 35],
+  level_up: [30, 50, 30, 50, 60],
+  perfect: [10, 20, 20, 20, 30, 20, 40, 20, 50],
+  coin: [8, 20, 12],
 };
 
 export function useAudio() {
@@ -111,12 +129,11 @@ export function useAudio() {
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-
     osc.connect(gain);
     gain.connect(ctx.destination);
-
     const now = ctx.currentTime;
 
+    // ── Mevcut sesler ──────────────────────────────────────────────
     if (type === "pop" || type === "click") {
       osc.type = "sine";
       osc.frequency.setValueAtTime(type === "pop" ? 600 : 800, now);
@@ -125,8 +142,7 @@ export function useAudio() {
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
       osc.start(now);
       osc.stop(now + 0.1);
-    } 
-    else if (type === "error") {
+    } else if (type === "error") {
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(150, now);
       osc.frequency.linearRampToValueAtTime(100, now + 0.2);
@@ -134,21 +150,19 @@ export function useAudio() {
       gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
       osc.start(now);
       osc.stop(now + 0.2);
-    } 
-    else if (type === "success") {
-      // Hızlı bir başarı arp'i (Arpeggio)
+    } else if (type === "success") {
+      // Kısa başarı arpeji — A4 → C#5 → E5 → A5
       osc.type = "triangle";
-      osc.frequency.setValueAtTime(440, now); // A4
-      osc.frequency.setValueAtTime(554.37, now + 0.1); // C#5
-      osc.frequency.setValueAtTime(659.25, now + 0.2); // E5
-      osc.frequency.setValueAtTime(880, now + 0.3); // A5
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(554.37, now + 0.1);
+      osc.frequency.setValueAtTime(659.25, now + 0.2);
+      osc.frequency.setValueAtTime(880, now + 0.3);
       gain.gain.setValueAtTime(0.2, now);
       gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
       osc.start(now);
       osc.stop(now + 0.5);
-    }
-    else if (type === "clear") {
-      // Blok temizleme (kristal çınlaması)
+    } else if (type === "clear") {
+      // Kristal çınlaması
       osc.type = "sine";
       osc.frequency.setValueAtTime(1200, now);
       osc.frequency.exponentialRampToValueAtTime(2000, now + 0.3);
@@ -156,9 +170,8 @@ export function useAudio() {
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
       osc.start(now);
       osc.stop(now + 0.3);
-    }
-    else if (type === "water") {
-      // Boru bağlantısı su sesi (hafif bir gurgle)
+    } else if (type === "water") {
+      // Su sesi (pipe connect)
       osc.type = "triangle";
       osc.frequency.setValueAtTime(200, now);
       osc.frequency.linearRampToValueAtTime(300, now + 0.05);
@@ -167,6 +180,63 @@ export function useAudio() {
       gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
       osc.start(now);
       osc.stop(now + 0.15);
+    }
+
+    // ── Yeni oyun sesleri ─────────────────────────────────────────────
+    else if (type === "wrong") {
+      // Yanlış: düşen sawtooth tok ses
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.linearRampToValueAtTime(130, now + 0.25);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (type === "streak") {
+      // Seri: hızlanan yükselen arpeggio (C4 → E4 → G4 → B4 → D5)
+      osc.type = "triangle";
+      const notes = [261.63, 329.63, 392.0, 493.88, 587.33];
+      const step = 0.08;
+      notes.forEach((freq, i) => {
+        osc.frequency.setValueAtTime(freq, now + i * step);
+      });
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + notes.length * step + 0.1);
+      osc.start(now);
+      osc.stop(now + notes.length * step + 0.1);
+    } else if (type === "level_up") {
+      // Seviye atla: fanfare (C4 → E4 → G4 → C5 uzun)
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(261.63, now);
+      osc.frequency.setValueAtTime(329.63, now + 0.12);
+      osc.frequency.setValueAtTime(392.0, now + 0.24);
+      osc.frequency.setValueAtTime(523.25, now + 0.36);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.setValueAtTime(0.25, now + 0.36);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.8);
+      osc.start(now);
+      osc.stop(now + 0.8);
+    } else if (type === "perfect") {
+      // Mükemmel: oktav çıkışı + uzun sustain (E4 → E5)
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(329.63, now);
+      osc.frequency.setValueAtTime(392.0, now + 0.1);
+      osc.frequency.setValueAtTime(523.25, now + 0.2);
+      osc.frequency.setValueAtTime(659.25, now + 0.3);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.setValueAtTime(0.25, now + 0.3);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.7);
+      osc.start(now);
+      osc.stop(now + 0.7);
+    } else if (type === "coin") {
+      // Jeton/puan kazanma: klasik kısa coin
+      osc.type = "square";
+      osc.frequency.setValueAtTime(988.0, now);
+      osc.frequency.setValueAtTime(1318.5, now + 0.06);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+      osc.start(now);
+      osc.stop(now + 0.18);
     }
   }, []);
 

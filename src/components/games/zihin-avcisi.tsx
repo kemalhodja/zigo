@@ -194,26 +194,29 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     if (!firstChoice || !secondChoice) return;
 
     if (firstChoice.icon === secondChoice.icon) {
-      playSound("click");
-      streakRef.current += 1;
-      maxStreakRef.current = Math.max(maxStreakRef.current, streakRef.current);
-      setCurrentStreak(streakRef.current);
+      // Eşleşme: streak mileston'a göre ses seç
+      const newStreak = streakRef.current + 1;
+      streakRef.current = newStreak;
+      maxStreakRef.current = Math.max(maxStreakRef.current, newStreak);
+      setCurrentStreak(newStreak);
 
-      // Match Flash: Eşleşen kartlar için parlama efekti
+      if (newStreak === 3 || newStreak === 5) {
+        playSound("streak");
+      } else {
+        playSound("coin");
+      }
+
+      // Match Flash
       const matchedIds = cards
-        .filter(c => c.icon === firstChoice.icon)
-        .map(c => c.id);
+        .filter((c) => c.icon === firstChoice.icon)
+        .map((c) => c.id);
       setMatchFlash(matchedIds);
       setTimeout(() => setMatchFlash([]), 600);
 
       // Combo Popup
-      if (streakRef.current >= 3) {
-        setComboPopup(`🔥 ${streakRef.current} KOMBO!`);
+      if (newStreak >= 3) {
+        setComboPopup(`🔥 ${newStreak} KOMBO!`);
         setTimeout(() => setComboPopup(null), 1200);
-      }
-
-      if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([20, 30, 20]);
       }
 
       setCards((prev) =>
@@ -233,7 +236,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
         )
       );
       
-      playSound("error");
+      playSound("wrong");
 
       const t = setTimeout(() => {
         setCards((prev) =>
@@ -274,7 +277,14 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       colors: ["#6366f1", "#a855f7", "#10b981", "#f59e0b"],
     });
 
-    playSound("success");
+    // Hatasız seri 5 ve üzeri: mükemmel; 3 ve üzeri: level_up; diğerleri: success
+    if (maxStreakRef.current >= 5) {
+      playSound("perfect");
+    } else if (maxStreakRef.current >= 3) {
+      playSound("level_up");
+    } else {
+      playSound("success");
+    }
 
     // Sonraki açılışta bir sonraki seviyeden devam etsin
     saveLevelProgress(newTotal, currentLevel + 1);

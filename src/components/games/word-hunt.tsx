@@ -183,7 +183,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    playSound("error");
+    playSound("wrong");
     setTimeout(() => setToastMessage(null), 2000);
   };
 
@@ -251,12 +251,19 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         }
 
         if (guess === targetWord) {
-          if (winLatchRef.current || isGameOver) return;
+        if (winLatchRef.current || isGameOver) return;
           winLatchRef.current = true;
           setHasWon(true);
           setIsGameOver(true);
           setIsTimerRunning(false);
-          playSound("success");
+          // İlk denemede bulursa mükemmel, aksi halde başarı sesi
+          if (currentRow === 0) {
+            playSound("perfect");
+          } else if (currentRow <= 2) {
+            playSound("streak");
+          } else {
+            playSound("success");
+          }
 
           if (gameMode === "daily") {
             const earned = calculateDuelScore(currentRow + 1, duelSeconds);
@@ -285,7 +292,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
           if (currentRow === ROWS - 1) {
             setIsGameOver(true);
             setIsTimerRunning(false);
-            playSound("error");
+            playSound("wrong");
             showToast(targetWord);
             saveGameProgress(gameMode === "daily" ? 0 : score, currentLevel, false);
           } else {
