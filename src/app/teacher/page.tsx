@@ -7,6 +7,7 @@ import { InviteCodesPanel } from "@/components/invite-codes-panel";
 import { LessonRequestsPanel } from "@/components/lesson-requests-panel";
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
+import { ProfileOrgBadge } from "@/components/profile-org-badge";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { StudioTabsLayout } from "@/components/studio-tabs-layout";
 import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/components/teacher-leaderboard-card";
@@ -172,6 +173,12 @@ export default async function TeacherPage({
             verifiedLabel={tb.verifiedTeacher}
           />
         </div>
+
+        <ProfileOrgBadge
+          organizationType={profile.organization_type}
+          role={profile.role}
+          isVerified={profile.is_verified}
+        />
       </section>
 
       {/* Studio Tabs Container */}
