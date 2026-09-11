@@ -5,8 +5,9 @@ import { POST as answersPost } from "@/app/api/answers/route";
 import { POST as authSignInPost } from "@/app/api/auth/sign-in/route";
 import { POST as gamificationAwardPost } from "@/app/api/gamification/award/route";
 import { POST as learnQuizPost } from "@/app/api/learn/quiz/route";
-import { GET as healthGet, MIGRATION_TARGET } from "@/app/api/setup/health/route";
+import { GET as healthGet } from "@/app/api/setup/health/route";
 import { GET as socialPostsGet, POST as socialPostsPost } from "@/app/api/social/posts/route";
+import { MIGRATION_TARGET } from "@/lib/domain/migration-target";
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),

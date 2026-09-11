@@ -109,6 +109,10 @@ describe("questions domain", () => {
           },
           error: null,
         },
+        questions: {
+          data: { id: "00000000-0000-4000-8000-000000000501", is_resolved: true },
+          error: null,
+        },
       },
     });
 
