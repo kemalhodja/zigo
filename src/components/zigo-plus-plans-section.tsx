@@ -166,9 +166,11 @@ function PlanGroupCard({
     : null;
 
   return (
-    <article className="rounded-xl border border-white/15 bg-white/5 p-4">
-      <h3 className="text-lg font-black text-white">{group.title}</h3>
-      <p className="mt-1 text-sm font-semibold text-white/70">{group.subtitle}</p>
+    <article className="linear-card relative overflow-hidden rounded-2xl bg-white/[0.04] p-5 backdrop-blur-md transition-all hover:border-white/20">
+      <div className="aurora-glow" />
+      <div className="relative">
+        <h3 className="text-xl font-black text-white tracking-tight">{group.title}</h3>
+        <p className="mt-1 text-sm font-semibold text-white/70">{group.subtitle}</p>
 
       {playStoreOnly && !hidePrices ? (
         <div className="mt-3 space-y-1.5 rounded-lg border border-emerald-400/30 bg-emerald-950/30 p-3 text-xs font-bold text-emerald-100">
@@ -252,6 +254,7 @@ function PlanGroupCard({
           </div>
         </div>
       )}
+      </div>
     </article>
   );
 }

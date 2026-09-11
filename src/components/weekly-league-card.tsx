@@ -60,9 +60,10 @@ export function WeeklyLeagueCard() {
   const activeTierConfig = WEEKLY_LEAGUE_TIERS[selectedTier] || WEEKLY_LEAGUE_TIERS.bronze;
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="linear-card relative overflow-hidden rounded-3xl p-6 shadow-sm">
+      <div className="aurora-glow" />
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
+      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-2xl">{activeTierConfig.emoji}</span>

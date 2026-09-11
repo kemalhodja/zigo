@@ -137,7 +137,7 @@ export function useUploadPipeline() {
 
         // ── Validate & Compress Videos ─────────────────────────────────────
         if (fileToUpload.type.startsWith("video/")) {
-          const videoValidation = await validateVideoLimits(fileToUpload);
+          const videoValidation = await validateVideoLimits(fileToUpload, { isReel: input.isReel });
           if (!videoValidation.valid) {
             console.error(`[POST_PIPELINE] Video validation failed for file ${i + 1}:`, videoValidation.error);
             setPhase("error");

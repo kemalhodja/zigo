@@ -14,10 +14,15 @@ import { NativeVideoCompressor } from './capacitor/native-video-compressor';
 export const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB üst limit
 export const VIDEO_COMPRESS_THRESHOLD_BYTES = 25 * 1024 * 1024; // 25 MB üzeri videoları sıkıştır
 export const VIDEO_MIN_DURATION_SECONDS = 5;
-export const VIDEO_MAX_DURATION_SECONDS = 90; // 90 saniye süre sınırı
+export const REEL_MAX_DURATION_SECONDS = 90; // Mikro/Reel için 90 saniye
+export const LESSON_VIDEO_MAX_DURATION_SECONDS = 15 * 60; // Ders videoları için 15 dakika (900 saniye)
+export const VIDEO_MAX_DURATION_SECONDS = LESSON_VIDEO_MAX_DURATION_SECONDS;
 
-/** Validate client-side video file size (15 MB max) and duration (45s max). */
-export async function validateVideoLimits(file: File): Promise<{ valid: boolean; error?: string; duration?: number }> {
+/** Validate client-side video file size (100 MB max) and duration. */
+export async function validateVideoLimits(
+  file: File,
+  options?: { isReel?: boolean; maxDurationSeconds?: number }
+): Promise<{ valid: boolean; error?: string; duration?: number }> {
   if (!file.type.startsWith("video/")) return { valid: true };
 
   if (file.size > VIDEO_MAX_SIZE_BYTES) {
@@ -27,6 +32,8 @@ export async function validateVideoLimits(file: File): Promise<{ valid: boolean;
     };
   }
 
+  const maxDuration = options?.maxDurationSeconds ?? (options?.isReel ? REEL_MAX_DURATION_SECONDS : LESSON_VIDEO_MAX_DURATION_SECONDS);
+
   return new Promise((resolve) => {
     const video = document.createElement("video");
     video.preload = "metadata";
@@ -34,10 +41,12 @@ export async function validateVideoLimits(file: File): Promise<{ valid: boolean;
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(video.src);
       const duration = video.duration;
-      if (duration > VIDEO_MAX_DURATION_SECONDS) {
+      if (duration > maxDuration) {
+        const maxMinutes = Math.floor(maxDuration / 60);
+        const limitText = maxMinutes > 0 ? `${maxMinutes} dakika` : `${maxDuration} saniye`;
         resolve({
           valid: false,
-          error: `Video süresi maksimum ${VIDEO_MAX_DURATION_SECONDS} saniye olabilir. Yüklediğiniz video: ${Math.round(duration)} saniye.`,
+          error: `Video süresi maksimum ${limitText} olabilir. Yüklediğiniz video: ${Math.round(duration)} saniye.`,
           duration,
         });
       } else {

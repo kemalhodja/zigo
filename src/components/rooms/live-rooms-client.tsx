@@ -93,6 +93,8 @@ function SyncedPomodoroPanel({
     };
   }, [slug]);
 
+  const [showFloatingXp, setShowFloatingXp] = useState(false);
+
   // Handle phase change and block completions
   useEffect(() => {
     let currentBlock = getRoomPhase().blockIndex;
@@ -106,6 +108,8 @@ function SyncedPomodoroPanel({
       if (currentPhaseType === "focus" && nextPhase.phase === "break") {
         playSound("perfect");
         triggerHaptic("success");
+        setShowFloatingXp(true);
+        setTimeout(() => setShowFloatingXp(false), 2200);
 
         // Register block completion
         fetch("/api/rooms/leaderboard", {
@@ -157,7 +161,12 @@ function SyncedPomodoroPanel({
           </button>
         </div>
 
-        <div className="mb-5 rounded-2xl bg-slate-900 p-6 text-center">
+        <div className="relative mb-5 rounded-2xl bg-slate-900 p-6 text-center shadow-lg">
+          {showFloatingXp && (
+            <div className="floating-xp-badge absolute left-1/2 top-4 -translate-x-1/2 z-20 pointer-events-none">
+              ⚡ +30 Odak Puanı!
+            </div>
+          )}
           <p
             className={`mb-1 text-xs font-black uppercase tracking-widest ${
               phase.phase === "focus" ? "text-emerald-400" : "text-amber-300"

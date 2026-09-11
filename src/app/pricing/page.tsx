@@ -120,27 +120,28 @@ function PlanCard({
   return (
     <div
       onClick={() => onSelect(role)}
-      className="relative flex flex-col h-full rounded-2xl border-2 p-5 transition-all border-slate-200 bg-white hover:border-slate-300 shadow-sm"
+      className="linear-card relative flex flex-col h-full rounded-3xl p-6 transition-all hover:border-slate-300 shadow-sm"
     >
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-tr ${config.gradient} text-white shadow-md`}>
+      <div className="aurora-glow" />
+      <div className="relative flex items-center gap-3 mb-4">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr ${config.gradient} text-white shadow-md`}>
           <config.icon className="h-6 w-6" />
         </div>
         <div>
-          <h3 className="text-lg font-black text-night leading-tight">{config.title}</h3>
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Zigo Plus</span>
+          <h3 className="text-xl font-black text-night leading-tight">{config.title}</h3>
+          <span className="text-[11px] font-black text-crystal uppercase tracking-wider">Zigo Plus</span>
         </div>
       </div>
 
-      <div className="mb-4 space-y-1">
+      <div className="relative mb-5 space-y-1">
         <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-black text-night">{monthly.toLocaleString("tr-TR")} ₺</span>
+          <span className="text-3xl font-black text-night tabular-nums">{monthly.toLocaleString("tr-TR")} ₺</span>
           <span className="text-sm font-bold text-slate-500">/ay</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-slate-500 line-through">{monthly * 12} ₺</span>
-          <span className="text-2xl font-black text-night">{yearly.toLocaleString("tr-TR")} ₺</span>
-          <span className="text-sm font-bold text-slate-500">/yıl</span>
+          <span className="text-sm font-bold text-slate-400 line-through tabular-nums">{monthly * 12} ₺</span>
+          <span className="text-xl font-black text-emerald-600 tabular-nums">{yearly.toLocaleString("tr-TR")} ₺</span>
+          <span className="text-xs font-bold text-slate-500">/yıl</span>
         </div>
       </div>
 
