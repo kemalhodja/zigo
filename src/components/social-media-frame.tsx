@@ -194,7 +194,7 @@ export function SocialMediaFrame({
                   priority={priority && idx === 0}
                   fetchPriority={fetchPriority}
                   src={url}
-                  unoptimized={url.startsWith("blob:") || url.startsWith("data:") || url.startsWith("/api/")}
+                  unoptimized
                   style={combinedStyle}
                 />
               )}
@@ -293,7 +293,7 @@ export function SocialMediaFrame({
             priority={priority}
             fetchPriority={fetchPriority}
             src={items[0]}
-            unoptimized={items[0].startsWith("blob:") || items[0].startsWith("data:") || items[0].startsWith("/api/")}
+            unoptimized
             style={combinedStyle}
           />
         )

@@ -81,6 +81,10 @@ export function getVideoPlaybackUrl(storagePath: string) {
   }
 
   // 4) Direct Supabase public storage URL
+  // If the path starts with avatars/ or covers/, route to that bucket
+  if (normalized.startsWith("avatars/")) {
+    return `${supabaseUrl}/storage/v1/object/public/${normalized}`;
+  }
   return `${supabaseUrl}/storage/v1/object/public/social-media/${normalized}`;
 }
 

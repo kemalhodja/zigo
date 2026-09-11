@@ -10,6 +10,7 @@ export type DisplayStory = {
   handle: string;
   accent: string;
   mediaUrl: string | null;
+  avatarUrl?: string | null;
   progress: number;
   href: string;
   status: "create" | "unread" | "watched";
@@ -266,6 +267,7 @@ export async function getHomeStories(viewer: { showStudentStrip: boolean; missio
                 handle: "create",
                 accent: "from-crystal to-fuchsia-500",
                 mediaUrl: null,
+                avatarUrl: profile.avatar_url,
                 href: "/create?mode=spark",
                 progress: 0,
                 status: "create",
@@ -278,26 +280,24 @@ export async function getHomeStories(viewer: { showStudentStrip: boolean; missio
         ...groupStoriesByCreator(activeStories).map((story) => toDisplayStory(story)),
       ];
     } catch {
-      if (!allowDemoContent()) return [];
-      stories = demoStories
-        .filter((story) => story.id !== "your-story")
-        .map((story) => ({
-          ...story,
-          showNewBadge: story.status === "unread",
-        }));
+      return allowDemoContent() ? (demoStories.filter((s) => s.id !== "your-story") as DisplayStory[]) : [];
     }
   }
 
   if (!viewer.showStudentStrip) return stories;
 
-  const missionProgress = Math.round((viewer.missionDone / Math.max(viewer.missionTotal, 1)) * 100);
+  const missionProgress = Math.min(
+    100,
+    Math.max(12, Math.round((viewer.missionDone / Math.max(1, viewer.missionTotal)) * 100)),
+  );
   const dailyMission: DisplayStory = {
     id: "daily-mission",
     creatorId: null,
     name: fe.dailyMission,
-    handle: fe.dailyMission,
-    accent: "from-amber-400 to-orange-500",
+    handle: "mission",
+    accent: "from-amber-400 via-orange-500 to-rose-500",
     mediaUrl: null,
+    avatarUrl: null,
     href: "/micro",
     progress: missionProgress,
     status: "unread",
@@ -321,6 +321,7 @@ function toDisplayStory(story: ActiveStory): DisplayStory {
     handle: name.toLowerCase().replaceAll(" ", ""),
     accent: "from-crystal to-fuchsia-500",
     mediaUrl: story.media_url,
+    avatarUrl: story.author?.avatar_url ?? (story.media_url?.match(/\.(jpg|jpeg|png|webp|gif)/i) ? story.media_url : null),
     progress: getStoryProgress(story.created_at),
     href: story.author?.id ? `/sparks?creatorId=${story.author.id}` : "/sparks",
     status,

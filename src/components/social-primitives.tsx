@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { useState } from "react";
 
 import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
 
@@ -27,11 +30,22 @@ export function SocialAvatar({
   online = false,
   ring = true,
 }: SocialAvatarProps) {
+  const [hasError, setHasError] = useState(false);
+  const src = imageUrl ? getMediaPlaybackUrl(imageUrl) : null;
+
   return (
     <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} ${ring ? "p-0.5" : ""} ${className}`}>
       <span className="relative flex size-full items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white text-[0.68rem] font-black text-night">
-        {imageUrl ? (
-          <Image alt={label} className="object-cover" fill sizes="48px" src={getMediaPlaybackUrl(imageUrl)} unoptimized={getMediaPlaybackUrl(imageUrl).startsWith("/api/")} />
+        {src && !hasError ? (
+          <Image
+            alt={label}
+            className="object-cover"
+            fill
+            sizes="48px"
+            src={src}
+            unoptimized
+            onError={() => setHasError(true)}
+          />
         ) : (
           getInitials(label)
         )}

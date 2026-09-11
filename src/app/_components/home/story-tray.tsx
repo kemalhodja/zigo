@@ -68,7 +68,7 @@ function StoryTrayItem({
         <SocialAvatar
           accent={story.status === "watched" ? "from-slate-200 to-slate-200" : story.accent}
           className="size-full"
-          imageUrl={story.mediaUrl}
+          imageUrl={story.avatarUrl || story.mediaUrl}
           label={story.name}
           ring={false}
         />
