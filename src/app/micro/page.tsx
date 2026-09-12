@@ -13,6 +13,7 @@ import { getFollowingFeed, getReelFeed, getSocialPostById, isFollowing, type Soc
 import { getServerMessages } from "@/lib/i18n/server";
 import type { Messages } from "@/lib/i18n/types";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 function buildDemoReels(d: Messages["demo"]) {
   return [
@@ -75,7 +76,7 @@ export default async function ReelsPage({ searchParams }: ReelsPageProps) {
   const params = await searchParams;
   const activeFeed = params.feed === "following" ? "following" : "for-you";
   const reels = await getReels(activeFeed, params.reelId);
-  let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
+  let viewerRole: UserRole | "guest" = "guest";
   if (hasSupabaseEnv()) {
     try {
       const supabase = await createClient();
@@ -124,7 +125,7 @@ function ReelSection({
   index: number;
   messages: Messages;
   reel: ReelItem;
-  viewerRole: "teacher" | "parent" | "student" | "guest";
+  viewerRole: UserRole | "guest";
 }) {
   const mp = m.microPage;
   const ru = m.reelUi;
@@ -246,7 +247,7 @@ function ReelLearningDock({
 }: {
   messages: Messages;
   postId?: string;
-  viewerRole: "teacher" | "parent" | "student" | "guest";
+  viewerRole: UserRole | "guest";
 }) {
   const mp = messages.microPage;
   const actions =

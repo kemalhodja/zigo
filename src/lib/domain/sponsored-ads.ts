@@ -33,7 +33,8 @@ export function isSponsoredAdActive(
   return new Date(post.sponsored_expires_at).getTime() > Date.now();
 }
 
-export function canViewerOpenSponsoredAd(_viewerId: string | undefined, post: SocialPostRow) {
+export function canViewerOpenSponsoredAd(viewerId: string | undefined, post: SocialPostRow) {
+  if (!viewerId) return false;
   return isSponsoredAdActive(post);
 }
 

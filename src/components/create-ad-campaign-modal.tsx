@@ -164,6 +164,7 @@ export function CreateAdCampaignModal({
     setError(null);
 
     let fileToUpload = file;
+    // Compress only non-audio images (skip videos & audio)
     if (!isAudio && file.type.startsWith("image/")) {
       fileToUpload = await compressImage(file, 1600, 0.85);
     }
@@ -172,18 +173,21 @@ export function CreateAdCampaignModal({
     formData.append("file", fileToUpload);
 
     try {
-      const res = await fetch("/api/profile/upload", {
+      // Use /api/social/upload so videos are accepted and stored in social-media bucket
+      const uploadEndpoint = isAudio ? "/api/social/upload" : "/api/social/upload";
+      const res = await fetch(uploadEndpoint, {
         method: "POST",
         body: formData,
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.data?.avatarUrl) {
+      // /api/social/upload returns { data: { mediaUrl, mediaType, objectPath } }
+      if (!res.ok || !data.data?.mediaUrl) {
         throw new Error(data.error || "Dosya yüklenemedi");
       }
       if (isAudio) {
-        setAudioUrl(data.data.avatarUrl);
+        setAudioUrl(data.data.mediaUrl);
       } else {
-        setMediaUrl(data.data.avatarUrl);
+        setMediaUrl(data.data.mediaUrl);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Yükleme hatası");
@@ -193,7 +197,12 @@ export function CreateAdCampaignModal({
     }
   }
 
-  const isVideoMedia = mediaUrl ? /\.(mp4|webm|mov|ogg)$/i.test(mediaUrl) || mediaUrl.includes("video") : false;
+  // Detect video: check extension, mime hint in URL, or proxy path containing a video extension
+  const isVideoMedia = mediaUrl
+    ? /\.(mp4|webm|mov|ogg)$/i.test(mediaUrl) ||
+      mediaUrl.includes("video") ||
+      /path=.*%2F[^&]*\.(mp4|webm|mov|ogg)/i.test(mediaUrl)
+    : false;
 
   // Resolve Target URL & CTA Label based on channel choice
   function getResolvedTargetUrl() {

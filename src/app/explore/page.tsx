@@ -24,7 +24,7 @@ import {
   type SocialFeedPost,
 } from "@/lib/domain/social";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
-import type { Database } from "@/lib/supabase/database.types";
+import type { Database, UserRole } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 const EXPLORE_FORMATS = ["all", "micro", "lessons", "teachers"] as const;
@@ -51,7 +51,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const filteredPosts = filterExploreTiles(posts, activeFormat);
   const tilesToRender = filteredPosts;
 
-  let viewerRole: "teacher" | "parent" | "student" | "guest" = "guest";
+  let viewerRole: UserRole | "guest" = "guest";
   if (supabase) {
     try {
       const profile = await getCachedUserProfile();

@@ -25,6 +25,7 @@ import {
 } from "@/lib/domain/profiles";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import { getRoleAccentLabel } from "@/lib/domain/role-theme";
 
 export default async function RoleSetupPage() {
   const m = await getServerMessages();
@@ -116,7 +117,9 @@ export default async function RoleSetupPage() {
       </section>
 
         <section className="-mx-4 bg-white px-4 py-4">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">{m.roles[profile.role]}</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">
+            {getRoleAccentLabel(profile.role, m, { organizationType: profile.organization_type })}
+          </p>
           <h3 className="mt-2 text-xl font-black text-night">{profile.full_name}</h3>
         </section>
 

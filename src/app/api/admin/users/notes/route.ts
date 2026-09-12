@@ -20,8 +20,7 @@ export async function POST(request: Request) {
     const body = addNoteSchema.parse(await request.json().catch(() => ({})));
     const adminClient = createAdminClient() ?? auth.supabase;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (adminClient as any)
+    const { data, error } = await adminClient
       .from("user_admin_notes")
       .insert({
         user_id: body.userId,

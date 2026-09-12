@@ -238,9 +238,9 @@ export async function updateUserProfile(
 
   const { data, error } = await supabase.rpc("update_user_profile", {
     ...(safeBio !== undefined ? { next_bio: safeBio ?? undefined } : {}),
-    ...(parsed.websiteUrl !== undefined ? { next_website_url: parsed.websiteUrl === "" ? null : parsed.websiteUrl } : {}),
-    ...(parsed.youtubeUrl !== undefined ? { next_youtube_url: parsed.youtubeUrl === "" ? null : parsed.youtubeUrl } : {}),
-    ...(parsed.instagramUrl !== undefined ? { next_instagram_url: parsed.instagramUrl === "" ? null : parsed.instagramUrl } : {}),
+    ...(parsed.websiteUrl !== undefined ? { next_website_url: parsed.websiteUrl || undefined } : {}),
+    ...(parsed.youtubeUrl !== undefined ? { next_youtube_url: parsed.youtubeUrl || undefined } : {}),
+    ...(parsed.instagramUrl !== undefined ? { next_instagram_url: parsed.instagramUrl || undefined } : {}),
     ...(parsed.avatarUrl !== undefined ? { next_avatar_url: parsed.avatarUrl ?? undefined } : {}),
     ...(parsed.fullName !== undefined ? { next_full_name: parsed.fullName } : {}),
   });

@@ -35,6 +35,7 @@ import {
 } from "@/lib/domain/verification-activation";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 export default async function TeacherPage({
   searchParams,
@@ -380,7 +381,7 @@ async function TeacherPreview({
   showMicroQuizPack = false,
 }: {
   mode: "preview" | "signed-out" | "role-preview";
-  viewerRole?: "student" | "parent" | "teacher" | "guest";
+  viewerRole?: UserRole | "guest";
   showMicroQuizPack?: boolean;
 }) {
   const messages = await getServerMessages();

@@ -85,6 +85,10 @@ export function getVideoPlaybackUrl(storagePath: string) {
   if (normalized.startsWith("avatars/")) {
     return `${supabaseUrl}/storage/v1/object/public/${normalized}`;
   }
+  // If it's an avatar path stored as {userId}/{filename} without avatars/ prefix
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\//i.test(normalized)) {
+    return `${supabaseUrl}/storage/v1/object/public/avatars/${normalized}`;
+  }
   return `${supabaseUrl}/storage/v1/object/public/social-media/${normalized}`;
 }
 
@@ -127,8 +131,11 @@ export function getMediaPlaybackUrl(storagePath: string, options?: ImageTransfor
   const url = getVideoPlaybackUrl(storagePath);
   if (!url || !options) return url;
 
-  // Supabase Storage Image Transformation
-  if (url.includes("/storage/v1/object/public/")) {
+  // Supabase Storage Image Transformation requires the feature to be enabled on the project plan.
+  // Set NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORM=true only if your Supabase project supports it (Pro+).
+  const transformEnabled = process.env.NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORM === "true";
+
+  if (transformEnabled && url.includes("/storage/v1/object/public/")) {
     const renderUrl = url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
     const params = new URLSearchParams();
     if (options.width) params.set("width", String(options.width));
@@ -137,6 +144,7 @@ export function getMediaPlaybackUrl(storagePath: string, options?: ImageTransfor
     return `${renderUrl}?${params.toString()}`;
   }
 
+  // Fallback: return the direct storage URL (works on all plans)
   return url;
 }
 

@@ -19,10 +19,10 @@ export async function POST(request: Request) {
     const body = toggleVisibilitySchema.parse(await request.json().catch(() => ({})));
     const adminClient = createAdminClient() ?? auth.supabase;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (adminClient as any)
+    const { error } = await adminClient
       .from("social_posts")
-      .update({ is_hidden: body.isHidden })
+      // DB uses `is_discoverable` (true = visible). is_hidden=true → is_discoverable=false
+      .update({ is_discoverable: !body.isHidden })
       .eq("id", body.postId);
 
     if (error) {

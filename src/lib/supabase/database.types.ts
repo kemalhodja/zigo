@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -61,8 +41,99 @@ export type Database = {
             foreignKeyName: "account_deletion_requests_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_deletion_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_deletion_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_deletion_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "account_deletion_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      ad_watch_log: {
+        Row: {
+          ad_type: string
+          expires_at: string
+          hours_granted: number
+          id: string
+          user_id: string
+          watched_at: string
+        }
+        Insert: {
+          ad_type?: string
+          expires_at: string
+          hours_granted?: number
+          id?: string
+          user_id: string
+          watched_at?: string
+        }
+        Update: {
+          ad_type?: string
+          expires_at?: string
+          hours_granted?: number
+          id?: string
+          user_id?: string
+          watched_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_watch_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_watch_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_watch_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_watch_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "ad_watch_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -102,7 +173,49 @@ export type Database = {
             foreignKeyName: "admin_billing_grants_admin_id_fkey"
             columns: ["admin_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
             referencedColumns: ["id"]
           },
           {
@@ -111,6 +224,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "admin_billing_grants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -144,52 +271,36 @@ export type Database = {
             foreignKeyName: "admin_messages_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "student_leaderboard_mv"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      user_feedback: {
-        Row: {
-          admin_note: string | null
-          category: string
-          content: string
-          created_at: string
-          id: string
-          resolved_at: string | null
-          status: string
-          subject: string
-          user_id: string
-        }
-        Insert: {
-          admin_note?: string | null
-          category: string
-          content: string
-          created_at?: string
-          id?: string
-          resolved_at?: string | null
-          status?: string
-          subject: string
-          user_id: string
-        }
-        Update: {
-          admin_note?: string | null
-          category?: string
-          content?: string
-          created_at?: string
-          id?: string
-          resolved_at?: string | null
-          status?: string
-          subject?: string
-          user_id?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "user_feedback_user_id_fkey"
+            foreignKeyName: "admin_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_messages_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "admin_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -220,8 +331,36 @@ export type Database = {
             foreignKeyName: "ai_mentor_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_mentor_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_mentor_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_mentor_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "ai_mentor_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -262,8 +401,36 @@ export type Database = {
             foreignKeyName: "answers_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "answers_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -315,7 +482,49 @@ export type Database = {
             foreignKeyName: "bank_transfer_requests_reviewed_by_fkey"
             columns: ["reviewed_by"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
             referencedColumns: ["id"]
           },
           {
@@ -324,6 +533,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -467,8 +690,36 @@ export type Database = {
             foreignKeyName: "child_profiles_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "child_profiles_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "child_profiles_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "child_profiles_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "child_profiles_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -516,8 +767,36 @@ export type Database = {
             foreignKeyName: "class_group_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "class_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -594,11 +873,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "content_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "content_reports_reporter_id_fkey"
             columns: ["reporter_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -619,6 +933,313 @@ export type Database = {
           id?: number
         }
         Relationships: []
+      }
+      education_platform_profile_extras: {
+        Row: {
+          availability_note: string | null
+          availability_status:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          contact_summary: string | null
+          content_count: number
+          details: Json
+          integration_docs_url: string | null
+          response_time_minutes: number | null
+          soft_skills: string[]
+          subscription_model: string
+          updated_at: string
+          user_base_size: number
+          user_id: string
+          video_intro_url: string | null
+        }
+        Insert: {
+          availability_note?: string | null
+          availability_status?:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type?:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          contact_summary?: string | null
+          content_count?: number
+          details?: Json
+          integration_docs_url?: string | null
+          response_time_minutes?: number | null
+          soft_skills?: string[]
+          subscription_model?: string
+          updated_at?: string
+          user_base_size?: number
+          user_id: string
+          video_intro_url?: string | null
+        }
+        Update: {
+          availability_note?: string | null
+          availability_status?:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type?:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          contact_summary?: string | null
+          content_count?: number
+          details?: Json
+          integration_docs_url?: string | null
+          response_time_minutes?: number | null
+          soft_skills?: string[]
+          subscription_model?: string
+          updated_at?: string
+          user_base_size?: number
+          user_id?: string
+          video_intro_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_platform_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_platform_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_platform_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_platform_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "education_platform_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      family_link_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_student_id: string | null
+          created_at: string
+          expires_at: string
+          guardian_id: string
+          id: string
+          status: string
+          student_email: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_student_id?: string | null
+          created_at?: string
+          expires_at?: string
+          guardian_id: string
+          id?: string
+          status?: string
+          student_email: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_student_id?: string | null
+          created_at?: string
+          expires_at?: string
+          guardian_id?: string
+          id?: string
+          status?: string
+          student_email?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_link_invitations_accepted_student_id_fkey"
+            columns: ["accepted_student_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_accepted_student_id_fkey"
+            columns: ["accepted_student_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_accepted_student_id_fkey"
+            columns: ["accepted_student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_accepted_student_id_fkey"
+            columns: ["accepted_student_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_accepted_student_id_fkey"
+            columns: ["accepted_student_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "family_link_invitations_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      family_student_links: {
+        Row: {
+          created_at: string
+          guardian_id: string
+          id: string
+          relationship: string
+          revoked_at: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_id: string
+          id?: string
+          relationship?: string
+          revoked_at?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          guardian_id?: string
+          id?: string
+          relationship?: string
+          revoked_at?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_student_links_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_student_links_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_student_links_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_student_links_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "family_student_links_guardian_id_fkey"
+            columns: ["guardian_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "family_student_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_student_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_student_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_student_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "family_student_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
       }
       focus_sessions: {
         Row: {
@@ -676,8 +1297,36 @@ export type Database = {
             foreignKeyName: "focus_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "focus_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "focus_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "focus_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "focus_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -702,7 +1351,49 @@ export type Database = {
             foreignKeyName: "follows_follower_id_fkey"
             columns: ["follower_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
             referencedColumns: ["id"]
           },
           {
@@ -711,6 +1402,143 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      game_daily_usage: {
+        Row: {
+          date: string
+          id: string
+          seconds_played: number
+          user_id: string
+        }
+        Insert: {
+          date?: string
+          id?: string
+          seconds_played?: number
+          user_id: string
+        }
+        Update: {
+          date?: string
+          id?: string
+          seconds_played?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_daily_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_daily_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_daily_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_daily_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "game_daily_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      game_progress: {
+        Row: {
+          game_type: string
+          high_score: number
+          id: string
+          last_level: number
+          total_plays: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          game_type: string
+          high_score?: number
+          id?: string
+          last_level?: number
+          total_plays?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          game_type?: string
+          high_score?: number
+          id?: string
+          last_level?: number
+          total_plays?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "game_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -756,8 +1584,138 @@ export type Database = {
             foreignKeyName: "google_play_purchases_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_play_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_play_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_play_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "google_play_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      institution_profile_extras: {
+        Row: {
+          accreditation: string[]
+          availability_note: string | null
+          availability_status:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          branch_count: number
+          capacity: number
+          contact_summary: string | null
+          details: Json
+          license_number: string
+          response_time_minutes: number | null
+          services: string[]
+          soft_skills: string[]
+          updated_at: string
+          user_id: string
+          video_intro_url: string | null
+        }
+        Insert: {
+          accreditation?: string[]
+          availability_note?: string | null
+          availability_status?:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type?:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          branch_count?: number
+          capacity?: number
+          contact_summary?: string | null
+          details?: Json
+          license_number: string
+          response_time_minutes?: number | null
+          services?: string[]
+          soft_skills?: string[]
+          updated_at?: string
+          user_id: string
+          video_intro_url?: string | null
+        }
+        Update: {
+          accreditation?: string[]
+          availability_note?: string | null
+          availability_status?:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type?:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          branch_count?: number
+          capacity?: number
+          contact_summary?: string | null
+          details?: Json
+          license_number?: string
+          response_time_minutes?: number | null
+          services?: string[]
+          soft_skills?: string[]
+          updated_at?: string
+          user_id?: string
+          video_intro_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "institution_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -797,8 +1755,36 @@ export type Database = {
             foreignKeyName: "invite_codes_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_codes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_codes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_codes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "invite_codes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -833,8 +1819,36 @@ export type Database = {
             foreignKeyName: "invite_redemptions_redeemer_id_fkey"
             columns: ["redeemer_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_redemptions_redeemer_id_fkey"
+            columns: ["redeemer_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_redemptions_redeemer_id_fkey"
+            columns: ["redeemer_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_redemptions_redeemer_id_fkey"
+            columns: ["redeemer_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "invite_redemptions_redeemer_id_fkey"
+            columns: ["redeemer_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -868,7 +1882,279 @@ export type Database = {
             foreignKeyName: "learning_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "learning_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      lesson_bookings: {
+        Row: {
+          area_id: number | null
+          availability_id: string
+          child_profile_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          parent_id: string
+          payment_status: Database["public"]["Enums"]["lesson_payment_status"]
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          area_id?: number | null
+          availability_id: string
+          child_profile_id?: string | null
+          created_at?: string
+          end_time: string
+          id?: string
+          parent_id: string
+          payment_status?: Database["public"]["Enums"]["lesson_payment_status"]
+          start_time: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          area_id?: number | null
+          availability_id?: string
+          child_profile_id?: string | null
+          created_at?: string
+          end_time?: string
+          id?: string
+          parent_id?: string
+          payment_status?: Database["public"]["Enums"]["lesson_payment_status"]
+          start_time?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_bookings_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_availability_id_fkey"
+            columns: ["availability_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_availability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_bookings_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      lesson_package_subscriptions: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          lessons_included: number
+          lessons_used: number
+          plan_type: Database["public"]["Enums"]["lesson_package_plan_type"]
+          starts_at: string
+          status: Database["public"]["Enums"]["lesson_package_status"]
+          stripe_checkout_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          lessons_included: number
+          lessons_used?: number
+          plan_type: Database["public"]["Enums"]["lesson_package_plan_type"]
+          starts_at?: string
+          status?: Database["public"]["Enums"]["lesson_package_status"]
+          stripe_checkout_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          lessons_included?: number
+          lessons_used?: number
+          plan_type?: Database["public"]["Enums"]["lesson_package_plan_type"]
+          starts_at?: string
+          status?: Database["public"]["Enums"]["lesson_package_status"]
+          stripe_checkout_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_package_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_package_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_package_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_package_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_package_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      lesson_reminder_log: {
+        Row: {
+          booking_id: string
+          id: string
+          reminder_type: string
+          sent_at: string
+        }
+        Insert: {
+          booking_id: string
+          id?: string
+          reminder_type: string
+          sent_at?: string
+        }
+        Update: {
+          booking_id?: string
+          id?: string
+          reminder_type?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_reminder_log_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_bookings"
             referencedColumns: ["id"]
           },
         ]
@@ -910,8 +2196,36 @@ export type Database = {
             foreignKeyName: "lesson_request_messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_request_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_request_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_request_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_request_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -922,6 +2236,7 @@ export type Database = {
           created_at: string
           id: string
           message_body: string
+          priority: Database["public"]["Enums"]["lesson_request_priority"]
           receiver_id: string
           sender_id: string
           status: Database["public"]["Enums"]["lesson_request_status"]
@@ -933,6 +2248,7 @@ export type Database = {
           created_at?: string
           id?: string
           message_body: string
+          priority?: Database["public"]["Enums"]["lesson_request_priority"]
           receiver_id: string
           sender_id: string
           status?: Database["public"]["Enums"]["lesson_request_status"]
@@ -944,6 +2260,7 @@ export type Database = {
           created_at?: string
           id?: string
           message_body?: string
+          priority?: Database["public"]["Enums"]["lesson_request_priority"]
           receiver_id?: string
           sender_id?: string
           status?: Database["public"]["Enums"]["lesson_request_status"]
@@ -968,7 +2285,49 @@ export type Database = {
             foreignKeyName: "lesson_requests_receiver_id_fkey"
             columns: ["receiver_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
             referencedColumns: ["id"]
           },
           {
@@ -977,6 +2336,346 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_requests_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      lesson_reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          matched_track_slugs: string[]
+          parent_id: string
+          rating: number
+          teacher_id: string
+          topic_tags: string[]
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          matched_track_slugs?: string[]
+          parent_id: string
+          rating: number
+          teacher_id: string
+          topic_tags?: string[]
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          matched_track_slugs?: string[]
+          parent_id?: string
+          rating?: number
+          teacher_id?: string
+          topic_tags?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "lesson_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      live_lessons: {
+        Row: {
+          booking_id: string
+          created_at: string
+          duration_minutes: number
+          end_time: string
+          id: string
+          meeting_url: string
+          parent_id: string
+          provider: string
+          start_time: string
+          status: Database["public"]["Enums"]["live_lesson_status"]
+          teacher_id: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          duration_minutes?: number
+          end_time: string
+          id?: string
+          meeting_url: string
+          parent_id: string
+          provider?: string
+          start_time: string
+          status?: Database["public"]["Enums"]["live_lesson_status"]
+          teacher_id: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          duration_minutes?: number
+          end_time?: string
+          id?: string
+          meeting_url?: string
+          parent_id?: string
+          provider?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["live_lesson_status"]
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_lessons_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "lesson_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_lessons_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_lessons_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_lessons_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_lessons_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "live_lessons_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "live_lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "live_lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      media_uploads: {
+        Row: {
+          attached_at: string | null
+          byte_size: number
+          created_at: string
+          deleted_at: string | null
+          expires_at: string
+          id: string
+          media_type: string
+          object_path: string
+          owner_id: string
+          post_id: string | null
+          status: string
+        }
+        Insert: {
+          attached_at?: string | null
+          byte_size: number
+          created_at?: string
+          deleted_at?: string | null
+          expires_at?: string
+          id?: string
+          media_type: string
+          object_path: string
+          owner_id: string
+          post_id?: string | null
+          status?: string
+        }
+        Update: {
+          attached_at?: string | null
+          byte_size?: number
+          created_at?: string
+          deleted_at?: string | null
+          expires_at?: string
+          id?: string
+          media_type?: string
+          object_path?: string
+          owner_id?: string
+          post_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_uploads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_uploads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_uploads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_uploads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "media_uploads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "media_uploads_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_uploads_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
           },
         ]
       }
@@ -1013,8 +2712,36 @@ export type Database = {
             foreignKeyName: "moderation_admin_alerts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_admin_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_admin_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_admin_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "moderation_admin_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
           {
             foreignKeyName: "moderation_admin_alerts_violation_id_fkey"
@@ -1058,8 +2785,36 @@ export type Database = {
             foreignKeyName: "moderation_audit_log_moderator_id_fkey"
             columns: ["moderator_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_audit_log_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_audit_log_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_audit_log_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "moderation_audit_log_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1099,8 +2854,36 @@ export type Database = {
             foreignKeyName: "moderation_violations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_violations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_violations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_violations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "moderation_violations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1111,6 +2894,7 @@ export type Database = {
           id: string
           is_read: boolean
           kind: string
+          lesson_booking_id: string | null
           lesson_request_id: string | null
           message: string
           post_id: string | null
@@ -1122,6 +2906,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           kind: string
+          lesson_booking_id?: string | null
           lesson_request_id?: string | null
           message: string
           post_id?: string | null
@@ -1133,6 +2918,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           kind?: string
+          lesson_booking_id?: string | null
           lesson_request_id?: string | null
           message?: string
           post_id?: string | null
@@ -1143,7 +2929,42 @@ export type Database = {
             foreignKeyName: "notifications_actor_id_fkey"
             columns: ["actor_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "notifications_lesson_booking_id_fkey"
+            columns: ["lesson_booking_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_bookings"
             referencedColumns: ["id"]
           },
           {
@@ -1161,109 +2982,122 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      platform_admins: {
-        Row: {
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          user_id?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "platform_admins_user_id_fkey"
+            foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
-      post_comments: {
+      parent_game_settings: {
         Row: {
-          content: string
-          created_at: string
+          child_profile_id: string
+          daily_limit_minutes: number
           id: string
-          moderation_status: string
-          post_id: string
-          user_id: string
+          night_ban_enabled: boolean
+          night_ban_end: string
+          night_ban_start: string
+          parent_user_id: string
+          updated_at: string | null
         }
         Insert: {
-          content: string
-          created_at?: string
+          child_profile_id: string
+          daily_limit_minutes?: number
           id?: string
-          moderation_status?: string
-          post_id: string
-          user_id: string
+          night_ban_enabled?: boolean
+          night_ban_end?: string
+          night_ban_start?: string
+          parent_user_id: string
+          updated_at?: string | null
         }
         Update: {
-          content?: string
-          created_at?: string
+          child_profile_id?: string
+          daily_limit_minutes?: number
           id?: string
-          moderation_status?: string
-          post_id?: string
-          user_id?: string
+          night_ban_enabled?: boolean
+          night_ban_end?: string
+          night_ban_start?: string
+          parent_user_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "post_comments_post_id_fkey"
-            columns: ["post_id"]
+            foreignKeyName: "parent_game_settings_child_profile_id_fkey"
+            columns: ["child_profile_id"]
             isOneToOne: false
-            referencedRelation: "social_posts"
+            referencedRelation: "child_profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "post_comments_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "parent_game_settings_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_game_settings_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_game_settings_parent_user_id_fkey"
+            columns: ["parent_user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      post_likes: {
-        Row: {
-          created_at: string
-          post_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          post_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          post_id?: string
-          user_id?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "post_likes_post_id_fkey"
-            columns: ["post_id"]
+            foreignKeyName: "parent_game_settings_parent_user_id_fkey"
+            columns: ["parent_user_id"]
             isOneToOne: false
-            referencedRelation: "social_posts"
-            referencedColumns: ["id"]
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
           },
           {
-            foreignKeyName: "post_likes_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "parent_game_settings_parent_user_id_fkey"
+            columns: ["parent_user_id"]
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1303,111 +3137,346 @@ export type Database = {
             foreignKeyName: "parental_consents_student_user_id_fkey"
             columns: ["student_user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parental_consents_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parental_consents_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "parental_consents_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "parental_consents_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
         ]
       }
-      review_items: {
+      payment_disputes: {
         Row: {
-          correct_index: number
+          booking_id: string
           created_at: string
-          due_at: string
-          ease_factor: number
           id: string
-          interval_days: number
-          last_reviewed_at: string | null
-          options: Json
-          question_text: string
-          repetitions: number
-          source: string
-          source_ref: string
+          opened_by: string
+          reason: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["payment_dispute_status"]
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          opened_by: string
+          reason: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["payment_dispute_status"]
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          opened_by?: string
+          reason?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["payment_dispute_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_disputes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "payment_disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      platform_admins: {
+        Row: {
+          created_at: string
           user_id: string
         }
         Insert: {
-          correct_index: number
           created_at?: string
-          due_at?: string
-          ease_factor?: number
-          id?: string
-          interval_days?: number
-          last_reviewed_at?: string | null
-          options: Json
-          question_text: string
-          repetitions?: number
-          source: string
-          source_ref: string
           user_id: string
         }
         Update: {
-          correct_index?: number
           created_at?: string
-          due_at?: string
-          ease_factor?: number
-          id?: string
-          interval_days?: number
-          last_reviewed_at?: string | null
-          options?: Json
-          question_text?: string
-          repetitions?: number
-          source?: string
-          source_ref?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "review_items_user_id_fkey"
+            foreignKeyName: "platform_admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "platform_admins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      post_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          moderation_status: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          moderation_status?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          moderation_status?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
         ]
       }
-      user_quizzes: {
+      post_likes: {
         Row: {
-          area_id: number | null
           created_at: string
-          creator_id: string
-          description: string | null
-          id: string
-          play_count: number
-          questions: Json
-          status: string
-          title: string
-          updated_at: string
+          post_id: string
+          user_id: string
         }
         Insert: {
-          area_id?: number | null
           created_at?: string
-          creator_id: string
-          description?: string | null
-          id?: string
-          play_count?: number
-          questions: Json
-          status?: string
-          title: string
-          updated_at?: string
+          post_id: string
+          user_id: string
         }
         Update: {
-          area_id?: number | null
           created_at?: string
-          creator_id?: string
-          description?: string | null
-          id?: string
-          play_count?: number
-          questions?: Json
-          status?: string
-          title?: string
-          updated_at?: string
+          post_id?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_quizzes_creator_id_fkey"
-            columns: ["creator_id"]
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1436,11 +3505,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "post_shares_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "post_shares_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_shares_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "post_shares_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_shares_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "post_shares_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1484,8 +3588,403 @@ export type Database = {
             foreignKeyName: "posts_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "posts_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      private_lesson_bids: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          post_id: string
+          price_per_hour_try: number
+          status: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          post_id: string
+          price_per_hour_try: number
+          status?: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          post_id?: string
+          price_per_hour_try?: number
+          status?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_lesson_bids_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "private_lesson_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_bids_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_bids_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_bids_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_bids_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "private_lesson_bids_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      private_lesson_posts: {
+        Row: {
+          area_id: number
+          bids_count: number
+          budget_try: number | null
+          child_profile_id: string | null
+          city: string | null
+          created_at: string
+          description: string
+          district: string | null
+          grade_level: string
+          id: string
+          mode: string
+          moderation_note: string | null
+          parent_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          area_id: number
+          bids_count?: number
+          budget_try?: number | null
+          child_profile_id?: string | null
+          city?: string | null
+          created_at?: string
+          description: string
+          district?: string | null
+          grade_level: string
+          id?: string
+          mode: string
+          moderation_note?: string | null
+          parent_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          area_id?: number
+          bids_count?: number
+          budget_try?: number | null
+          child_profile_id?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string
+          district?: string | null
+          grade_level?: string
+          id?: string
+          mode?: string
+          moderation_note?: string | null
+          parent_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_lesson_posts_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "private_lesson_posts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      progress_reports: {
+        Row: {
+          area_id: number
+          child_profile_id: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          report_date: string
+          score: number
+          student_user_id: string | null
+        }
+        Insert: {
+          area_id: number
+          child_profile_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          report_date?: string
+          score: number
+          student_user_id?: string | null
+        }
+        Update: {
+          area_id?: number
+          child_profile_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          report_date?: string
+          score?: number
+          student_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_reports_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_reports_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_reports_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_reports_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_reports_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "progress_reports_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "progress_reports_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1529,8 +4028,36 @@ export type Database = {
             foreignKeyName: "questions_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "questions_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1638,8 +4165,36 @@ export type Database = {
             foreignKeyName: "quiz_attempts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "quiz_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1730,8 +4285,349 @@ export type Database = {
             foreignKeyName: "quizzes_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quizzes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quizzes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quizzes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "quizzes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      reputation_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          delta: number
+          id: string
+          kind: Database["public"]["Enums"]["reputation_event_kind"]
+          note: string | null
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          delta: number
+          id?: string
+          kind: Database["public"]["Enums"]["reputation_event_kind"]
+          note?: string | null
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          delta?: number
+          id?: string
+          kind?: Database["public"]["Enums"]["reputation_event_kind"]
+          note?: string | null
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reputation_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reputation_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reputation_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reputation_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "reputation_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "reputation_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reputation_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reputation_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reputation_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "reputation_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      review_items: {
+        Row: {
+          correct_index: number
+          created_at: string
+          due_at: string
+          ease_factor: number
+          id: string
+          interval_days: number
+          last_reviewed_at: string | null
+          options: Json
+          question_text: string
+          repetitions: number
+          source: string
+          source_ref: string
+          user_id: string
+        }
+        Insert: {
+          correct_index: number
+          created_at?: string
+          due_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          options: Json
+          question_text: string
+          repetitions?: number
+          source: string
+          source_ref: string
+          user_id: string
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          due_at?: string
+          ease_factor?: number
+          id?: string
+          interval_days?: number
+          last_reviewed_at?: string | null
+          options?: Json
+          question_text?: string
+          repetitions?: number
+          source?: string
+          source_ref?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "review_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      role_change_requests: {
+        Row: {
+          created_at: string
+          fee_amount: number
+          fee_paid: boolean
+          id: string
+          old_role: string
+          reason: string | null
+          requested_organization_type: string | null
+          requested_role: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: string
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fee_amount?: number
+          fee_paid?: boolean
+          id?: string
+          old_role: string
+          reason?: string | null
+          requested_organization_type?: string | null
+          requested_role: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fee_amount?: number
+          fee_paid?: boolean
+          id?: string
+          old_role?: string
+          reason?: string | null
+          requested_organization_type?: string | null
+          requested_role?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_change_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "role_change_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1760,11 +4656,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "saved_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "saved_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "saved_posts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "saved_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -1773,19 +4704,30 @@ export type Database = {
           area_id: number | null
           author_id: string
           caption: string
+          city: string | null
           co_author_id: string | null
+          comments_count: number
           content: string | null
           created_at: string
+          district: string | null
           external_url: string | null
+          follower_conversion_count: number
+          followers_only: boolean
+          followers_only_comments: boolean
           id: string
+          is_discoverable: boolean
           is_reel: boolean
           legacy_post_id: string | null
+          likes_count: number
+          location_name: string | null
           media_type: string
           media_url: string | null
           post_type: Database["public"]["Enums"]["content_post_type"]
           premium_prep_label: string | null
           premium_prep_url: string | null
           quiz_id: string | null
+          saves_count: number
+          shares_count: number
           sponsored_click_count: number
           sponsored_disclosure: string | null
           sponsored_expires_at: string | null
@@ -1794,29 +4736,37 @@ export type Database = {
           sponsored_target_url: string | null
           target_audience: string
           target_grade: string | null
-          title: string | null
-          followers_only: boolean
-          followers_only_comments: boolean
           teaser_text: string | null
-          follower_conversion_count: number
+          title: string | null
         }
         Insert: {
           area_id?: number | null
           author_id: string
           caption: string
+          city?: string | null
           co_author_id?: string | null
+          comments_count?: number
           content?: string | null
           created_at?: string
+          district?: string | null
           external_url?: string | null
+          follower_conversion_count?: number
+          followers_only?: boolean
+          followers_only_comments?: boolean
           id?: string
+          is_discoverable?: boolean
           is_reel?: boolean
           legacy_post_id?: string | null
+          likes_count?: number
+          location_name?: string | null
           media_type?: string
           media_url?: string | null
           post_type?: Database["public"]["Enums"]["content_post_type"]
           premium_prep_label?: string | null
           premium_prep_url?: string | null
           quiz_id?: string | null
+          saves_count?: number
+          shares_count?: number
           sponsored_click_count?: number
           sponsored_disclosure?: string | null
           sponsored_expires_at?: string | null
@@ -1825,29 +4775,37 @@ export type Database = {
           sponsored_target_url?: string | null
           target_audience?: string
           target_grade?: string | null
-          title?: string | null
-          followers_only?: boolean
-          followers_only_comments?: boolean
           teaser_text?: string | null
-          follower_conversion_count?: number
+          title?: string | null
         }
         Update: {
           area_id?: number | null
           author_id?: string
           caption?: string
+          city?: string | null
           co_author_id?: string | null
+          comments_count?: number
           content?: string | null
           created_at?: string
+          district?: string | null
           external_url?: string | null
+          follower_conversion_count?: number
+          followers_only?: boolean
+          followers_only_comments?: boolean
           id?: string
+          is_discoverable?: boolean
           is_reel?: boolean
           legacy_post_id?: string | null
+          likes_count?: number
+          location_name?: string | null
           media_type?: string
           media_url?: string | null
           post_type?: Database["public"]["Enums"]["content_post_type"]
           premium_prep_label?: string | null
           premium_prep_url?: string | null
           quiz_id?: string | null
+          saves_count?: number
+          shares_count?: number
           sponsored_click_count?: number
           sponsored_disclosure?: string | null
           sponsored_expires_at?: string | null
@@ -1856,11 +4814,8 @@ export type Database = {
           sponsored_target_url?: string | null
           target_audience?: string
           target_grade?: string | null
-          title?: string | null
-          followers_only?: boolean
-          followers_only_comments?: boolean
           teaser_text?: string | null
-          follower_conversion_count?: number
+          title?: string | null
         }
         Relationships: [
           {
@@ -1874,7 +4829,49 @@ export type Database = {
             foreignKeyName: "social_posts_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
             referencedColumns: ["id"]
           },
           {
@@ -1883,6 +4880,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
           {
             foreignKeyName: "social_posts_quiz_id_fkey"
@@ -1921,11 +4932,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "sponsored_ad_clicks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "sponsored_ad_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_ad_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sponsored_ad_clicks_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_ad_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "sponsored_ad_clicks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2018,8 +5064,36 @@ export type Database = {
             foreignKeyName: "store_redemptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "store_redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2030,6 +5104,7 @@ export type Database = {
           caption: string | null
           created_at: string
           expires_at: string
+          followers_only: boolean
           id: string
           media_url: string | null
         }
@@ -2039,6 +5114,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           expires_at?: string
+          followers_only?: boolean
           id?: string
           media_url?: string | null
         }
@@ -2048,6 +5124,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           expires_at?: string
+          followers_only?: boolean
           id?: string
           media_url?: string | null
         }
@@ -2063,8 +5140,36 @@ export type Database = {
             foreignKeyName: "stories_author_id_fkey"
             columns: ["author_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stories_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stories_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stories_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "stories_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2105,8 +5210,511 @@ export type Database = {
             foreignKeyName: "story_replies_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_replies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_replies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_replies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "story_replies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      student_needs: {
+        Row: {
+          area_id: number
+          child_profile_id: string | null
+          created_at: string
+          id: string
+          student_user_id: string | null
+          updated_at: string
+          weakness_level: number
+        }
+        Insert: {
+          area_id: number
+          child_profile_id?: string | null
+          created_at?: string
+          id?: string
+          student_user_id?: string | null
+          updated_at?: string
+          weakness_level: number
+        }
+        Update: {
+          area_id?: number
+          child_profile_id?: string | null
+          created_at?: string
+          id?: string
+          student_user_id?: string | null
+          updated_at?: string
+          weakness_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_needs_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_needs_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_needs_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_needs_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_needs_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_needs_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "student_needs_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      student_subject_success: {
+        Row: {
+          area_id: number
+          child_profile_id: string | null
+          completed_lessons: number
+          id: string
+          student_user_id: string | null
+          success_score: number
+          updated_at: string
+        }
+        Insert: {
+          area_id: number
+          child_profile_id?: string | null
+          completed_lessons?: number
+          id?: string
+          student_user_id?: string | null
+          success_score?: number
+          updated_at?: string
+        }
+        Update: {
+          area_id?: number
+          child_profile_id?: string | null
+          completed_lessons?: number
+          id?: string
+          student_user_id?: string | null
+          success_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_subject_success_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_subject_success_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_subject_success_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_subject_success_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_subject_success_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_subject_success_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "student_subject_success_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      study_group_approvals: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          kind: Database["public"]["Enums"]["study_group_approval_kind"]
+          note: string | null
+          parent_user_id: string
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["study_group_approval_status"]
+          student_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["study_group_approval_kind"]
+          note?: string | null
+          parent_user_id: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["study_group_approval_status"]
+          student_user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["study_group_approval_kind"]
+          note?: string | null
+          parent_user_id?: string
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["study_group_approval_status"]
+          student_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_group_approvals_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_group_approvals_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      study_group_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      study_group_messages: {
+        Row: {
+          content: string
+          created_at: string
+          group_id: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          group_id: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "study_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_group_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_group_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      study_groups: {
+        Row: {
+          area_id: number | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_user_id: string
+          status: Database["public"]["Enums"]["study_group_status"]
+        }
+        Insert: {
+          area_id?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_user_id: string
+          status?: Database["public"]["Enums"]["study_group_status"]
+        }
+        Update: {
+          area_id?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_user_id?: string
+          status?: Database["public"]["Enums"]["study_group_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_groups_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_groups_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_groups_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_groups_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_groups_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_groups_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2138,8 +5746,36 @@ export type Database = {
             foreignKeyName: "study_moment_cheers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_moment_cheers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_moment_cheers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_moment_cheers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_moment_cheers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2193,8 +5829,36 @@ export type Database = {
             foreignKeyName: "study_moments_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_moments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_moments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_moments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_moments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2238,8 +5902,36 @@ export type Database = {
             foreignKeyName: "study_plans_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_plans_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2274,8 +5966,36 @@ export type Database = {
             foreignKeyName: "study_room_participants_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_room_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_room_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_room_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_room_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2315,8 +6035,726 @@ export type Database = {
             foreignKeyName: "study_rooms_host_id_fkey"
             columns: ["host_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "study_rooms_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      taboo_custom_cards: {
+        Row: {
+          ai_descriptions: Json
+          created_at: string | null
+          deck_id: string | null
+          forbidden_words: Json
+          id: string
+          word: string
+        }
+        Insert: {
+          ai_descriptions: Json
+          created_at?: string | null
+          deck_id?: string | null
+          forbidden_words: Json
+          id?: string
+          word: string
+        }
+        Update: {
+          ai_descriptions?: Json
+          created_at?: string | null
+          deck_id?: string | null
+          forbidden_words?: Json
+          id?: string
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "taboo_custom_cards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "taboo_custom_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      taboo_custom_decks: {
+        Row: {
+          category: string
+          code: string
+          created_at: string | null
+          id: string
+          teacher_id: string | null
+          title: string
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string | null
+          id?: string
+          teacher_id?: string | null
+          title: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string | null
+          id?: string
+          teacher_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      taboo_duels: {
+        Row: {
+          category: string | null
+          challenger_combo: number
+          challenger_id: string | null
+          challenger_score: number
+          created_at: string | null
+          id: string
+          seed: string
+        }
+        Insert: {
+          category?: string | null
+          challenger_combo: number
+          challenger_id?: string | null
+          challenger_score: number
+          created_at?: string | null
+          id?: string
+          seed: string
+        }
+        Update: {
+          category?: string | null
+          challenger_combo?: number
+          challenger_id?: string | null
+          challenger_score?: number
+          created_at?: string | null
+          id?: string
+          seed?: string
+        }
+        Relationships: []
+      }
+      teacher_availability: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          is_booked: boolean
+          start_time: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          is_booked?: boolean
+          start_time: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_booked?: boolean
+          start_time?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_availability_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_availability_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_availability_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_availability_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "teacher_availability_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      teacher_campaigns: {
+        Row: {
+          click_count: number
+          cover_image_url: string | null
+          created_at: string
+          cta_label: string
+          cta_url: string | null
+          headline: string
+          id: string
+          is_published: boolean
+          is_sponsored: boolean
+          pitch: string | null
+          sponsored_disclosure: string
+          sponsored_expires_at: string | null
+          sponsored_package_days: number | null
+          sponsored_status: string | null
+          sponsored_targeting: Json | null
+          tagline: string | null
+          teacher_id: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          click_count?: number
+          cover_image_url?: string | null
+          created_at?: string
+          cta_label?: string
+          cta_url?: string | null
+          headline: string
+          id?: string
+          is_published?: boolean
+          is_sponsored?: boolean
+          pitch?: string | null
+          sponsored_disclosure?: string
+          sponsored_expires_at?: string | null
+          sponsored_package_days?: number | null
+          sponsored_status?: string | null
+          sponsored_targeting?: Json | null
+          tagline?: string | null
+          teacher_id: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          click_count?: number
+          cover_image_url?: string | null
+          created_at?: string
+          cta_label?: string
+          cta_url?: string | null
+          headline?: string
+          id?: string
+          is_published?: boolean
+          is_sponsored?: boolean
+          pitch?: string | null
+          sponsored_disclosure?: string
+          sponsored_expires_at?: string | null
+          sponsored_package_days?: number | null
+          sponsored_status?: string | null
+          sponsored_targeting?: Json | null
+          tagline?: string | null
+          teacher_id?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_campaigns_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_campaigns_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_campaigns_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_campaigns_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "teacher_campaigns_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      teacher_credential_submissions: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          credential_type: Database["public"]["Enums"]["teacher_credential_type"]
+          document_url: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["teacher_credential_status"]
+          teacher_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          credential_type: Database["public"]["Enums"]["teacher_credential_type"]
+          document_url: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["teacher_credential_status"]
+          teacher_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          credential_type?: Database["public"]["Enums"]["teacher_credential_type"]
+          document_url?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["teacher_credential_status"]
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_credential_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "teacher_credential_submissions_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      teacher_expertise_selections: {
+        Row: {
+          review_boost_score: number
+          selected_at: string
+          teacher_id: string
+          track_slug: string
+        }
+        Insert: {
+          review_boost_score?: number
+          selected_at?: string
+          teacher_id: string
+          track_slug: string
+        }
+        Update: {
+          review_boost_score?: number
+          selected_at?: string
+          teacher_id?: string
+          track_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_expertise_selections_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_expertise_selections_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_expertise_selections_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_expertise_selections_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "teacher_expertise_selections_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      teacher_profile_extras: {
+        Row: {
+          availability_note: string | null
+          availability_status:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          contact_summary: string | null
+          cv_url: string | null
+          details: Json
+          education_degree:
+            | Database["public"]["Enums"]["education_degree_type"]
+            | null
+          hourly_rate: number | null
+          lesson_acceptance_rate_percent: number | null
+          response_time_minutes: number | null
+          soft_skills: string[]
+          teaching_style:
+            | Database["public"]["Enums"]["teaching_style_type"]
+            | null
+          updated_at: string
+          user_id: string
+          video_intro_url: string | null
+          years_of_experience: number
+        }
+        Insert: {
+          availability_note?: string | null
+          availability_status?:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type?:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          contact_summary?: string | null
+          cv_url?: string | null
+          details?: Json
+          education_degree?:
+            | Database["public"]["Enums"]["education_degree_type"]
+            | null
+          hourly_rate?: number | null
+          lesson_acceptance_rate_percent?: number | null
+          response_time_minutes?: number | null
+          soft_skills?: string[]
+          teaching_style?:
+            | Database["public"]["Enums"]["teaching_style_type"]
+            | null
+          updated_at?: string
+          user_id: string
+          video_intro_url?: string | null
+          years_of_experience?: number
+        }
+        Update: {
+          availability_note?: string | null
+          availability_status?:
+            | Database["public"]["Enums"]["profile_availability_status"]
+            | null
+          badge_type?:
+            | Database["public"]["Enums"]["professional_badge_type"]
+            | null
+          contact_summary?: string | null
+          cv_url?: string | null
+          details?: Json
+          education_degree?:
+            | Database["public"]["Enums"]["education_degree_type"]
+            | null
+          hourly_rate?: number | null
+          lesson_acceptance_rate_percent?: number | null
+          response_time_minutes?: number | null
+          soft_skills?: string[]
+          teaching_style?:
+            | Database["public"]["Enums"]["teaching_style_type"]
+            | null
+          updated_at?: string
+          user_id?: string
+          video_intro_url?: string | null
+          years_of_experience?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "teacher_profile_extras_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      teacher_stats: {
+        Row: {
+          avg_response_minutes: number
+          stats_computed_at: string
+          teacher_id: string
+          total_lessons: number
+          total_students: number
+          updated_at: string
+        }
+        Insert: {
+          avg_response_minutes?: number
+          stats_computed_at?: string
+          teacher_id: string
+          total_lessons?: number
+          total_students?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_response_minutes?: number
+          stats_computed_at?: string
+          teacher_id?: string
+          total_lessons?: number
+          total_students?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_stats_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_stats_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_stats_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_stats_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "teacher_stats_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocked_id_fkey"
+            columns: ["blocked_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "user_blocks_blocker_id_fkey"
+            columns: ["blocker_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2345,85 +6783,256 @@ export type Database = {
             foreignKeyName: "user_interests_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_interests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_interests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_interests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "user_interests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
         ]
       }
-      user_blocks: {
+      user_onboarding_intake: {
         Row: {
-          blocker_id: string
-          blocked_id: string
-          created_at: string
+          completed_at: string
+          goal_exam: Database["public"]["Enums"]["exam_goal_type"]
+          grade_level: string | null
+          struggle_area_id: number | null
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          blocker_id: string
-          blocked_id: string
-          created_at?: string
+          completed_at?: string
+          goal_exam?: Database["public"]["Enums"]["exam_goal_type"]
+          grade_level?: string | null
+          struggle_area_id?: number | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          blocker_id?: string
-          blocked_id?: string
-          created_at?: string
+          completed_at?: string
+          goal_exam?: Database["public"]["Enums"]["exam_goal_type"]
+          grade_level?: string | null
+          struggle_area_id?: number | null
+          updated_at?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_onboarding_intake_struggle_area_id_fkey"
+            columns: ["struggle_area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_onboarding_intake_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_onboarding_intake_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_onboarding_intake_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_onboarding_intake_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "user_onboarding_intake_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
       }
-      teacher_campaigns: {
+      user_quizzes: {
         Row: {
-          id: string
-          teacher_id: string
-          headline: string | null
-          tagline: string | null
-          pitch: string | null
-          cta_label: string | null
-          cta_url: string | null
-          cover_image_url: string | null
-          is_published: boolean
-          is_sponsored: boolean
-          sponsored_status: string
-          sponsored_package_days: number | null
-          sponsored_expires_at: string | null
-          package_duration_days: number
-          expires_at: string | null
+          area_id: number | null
           created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          play_count: number
+          questions: Json
+          status: string
+          title: string
+          updated_at: string
         }
         Insert: {
-          id?: string
-          teacher_id: string
-          headline?: string | null
-          tagline?: string | null
-          pitch?: string | null
-          cta_label?: string | null
-          cta_url?: string | null
-          cover_image_url?: string | null
-          is_published?: boolean
-          is_sponsored?: boolean
-          sponsored_status?: string
-          sponsored_package_days?: number | null
-          sponsored_expires_at?: string | null
-          package_duration_days?: number
-          expires_at?: string | null
+          area_id?: number | null
           created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          play_count?: number
+          questions: Json
+          status?: string
+          title: string
+          updated_at?: string
         }
         Update: {
-          id?: string
-          teacher_id?: string
-          headline?: string | null
-          tagline?: string | null
-          pitch?: string | null
-          cta_label?: string | null
-          cta_url?: string | null
-          cover_image_url?: string | null
-          is_published?: boolean
-          is_sponsored?: boolean
-          sponsored_status?: string
-          sponsored_package_days?: number | null
-          sponsored_expires_at?: string | null
-          package_duration_days?: number
-          expires_at?: string | null
+          area_id?: number | null
           created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          play_count?: number
+          questions?: Json
+          status?: string
+          title?: string
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_quizzes_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_quizzes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_quizzes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_quizzes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_quizzes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "user_quizzes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      user_safety_settings: {
+        Row: {
+          allow_comments: boolean
+          allow_follow_requests: boolean
+          allow_story_replies: boolean
+          profile_discoverable: boolean
+          require_guardian_post_approval: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_comments?: boolean
+          allow_follow_requests?: boolean
+          allow_story_replies?: boolean
+          profile_discoverable?: boolean
+          require_guardian_post_approval?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_comments?: boolean
+          allow_follow_requests?: boolean
+          allow_story_replies?: boolean
+          profile_discoverable?: boolean
+          require_guardian_post_approval?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_safety_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_safety_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_safety_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_safety_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "user_safety_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
       }
       user_subscriptions: {
         Row: {
@@ -2431,6 +7040,8 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at: string | null
+          trial_started_at: string | null
           updated_at: string
           user_id: string
         }
@@ -2439,6 +7050,8 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2447,6 +7060,8 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2455,8 +7070,36 @@ export type Database = {
             foreignKeyName: "user_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
           },
         ]
       }
@@ -2467,6 +7110,7 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
@@ -2476,16 +7120,22 @@ export type Database = {
           game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
           last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -2496,7 +7146,6 @@ export type Database = {
           total_points: number
           website_url: string | null
           youtube_url: string | null
-          instagram_url: string | null
         }
         Insert: {
           account_status?: Database["public"]["Enums"]["account_status"]
@@ -2504,6 +7153,7 @@ export type Database = {
           avatar_assets?: Json
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
           classroom?: string | null
           created_at?: string
           district?: string | null
@@ -2513,16 +7163,22 @@ export type Database = {
           game_xp_today?: number
           grade_level?: string | null
           id: string
+          instagram_url?: string | null
           is_premium?: boolean | null
           is_verified?: boolean
+          last_active_date?: string | null
           last_game_xp_at?: string | null
           level?: number
           organization_type?: string | null
+          reputation_score?: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed?: boolean
           school_name?: string | null
+          shortcut_preferences?: Json
           social_interactions_blocked?: boolean
           social_interactions_blocked_at?: string | null
           social_safety_strike_count?: number
+          streak_days?: number
           student_document_reviewed_at?: string | null
           student_document_reviewed_by?: string | null
           student_document_status?:
@@ -2533,7 +7189,6 @@ export type Database = {
           total_points?: number
           website_url?: string | null
           youtube_url?: string | null
-          instagram_url?: string | null
         }
         Update: {
           account_status?: Database["public"]["Enums"]["account_status"]
@@ -2541,6 +7196,7 @@ export type Database = {
           avatar_assets?: Json
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
           classroom?: string | null
           created_at?: string
           district?: string | null
@@ -2550,16 +7206,22 @@ export type Database = {
           game_xp_today?: number
           grade_level?: string | null
           id?: string
+          instagram_url?: string | null
           is_premium?: boolean | null
           is_verified?: boolean
+          last_active_date?: string | null
           last_game_xp_at?: string | null
           level?: number
           organization_type?: string | null
+          reputation_score?: number
           role?: Database["public"]["Enums"]["user_role"]
+          role_selection_completed?: boolean
           school_name?: string | null
+          shortcut_preferences?: Json
           social_interactions_blocked?: boolean
           social_interactions_blocked_at?: string | null
           social_safety_strike_count?: number
+          streak_days?: number
           student_document_reviewed_at?: string | null
           student_document_reviewed_by?: string | null
           student_document_status?:
@@ -2570,12 +7232,116 @@ export type Database = {
           total_points?: number
           website_url?: string | null
           youtube_url?: string | null
-          instagram_url?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "users_student_document_reviewed_by_fkey"
             columns: ["student_document_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_student_document_reviewed_by_fkey"
+            columns: ["student_document_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_student_document_reviewed_by_fkey"
+            columns: ["student_document_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "users_student_document_reviewed_by_fkey"
+            columns: ["student_document_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "users_student_document_reviewed_by_fkey"
+            columns: ["student_document_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
+      user_admin_notes: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          note: string
+          tags: string[] | null
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          note: string
+          tags?: string[] | null
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          tags?: string[] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_admin_notes_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_admin_notes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_time_limits: {
+        Row: {
+          created_at: string
+          day: string
+          id: string
+          limit_minutes: number
+          used_seconds: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day: string
+          id?: string
+          limit_minutes?: number
+          used_seconds?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day?: string
+          id?: string
+          limit_minutes?: number
+          used_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_time_limits_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -2636,13 +7402,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "video_completions_social_post_id_fkey"
+            columns: ["social_post_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "video_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "video_completions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "video_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "video_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
         ]
+      }
+      zigo_applied_migrations: {
+        Row: {
+          applied_at: string
+          migration_id: string
+        }
+        Insert: {
+          applied_at?: string
+          migration_id: string
+        }
+        Update: {
+          applied_at?: string
+          migration_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -2655,15 +7471,132 @@ export type Database = {
         }
         Relationships: []
       }
+      student_leaderboard_mv: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string | null
+          rank: number | null
+          total_points: number | null
+        }
+        Relationships: []
+      }
+      teacher_leaderboard_mv: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string | null
+          rank: number | null
+          total_points: number | null
+        }
+        Relationships: []
+      }
+      vw_explore_social_posts: {
+        Row: {
+          area_id: number | null
+          author_id: string | null
+          caption: string | null
+          co_author_id: string | null
+          co_full_name: string | null
+          co_id: string | null
+          content: string | null
+          created_at: string | null
+          ea_area_name: string | null
+          is_reel: boolean | null
+          media_type: string | null
+          media_url: string | null
+          post_id: string | null
+          post_type: Database["public"]["Enums"]["content_post_type"] | null
+          title: string | null
+          u_avatar_url: string | null
+          u_full_name: string | null
+          u_id: string | null
+          u_is_verified: boolean | null
+          u_organization_type: string | null
+          u_role: Database["public"]["Enums"]["user_role"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "education_areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "social_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "student_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_leaderboard_mv"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["co_id"]
+          },
+          {
+            foreignKeyName: "social_posts_co_author_id_fkey"
+            columns: ["co_author_id"]
+            isOneToOne: false
+            referencedRelation: "vw_explore_social_posts"
+            referencedColumns: ["u_id"]
+          },
+        ]
+      }
     }
     Functions: {
-      list_explore_social_posts: {
-        Args: {
-          p_limit?: number
-          p_query?: string
-        }
-        Returns: Json
-      }
       _finalize_quiz_attempt: {
         Args: {
           p_answer_rows: Json
@@ -2695,13 +7628,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      auto_hide_social_post: {
-        Args: { p_post_id: string }
-        Returns: void
+      accept_family_link_invitation: {
+        Args: { raw_token: string }
+        Returns: {
+          created_at: string
+          guardian_id: string
+          id: string
+          relationship: string
+          revoked_at: string | null
+          status: string
+          student_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "family_student_links"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      increment_follower_conversion: {
-        Args: { p_post_id: string }
-        Returns: undefined
+      activate_lesson_package_subscription: {
+        Args: {
+          p_duration_days?: number
+          p_plan_type: Database["public"]["Enums"]["lesson_package_plan_type"]
+          p_stripe_checkout_session_id?: string
+          p_user_id: string
+        }
+        Returns: {
+          created_at: string
+          ends_at: string
+          id: string
+          lessons_included: number
+          lessons_used: number
+          plan_type: Database["public"]["Enums"]["lesson_package_plan_type"]
+          starts_at: string
+          status: Database["public"]["Enums"]["lesson_package_status"]
+          stripe_checkout_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lesson_package_subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       admin_send_user_message: {
         Args: { msg_body: string; msg_title: string; target_user_id: string }
@@ -2718,7 +7688,28 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_teacher_stats_on_lesson_complete: {
+        Args: { lesson_progress_score?: number; target_booking_id: string }
+        Returns: {
+          avg_response_minutes: number
+          stats_computed_at: string
+          teacher_id: string
+          total_lessons: number
+          total_students: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_stats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       approve_answer: { Args: { answer_id: string }; Returns: undefined }
+      approve_role_change_request: {
+        Args: { request_id: string }
+        Returns: undefined
+      }
       assert_content_text_safe: {
         Args: { input_text: string }
         Returns: undefined
@@ -2746,12 +7737,22 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      auto_hide_social_post: { Args: { p_post_id: string }; Returns: undefined }
       award_child_learning_points: {
         Args: { action_kind: string; target_child_profile_id: string }
         Returns: {
           id: string
           total_points: number
         }[]
+      }
+      award_child_lesson_completion_reward: {
+        Args: {
+          points_to_add?: number
+          target_booking_id: string
+          target_child_profile_id: string
+          teacher_id: string
+        }
+        Returns: undefined
       }
       award_learning_points: {
         Args: { action_kind: string; student_id: string }
@@ -2760,36 +7761,21 @@ export type Database = {
           total_points: number
         }[]
       }
-      award_safe_duel_win_points:
-        | {
+      award_safe_duel_win_points: {
         Args: {
-              p_duel_id: string
-              p_score: number
-              p_target_user_id: string
-              p_total_questions?: number
-            }
+          p_area_id?: number
+          p_duel_id: string
+          p_score: number
+          p_target_user_id: string
+          p_total_questions?: number
+        }
         Returns: {
-              already_awarded: boolean
-              event_id: string
-              points_awarded: number
-              total_points: number
-            }[]
-          }
-        | {
-        Args: {
-              p_area_id?: number
-              p_duel_id: string
-              p_score: number
-              p_target_user_id: string
-              p_total_questions?: number
-            }
-        Returns: {
-              already_awarded: boolean
-              event_id: string
-              points_awarded: number
-              total_points: number
-            }[]
-          }
+          already_awarded: boolean
+          event_id: string
+          points_awarded: number
+          total_points: number
+        }[]
+      }
       award_social_reel_watch_points: {
         Args: {
           p_points: number
@@ -2802,6 +7788,78 @@ export type Database = {
           points_awarded: number
           total_points: number
         }[]
+      }
+      book_availability_slot: {
+        Args: {
+          area_id?: number
+          child_profile_id?: string
+          parent_id: string
+          slot_id: string
+        }
+        Returns: {
+          area_id: number | null
+          availability_id: string
+          child_profile_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          parent_id: string
+          payment_status: Database["public"]["Enums"]["lesson_payment_status"]
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          teacher_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lesson_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      boost_teacher_expertise_from_review: {
+        Args: {
+          boost_amount?: number
+          boost_slugs: string[]
+          target_teacher_id: string
+        }
+        Returns: undefined
+      }
+      build_jitsi_meeting_url: {
+        Args: { for_booking_id: string }
+        Returns: string
+      }
+      campaign_targeting_has_placement: {
+        Args: { placement_key: string; targeting: Json }
+        Returns: boolean
+      }
+      campaign_targeting_targets_all_cities: {
+        Args: { targeting: Json }
+        Returns: boolean
+      }
+      can_view_social_media: { Args: { target_path: string }; Returns: boolean }
+      cancel_lesson_booking: {
+        Args: { actor_id: string; booking_id: string }
+        Returns: {
+          area_id: number | null
+          availability_id: string
+          child_profile_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          parent_id: string
+          payment_status: Database["public"]["Enums"]["lesson_payment_status"]
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          teacher_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lesson_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       cheer_study_moment: {
         Args: { p_moment_id: string }
@@ -2842,6 +7900,89 @@ export type Database = {
           total_points: number
         }[]
       }
+      complete_lesson_booking: {
+        Args: {
+          booking_id: string
+          progress_feedback?: string
+          progress_score?: number
+          teacher_id: string
+        }
+        Returns: {
+          area_id: number | null
+          availability_id: string
+          child_profile_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          parent_id: string
+          payment_status: Database["public"]["Enums"]["lesson_payment_status"]
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          teacher_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lesson_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      complete_role_selection: {
+        Args: {
+          org_type?: string
+          profile_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: {
+          account_status: Database["public"]["Enums"]["account_status"]
+          ad_free_until: string | null
+          avatar_assets: Json
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          classroom: string | null
+          created_at: string
+          district: string | null
+          email: string
+          full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
+          grade_level: string | null
+          id: string
+          instagram_url: string | null
+          is_premium: boolean | null
+          is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
+          level: number
+          organization_type: string | null
+          reputation_score: number
+          role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
+          school_name: string | null
+          shortcut_preferences: Json
+          social_interactions_blocked: boolean
+          social_interactions_blocked_at: string | null
+          social_safety_strike_count: number
+          streak_days: number
+          student_document_reviewed_at: string | null
+          student_document_reviewed_by: string | null
+          student_document_status:
+            | Database["public"]["Enums"]["student_document_status"]
+            | null
+          student_document_submitted_at: string | null
+          student_document_url: string | null
+          total_points: number
+          website_url: string | null
+          youtube_url: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       complete_video_post: {
         Args: { seconds_watched?: number; target_post_id: string }
         Returns: {
@@ -2860,6 +8001,37 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      compute_teacher_avg_response_minutes: {
+        Args: { target_teacher_id: string }
+        Returns: number
+      }
+      confirm_lesson_payment: {
+        Args: { side: string; target_booking_id: string }
+        Returns: {
+          area_id: number | null
+          availability_id: string
+          child_profile_id: string | null
+          created_at: string
+          end_time: string
+          id: string
+          parent_id: string
+          payment_status: Database["public"]["Enums"]["lesson_payment_status"]
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          teacher_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lesson_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      consume_lesson_package_credit: {
+        Args: { for_parent_id: string }
+        Returns: undefined
       }
       content_contains_blocked_keyword: {
         Args: { input_text: string }
@@ -2919,6 +8091,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_family_link_invitation: {
+        Args: { target_student_email: string }
+        Returns: {
+          expires_at: string
+          invitation_id: string
+          invitation_token: string
+        }[]
+      }
       create_lesson_request_notification: {
         Args: {
           actor_id: string
@@ -2928,6 +8108,28 @@ export type Database = {
           request_id: string
         }
         Returns: undefined
+      }
+      create_live_lesson_for_booking: {
+        Args: { target_booking_id: string }
+        Returns: {
+          booking_id: string
+          created_at: string
+          duration_minutes: number
+          end_time: string
+          id: string
+          meeting_url: string
+          parent_id: string
+          provider: string
+          start_time: string
+          status: Database["public"]["Enums"]["live_lesson_status"]
+          teacher_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "live_lessons"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_profile: {
         Args: {
@@ -2940,22 +8142,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -2964,10 +8176,35 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
           to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_study_group: {
+        Args: {
+          p_area_id?: number
+          p_description?: string
+          p_name: string
+          p_parent_email?: string
+        }
+        Returns: {
+          area_id: number | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_user_id: string
+          status: Database["public"]["Enums"]["study_group_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "study_groups"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -2978,6 +8215,7 @@ export type Database = {
         Args: { target_area_id: number }
         Returns: boolean
       }
+      current_user_is_parent_or_student: { Args: never; Returns: boolean }
       current_user_is_parent_or_teacher: { Args: never; Returns: boolean }
       current_user_is_platform_admin: { Args: never; Returns: boolean }
       current_user_is_verified_teacher: { Args: never; Returns: boolean }
@@ -2990,7 +8228,27 @@ export type Database = {
         Returns: boolean
       }
       current_user_student_document_approved: { Args: never; Returns: boolean }
+      downgrade_from_premium: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
       export_user_data: { Args: never; Returns: Json }
+      find_best_teacher: {
+        Args: {
+          for_child_profile_id?: string
+          for_student_user_id?: string
+          limit_count?: number
+        }
+        Returns: {
+          area_name: string
+          full_name: string
+          match_score: number
+          matched_area_id: number
+          reputation_score: number
+          teacher_id: string
+          weakness_level: number
+        }[]
+      }
       get_active_focus_session: {
         Args: never
         Returns: {
@@ -3011,6 +8269,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      get_area_leaderboard: {
+        Args: { limit_count?: number; target_area_id: number }
+        Returns: {
+          full_name: string
+          rank: number
+          total_points: number
+          user_id: string
+        }[]
       }
       get_child_matched_quizzes: {
         Args: { target_child_profile_id: string }
@@ -3097,6 +8364,10 @@ export type Database = {
           matched_study_moments: number
         }[]
       }
+      get_parent_weekly_progress_summary: {
+        Args: { for_child_profile_id?: string; for_parent_id: string }
+        Returns: Json
+      }
       get_premium_prep_url: {
         Args: { target_post_id: string }
         Returns: string
@@ -3129,16 +8400,117 @@ export type Database = {
           weekly_goal: number
         }[]
       }
+      get_teacher_campaign: {
+        Args: { target_teacher_id: string }
+        Returns: {
+          click_count: number
+          cover_image_url: string
+          cta_label: string
+          cta_url: string
+          headline: string
+          id: string
+          is_published: boolean
+          is_sponsored: boolean
+          is_sponsored_active: boolean
+          pitch: string
+          sponsored_disclosure: string
+          sponsored_expires_at: string
+          sponsored_package_days: number
+          sponsored_status: string
+          sponsored_targeting: Json
+          tagline: string
+          teacher_id: string
+          teacher_name: string
+          teacher_verified: boolean
+          updated_at: string
+          view_count: number
+        }[]
+      }
+      get_teacher_completed_lesson_count: {
+        Args: { target_teacher_id: string }
+        Returns: number
+      }
+      get_teacher_platform_activity_stats: {
+        Args: { target_teacher_id: string }
+        Returns: {
+          avg_response_minutes: number
+          completed_student_count: number
+          total_completed_lessons: number
+        }[]
+      }
+      get_weekly_focus_minutes: {
+        Args: never
+        Returns: {
+          day: string
+          focus_minutes: number
+          sessions: number
+        }[]
+      }
+      get_weekly_league: {
+        Args: { p_limit?: number }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          user_id: string
+          weekly_points: number
+        }[]
+      }
+      grant_ad_free_time: {
+        Args: { hours_to_add?: number; target_user_id: string }
+        Returns: undefined
+      }
+      grant_registration_trial: {
+        Args: { p_user_id: string }
+        Returns: {
+          current_period_end: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at: string | null
+          trial_started_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      increment_follower_conversion: {
+        Args: { p_post_id: string }
+        Returns: undefined
+      }
+      increment_game_seconds: {
+        Args: { p_date: string; p_seconds: number; p_user_id: string }
+        Returns: undefined
+      }
+      increment_user_quiz_play_count: {
+        Args: { p_quiz_id: string }
+        Returns: undefined
+      }
+      is_active_guardian_of: {
+        Args: { target_guardian_id?: string; target_student_id: string }
+        Returns: boolean
+      }
       is_sponsored_ad_active: {
         Args: {
           target_post: Database["public"]["Tables"]["social_posts"]["Row"]
         }
         Returns: boolean
       }
+      is_teacher_campaign_sponsored_active: {
+        Args: {
+          target_campaign: Database["public"]["Tables"]["teacher_campaigns"]["Row"]
+        }
+        Returns: boolean
+      }
+      is_user_ad_free: { Args: { target_user_id: string }; Returns: boolean }
       is_user_subscriber: { Args: { target_user_id: string }; Returns: boolean }
       join_class_group:
         | {
-        Args: {
+            Args: {
               p_child_profile_id?: string
               p_city: string
               p_district: string
@@ -3163,7 +8535,7 @@ export type Database = {
             }
           }
         | {
-        Args: {
+            Args: {
               p_child_profile_id?: string
               p_city: string
               p_classroom?: string
@@ -3192,6 +8564,33 @@ export type Database = {
         Args: { p_child_profile_id?: string; p_group_id: string }
         Returns: boolean
       }
+      lesson_package_booking_gating_removed: { Args: never; Returns: boolean }
+      lesson_package_lessons_for_plan: {
+        Args: { plan: Database["public"]["Enums"]["lesson_package_plan_type"] }
+        Returns: number
+      }
+      list_explore_social_posts: {
+        Args: { p_limit?: number; p_query?: string }
+        Returns: Json
+      }
+      list_sponsored_teacher_campaigns: {
+        Args: { limit_count?: number; placement_key?: string }
+        Returns: {
+          click_count: number
+          cover_image_url: string
+          headline: string
+          is_sponsored_active: boolean
+          sponsored_expires_at: string
+          sponsored_package_days: number
+          sponsored_targeting: Json
+          tagline: string
+          teacher_id: string
+          teacher_name: string
+          teacher_verified: boolean
+          updated_at: string
+          view_count: number
+        }[]
+      }
       list_teacher_sponsored_ads: {
         Args: { limit_count?: number }
         Returns: {
@@ -3208,9 +8607,65 @@ export type Database = {
         Args: { for_user_id?: string; target_request_id: string }
         Returns: number
       }
+      moderate_private_lesson_post: {
+        Args: { next_status: string; note?: string; target_post_id: string }
+        Returns: undefined
+      }
       normalize_moderation_text: {
         Args: { input_text: string }
         Returns: string
+      }
+      notify_lesson_booking_confirmed: {
+        Args: { target_booking_id: string }
+        Returns: undefined
+      }
+      open_payment_dispute: {
+        Args: { dispute_reason: string; target_booking_id: string }
+        Returns: {
+          booking_id: string
+          created_at: string
+          id: string
+          opened_by: string
+          reason: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["payment_dispute_status"]
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payment_disputes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      parent_has_active_lesson_package: {
+        Args: { for_parent_id: string }
+        Returns: boolean
+      }
+      parent_owns_child: {
+        Args: { p_child_profile_id: string; p_parent_id: string }
+        Returns: boolean
+      }
+      parent_review_study_group_approval: {
+        Args: { p_approval_id: string; p_decision: string }
+        Returns: {
+          created_at: string
+          group_id: string
+          id: string
+          kind: Database["public"]["Enums"]["study_group_approval_kind"]
+          note: string | null
+          parent_user_id: string
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["study_group_approval_status"]
+          student_user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "study_group_approvals"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       parent_update_store_redemption_status: {
         Args: {
@@ -3234,26 +8689,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      get_weekly_focus_minutes: {
-        Args: Record<string, never>
-        Returns: {
-          day: string
-          focus_minutes: number
-          sessions: number
-        }[]
+      process_lesson_reminders: {
+        Args: { window_minutes?: number }
+        Returns: number
       }
-      increment_user_quiz_play_count: {
-        Args: { p_quiz_id: string }
-        Returns: undefined
-      }
-      get_weekly_league: {
-        Args: { p_limit?: number }
+      recompute_teacher_stats: {
+        Args: { target_teacher_id: string }
         Returns: {
-          user_id: string
-          full_name: string | null
-          avatar_url: string | null
-          weekly_points: number
-        }[]
+          avg_response_minutes: number
+          stats_computed_at: string
+          teacher_id: string
+          total_lessons: number
+          total_students: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_stats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       record_google_play_purchase: {
         Args: {
@@ -3293,12 +8748,102 @@ export type Database = {
         }
         Returns: Json
       }
+      record_reputation_event: {
+        Args: {
+          event_actor_id?: string
+          event_delta: number
+          event_kind: Database["public"]["Enums"]["reputation_event_kind"]
+          event_note?: string
+          event_reference_id?: string
+          target_user_id: string
+        }
+        Returns: {
+          account_status: Database["public"]["Enums"]["account_status"]
+          ad_free_until: string | null
+          avatar_assets: Json
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          classroom: string | null
+          created_at: string
+          district: string | null
+          email: string
+          full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
+          grade_level: string | null
+          id: string
+          instagram_url: string | null
+          is_premium: boolean | null
+          is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
+          level: number
+          organization_type: string | null
+          reputation_score: number
+          role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
+          school_name: string | null
+          shortcut_preferences: Json
+          social_interactions_blocked: boolean
+          social_interactions_blocked_at: string | null
+          social_safety_strike_count: number
+          streak_days: number
+          student_document_reviewed_at: string | null
+          student_document_reviewed_by: string | null
+          student_document_status:
+            | Database["public"]["Enums"]["student_document_status"]
+            | null
+          student_document_submitted_at: string | null
+          student_document_url: string | null
+          total_points: number
+          website_url: string | null
+          youtube_url: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       record_store_visit_mission: {
         Args: never
         Returns: {
           already_recorded: boolean
           recorded: boolean
         }[]
+      }
+      record_student_subject_success: {
+        Args: {
+          lesson_progress_score: number
+          target_area_id: number
+          target_child_profile_id: string
+          target_student_user_id: string
+        }
+        Returns: {
+          area_id: number
+          child_profile_id: string | null
+          completed_lessons: number
+          id: string
+          student_user_id: string | null
+          success_score: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "student_subject_success"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      record_teacher_campaign_click: {
+        Args: { target_teacher_id: string }
+        Returns: string
+      }
+      record_teacher_campaign_view: {
+        Args: { target_teacher_id: string }
+        Returns: undefined
       }
       redeem_child_store_product: {
         Args: {
@@ -3346,6 +8891,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      refresh_student_leaderboard: { Args: never; Returns: undefined }
+      refresh_teacher_leaderboard: { Args: never; Returns: undefined }
+      reject_role_change_request: {
+        Args: { note?: string; request_id: string }
+        Returns: undefined
+      }
       request_account_deletion: {
         Args: { p_reason?: string }
         Returns: {
@@ -3358,6 +8909,55 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "account_deletion_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      request_role_change: {
+        Args: {
+          next_organization_type?: string
+          next_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: {
+          created_at: string
+          fee_amount: number
+          fee_paid: boolean
+          id: string
+          old_role: string
+          reason: string | null
+          requested_organization_type: string | null
+          requested_role: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: string
+          stripe_session_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "role_change_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      request_study_group_join: {
+        Args: { p_group_id: string; p_parent_email: string }
+        Returns: {
+          created_at: string
+          group_id: string
+          id: string
+          kind: Database["public"]["Enums"]["study_group_approval_kind"]
+          note: string | null
+          parent_user_id: string
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["study_group_approval_status"]
+          student_user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "study_group_approvals"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -3401,22 +9001,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -3425,10 +9035,32 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
           to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      revoke_family_student_link: {
+        Args: { target_link_id: string }
+        Returns: undefined
+      }
+      send_study_group_message: {
+        Args: { p_content: string; p_group_id: string }
+        Returns: {
+          content: string
+          created_at: string
+          group_id: string
+          id: string
+          sender_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "study_group_messages"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -3437,46 +9069,25 @@ export type Database = {
         Args: { area_ids: number[]; target_child_profile_id: string }
         Returns: undefined
       }
+      set_teacher_expertise_matrix: {
+        Args: { track_slugs: string[] }
+        Returns: {
+          review_boost_score: number
+          selected_at: string
+          teacher_id: string
+          track_slug: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "teacher_expertise_selections"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       set_user_interests: { Args: { area_ids: number[] }; Returns: undefined }
       set_user_organization_type: {
         Args: { target_type: string }
-        Returns: {
-          account_status: Database["public"]["Enums"]["account_status"]
-          ad_free_until: string | null
-          avatar_assets: Json
-          avatar_url: string | null
-          bio: string | null
-          classroom: string | null
-          created_at: string
-          district: string | null
-          email: string
-          full_name: string
-          grade_level: string | null
-          id: string
-          is_premium: boolean | null
-          is_verified: boolean
-          level: number
-          organization_type: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          school_name: string | null
-          social_interactions_blocked: boolean
-          social_interactions_blocked_at: string | null
-          social_safety_strike_count: number
-          student_document_reviewed_at: string | null
-          student_document_reviewed_by: string | null
-          student_document_status:
-            | Database["public"]["Enums"]["student_document_status"]
-            | null
-          student_document_submitted_at: string | null
-          student_document_url: string | null
-          total_points: number
-        }
-        SetofOptions: {
-          from: "*"
-          to: "users"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        Returns: undefined
       }
       set_user_subscription_tier: {
         Args: {
@@ -3491,6 +9102,8 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at: string | null
+          trial_started_at: string | null
           updated_at: string
           user_id: string
         }
@@ -3520,6 +9133,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       social_post_matches_current_user: {
         Args: { p_post_id: string }
         Returns: boolean
@@ -3668,22 +9283,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -3692,6 +9317,8 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -3706,19 +9333,30 @@ export type Database = {
           area_id: number | null
           author_id: string
           caption: string
+          city: string | null
           co_author_id: string | null
+          comments_count: number
           content: string | null
           created_at: string
+          district: string | null
           external_url: string | null
+          follower_conversion_count: number
+          followers_only: boolean
+          followers_only_comments: boolean
           id: string
+          is_discoverable: boolean
           is_reel: boolean
           legacy_post_id: string | null
+          likes_count: number
+          location_name: string | null
           media_type: string
           media_url: string | null
           post_type: Database["public"]["Enums"]["content_post_type"]
           premium_prep_label: string | null
           premium_prep_url: string | null
           quiz_id: string | null
+          saves_count: number
+          shares_count: number
           sponsored_click_count: number
           sponsored_disclosure: string | null
           sponsored_expires_at: string | null
@@ -3727,6 +9365,7 @@ export type Database = {
           sponsored_target_url: string | null
           target_audience: string
           target_grade: string | null
+          teaser_text: string | null
           title: string | null
         }
         SetofOptions: {
@@ -3739,6 +9378,25 @@ export type Database = {
       sync_quiz_questions_for_quiz: {
         Args: { target_quiz_id: string }
         Returns: undefined
+      }
+      teacher_campaign_matches_sponsored_targeting: {
+        Args: {
+          campaign: Database["public"]["Tables"]["teacher_campaigns"]["Row"]
+          viewer_id: string
+        }
+        Returns: boolean
+      }
+      teacher_campaign_matches_viewer: {
+        Args: { target_teacher_id: string }
+        Returns: boolean
+      }
+      teacher_campaign_visible_for_viewer: {
+        Args: { placement_key?: string; target_teacher_id: string }
+        Returns: boolean
+      }
+      teacher_has_approved_credentials: {
+        Args: { target_teacher_id: string }
+        Returns: boolean
       }
       teacher_shares_area_with_parent: {
         Args: {
@@ -3796,22 +9454,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -3820,6 +9488,8 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -3879,22 +9549,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -3903,6 +9583,8 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -3916,6 +9598,9 @@ export type Database = {
           next_avatar_url?: string
           next_bio?: string
           next_full_name?: string
+          next_instagram_url?: string
+          next_website_url?: string
+          next_youtube_url?: string
         }
         Returns: {
           account_status: Database["public"]["Enums"]["account_status"]
@@ -3923,22 +9608,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -3947,6 +9642,8 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -3955,6 +9652,225 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_user_shortcut_preferences: {
+        Args: { next_preferences: Json }
+        Returns: {
+          account_status: Database["public"]["Enums"]["account_status"]
+          ad_free_until: string | null
+          avatar_assets: Json
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          classroom: string | null
+          created_at: string
+          district: string | null
+          email: string
+          full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
+          grade_level: string | null
+          id: string
+          instagram_url: string | null
+          is_premium: boolean | null
+          is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
+          level: number
+          organization_type: string | null
+          reputation_score: number
+          role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
+          school_name: string | null
+          shortcut_preferences: Json
+          social_interactions_blocked: boolean
+          social_interactions_blocked_at: string | null
+          social_safety_strike_count: number
+          streak_days: number
+          student_document_reviewed_at: string | null
+          student_document_reviewed_by: string | null
+          student_document_status:
+            | Database["public"]["Enums"]["student_document_status"]
+            | null
+          student_document_submitted_at: string | null
+          student_document_url: string | null
+          total_points: number
+          website_url: string | null
+          youtube_url: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "users"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_user_streak: { Args: never; Returns: Json }
+      upgrade_to_premium: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
+      upsert_education_platform_profile_extras:
+        | {
+            Args: {
+              next_contact_summary?: string
+              next_content_count?: number
+              next_integration_docs_url?: string
+              next_response_time_minutes?: number
+              next_subscription_model?: string
+              next_user_base_size?: number
+            }
+            Returns: {
+              availability_note: string | null
+              availability_status:
+                | Database["public"]["Enums"]["profile_availability_status"]
+                | null
+              badge_type:
+                | Database["public"]["Enums"]["professional_badge_type"]
+                | null
+              contact_summary: string | null
+              content_count: number
+              details: Json
+              integration_docs_url: string | null
+              response_time_minutes: number | null
+              soft_skills: string[]
+              subscription_model: string
+              updated_at: string
+              user_base_size: number
+              user_id: string
+              video_intro_url: string | null
+            }
+            SetofOptions: {
+              from: "*"
+              to: "education_platform_profile_extras"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              next_availability_note?: string
+              next_availability_status?: Database["public"]["Enums"]["profile_availability_status"]
+              next_badge_type?: Database["public"]["Enums"]["professional_badge_type"]
+              next_contact_summary?: string
+              next_content_count?: number
+              next_details?: Json
+              next_integration_docs_url?: string
+              next_response_time_minutes?: number
+              next_soft_skills?: string[]
+              next_subscription_model?: string
+              next_user_base_size?: number
+              next_video_intro_url?: string
+            }
+            Returns: {
+              availability_note: string | null
+              availability_status:
+                | Database["public"]["Enums"]["profile_availability_status"]
+                | null
+              badge_type:
+                | Database["public"]["Enums"]["professional_badge_type"]
+                | null
+              contact_summary: string | null
+              content_count: number
+              details: Json
+              integration_docs_url: string | null
+              response_time_minutes: number | null
+              soft_skills: string[]
+              subscription_model: string
+              updated_at: string
+              user_base_size: number
+              user_id: string
+              video_intro_url: string | null
+            }
+            SetofOptions: {
+              from: "*"
+              to: "education_platform_profile_extras"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      upsert_institution_profile_extras:
+        | {
+            Args: {
+              next_accreditation?: string[]
+              next_branch_count?: number
+              next_capacity?: number
+              next_contact_summary?: string
+              next_license_number: string
+              next_response_time_minutes?: number
+              next_services?: string[]
+            }
+            Returns: {
+              accreditation: string[]
+              availability_note: string | null
+              availability_status:
+                | Database["public"]["Enums"]["profile_availability_status"]
+                | null
+              badge_type:
+                | Database["public"]["Enums"]["professional_badge_type"]
+                | null
+              branch_count: number
+              capacity: number
+              contact_summary: string | null
+              details: Json
+              license_number: string
+              response_time_minutes: number | null
+              services: string[]
+              soft_skills: string[]
+              updated_at: string
+              user_id: string
+              video_intro_url: string | null
+            }
+            SetofOptions: {
+              from: "*"
+              to: "institution_profile_extras"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              next_accreditation?: string[]
+              next_availability_note?: string
+              next_availability_status?: Database["public"]["Enums"]["profile_availability_status"]
+              next_badge_type?: Database["public"]["Enums"]["professional_badge_type"]
+              next_branch_count?: number
+              next_capacity?: number
+              next_contact_summary?: string
+              next_details?: Json
+              next_license_number: string
+              next_response_time_minutes?: number
+              next_services?: string[]
+              next_soft_skills?: string[]
+              next_video_intro_url?: string
+            }
+            Returns: {
+              accreditation: string[]
+              availability_note: string | null
+              availability_status:
+                | Database["public"]["Enums"]["profile_availability_status"]
+                | null
+              badge_type:
+                | Database["public"]["Enums"]["professional_badge_type"]
+                | null
+              branch_count: number
+              capacity: number
+              contact_summary: string | null
+              details: Json
+              license_number: string
+              response_time_minutes: number | null
+              services: string[]
+              soft_skills: string[]
+              updated_at: string
+              user_id: string
+              video_intro_url: string | null
+            }
+            SetofOptions: {
+              from: "*"
+              to: "institution_profile_extras"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       upsert_study_plan: {
         Args: {
           p_area_id?: number
@@ -3977,12 +9893,160 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      upsert_teacher_campaign: {
+        Args: {
+          next_cover_image_url?: string
+          next_cta_label?: string
+          next_cta_url?: string
+          next_headline: string
+          next_is_published?: boolean
+          next_is_sponsored?: boolean
+          next_pitch?: string
+          next_sponsored_package_days?: number
+          next_sponsored_targeting?: Json
+          next_tagline?: string
+        }
+        Returns: {
+          click_count: number
+          cover_image_url: string | null
+          created_at: string
+          cta_label: string
+          cta_url: string | null
+          headline: string
+          id: string
+          is_published: boolean
+          is_sponsored: boolean
+          pitch: string | null
+          sponsored_disclosure: string
+          sponsored_expires_at: string | null
+          sponsored_package_days: number | null
+          sponsored_status: string | null
+          sponsored_targeting: Json | null
+          tagline: string | null
+          teacher_id: string
+          updated_at: string
+          view_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_campaigns"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      upsert_teacher_profile_extras:
+        | {
+            Args: {
+              next_contact_summary?: string
+              next_cv_url?: string
+              next_education_degree?: Database["public"]["Enums"]["education_degree_type"]
+              next_hourly_rate?: number
+              next_lesson_acceptance_rate_percent?: number
+              next_response_time_minutes?: number
+              next_teaching_style?: Database["public"]["Enums"]["teaching_style_type"]
+              next_years_of_experience?: number
+            }
+            Returns: {
+              availability_note: string | null
+              availability_status:
+                | Database["public"]["Enums"]["profile_availability_status"]
+                | null
+              badge_type:
+                | Database["public"]["Enums"]["professional_badge_type"]
+                | null
+              contact_summary: string | null
+              cv_url: string | null
+              details: Json
+              education_degree:
+                | Database["public"]["Enums"]["education_degree_type"]
+                | null
+              hourly_rate: number | null
+              lesson_acceptance_rate_percent: number | null
+              response_time_minutes: number | null
+              soft_skills: string[]
+              teaching_style:
+                | Database["public"]["Enums"]["teaching_style_type"]
+                | null
+              updated_at: string
+              user_id: string
+              video_intro_url: string | null
+              years_of_experience: number
+            }
+            SetofOptions: {
+              from: "*"
+              to: "teacher_profile_extras"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              next_availability_note?: string
+              next_availability_status?: Database["public"]["Enums"]["profile_availability_status"]
+              next_badge_type?: Database["public"]["Enums"]["professional_badge_type"]
+              next_contact_summary?: string
+              next_cv_url?: string
+              next_details?: Json
+              next_education_degree?: Database["public"]["Enums"]["education_degree_type"]
+              next_hourly_rate?: number
+              next_lesson_acceptance_rate_percent?: number
+              next_response_time_minutes?: number
+              next_soft_skills?: string[]
+              next_teaching_style?: Database["public"]["Enums"]["teaching_style_type"]
+              next_video_intro_url?: string
+              next_years_of_experience?: number
+            }
+            Returns: {
+              availability_note: string | null
+              availability_status:
+                | Database["public"]["Enums"]["profile_availability_status"]
+                | null
+              badge_type:
+                | Database["public"]["Enums"]["professional_badge_type"]
+                | null
+              contact_summary: string | null
+              cv_url: string | null
+              details: Json
+              education_degree:
+                | Database["public"]["Enums"]["education_degree_type"]
+                | null
+              hourly_rate: number | null
+              lesson_acceptance_rate_percent: number | null
+              response_time_minutes: number | null
+              soft_skills: string[]
+              teaching_style:
+                | Database["public"]["Enums"]["teaching_style_type"]
+                | null
+              updated_at: string
+              user_id: string
+              video_intro_url: string | null
+              years_of_experience: number
+            }
+            SetofOptions: {
+              from: "*"
+              to: "teacher_profile_extras"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      user_has_active_entitlement: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
+      user_is_active_study_group_member: {
+        Args: { p_group_id: string; p_user_id: string }
+        Returns: boolean
+      }
       user_is_verified_teacher: {
         Args: { p_user_id: string }
         Returns: boolean
       }
       user_participates_in_lesson_request: {
         Args: { target_request_id: string }
+        Returns: boolean
+      }
+      users_are_blocked: {
+        Args: { user_a: string; user_b: string }
         Returns: boolean
       }
       verify_teacher: {
@@ -3993,22 +10057,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -4017,6 +10091,8 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -4033,22 +10109,32 @@ export type Database = {
           avatar_assets: Json
           avatar_url: string | null
           bio: string | null
+          city: string | null
           classroom: string | null
           created_at: string
           district: string | null
           email: string
           full_name: string
+          game_xp_day: string | null
+          game_xp_today: number
           grade_level: string | null
           id: string
+          instagram_url: string | null
           is_premium: boolean | null
           is_verified: boolean
+          last_active_date: string | null
+          last_game_xp_at: string | null
           level: number
           organization_type: string | null
+          reputation_score: number
           role: Database["public"]["Enums"]["user_role"]
+          role_selection_completed: boolean
           school_name: string | null
+          shortcut_preferences: Json
           social_interactions_blocked: boolean
           social_interactions_blocked_at: string | null
           social_safety_strike_count: number
+          streak_days: number
           student_document_reviewed_at: string | null
           student_document_reviewed_by: string | null
           student_document_status:
@@ -4057,6 +10143,8 @@ export type Database = {
           student_document_submitted_at: string | null
           student_document_url: string | null
           total_points: number
+          website_url: string | null
+          youtube_url: string | null
         }
         SetofOptions: {
           from: "*"
@@ -4064,6 +10152,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      viewer_grade_bands_for_user: {
+        Args: { target_user_id: string }
+        Returns: string[]
+      }
+      watch_ad_for_reward: {
+        Args: { hours_to_grant?: number; target_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -4073,8 +10169,33 @@ export type Database = {
         | "approved"
         | "rejected"
         | "cancelled"
+      booking_status: "booked" | "completed" | "cancelled"
       content_post_type: "normal" | "quiz" | "micro"
+      education_degree_type: "lisans" | "yuksek_lisans" | "doktora"
+      exam_goal_type: "lgs" | "yks" | "general"
+      lesson_package_plan_type: "basic" | "pro" | "premium"
+      lesson_package_status: "pending" | "active" | "expired" | "canceled"
+      lesson_payment_status:
+        | "pending"
+        | "parent_confirmed"
+        | "teacher_confirmed"
+        | "payment_confirmed"
+        | "disputed"
+      lesson_request_priority: "normal" | "urgent"
       lesson_request_status: "pending" | "accepted" | "rejected" | "closed"
+      live_lesson_status: "scheduled" | "live" | "completed" | "canceled"
+      payment_dispute_status:
+        | "open"
+        | "reviewing"
+        | "resolved_parent"
+        | "resolved_teacher"
+        | "closed"
+      professional_badge_type: "gold" | "platinum" | "verified"
+      profile_availability_status: "available" | "busy" | "scheduled"
+      reputation_event_kind:
+        | "lesson_completed"
+        | "positive_feedback"
+        | "prompt_answer"
       store_product_category:
         | "stationery"
         | "book"
@@ -4087,10 +10208,16 @@ export type Database = {
         | "fulfilled"
         | "cancelled"
       student_document_status: "pending" | "approved" | "rejected"
+      study_group_approval_kind: "create_group" | "join_group"
+      study_group_approval_status: "pending" | "approved" | "rejected"
+      study_group_status: "pending_parent" | "active" | "closed"
       study_room_status: "active" | "closed"
       study_room_type: "voice" | "silent"
       subscription_tier: "free" | "zigo_plus"
-      user_role: "teacher" | "parent" | "student"
+      teacher_credential_status: "pending" | "approved" | "rejected"
+      teacher_credential_type: "diploma" | "e_devlet"
+      teaching_style_type: "visual" | "practical" | "theory"
+      user_role: "teacher" | "parent" | "student" | "platform" | "education_institution" | "education_platform" | "publisher"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4106,12 +10233,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4135,11 +10262,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4160,11 +10287,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4185,11 +10312,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4202,11 +10329,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4216,9 +10343,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       account_status: ["active", "suspended", "limited", "closed"],
@@ -4228,8 +10352,36 @@ export const Constants = {
         "rejected",
         "cancelled",
       ],
+      booking_status: ["booked", "completed", "cancelled"],
       content_post_type: ["normal", "quiz", "micro"],
+      education_degree_type: ["lisans", "yuksek_lisans", "doktora"],
+      exam_goal_type: ["lgs", "yks", "general"],
+      lesson_package_plan_type: ["basic", "pro", "premium"],
+      lesson_package_status: ["pending", "active", "expired", "canceled"],
+      lesson_payment_status: [
+        "pending",
+        "parent_confirmed",
+        "teacher_confirmed",
+        "payment_confirmed",
+        "disputed",
+      ],
+      lesson_request_priority: ["normal", "urgent"],
       lesson_request_status: ["pending", "accepted", "rejected", "closed"],
+      live_lesson_status: ["scheduled", "live", "completed", "canceled"],
+      payment_dispute_status: [
+        "open",
+        "reviewing",
+        "resolved_parent",
+        "resolved_teacher",
+        "closed",
+      ],
+      professional_badge_type: ["gold", "platinum", "verified"],
+      profile_availability_status: ["available", "busy", "scheduled"],
+      reputation_event_kind: [
+        "lesson_completed",
+        "positive_feedback",
+        "prompt_answer",
+      ],
       store_product_category: [
         "stationery",
         "book",
@@ -4244,99 +10396,96 @@ export const Constants = {
         "cancelled",
       ],
       student_document_status: ["pending", "approved", "rejected"],
+      study_group_approval_kind: ["create_group", "join_group"],
+      study_group_approval_status: ["pending", "approved", "rejected"],
+      study_group_status: ["pending_parent", "active", "closed"],
       study_room_status: ["active", "closed"],
       study_room_type: ["voice", "silent"],
       subscription_tier: ["free", "zigo_plus"],
-      user_role: ["teacher", "parent", "student"],
+      teacher_credential_status: ["pending", "approved", "rejected"],
+      teacher_credential_type: ["diploma", "e_devlet"],
+      teaching_style_type: ["visual", "practical", "theory"],
+      user_role: ["teacher", "parent", "student", "platform", "education_institution", "education_platform", "publisher"],
     },
   },
-} as const;
+} as const
 
-export type UserRole =
-  | "student"
-  | "teacher"
-  | "parent"
-  | "education_institution"
-  | "education_platform"
-  | "publisher";
 
-export type SubscriptionTier = "free" | "zigo_plus";
-export type BankTransferRequestStatus = "pending" | "approved" | "rejected";
-export type StoreRedemptionStatus = "pending" | "approved" | "fulfilled" | "rejected" | "cancelled" | "pending_parent_approval";
-export type AccountStatus = "active" | "suspended" | "limited" | "closed";
-export type StudentDocumentStatus = "none" | "pending" | "approved" | "rejected";
-export type ContentReportStatus = "pending" | "reviewed" | "dismissed" | "action_taken" | "resolved" | "open" | "reviewing";
-export type AvatarAssets = Record<string, unknown>;
-export type BankTransferRequestRow = Record<string, unknown>;
-export type PublicQuizRow = {
-  id: string;
-  title: string;
-  question_count?: number | null;
-  [key: string]: unknown;
-};
-export type QuizQuestionForPlay = Record<string, unknown>;
+// =============================================================================
+// Custom helper type aliases (derived from generated Database types)
+// These are convenience exports used throughout the codebase.
+// =============================================================================
 
-export type SocialPostRow = Database["public"]["Tables"]["social_posts"]["Row"];
-export type StoryReplyRow = Database["public"]["Tables"]["story_replies"]["Row"];
+export type UserRole = Database["public"]["Enums"]["user_role"];
+export type AccountStatus = Database["public"]["Enums"]["account_status"];
+export type SubscriptionTier = Database["public"]["Enums"]["subscription_tier"];
+export type ContentReportStatus = string; // content_reports has no enum; status is text
+export type ContentPostType = Database["public"]["Enums"]["content_post_type"];
+export type StoreRedemptionStatus = Database["public"]["Enums"]["store_redemption_status"];
+export type BankTransferRequestStatus = Database["public"]["Enums"]["bank_transfer_request_status"];
+
+// Row type shortcuts
 export type UserRow = Database["public"]["Tables"]["users"]["Row"];
-export type ContentReportRow = Database["public"]["Tables"]["content_reports"]["Row"];
-export type EducationAreaRow = Database["public"]["Tables"]["education_areas"]["Row"];
-export type ChildProfileRow = Database["public"]["Tables"]["child_profiles"]["Row"];
-export type StoreProductRow = Database["public"]["Tables"]["store_products"]["Row"];
+export type SocialPostRow = Database["public"]["Tables"]["social_posts"]["Row"] & {
+  /** Runtime-only client-side field; not stored in DB (use is_discoverable for visibility control). */
+  is_hidden?: boolean;
+};
+
+// View row types (generated as Tables but are actually Views)
+export type TeacherCampaignRow = Database["public"]["Tables"]["teacher_campaigns"]["Row"] & {
+  teacher_name?: string | null;
+  full_name?: string | null;
+  teacher_verified?: boolean | null;
+};
+export type TeacherCampaignView = TeacherCampaignRow;
+export type SponsoredTeacherCampaignSummary = TeacherCampaignRow;
+
+// Additional Row type shortcuts (auto-generated from DB tables)
 export type ClassGroupRow = Database["public"]["Tables"]["class_groups"]["Row"];
 export type LearningEventRow = Database["public"]["Tables"]["learning_events"]["Row"];
+export type EducationAreaRow = Database["public"]["Tables"]["education_areas"]["Row"];
+export type ContentReportRow = Database["public"]["Tables"]["content_reports"]["Row"];
+export type StudentDocumentStatus = Database["public"]["Enums"]["student_document_status"];
+export type PostCommentRow = Database["public"]["Tables"]["post_comments"]["Row"];
+export type StoryReplyRow = Database["public"]["Tables"]["story_replies"]["Row"];
+export type BankTransferRequestRow = Database["public"]["Tables"]["bank_transfer_requests"]["Row"];
+export type ChildProfileRow = Database["public"]["Tables"]["child_profiles"]["Row"];
+export type StoreProductRow = Database["public"]["Tables"]["store_products"]["Row"];
+export type PublicQuizRow = Omit<Database["public"]["Tables"]["quizzes"]["Row"], "correct_option" | "is_active" | "teacher_id"> & {
+  correct_option?: number;
+  is_active?: boolean;
+  teacher_id?: string;
+  question_count?: number;
+};
 
-export type ContentPostType = "normal" | "quiz" | "micro";
-export type SocialMediaType = "image" | "video" | "audio" | "document" | "link" | "carousel";
+export type QuizQuestionForPlay = {
+  id: string;
+  question_text: string;
+  options: string[];
+  correct_option_index?: number;
+  sort_order?: number;
+  explanation?: string | null;
+};
+
+export type AvatarAssets = {
+  avatar?: string;
+  badge?: string;
+  frame?: string;
+  banner?: string;
+  background?: string;
+  title?: string;
+  [key: string]: unknown;
+};
 
 export type ModerationAdminAlertRow = {
   id: string;
-  post_id: string;
+  target_id: string;
+  target_type: string;
   reason: string;
+  reporter_id?: string | null;
   created_at: string;
-};
-export type PostCommentRow = {
-  id: string;
-  post_id: string;
-  author_id: string;
-  content: string;
-  created_at: string;
-  moderation_status?: string | null;
-};
-
-export type TeacherCampaignRow = {
-  id: string;
-  teacher_id: string;
-  headline?: string | null;
-  tagline?: string | null;
-  pitch?: string | null;
-  cta_label?: string | null;
-  cta_url?: string | null;
-  cover_image_url?: string | null;
-  is_published?: boolean;
-  is_sponsored?: boolean;
-  sponsored_status?: string;
-  sponsored_package_days?: number | null;
-  sponsored_expires_at?: string | null;
-  package_duration_days?: number;
-  expires_at?: string | null;
-  created_at?: string;
-};
-export type TeacherCampaignView = TeacherCampaignRow;
-export type SponsoredTeacherCampaignSummary = {
-  teacher_id: string;
-  full_name?: string | null;
-  teacher_name?: string | null;
-  avatar_url?: string | null;
-  cover_image_url?: string | null;
-  headline?: string | null;
-  tagline?: string | null;
-  pitch?: string | null;
-  click_count?: number;
-  view_count?: number;
-  expires_at?: string | null;
+  status: string;
   [key: string]: unknown;
 };
 
-
-
+export type SocialMediaType = "image" | "video" | "carousel" | "audio" | "document";

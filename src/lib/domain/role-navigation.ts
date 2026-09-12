@@ -6,6 +6,7 @@ export const ROLE_BACK: Record<UserRole, { href: string; label: string }> = {
   student: { href: "/student", label: "Öğrenci Paneli" },
   parent: { href: "/parent", label: "Veli Paneli" },
   teacher: { href: "/teacher", label: "Öğretmen Stüdyosu" },
+  platform: { href: "/teacher", label: "Platform Paneli" },
   education_institution: { href: "/teacher", label: "Kurum Paneli" },
   education_platform: { href: "/teacher", label: "Platform Paneli" },
   publisher: { href: "/teacher", label: "Yayınevi Paneli" },

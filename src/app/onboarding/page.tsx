@@ -12,6 +12,8 @@ import { listSponsoredTeacherCampaigns } from "@/lib/domain/teacher-campaign";
 import { getServerMessages } from "@/lib/i18n/server";
 import type { Messages } from "@/lib/i18n/types";
 import { createClient } from "@/lib/supabase/server";
+import type { UserRole } from "@/lib/supabase/database.types";
+import { getRoleAccentLabel } from "@/lib/domain/role-theme";
 
 export default async function OnboardingPage() {
   const m = await getServerMessages();
@@ -94,7 +96,9 @@ export default async function OnboardingPage() {
       </section>
 
       <section className="-mx-4 bg-white px-4 py-4">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">{m.roles[profile.role]}</p>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">
+          {getRoleAccentLabel(profile.role, m, { organizationType: profile.organization_type })}
+        </p>
         <h3 className="mt-2 text-xl font-black text-night">{profile.full_name}</h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">{roleNote}</p>
         <div className="mt-4 grid grid-cols-2 gap-2">
@@ -160,7 +164,7 @@ function NextBestActionPanel({
   hasAreas: boolean;
   isVerified: boolean;
   messages: Messages;
-  role: "teacher" | "parent" | "student";
+  role: UserRole;
 }) {
   const ob = m.onboarding;
   const o = m.onboardingPage;
@@ -204,7 +208,7 @@ function getNextActions({
 }: {
   hasAreas: boolean;
   isVerified: boolean;
-  role: "teacher" | "parent" | "student";
+  role: UserRole;
   messages: Messages;
 }) {
   const ob = m.onboarding;

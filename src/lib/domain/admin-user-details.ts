@@ -236,11 +236,10 @@ export async function getUser360Details(
   supabase: SupabaseClient<Database>,
   userId: string
 ): Promise<User360Data | null> {
-  const client = createAdminClient() ?? supabase;
+  const client: SupabaseClient<Database> = createAdminClient() ?? supabase;
 
   // 1. Core user query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rawUser, error: userError } = await (client as any)
+  const { data: rawUser, error: userError } = await client
     .from("users")
     .select("*")
     .eq("id", userId)
@@ -268,7 +267,7 @@ export async function getUser360Details(
     student_document_submitted_at: rawUser.student_document_submitted_at ?? null,
     student_document_reviewed_at: rawUser.student_document_reviewed_at ?? null,
     organization_type: rawUser.organization_type ?? null,
-    teacher_creator_plus: Boolean(rawUser.teacher_creator_plus),
+    teacher_creator_plus: Boolean((rawUser as Record<string, unknown>).teacher_creator_plus),
     created_at: rawUser.created_at,
     level: rawUser.level ?? 1,
     total_points: rawUser.total_points ?? 0,
@@ -285,332 +284,273 @@ export async function getUser360Details(
 
   const trial = calculateTrialEligibility(user.created_at);
 
-  // Parallel resilient queries
-  const [
-    subRes,
-    grantsRes,
-    transfersRes,
-    violationsRes,
-    reportsRes,
-    messagesRes,
-    notesRes,
-    feedbackRes,
-    relatedUsersRes,
-    postsRes,
-    gameLimitsRes,
-    gameProgressRes,
-    quizAttemptsRes,
-    consentRes,
-    lessonReqsRes,
-    interestsRes,
-    childrenRes,
-  ] = await Promise.allSettled([
-    // Subscription
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("user_subscriptions")
+  // Parallel resilient queries – split into two batches to avoid TS deep instantiation
+  type AnyResult = { data: unknown; error: unknown };
+  type SettledResult = PromiseSettledResult<AnyResult>;
+
+  // Cast client to any to prevent TypeScript from recursing into Supabase's
+  // deeply nested generic types (especially on tables with many columns).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const c = client as any;
+
+  const batch1: Promise<SettledResult[]> = Promise.allSettled([
+    // 0: Subscription
+    c.from("user_subscriptions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle(),
+      .maybeSingle() as Promise<AnyResult>,
 
-    // Admin billing grants
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("admin_billing_grants")
+    // 1: Admin billing grants
+    c.from("admin_billing_grants")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // Bank transfer requests
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("bank_transfer_requests")
+    // 2: Bank transfer requests
+    c.from("bank_transfer_requests")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // Moderation violations
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("moderation_violations")
+    // 3: Moderation violations
+    c.from("moderation_violations")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // Content reports against this author
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("content_reports")
+    // 4: Content reports
+    c.from("content_reports")
       .select("*")
-      .eq("author_id", userId)
+      .eq("reporter_id", userId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // Admin messages sent to user
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("admin_messages")
+    // 5: Admin messages
+    c.from("admin_messages")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // User admin notes
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("user_admin_notes")
+    // 6: User admin notes
+    c.from("user_admin_notes")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(20),
+      .limit(20) as Promise<AnyResult>,
 
-    // User feedback & support tickets
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("user_feedback")
+    // 7: User feedback & support tickets
+    c.from("user_feedback")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // Related users (same school or family)
+    // 8: Related users (same school)
     rawUser.school_name
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (client as any)
-          .from("users")
+      ? (c.from("users")
           .select("id, full_name, email, role, classroom, school_name")
           .eq("school_name", rawUser.school_name)
           .neq("id", userId)
-          .limit(5)
-      : Promise.resolve({ data: [] }),
+          .limit(5) as Promise<AnyResult>)
+      : Promise.resolve({ data: [], error: null } as AnyResult),
+  ]);
 
-    // Social posts
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("social_posts")
-      .select("id, content, media_url, media_type, likes_count, comments_count, is_hidden, created_at")
+  const batch2: Promise<SettledResult[]> = Promise.allSettled([
+    // 0: Social posts
+    c.from("social_posts")
+      .select("id, content, media_url, media_type, likes_count, comments_count, is_discoverable, created_at")
       .eq("author_id", userId)
       .order("created_at", { ascending: false })
-      .limit(12),
+      .limit(12) as Promise<AnyResult>,
 
-    // Game limits for today
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("game_time_limits")
+    // 1: Game limits for today
+    c.from("game_time_limits")
       .select("*")
       .eq("user_id", userId)
       .eq("day", new Date().toISOString().split("T")[0])
-      .maybeSingle(),
+      .maybeSingle() as Promise<AnyResult>,
 
-    // Game progress (high scores)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("game_progress")
+    // 2: Game progress (high scores)
+    c.from("game_progress")
       .select("*")
       .eq("user_id", userId)
-      .order("high_score", { ascending: false }),
+      .order("high_score", { ascending: false }) as Promise<AnyResult>,
 
-    // Quiz attempts
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("quiz_attempts")
-      .select("id, score, total_questions, created_at, quiz:quizzes(title)")
+    // 3: Quiz attempts
+    c.from("quiz_attempts")
+      .select("id, correct_answers, total_questions, created_at, quiz:quizzes(title)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // Parental consent (if student)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("parental_consents")
+    // 4: Parental consent
+    c.from("parental_consents")
       .select("*")
       .eq("student_user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle(),
+      .maybeSingle() as Promise<AnyResult>,
 
-    // Lesson requests (if teacher or parent)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("lesson_requests")
-      .select("id, topic, status, hourly_rate_krs, created_at, student:users!lesson_requests_student_id_fkey(full_name)")
+    // 5: Lesson requests
+    c.from("lesson_requests")
+      .select("id, subject_area, status, hourly_rate_krs, created_at, student:users!lesson_requests_student_id_fkey(full_name)")
       .or(`teacher_id.eq.${userId},student_id.eq.${userId}`)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(10) as Promise<AnyResult>,
 
-    // Teacher interests / expertise areas
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("user_interests")
+    // 6: Teacher interests
+    c.from("user_interests")
       .select("education_areas(area_name)")
-      .eq("user_id", userId),
+      .eq("user_id", userId) as Promise<AnyResult>,
 
-    // Child profiles (if parent)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any)
-      .from("child_profiles")
+    // 7: Child profiles
+    c.from("child_profiles")
       .select("id, display_name, age_group, total_points, created_at")
-      .eq("parent_id", userId),
+      .eq("parent_id", userId) as Promise<AnyResult>,
   ]);
 
+  const [b1, b2] = await Promise.all([batch1, batch2]);
+
+
+
+
+  const [subRes, grantsRes, transfersRes, violationsRes, reportsRes, messagesRes, notesRes, feedbackRes, relatedUsersRes] = b1;
+  const [postsRes, gameLimitsRes, gameProgressRes, quizAttemptsRes, consentRes, lessonReqsRes, interestsRes, childrenRes] = b2;
+
+
+  const getRows = (r: SettledResult): Record<string, unknown>[] =>
+    r.status === "fulfilled" && Array.isArray((r.value as AnyResult).data)
+      ? ((r.value as AnyResult).data as Record<string, unknown>[])
+      : [];
+  const getSingle = (r: SettledResult): Record<string, unknown> | null =>
+    r.status === "fulfilled" ? ((r.value as AnyResult).data as Record<string, unknown> | null) : null;
+
   // Parse results safely
-  const subData = subRes.status === "fulfilled" ? subRes.value.data : null;
+  const subData = getSingle(subRes);
   const subscription: User360Subscription = {
-    plan_slug: subData?.plan_slug ?? (user.is_premium ? "zigo_plus" : "free"),
-    status: subData?.status ?? (user.is_premium ? "active" : "inactive"),
-    current_period_end: subData?.current_period_end ?? null,
-    trial_end: subData?.trial_end ?? null,
-    is_active: user.is_premium || subData?.status === "active",
+    plan_slug: String(subData?.plan_slug ?? (user.is_premium ? "zigo_plus" : "free")),
+    status: String(subData?.status ?? (user.is_premium ? "active" : "inactive")),
+    current_period_end: subData?.current_period_end ? String(subData.current_period_end) : null,
+    trial_end: subData?.trial_ends_at ? String(subData.trial_ends_at) : null,
+    is_active: user.is_premium || String(subData?.status) === "active",
   };
 
-  const billingGrants: User360BillingGrant[] =
-    grantsRes.status === "fulfilled" && grantsRes.value.data
-      ? grantsRes.value.data.map((g: Record<string, unknown>) => ({
-          id: String(g.id),
-          kind: String(g.kind || "plus"),
-          duration_days: Number(g.duration_days || 30),
-          note: g.note ? String(g.note) : null,
-          period_ends_at: g.period_ends_at ? String(g.period_ends_at) : null,
-          created_at: String(g.created_at),
-        }))
-      : [];
+  const billingGrants: User360BillingGrant[] = getRows(grantsRes).map((g) => ({
+    id: String(g.id),
+    kind: String(g.kind || "plus"),
+    duration_days: Number(g.duration_days || 30),
+    note: g.note ? String(g.note) : null,
+    period_ends_at: g.period_ends_at ? String(g.period_ends_at) : null,
+    created_at: String(g.created_at),
+  }));
 
-  const bankTransfers: User360BankTransfer[] =
-    transfersRes.status === "fulfilled" && transfersRes.value.data
-      ? transfersRes.value.data.map((t: Record<string, unknown>) => ({
-          id: String(t.id),
-          plan_slug: String(t.plan_slug || "zigo_plus_yearly"),
-          amount_krs: Number(t.amount_krs || 0),
-          status: String(t.status || "pending"),
-          receipt_url: t.receipt_url ? String(t.receipt_url) : null,
-          created_at: String(t.created_at),
-          admin_note: t.admin_note ? String(t.admin_note) : null,
-        }))
-      : [];
+  const bankTransfers: User360BankTransfer[] = getRows(transfersRes).map((t) => ({
+    id: String(t.id),
+    plan_slug: String(t.plan_slug || "zigo_plus_yearly"),
+    amount_krs: Number(t.amount_krs || 0),
+    status: String(t.status || "pending"),
+    receipt_url: t.receipt_url ? String(t.receipt_url) : null,
+    created_at: String(t.created_at),
+    admin_note: t.admin_note ? String(t.admin_note) : null,
+  }));
 
-  const violations: User360Violation[] =
-    violationsRes.status === "fulfilled" && violationsRes.value.data
-      ? violationsRes.value.data.map((v: Record<string, unknown>) => ({
-          id: String(v.id),
-          violation_type: String(v.violation_type || "policy_violation"),
-          severity: String(v.severity || "warning"),
-          notes: v.notes ? String(v.notes) : null,
-          created_at: String(v.created_at),
-        }))
-      : [];
+  const violations: User360Violation[] = getRows(violationsRes).map((v) => ({
+    id: String(v.id),
+    violation_type: String(v.violation_type || "policy_violation"),
+    severity: String(v.severity || "warning"),
+    notes: v.notes ? String(v.notes) : null,
+    created_at: String(v.created_at),
+  }));
 
-  const reports: User360Report[] =
-    reportsRes.status === "fulfilled" && reportsRes.value.data
-      ? reportsRes.value.data.map((r: Record<string, unknown>) => ({
-          id: String(r.id),
-          reason: String(r.reason || "Uygunsuz içerik"),
-          details: r.details ? String(r.details) : null,
-          status: String(r.status || "open"),
-          created_at: String(r.created_at),
-        }))
-      : [];
+  const reports: User360Report[] = getRows(reportsRes).map((r) => ({
+    id: String(r.id),
+    reason: String(r.reason || "Uygunsuz içerik"),
+    details: r.details ? String(r.details) : null,
+    status: String(r.status || "open"),
+    created_at: String(r.created_at),
+  }));
 
-  const adminMessages: User360AdminMessage[] =
-    messagesRes.status === "fulfilled" && messagesRes.value.data
-      ? messagesRes.value.data.map((m: Record<string, unknown>) => ({
-          id: String(m.id),
-          title: String(m.title || "Bildirim"),
-          body: String(m.body || ""),
-          is_read: Boolean(m.is_read),
-          created_at: String(m.created_at),
-        }))
-      : [];
+  const adminMessages: User360AdminMessage[] = getRows(messagesRes).map((m) => ({
+    id: String(m.id),
+    title: String(m.title || "Bildirim"),
+    body: String(m.body || ""),
+    is_read: Boolean(m.is_read),
+    created_at: String(m.created_at),
+  }));
 
-  const adminNotes: User360AdminNote[] =
-    notesRes.status === "fulfilled" && notesRes.value.data
-      ? notesRes.value.data.map((n: Record<string, unknown>) => ({
-          id: String(n.id),
-          admin_id: String(n.admin_id),
-          note: String(n.note || ""),
-          tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
-          created_at: String(n.created_at),
-        }))
-      : [];
+  const adminNotes: User360AdminNote[] = getRows(notesRes).map((n) => ({
+    id: String(n.id),
+    admin_id: String(n.admin_id),
+    note: String(n.note || ""),
+    tags: Array.isArray(n.tags) ? n.tags.map(String) : [],
+    created_at: String(n.created_at),
+  }));
 
-  const feedback: User360Feedback[] =
-    feedbackRes.status === "fulfilled" && feedbackRes.value.data
-      ? feedbackRes.value.data.map((f: Record<string, unknown>) => ({
-          id: String(f.id),
-          category: String(f.category || "request"),
-          subject: String(f.subject || "Destek Talebi"),
-          content: String(f.content || ""),
-          status: String(f.status || "open"),
-          admin_note: f.admin_note ? String(f.admin_note) : null,
-          created_at: String(f.created_at),
-        }))
-      : [];
+  const feedback: User360Feedback[] = getRows(feedbackRes).map((f) => ({
+    id: String(f.id),
+    category: String(f.category || "request"),
+    subject: String(f.subject || "Destek Talebi"),
+    content: String(f.content || ""),
+    status: String(f.status || "open"),
+    admin_note: f.admin_note ? String(f.admin_note) : null,
+    created_at: String(f.created_at),
+  }));
 
-  const relatedUsers: User360RelatedUser[] =
-    relatedUsersRes.status === "fulfilled" && relatedUsersRes.value.data
-      ? relatedUsersRes.value.data.map((ru: Record<string, unknown>) => ({
-          id: String(ru.id),
-          full_name: String(ru.full_name || "Kullanıcı"),
-          email: String(ru.email || ""),
-          role: String(ru.role || "student"),
-          reason: ru.classroom
-            ? `Aynı Okul & Sınıf (${ru.classroom})`
-            : `Aynı Okul (${ru.school_name || "Kayıtlı"})`,
-        }))
-      : [];
+  const relatedUsers: User360RelatedUser[] = getRows(relatedUsersRes).map((ru) => ({
+    id: String(ru.id),
+    full_name: String(ru.full_name || "Kullanıcı"),
+    email: String(ru.email || ""),
+    role: String(ru.role || "student"),
+    reason: ru.classroom
+      ? `Aynı Okul & Sınıf (${ru.classroom})`
+      : `Aynı Okul (${ru.school_name || "Kayıtlı"})`,
+  }));
 
-  const posts: User360Post[] =
-    postsRes.status === "fulfilled" && postsRes.value.data
-      ? postsRes.value.data.map((p: Record<string, unknown>) => ({
-          id: String(p.id),
-          content: p.content ? String(p.content) : null,
-          media_url: p.media_url ? String(p.media_url) : null,
-          media_type: p.media_type ? String(p.media_type) : null,
-          likes_count: Number(p.likes_count || 0),
-          comments_count: Number(p.comments_count || 0),
-          is_hidden: Boolean(p.is_hidden),
-          created_at: String(p.created_at),
-        }))
-      : [];
+  const posts: User360Post[] = getRows(postsRes).map((p) => ({
+    id: String(p.id),
+    content: p.content ? String(p.content) : null,
+    media_url: p.media_url ? String(p.media_url) : null,
+    media_type: p.media_type ? String(p.media_type) : null,
+    likes_count: Number(p.likes_count || 0),
+    comments_count: Number(p.comments_count || 0),
+    // is_discoverable: false means hidden; map to is_hidden for UI
+    is_hidden: p.is_discoverable === false,
+    created_at: String(p.created_at),
+  }));
 
   // Game stats
-  const gameLimitRow = gameLimitsRes.status === "fulfilled" ? gameLimitsRes.value.data : null;
+  const gameLimitRow = getSingle(gameLimitsRes);
   const gameMinutesToday = gameLimitRow?.used_seconds
     ? Math.round(Number(gameLimitRow.used_seconds) / 60)
     : 0;
   const gameLimitMinutes = 120; // Strict AGENTS.md rule: 120 minutes daily max
 
-  const gameScores: User360GameScore[] =
-    gameProgressRes.status === "fulfilled" && gameProgressRes.value.data
-      ? gameProgressRes.value.data.map((g: Record<string, unknown>) => ({
-          game_type: String(g.game_type || "2048"),
-          high_score: Number(g.high_score || 0),
-          level: Number(g.current_level || 1),
-          stars: Number(g.stars || 0),
-          updated_at: String(g.updated_at || g.created_at || new Date().toISOString()),
-        }))
-      : [];
+  const gameScores: User360GameScore[] = getRows(gameProgressRes).map((g) => ({
+    game_type: String(g.game_type || "2048"),
+    high_score: Number(g.high_score || 0),
+    level: Number(g.current_level || 1),
+    stars: Number(g.stars || 0),
+    updated_at: String(g.updated_at || g.created_at || new Date().toISOString()),
+  }));
 
-  const quizAttempts: User360QuizAttempt[] =
-    quizAttemptsRes.status === "fulfilled" && quizAttemptsRes.value.data
-      ? quizAttemptsRes.value.data.map((q: Record<string, unknown>) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const quizObj = q.quiz as any;
-          return {
-            id: String(q.id),
-            quiz_title: quizObj?.title ? String(quizObj.title) : "Zigo Deneme Sınavı",
-            score: Number(q.score || 0),
-            total_questions: Number(q.total_questions || 10),
-            created_at: String(q.created_at),
-          };
-        })
-      : [];
+  const quizAttempts: User360QuizAttempt[] = getRows(quizAttemptsRes).map((q) => {
+    const quizObj = q.quiz as Record<string, unknown> | null;
+    return {
+      id: String(q.id),
+      quiz_title: quizObj?.title ? String(quizObj.title) : "Zigo Deneme Sınavı",
+      score: Number(q.correct_answers ?? q.score ?? 0),
+      total_questions: Number(q.total_questions || 10),
+      created_at: String(q.created_at),
+    };
+  });
 
-  const consentData = consentRes.status === "fulfilled" ? consentRes.value.data : null;
+  const consentData = getSingle(consentRes);
   const parentConsent: User360ParentConsent | null = consentData
     ? {
         id: String(consentData.id),
@@ -621,40 +561,29 @@ export async function getUser360Details(
       }
     : null;
 
-  const lessonRequests: User360LessonRequest[] =
-    lessonReqsRes.status === "fulfilled" && lessonReqsRes.value.data
-      ? lessonReqsRes.value.data.map((l: Record<string, unknown>) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const studentObj = l.student as any;
-          return {
-            id: String(l.id),
-            student_name: studentObj?.full_name ? String(studentObj.full_name) : "Öğrenci",
-            topic: String(l.topic || "Özel Ders"),
-            status: String(l.status || "pending"),
-            hourly_rate_krs: l.hourly_rate_krs ? Number(l.hourly_rate_krs) : null,
-            created_at: String(l.created_at),
-          };
-        })
-      : [];
+  const lessonRequests: User360LessonRequest[] = getRows(lessonReqsRes).map((l) => {
+    const studentObj = l.student as Record<string, unknown> | null;
+    return {
+      id: String(l.id),
+      student_name: studentObj?.full_name ? String(studentObj.full_name) : "Öğrenci",
+      topic: String(l.subject_area ?? l.topic ?? "Özel Ders"),
+      status: String(l.status || "pending"),
+      hourly_rate_krs: l.hourly_rate_krs ? Number(l.hourly_rate_krs) : null,
+      created_at: String(l.created_at),
+    };
+  });
 
-  const teacherAreas: string[] =
-    interestsRes.status === "fulfilled" && interestsRes.value.data
-      ? interestsRes.value.data
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((i: any) => i.education_areas?.area_name)
-          .filter(Boolean)
-      : [];
+  const teacherAreas: string[] = getRows(interestsRes)
+    .map((i) => (i.education_areas as Record<string, unknown> | null)?.area_name)
+    .filter((a): a is string => typeof a === "string");
 
-  const children: User360Child[] =
-    childrenRes.status === "fulfilled" && childrenRes.value.data
-      ? childrenRes.value.data.map((c: Record<string, unknown>) => ({
-          id: String(c.id),
-          display_name: String(c.display_name || "Öğrenci"),
-          age_group: c.age_group ? String(c.age_group) : null,
-          total_points: Number(c.total_points || 0),
-          created_at: String(c.created_at),
-        }))
-      : [];
+  const children: User360Child[] = getRows(childrenRes).map((c) => ({
+    id: String(c.id),
+    display_name: String(c.display_name || "Öğrenci"),
+    age_group: c.age_group ? String(c.age_group) : null,
+    total_points: Number(c.total_points || 0),
+    created_at: String(c.created_at),
+  }));
 
   return {
     user,

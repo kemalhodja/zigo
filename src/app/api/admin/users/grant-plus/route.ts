@@ -24,8 +24,7 @@ export async function POST(request: Request) {
 
     // 1. Insert into admin_billing_grants ledger
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (adminClient as any).from("admin_billing_grants").insert({
+      await adminClient.from("admin_billing_grants").insert({
         admin_id: auth.profile.id,
         user_id: body.userId,
         kind: "plus",
@@ -38,8 +37,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Update user premium flag
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: userUpdateError } = await (adminClient as any)
+    const { error: userUpdateError } = await adminClient
       .from("users")
       .update({ is_premium: true })
       .eq("id", body.userId);

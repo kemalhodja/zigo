@@ -14,7 +14,6 @@ const updateUserSchema = z.object({
       "education_institution",
       "education_platform",
       "publisher",
-      "admin",
     ])
     .optional(),
   isVerified: z.boolean().optional(),
@@ -94,13 +93,14 @@ export async function POST(request: Request) {
       updatePayload.instagram_url = body.instagramUrl;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: updatedUser, error } = await (adminClient as any)
+    const { data: updatedUser, error } = await adminClient
       .from("users")
-      .update(updatePayload)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update(updatePayload as any)
       .eq("id", body.userId)
       .select("*")
       .single();
+
 
     if (error) {
       console.error("[ADMIN_UPDATE_USER_ERROR]", error);

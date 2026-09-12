@@ -21,8 +21,7 @@ export async function POST(request: Request) {
     // Resetting created_at to now gives the user a fresh 7-day trial and 50% discount window
     const nowIso = new Date().toISOString();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (adminClient as any)
+    const { error } = await adminClient
       .from("users")
       .update({ created_at: nowIso })
       .eq("id", body.userId);

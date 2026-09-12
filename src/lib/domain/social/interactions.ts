@@ -255,7 +255,6 @@ export async function createStory(
           area_id: parsed.areaId,
           caption: safeCaption,
           media_url: parsed.mediaUrl || null,
-          // @ts-expect-error - followers_only field exists in DB but missing from types
           followers_only: parsed.followersOnly,
         });
 

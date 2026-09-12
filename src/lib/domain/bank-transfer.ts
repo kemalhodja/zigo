@@ -207,7 +207,7 @@ export async function getUserBankTransferRequests(
 ) {
   const { data, error } = await supabase
     .from("bank_transfer_requests")
-    .select("id, plan_id, amount_try, status, created_at, reviewed_at, receipt_storage_path, admin_note, reference_code, period_end")
+    .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(10);

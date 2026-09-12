@@ -1,5 +1,6 @@
 import type { SocialMediaSceneName } from "@/components/social-media-scenes";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
+import type { UserRole } from "@/lib/supabase/database.types";
 
 /* ─── Shared display types ─── */
 
@@ -372,7 +373,7 @@ export function toDisplayPost(
   followState: {
     canFollowCreator?: boolean;
     isFollowingCreator?: boolean;
-    viewerRole?: "teacher" | "parent" | "student" | null;
+    viewerRole?: UserRole | null;
     viewerId?: string | null;
   } = {},
 ): DisplayPost {
@@ -451,7 +452,7 @@ export async function getHomeViewerContext(): Promise<{
   streakDays: number;
   missionDone: number;
   missionTotal: number;
-  role: "teacher" | "parent" | "student" | null;
+  role: UserRole | null;
 }> {
   if (!hasSupabaseEnv()) {
     return allowDemoContent()
