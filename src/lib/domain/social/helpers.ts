@@ -32,6 +32,11 @@ export function filterPostsForAudience(
       return false;
     }
 
+    // Reklamlar ve sponsorlu gönderiler herkes tarafından görülebilmeli:
+    if (post.sponsored_label || post.sponsored_status === "active") {
+      return true;
+    }
+
     if (!post.target_audience || post.target_audience === "all") return true;
     if (
       post.author &&
@@ -319,7 +324,64 @@ export async function countPostShares(supabase: SupabaseClient<Database>, postId
 }
 
 export function rankSocialPosts(posts: SocialFeedPost[]) {
-  return [...posts].sort((first, second) => second.ranking_score - first.ranking_score);
+  const sorted = [...posts].sort((first, second) => second.ranking_score - first.ranking_score);
+
+  // Reklam olan ve organik olan içerikleri ayır
+  const isAd = (p: SocialFeedPost) => Boolean(p.is_sponsored_active || p.has_sponsored);
+  const ads = sorted.filter(isAd);
+  const organic = sorted.filter((p) => !isAd(p));
+
+  // Eğer hiç reklam yoksa veya sadece reklam varsa mevcut sıralamayı koru
+  if (ads.length === 0 || organic.length === 0) {
+    return sorted;
+  }
+
+  // Farklı reklamları öne alacak şekilde benzersiz yazar/kampanya sırasına diz
+  // (Kullanıcıya art arda aynı reklam gösterilmez; farklı reklamlar rotasyonla verilir,
+  // eğer başka reklam kalmamışsa veya tek reklam varsa ancak organik aralıktan sonra tekrar edebilir)
+  const uniqueAds: SocialFeedPost[] = [];
+  const adAuthorMap = new Map<string, SocialFeedPost[]>();
+
+  for (const ad of ads) {
+    const key = ad.author_id || ad.id;
+    const existing = adAuthorMap.get(key) ?? [];
+    existing.push(ad);
+    adAuthorMap.set(key, existing);
+  }
+
+  // Round-robin ile farklı reklamverenleri sıraya diz
+  let hasMore = true;
+  while (hasMore) {
+    hasMore = false;
+    for (const [key, list] of adAuthorMap.entries()) {
+      if (list.length > 0) {
+        uniqueAds.push(list.shift()!);
+        hasMore = true;
+      }
+    }
+  }
+
+  // Organik içeriklerin arasına reklamları dengeli (örneğin her 4 organik gönderide 1 reklam) dağıt
+  const result: SocialFeedPost[] = [];
+  let organicIndex = 0;
+  let adIndex = 0;
+  const AD_INTERVAL = 4; // Her 4 organik gönderide bir reklam slotu
+
+  while (organicIndex < organic.length || adIndex < uniqueAds.length) {
+    // 4 adet organik gönderi ekle
+    for (let i = 0; i < AD_INTERVAL && organicIndex < organic.length; i++) {
+      result.push(organic[organicIndex++]);
+    }
+
+    // Araya 1 adet reklam yerleştir (Asla art arda iki reklam gelmez)
+    if (adIndex < uniqueAds.length) {
+      result.push(uniqueAds[adIndex++]);
+    } else if (organicIndex >= organic.length) {
+      break;
+    }
+  }
+
+  return result;
 }
 
 function scoreSocialPost(
@@ -343,9 +405,9 @@ function scoreSocialPost(
   const audienceBoost = 0;
   const interestBoost = 0;
 
-  // Active approved sponsored ad scoring (Temporarily disabled)
+  // Active approved sponsored ad scoring (Herkesin görebilmesi ve öne çıkması için)
   if (post.sponsored_status === "active") {
-    sponsoredBoost = 0; // Temporarily disabled (was 150)
+    sponsoredBoost = 150;
   } else if (viewerContext?.city) {
     // Regular organic post location boost
     const pLoc = post as SocialPostRow & { city?: string | null; district?: string | null };

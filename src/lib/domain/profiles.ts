@@ -21,6 +21,9 @@ export const createProfileSchema = z.object({
   role: z.enum(["teacher", "parent", "student"]).optional(),
   accountKind: z.enum(REGISTRATION_ACCOUNT_KIND_VALUES).optional(),
   city: z.string().trim().optional(),
+  district: z.string().trim().optional(),
+  schoolName: z.string().trim().optional(),
+  gradeLevel: z.string().trim().optional(),
 }).refine((value) => Boolean(value.role || value.accountKind), {
   message: "Choose student, parent, teacher, kurs, okul, institution, platform or publisher.",
 });
@@ -91,7 +94,15 @@ export async function getCurrentProfile(supabase: SupabaseClient<Database>) {
 
 export async function createProfile(
   supabase: SupabaseClient<Database>,
-  input: { fullName: string; role?: UserRole; accountKind?: RegistrationAccountKind; city?: string },
+  input: {
+    fullName: string;
+    role?: UserRole;
+    accountKind?: RegistrationAccountKind;
+    city?: string;
+    district?: string;
+    schoolName?: string;
+    gradeLevel?: string;
+  },
 ) {
   const parsed = createProfileSchema.parse(input);
   const account = parsed.accountKind
@@ -108,13 +119,32 @@ export async function createProfile(
 
   if (error) throw error;
 
-  // Update city if provided
-  if (parsed.city?.trim()) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from("users").update({ city: parsed.city.trim() } as unknown as Partial<Database["public"]["Tables"]["users"]["Update"]>).eq("id", user.id);
+  // Update city, district, school_name, grade_level if provided
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const updatePayload: Record<string, unknown> = {};
+    if (parsed.city?.trim()) updatePayload.city = parsed.city.trim();
+    if (parsed.district?.trim()) updatePayload.district = parsed.district.trim();
+    if (parsed.schoolName?.trim()) updatePayload.school_name = parsed.schoolName.trim();
+    if (parsed.gradeLevel?.trim()) updatePayload.grade_level = parsed.gradeLevel.trim();
+
+    if (Object.keys(updatePayload).length > 0) {
+      await supabase
+        .from("users")
+        .update(updatePayload as unknown as Partial<Database["public"]["Tables"]["users"]["Update"]>)
+        .eq("id", user.id);
+    }
+
+    // If gradeLevel is set, apply auto interests for students/parents
+    if (parsed.gradeLevel?.trim() && (account.role === "student" || account.role === "parent")) {
+      try {
+        await applyAutoInterestsForGrade(supabase, parsed.gradeLevel.trim());
+      } catch {
+        // Non-blocking auto interests
+      }
     }
   }
 

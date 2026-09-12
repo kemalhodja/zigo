@@ -3,6 +3,7 @@ import Link from "next/link";
 
 const ParentChart = dynamic(() => import("@/components/parent-chart").then((mod) => mod.ParentChart));
 const ParentActivityBreakdown = dynamic(() => import("@/components/parent-activity-breakdown").then((mod) => mod.ParentActivityBreakdown));
+import { ClassGroupManager } from "@/components/class-group-manager";
 import { LimitSettingsCard } from "@/components/limit-settings-card";
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
@@ -28,8 +29,21 @@ const previewChildren = [
 
 export default async function ParentPage() {
   const messages = await getServerMessages();
-  const { mode, isPremium, allowDevActivate, planGroups, children, childActivityById, pendingApprovals, userCreatedAt } =
-    await getParentData();
+  const {
+    mode,
+    isPremium,
+    allowDevActivate,
+    planGroups,
+    children,
+    childActivityById,
+    pendingApprovals,
+    userCreatedAt,
+    city,
+    district,
+    schoolName,
+    gradeLevel,
+    classroom,
+  } = await getParentData();
   const d = messages.dashboard;
 
   // Tüm çocukların aktivitelerinden gerçek 7 günlük grafik ve kategori kırılımı
@@ -142,6 +156,20 @@ export default async function ParentPage() {
       <div className="-mx-4 bg-white p-4 border-b border-slate-100">
         <MiniGamesArcadeSection isPremium={isPremium} />
       </div>
+
+      {mode === "parent" ? (
+        <div className="-mx-4 bg-white p-4 border-b border-slate-100">
+          <ClassGroupManager
+            isSubscriber={isPremium}
+            initialCity={city}
+            initialDistrict={district}
+            initialSchoolName={schoolName}
+            initialGradeLevel={gradeLevel}
+            initialClassroom={classroom}
+            userRole="parent"
+          />
+        </div>
+      ) : null}
 
       {mode === "parent" || mode === "preview" ? (
         <ZigoPlusPlansSection

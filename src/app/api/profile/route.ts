@@ -20,7 +20,16 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     if (!body.city || !String(body.city).trim()) {
-      return NextResponse.json({ error: "Kayıt olurken bulunduğunuz şehri (il) seçmeniz zorunludur." }, { status: 400 });
+      return NextResponse.json({ error: "Bulunduğunuz ili seçmeniz zorunludur." }, { status: 400 });
+    }
+
+    if (!body.district || !String(body.district).trim()) {
+      return NextResponse.json({ error: "Bulunduğunuz ilçeyi seçmeniz zorunludur." }, { status: 400 });
+    }
+
+    const isLearner = body.accountKind === "student" || body.accountKind === "parent" || body.role === "student" || body.role === "parent";
+    if (isLearner && (!body.gradeLevel || !String(body.gradeLevel).trim())) {
+      return NextResponse.json({ error: "Öğrenci ve veli kayıtlarında sınıf seviyesi seçimi zorunludur." }, { status: 400 });
     }
 
     const profile = await createProfile(supabase, {
@@ -28,6 +37,9 @@ export async function POST(request: Request) {
       role: body.role,
       accountKind: isRegistrationAccountKind(body.accountKind) ? body.accountKind : undefined,
       city: String(body.city).trim(),
+      district: String(body.district).trim(),
+      schoolName: body.schoolName ? String(body.schoolName).trim() : undefined,
+      gradeLevel: body.gradeLevel ? String(body.gradeLevel).trim() : undefined,
     });
 
     return NextResponse.json({ data: profile }, { status: 201 });

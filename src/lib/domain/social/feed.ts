@@ -124,7 +124,7 @@ export async function getSocialFeed(
 
   const profile = viewerId ? await getCachedProfileById(viewerId).catch(() => null) : null;
   const premiumAccess = await resolvePremiumPrepAccess(supabase, viewerId, profile?.role ?? null);
-  const canOpenSponsored = Boolean(viewerId);
+  const canOpenSponsored = true;
 
   const lastRawPost = posts.length === limit ? posts[posts.length - 1] : null;
   const hydrated = await hydrateSocialPosts(
@@ -181,7 +181,7 @@ export async function getExplorePosts(
   );
   if (posts.length === 0) return [];
 
-  const canOpenSponsored = Boolean(viewerId);
+  const canOpenSponsored = true;
   const canOpenPremiumPrep = await resolveViewerCanOpenPremiumPrep(supabase, viewerId);
   const hydrated = await hydrateSocialPosts(
     supabase,
@@ -362,7 +362,7 @@ export async function getFollowingFeed(
     .limit(50);
 
   if (error) throw error;
-  const canOpenSponsored = Boolean(viewerId);
+  const canOpenSponsored = true;
   const canOpenPremiumPrep = await resolveViewerCanOpenPremiumPrep(supabase, viewerId);
   const hydrated = await hydrateSocialPosts(
     supabase,

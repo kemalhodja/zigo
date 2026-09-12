@@ -40,6 +40,12 @@ export function FeedPostHeader({
                 Zigo Plus Öğrenci
               </span>
             )}
+            {Boolean(post.showSponsored || post.isSponsoredActive) && (
+              <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-black tracking-wider text-amber-600 border border-amber-500/20">
+                <span className="inline-block size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                {post.sponsoredDisclosure || "Sponsorlu Reklam"}
+              </span>
+            )}
             {post.isFollowersOnly && (
               <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-600">
                 <svg aria-hidden="true" className="size-3" fill="currentColor" viewBox="0 0 20 20">

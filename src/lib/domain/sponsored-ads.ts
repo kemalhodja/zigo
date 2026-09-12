@@ -33,8 +33,8 @@ export function isSponsoredAdActive(
   return new Date(post.sponsored_expires_at).getTime() > Date.now();
 }
 
-export function canViewerOpenSponsoredAd(viewerId: string | undefined, post: SocialPostRow) {
-  return Boolean(viewerId && isSponsoredAdActive(post));
+export function canViewerOpenSponsoredAd(_viewerId: string | undefined, post: SocialPostRow) {
+  return isSponsoredAdActive(post);
 }
 
 /** Click-through rate from campaign/post counters. */

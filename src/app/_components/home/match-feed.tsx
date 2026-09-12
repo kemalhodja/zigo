@@ -75,14 +75,22 @@ export function FeedPostCard({
               href={post.externalUrl} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors hover:bg-slate-100 active:scale-[0.98]"
+              className={`flex items-center justify-between gap-3 overflow-hidden rounded-xl p-3 transition-all active:scale-[0.98] ${
+                post.isSponsoredActive || post.showSponsored
+                  ? "border border-amber-400/40 bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-50 hover:border-amber-400 hover:shadow-sm"
+                  : "border border-slate-200 bg-slate-50 hover:bg-slate-100"
+              }`}
             >
               <div className="flex flex-col truncate">
-                <span className="text-sm font-bold text-slate-800">Bağlantıyı Ziyaret Et</span>
+                <span className={`text-sm font-black ${post.isSponsoredActive || post.showSponsored ? "text-amber-900" : "text-slate-800"}`}>
+                  {post.sponsoredLabel || "Detaylı Bilgi Al"}
+                </span>
                 <span className="truncate text-xs font-semibold text-slate-500">{post.externalUrl}</span>
               </div>
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-                <ExternalLinkIcon className="h-4 w-4 text-slate-600" />
+              <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full shadow-sm ${
+                post.isSponsoredActive || post.showSponsored ? "bg-amber-500 text-white" : "bg-white text-slate-600"
+              }`}>
+                <ExternalLinkIcon className="h-4 w-4" />
               </div>
             </a>
           </div>
