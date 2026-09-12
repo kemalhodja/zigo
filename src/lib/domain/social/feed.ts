@@ -359,7 +359,7 @@ export async function getFollowingFeed(
     )
     .in("author_id", authorIds)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(20);
 
   if (error) throw error;
   const canOpenSponsored = true;

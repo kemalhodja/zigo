@@ -1,7 +1,9 @@
-const CACHE_NAME = "zigo-offline-shell-v2";
+const CACHE_NAME = "zigo-offline-shell-v3";
 
 const OFFLINE_URLS = [
   "/",
+  "/explore",
+  "/micro",
   "/games",
   "/games/math",
   "/games/word",
@@ -44,6 +46,10 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/images/") ||
     url.pathname.endsWith(".svg") ||
     url.pathname.endsWith(".ico") ||
+    url.pathname.endsWith(".webp") ||
+    url.pathname.endsWith(".avif") ||
+    url.pathname.endsWith(".woff2") ||
+    url.pathname.includes("/storage/v1/object/public/avatars/") ||
     url.pathname.startsWith("/games");
 
   if (request.method === "GET" && isStaticCacheable) {

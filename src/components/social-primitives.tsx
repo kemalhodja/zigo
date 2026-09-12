@@ -31,7 +31,7 @@ export function SocialAvatar({
   ring = true,
 }: SocialAvatarProps) {
   const [hasError, setHasError] = useState(false);
-  const src = imageUrl ? getMediaPlaybackUrl(imageUrl) : null;
+  const src = imageUrl ? getMediaPlaybackUrl(imageUrl, { width: 96, quality: 80, format: "webp" }) : null;
 
   return (
     <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accent} ${ring ? "p-0.5" : ""} ${className}`}>

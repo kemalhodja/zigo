@@ -58,7 +58,12 @@ export function SocialMediaFrame({
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const rawUrls = mediaUrls && mediaUrls.length > 0 ? mediaUrls : mediaUrl ? [mediaUrl] : [];
-  const items = rawUrls.map((url) => getMediaPlaybackUrl(url)).filter(Boolean) as string[];
+  const items = rawUrls
+    .map((url) => {
+      const isVid = url.includes(".mp4") || url.includes(".webm") || url.includes(".mov");
+      return getMediaPlaybackUrl(url, isVid ? undefined : { width: 720, quality: 80, format: "webp" });
+    })
+    .filter(Boolean) as string[];
   const isCarousel = items.length > 1;
   const hasMedia = items.length > 0;
   

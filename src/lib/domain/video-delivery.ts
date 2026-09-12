@@ -115,9 +115,29 @@ export function getHlsUrl(storagePath: string): string | null {
 export function isAdaptiveStreamingEnabled() {
   return Boolean(process.env.NEXT_PUBLIC_VIDEO_HLS_ENABLED === "true" || isMuxEnabled());
 }
-/** Alias for images and video paths stored in social-media bucket. */
-export function getMediaPlaybackUrl(storagePath: string) {
-  return getVideoPlaybackUrl(storagePath);
+
+export type ImageTransformOptions = {
+  width?: number;
+  quality?: number;
+  format?: "webp" | "avif" | "origin";
+};
+
+/** Alias for images and video paths stored in social-media bucket with optional on-the-fly transforms. */
+export function getMediaPlaybackUrl(storagePath: string, options?: ImageTransformOptions) {
+  const url = getVideoPlaybackUrl(storagePath);
+  if (!url || !options) return url;
+
+  // Supabase Storage Image Transformation
+  if (url.includes("/storage/v1/object/public/")) {
+    const renderUrl = url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
+    const params = new URLSearchParams();
+    if (options.width) params.set("width", String(options.width));
+    if (options.quality) params.set("quality", String(options.quality));
+    params.set("format", options.format || "webp");
+    return `${renderUrl}?${params.toString()}`;
+  }
+
+  return url;
 }
 
 export function estimateMonthlyEgressCost(gbPerMonth: number, provider: VideoDeliveryProvider = getVideoDeliveryProvider()): { costTry: number; savingsTry: number } {
