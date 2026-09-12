@@ -149,7 +149,7 @@ export const demoStories: DisplayStory[] = [
   },
 ];
 
-/* ─── Data helpers (server-only) ─── */
+import { cache } from "react";
 
 import { hasSupabaseEnv } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
@@ -157,10 +157,10 @@ import { getDailyMissionProgress } from "@/lib/domain/learning";
 import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import {
   type ActiveStory,
-  getActiveStories,
+  getActiveStories as getRawActiveStories,
   getFollowingFeed,
   getSocialFeed,
-  getSuggestedCreators,
+  getSuggestedCreators as getRawSuggestedCreators,
   type SocialFeedPost,
 } from "@/lib/domain/social";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
@@ -168,6 +168,18 @@ import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+
+const getActiveStories = cache(async (supabase: Parameters<typeof getRawActiveStories>[0]) => {
+  return getRawActiveStories(supabase);
+});
+
+const getSuggestedCreators = cache(async (
+  supabase: Parameters<typeof getRawSuggestedCreators>[0],
+  viewerId?: string,
+  limit?: number,
+) => {
+  return getRawSuggestedCreators(supabase, viewerId, limit);
+});
 
 export async function getHomePosts(): Promise<DisplayPost[]> {
   const m = await getServerMessages();
