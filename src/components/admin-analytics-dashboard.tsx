@@ -33,16 +33,6 @@ type AnalyticsDashboardClientProps = {
 
 const COLORS = ["#8b5cf6", "#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#06b6d4"];
 
-function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
-  return (
-    <div className="rounded-xl bg-slate-50 p-4">
-      <p className={`text-xl font-black ${color ?? "text-night"}`}>{value}</p>
-      <p className="mt-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
-      {sub && <p className="mt-0.5 text-[0.65rem] font-bold text-slate-400">{sub}</p>}
-    </div>
-  );
-}
-
 export function AdminAnalyticsDashboard({
   activationData,
   retentionData,
@@ -159,7 +149,7 @@ export function AdminAnalyticsDashboard({
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(val: any, name: any) => [`${val} kullanıcı`, name]}
+                    formatter={(val: unknown, name: unknown) => [`${String(val)} kullanıcı`, String(name)]}
                     contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 24px rgb(0 0 0/0.12)", fontSize: "12px" }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: "10px", fontWeight: "bold" }} />
@@ -195,10 +185,10 @@ export function AdminAnalyticsDashboard({
                 <BarChart data={revenueSplit} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                   <XAxis type="number" tick={{ fontSize: 9, fill: "#94a3b8" }} axisLine={false} tickLine={false}
-                    tickFormatter={(v: any) => `₺${(Number(v) / 1000).toFixed(0)}k`} />
+                    tickFormatter={(v: unknown) => `₺${(Number(v) / 1000).toFixed(0)}k`} />
                   <YAxis dataKey="source" type="category" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} />
                   <Tooltip
-                    formatter={(v: any) => [`₺${Number(v).toLocaleString("tr-TR")}`, "Gelir"]}
+                    formatter={(v: unknown) => [`₺${Number(v).toLocaleString("tr-TR")}`, "Gelir"]}
                     contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 24px rgb(0 0 0/0.12)", fontSize: "12px" }}
                   />
                   <Bar dataKey="amount" radius={[0, 4, 4, 0]} barSize={24}>

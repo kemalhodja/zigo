@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { key, items } = body as { key?: string; items?: Array<{ data: unknown; timestamp: number }> };
+    const { _key, items } = body as { _key?: string; items?: Array<{ data: unknown; timestamp: number }> };
 
     if (!items || !Array.isArray(items)) {
       return NextResponse.json({ error: "Geçersiz kuyruk verisi." }, { status: 400 });

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
-import { Swords, Trophy, Zap, Clock, CheckCircle2, XCircle, RotateCcw, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
+import { CheckCircle2, Clock, RotateCcw, Swords, Trophy, XCircle } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef,useState } from "react";
+
 import { useAudio } from "@/hooks/use-audio";
 import { createClient } from "@/lib/supabase/client";
 
@@ -304,7 +305,14 @@ export default function DuelsPage() {
               <div className="flex items-center gap-2.5 rounded-xl bg-orange-50/70 p-2.5 border border-orange-100">
                 <span className="text-2xl">{opponent.avatar}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-black text-slate-800">{opponent.name}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="truncate text-xs font-black text-slate-800">{opponent.name}</p>
+                    {opponentAnswered && (
+                      <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[0.6rem] font-bold text-emerald-700">
+                        Cevapladı
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm font-black text-orange-600">{opponent.score} Puan</p>
                 </div>
               </div>

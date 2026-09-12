@@ -7,6 +7,7 @@ import {
   type WeeklyLeagueParticipant,
   type WeeklyLeagueTier,
 } from "@/lib/domain/weekly-leagues";
+import { asUntyped } from "@/lib/supabase/helpers";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
     // 1. Get user tier if not explicitly specified
     let targetTier: WeeklyLeagueTier = requestedTier || "bronze";
     if (!requestedTier) {
-      const { data: userTierData } = await (supabase as any).rpc("get_user_league_tier", {
+      const { data: userTierData } = await asUntyped(supabase).rpc("get_user_league_tier", {
         p_user_id: profile.id,
       });
       if (userTierData && typeof userTierData === "string") {
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Fetch league bucket from get_weekly_league_v2
-    const { data: rowsData, error } = await (supabase as any).rpc("get_weekly_league_v2", {
+    const { data: rowsData, error } = await asUntyped(supabase).rpc("get_weekly_league_v2", {
       p_tier: targetTier,
       p_limit: 30,
     });

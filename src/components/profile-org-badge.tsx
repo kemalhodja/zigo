@@ -1,4 +1,5 @@
-import { Building2, GraduationCap, School, BookOpen, Globe2, Sparkles } from "lucide-react";
+import { BookOpen, Building2, Globe2, GraduationCap, School, Sparkles } from "lucide-react";
+
 import type { EducationOrganizationType } from "@/lib/domain/education-organization";
 
 type ProfileOrgBadgeProps = {

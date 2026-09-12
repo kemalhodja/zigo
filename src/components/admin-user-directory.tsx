@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { getOrganizationOption } from "@/lib/domain/education-organization";
 import { parseOrganizationType } from "@/lib/domain/profiles";
 import { useMessages } from "@/lib/i18n/locale-context";
-import type { Database } from "@/lib/supabase/database.types";
 
 import { AdminBillingGrantActions } from "./admin-billing-grant-actions";
 import { AdminTeacherAreaForm } from "./admin-teacher-area-form";

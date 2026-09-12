@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requirePlatformAdmin } from "@/lib/domain/admin-auth";
+import { asUntyped } from "@/lib/supabase/helpers";
 
 const sendSchema = z.object({
   targetRole: z.enum(["all", "student", "teacher", "parent", "education_institution", "education_platform", "publisher"]),
@@ -17,7 +18,7 @@ export async function GET() {
     const auth = await requirePlatformAdmin();
     if ("error" in auth) return auth.error;
 
-    const { data, error } = await (auth.supabase as any)
+    const { data, error } = await asUntyped(auth.supabase)
       .from("notification_schedules")
       .select("id, title, body, target_role, status, sent_count, created_at, sent_at")
       .order("created_at", { ascending: false })
@@ -43,29 +44,29 @@ export async function POST(request: Request) {
 
     if (!isScheduled) {
       // Anında gönderim: hedef kullanıcıları bul
-      let query = auth.supabase.from("users").select("id");
+      let query = asUntyped(auth.supabase).from("users").select("id");
 
       if (payload.targetRole !== "all") {
-        query = query.eq("role", payload.targetRole as any);
+        query = query.eq("role", payload.targetRole);
       }
 
       // Abonelik filtresi
       if (payload.targetFilter === "subscribed") {
-        const { data: subUsers } = await (auth.supabase as any)
+        const { data: subUsers } = await asUntyped(auth.supabase)
           .from("user_subscriptions")
           .select("user_id")
           .or("status.eq.active,tier.eq.zigo_plus");
-        const subUserIds = (subUsers ?? []).map((s: { user_id: string }) => s.user_id);
+        const subUserIds = ((subUsers ?? []) as { user_id: string }[]).map((s) => s.user_id);
         if (subUserIds.length === 0) {
           return NextResponse.json({ error: "Abone kullanıcı bulunamadı." }, { status: 400 });
         }
         query = query.in("id", subUserIds);
       } else if (payload.targetFilter === "trial") {
-        const { data: trialUsers } = await (auth.supabase as any)
+        const { data: trialUsers } = await asUntyped(auth.supabase)
           .from("user_subscriptions")
           .select("user_id")
           .eq("status", "trialing");
-        const trialIds = (trialUsers ?? []).map((s: { user_id: string }) => s.user_id);
+        const trialIds = ((trialUsers ?? []) as { user_id: string }[]).map((s) => s.user_id);
         if (trialIds.length === 0) {
           return NextResponse.json({ error: "Deneme kullanan kullanıcı bulunamadı." }, { status: 400 });
         }
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
       }
 
       const fullMessage = `📣 ${payload.title}\n${payload.body}`;
-      const notifications = targetUsers.map((user) => ({
+      const notifications = (targetUsers as { id: string }[]).map((user) => ({
         user_id: user.id,
         actor_id: auth.profile.id,
         kind: "system" as const,
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
       }
 
       // Geçmiş kaydı
-      await (auth.supabase as any).from("notification_schedules").insert({
+      await asUntyped(auth.supabase).from("notification_schedules").insert({
         created_by: auth.profile.id,
         title: payload.title,
         body: payload.body,
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     }
 
     // Zamanlanmış gönderim: kaydet
-    const { error: scheduleError } = await (auth.supabase as any).from("notification_schedules").insert({
+    const { error: scheduleError } = await asUntyped(auth.supabase).from("notification_schedules").insert({
       created_by: auth.profile.id,
       title: payload.title,
       body: payload.body,

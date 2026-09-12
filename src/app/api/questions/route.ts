@@ -5,6 +5,7 @@ import { RateLimitExceededError, respondWithDomainError } from "@/lib/domain/api
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { createQuestion, getMatchedQuestions } from "@/lib/domain/questions";
 import { checkRateLimitAsync } from "@/lib/server/rate-limit";
+import { asUntyped } from "@/lib/supabase/helpers";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
     if (snapMode === "1" || snapMode === "true") {
       const areaParam = searchParams.get("areaId");
       const areaId = areaParam ? Number(areaParam) : null;
-      const { data, error } = await (supabase as any).rpc("get_snap_questions", {
+      const { data, error } = await asUntyped(supabase).rpc("get_snap_questions", {
         p_area_id: areaId,
         p_limit: 30,
       });

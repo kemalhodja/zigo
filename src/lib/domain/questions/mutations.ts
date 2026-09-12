@@ -3,6 +3,7 @@ import type { z } from "zod";
 
 import { runModeratedFieldsAction, runModeratedSafeTextAction } from "@/lib/domain/moderation-policy";
 import type { Database } from "@/lib/supabase/database.types";
+import { asUntyped } from "@/lib/supabase/helpers";
 
 import { createAnswerSchema, createQuestionSchema } from "./schemas";
 
@@ -23,7 +24,7 @@ export async function createQuestion(
       ],
     },
     async ([title, description]) => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await asUntyped(supabase)
         .from("questions")
         .insert({
           author_id: parsed.authorId,
@@ -55,7 +56,7 @@ export async function createTeacherAnswer(
       text: parsed.content,
     },
     async (content) => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await asUntyped(supabase)
         .from("answers")
         .insert({
           question_id: parsed.questionId,
@@ -71,7 +72,7 @@ export async function createTeacherAnswer(
       if (error) throw error;
 
       // Automatically mark question as answered/resolved
-      await (supabase as any)
+      await asUntyped(supabase)
         .from("questions")
         .update({ is_resolved: true })
         .eq("id", parsed.questionId);

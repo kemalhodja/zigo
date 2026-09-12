@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Clock, ExternalLink, ShieldCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -10,12 +10,22 @@ import { AdminRoleRequests } from "@/components/admin-role-requests";
 import { AdminStudentDocumentActions } from "@/components/admin-student-document-actions";
 import { AdminUserActions } from "@/components/admin-user-actions";
 import type { AdminEditableUser } from "@/components/admin-user-edit-modal";
-import type { Database } from "@/lib/supabase/database.types";
-
-type User = Database["public"]["Tables"]["users"]["Row"];
+import type { AccountStatus } from "@/lib/supabase/database.types";
 
 type ApprovalHubProps = {
-  pendingUsers: User[];
+  pendingUsers: {
+    id: string;
+    full_name: string;
+    email: string;
+    role: string;
+    is_verified: boolean;
+    created_at: string;
+    school_name?: string | null;
+    grade_level?: string | null;
+    organization_type?: string | null;
+    avatar_url?: string | null;
+    account_status?: AccountStatus;
+  }[];
   studentDocuments: {
     id: string;
     full_name: string;
@@ -30,6 +40,7 @@ type ApprovalHubProps = {
     status: string;
     receipt_storage_path: string | null;
     created_at: string;
+    user_id?: string;
     user?: unknown;
   }[];
   onEditUser?: (user: AdminEditableUser) => void;
@@ -170,7 +181,7 @@ export function AdminApprovalHub({
                         </button>
                       )}
                       <AdminUserActions
-                        accountStatus={u.account_status}
+                        accountStatus={u.account_status ?? "active"}
                         isVerified={u.is_verified}
                         userId={u.id}
                         userName={u.full_name}

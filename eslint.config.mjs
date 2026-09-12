@@ -29,6 +29,7 @@ const eslintConfig = [
       "*.js",
       "e2e/load-test.js",
       "public/OneSignalSDKWorker.js",
+      "public/sw.js",
     ],
   },
   js.configs.recommended,

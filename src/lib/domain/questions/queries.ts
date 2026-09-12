@@ -1,11 +1,42 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
+import { asUntyped } from "@/lib/supabase/helpers";
+
+export type QuestionTeacher = {
+  full_name: string | null;
+  avatar_url: string | null;
+  is_verified: boolean;
+};
+
+export type QuestionAnswer = {
+  id: string;
+  teacher_id: string;
+  content: string;
+  video_url: string | null;
+  audio_url: string | null;
+  media_duration_sec: number | null;
+  created_at: string;
+  teacher: QuestionTeacher | null;
+};
+
+export type QuestionItem = {
+  id: string;
+  author_id: string;
+  area_id: number;
+  title: string;
+  description: string;
+  image_url: string | null;
+  is_resolved: boolean;
+  created_at: string;
+  author?: { full_name: string | null; avatar_url: string | null } | null;
+  answers?: QuestionAnswer[];
+};
 
 export async function getMatchedQuestions(
   supabase: SupabaseClient<Database>,
   userId: string,
-) {
+): Promise<QuestionItem[]> {
   const { data: interests, error: interestsError } = await supabase
     .from("user_interests")
     .select("area_id")
@@ -19,7 +50,7 @@ export async function getMatchedQuestions(
     return [];
   }
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await asUntyped(supabase)
     .from("questions")
     .select(`
       *,
@@ -39,5 +70,5 @@ export async function getMatchedQuestions(
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data;
+  return (data ?? []) as QuestionItem[];
 }

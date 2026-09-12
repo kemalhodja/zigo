@@ -1,7 +1,8 @@
 "use client";
 
+import { Send,Star, X } from "lucide-react";
 import { useState } from "react";
-import { Star, MessageSquare, ThumbsUp, X, Send } from "lucide-react";
+
 import { SocialAvatar } from "@/components/social-primitives";
 import type { TeacherReviewItem, TeacherReviewSummary } from "@/lib/domain/teacher-reviews";
 
@@ -20,7 +21,7 @@ export function TeacherReviewsSection({
   initialReviews,
   canReview,
 }: TeacherReviewsSectionProps) {
-  const [reviews, setReviews] = useState<TeacherReviewItem[]>(initialReviews);
+  const [reviews] = useState<TeacherReviewItem[]>(initialReviews);
   const [showModal, setShowModal] = useState(false);
   const [clarity, setClarity] = useState(5);
   const [comm, setComm] = useState(5);

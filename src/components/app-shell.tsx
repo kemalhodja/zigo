@@ -14,6 +14,7 @@ import { RegistrationCampaignAnnouncement } from "@/components/registration-camp
 import { RoleNextActionBar } from "@/components/role-next-action-bar";
 import { ScrollToTopOnLogoTap } from "@/components/scroll-to-top-on-logo-tap";
 import { useStreakTracker } from "@/hooks/use-streak-tracker";
+import { clearAppBadgeCount, setAppBadgeCount } from "@/lib/client/app-badge";
 import {
   getHeaderPrimaryAction,
   isParentSupervisionRole,
@@ -22,7 +23,6 @@ import {
 } from "@/lib/domain/role-navigation";
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
-import { clearAppBadgeCount, setAppBadgeCount } from "@/lib/client/app-badge";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;

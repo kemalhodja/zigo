@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requirePlatformAdmin } from "@/lib/domain/admin-auth";
+import { asUntyped } from "@/lib/supabase/helpers";
 
 const bulkActionSchema = z.object({
   action: z.enum(["bulk_approve", "bulk_hide", "bulk_delete", "bulk_escalate"]),
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "50"), 200);
 
-    const { data, error } = await (auth.supabase as any)
+    const { data, error } = await asUntyped(auth.supabase)
       .from("social_posts")
       .select(`
         id,
@@ -52,7 +53,8 @@ export async function GET(request: Request) {
     }
 
     // Şikayet sayılarını getir
-    const postIds = (data ?? []).map((p: any) => p.id);
+    const rows = (data ?? []) as Record<string, unknown>[];
+    const postIds = rows.map((p) => p.id as string);
     const { data: reports } = postIds.length > 0
       ? await auth.supabase
           .from("content_reports")
@@ -66,22 +68,22 @@ export async function GET(request: Request) {
       if (r.post_id) reportCounts[r.post_id] = (reportCounts[r.post_id] ?? 0) + 1;
     }
 
-    const items = (data ?? []).map((post: any) => {
+    const items = rows.map((post) => {
       const user = Array.isArray(post.users) ? post.users[0] : post.users;
       return {
-        id: post.id,
-        type: (post.post_type as "post" | "story" | "reel") ?? "post",
-        authorId: post.author_id,
+        id: post.id as string,
+        type: ((post.post_type as string) ?? "post") as "post" | "story" | "reel",
+        authorId: post.author_id as string,
         authorName: (user as { full_name?: string })?.full_name ?? "—",
         authorRole: (user as { role?: string })?.role ?? "—",
-        content: post.content ?? "",
-        mediaUrl: post.media_url ?? null,
-        aiFlagged: post.ai_flagged ?? false,
-        aiFlagReason: post.ai_flag_reason ?? null,
-        moderationPriority: (post.moderation_priority as "low" | "normal" | "high" | "critical") ?? "normal",
-        reportCount: reportCounts[post.id] ?? 0,
-        isVisible: post.is_visible ?? true,
-        createdAt: post.created_at,
+        content: (post.content as string) ?? "",
+        mediaUrl: (post.media_url as string | null) ?? null,
+        aiFlagged: (post.ai_flagged as boolean) ?? false,
+        aiFlagReason: (post.ai_flag_reason as string | null) ?? null,
+        moderationPriority: ((post.moderation_priority as string) ?? "normal") as "low" | "normal" | "high" | "critical",
+        reportCount: reportCounts[post.id as string] ?? 0,
+        isVisible: (post.is_visible as boolean) ?? true,
+        createdAt: post.created_at as string,
       };
     });
 
@@ -112,7 +114,7 @@ export async function PATCH(request: Request) {
       }
 
       if (Object.keys(updates).length > 0) {
-        await (auth.supabase as any)
+        await asUntyped(auth.supabase)
           .from("social_posts")
           .update(updates)
           .eq("id", payload.contentId);
@@ -120,7 +122,7 @@ export async function PATCH(request: Request) {
     }
 
     // Karar logu
-    await (auth.supabase as any).from("moderation_decisions").insert({
+    await asUntyped(auth.supabase).from("moderation_decisions").insert({
       moderator_id: auth.profile.id,
       content_type: payload.contentType,
       content_id: payload.contentId,
@@ -165,7 +167,7 @@ export async function POST(request: Request) {
       }
 
       if (Object.keys(updates).length > 0) {
-        await (auth.supabase as any)
+        await asUntyped(auth.supabase)
           .from("social_posts")
           .update(updates)
           .in("id", payload.contentIds);
@@ -182,10 +184,10 @@ export async function POST(request: Request) {
       is_escalated: decision === "escalated",
     }));
 
-    await (auth.supabase as any).from("moderation_decisions").insert(decisions);
+    await asUntyped(auth.supabase).from("moderation_decisions").insert(decisions);
 
     // Toplu işlem logu
-    await (auth.supabase as any).from("moderation_bulk_actions").insert({
+    await asUntyped(auth.supabase).from("moderation_bulk_actions").insert({
       moderator_id: auth.profile.id,
       action: payload.action,
       content_type: payload.contentType,

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+
+import { useAudio } from "@/hooks/use-audio";
 import { triggerConfetti } from "@/lib/client/confetti";
 import { triggerHaptic } from "@/lib/client/haptics";
-import { useAudio } from "@/hooks/use-audio";
 
 export interface CelebrationModalProps {
   isOpen: boolean;

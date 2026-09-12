@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+
 import type { Database } from "@/lib/supabase/database.types";
+import { asUntyped } from "@/lib/supabase/helpers";
 
 export type TeacherReviewSummary = {
   total_reviews: number;
@@ -38,7 +40,7 @@ export async function getTeacherReviewSummary(
   teacherId: string,
 ): Promise<TeacherReviewSummary> {
   try {
-    const { data, error } = await (supabase.rpc as any)(
+    const { data, error } = await asUntyped(supabase).rpc(
       "get_teacher_review_summary",
       { target_teacher_id: teacherId },
     );
@@ -73,7 +75,7 @@ export async function getTeacherReviews(
   limit = 10,
 ): Promise<TeacherReviewItem[]> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await asUntyped(supabase)
       .from("teacher_reviews")
       .select(`
         id,
@@ -96,7 +98,19 @@ export async function getTeacherReviews(
 
     if (error || !data) return [];
 
-    return data.map((row: any) => ({
+    type ReviewRow = {
+      id: string;
+      parent_id: string;
+      parent?: { full_name?: string | null; avatar_url?: string | null } | null;
+      rating_clarity: number;
+      rating_communication: number;
+      rating_pedagogy: number;
+      overall_rating: number | string;
+      comment: string;
+      created_at: string;
+    };
+
+    return ((data ?? []) as ReviewRow[]).map((row) => ({
       id: row.id,
       parent_id: row.parent_id,
       parent_name: row.parent?.full_name || "Veli",
@@ -124,7 +138,7 @@ export async function submitTeacherReview(
 
   if (!user) throw new Error("Oturum açmanız gerekmektedir.");
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await asUntyped(supabase)
     .from("teacher_reviews")
     .upsert({
       teacher_id: parsed.teacherId,

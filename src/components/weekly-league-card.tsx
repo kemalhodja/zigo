@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
 import {
+  getCountdownToWeeklyReset,
   WEEKLY_LEAGUE_TIERS,
   type WeeklyLeagueParticipant,
   type WeeklyLeagueTier,
-  getCountdownToWeeklyReset,
 } from "@/lib/domain/weekly-leagues";
 
 interface WeeklyLeagueResponse {

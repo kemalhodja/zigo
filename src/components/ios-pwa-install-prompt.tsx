@@ -1,7 +1,7 @@
 "use client";
 
+import { PlusSquare, Share, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Share, PlusSquare, X } from "lucide-react";
 
 export function IosPwaInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
@@ -10,8 +10,10 @@ export function IosPwaInstallPrompt() {
     // Only show on iOS Safari and when not already running in standalone PWA mode
     if (typeof window === "undefined") return;
 
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isStandalone = (window.navigator as any).standalone || window.matchMedia("(display-mode: standalone)").matches;
+    const win = window as unknown as { MSStream?: unknown };
+    const nav = window.navigator as unknown as { standalone?: boolean };
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !win.MSStream;
+    const isStandalone = Boolean(nav.standalone) || window.matchMedia("(display-mode: standalone)").matches;
     const hasDismissed = localStorage.getItem("zigo_ios_prompt_dismissed");
 
     if (isIos && !isStandalone && !hasDismissed) {

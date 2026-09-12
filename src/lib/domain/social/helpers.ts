@@ -1,8 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getCachedProfileById } from "@/lib/domain/profiles.server";
 import type { SocialFeedPost, SuggestedCreator } from "@/lib/domain/social/types";
 import { isSponsoredAdActive, isSponsoredAdConfigured } from "@/lib/domain/sponsored-ads";
-import { getCachedProfileById } from "@/lib/domain/profiles.server";
 import type {
   Database,
   EducationAreaRow,
@@ -353,7 +353,7 @@ export function rankSocialPosts(posts: SocialFeedPost[]) {
   let hasMore = true;
   while (hasMore) {
     hasMore = false;
-    for (const [key, list] of adAuthorMap.entries()) {
+    for (const [_key, list] of adAuthorMap.entries()) {
       if (list.length > 0) {
         uniqueAds.push(list.shift()!);
         hasMore = true;

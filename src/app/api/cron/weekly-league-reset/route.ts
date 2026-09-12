@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { asUntyped } from "@/lib/supabase/helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -25,13 +26,13 @@ export async function POST(request: Request) {
     }
 
     // 1. Sync points for the week
-    const { error: syncError } = await (admin as any).rpc("sync_weekly_league_points");
+    const { error: syncError } = await asUntyped(admin).rpc("sync_weekly_league_points");
     if (syncError) {
       console.error("[CRON] sync_weekly_league_points error:", syncError);
     }
 
     // 2. Process promotions & relegations
-    const { error: promoError } = await (admin as any).rpc("process_weekly_promotions_relegations");
+    const { error: promoError } = await asUntyped(admin).rpc("process_weekly_promotions_relegations");
     if (promoError) {
       console.error("[CRON] process_weekly_promotions_relegations error:", promoError);
       return NextResponse.json({ error: promoError.message }, { status: 500 });

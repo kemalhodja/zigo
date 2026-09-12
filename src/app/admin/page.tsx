@@ -25,10 +25,8 @@ import { AdminBroadcastButton } from '@/components/admin-broadcast-button';
 import { AdminFeedbackQueue } from '@/components/admin-feedback-queue';
 import { AdminLivePulse } from '@/components/admin-live-pulse';
 import { AdminRedemptionStatus } from '@/components/admin-redemption-status';
-import { AdminRoleRequests } from '@/components/admin-role-requests';
 import { AdminStockForm } from '@/components/admin-stock-form';
 import { AdminStripeCampaignPanel } from '@/components/admin-stripe-campaign-panel';
-import { AdminStudentDocumentActions } from '@/components/admin-student-document-actions';
 import { AdminUserDirectory } from '@/components/admin-user-directory';
 import { StateCard } from '@/components/state-card';
 import { hasSupabaseEnv } from '@/lib/config';
@@ -83,6 +81,7 @@ import { getRevenueOpsSnapshot } from '@/lib/domain/revenue-ops';
 import { getTeacherActivationFunnel } from '@/lib/domain/verification-activation';
 import { getServerMessages } from '@/lib/i18n/server';
 import { createAdminClient, hasServiceRoleEnv } from '@/lib/supabase/admin';
+import { asUntyped } from '@/lib/supabase/helpers';
 import { createClient } from '@/lib/supabase/server';
 
 type AdminPageProps = {
@@ -220,9 +219,9 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     getDailyLimitAlerts(supabase, 80).catch(() => []),
     getXpFarmSuspects(supabase).catch(() => []),
     getGameTypeStats(metricsClient, 7).catch(() => []),
-    (supabase as any).from('notification_schedules').select('id,title,body,target_role,status,sent_count,created_at,sent_at').order('created_at', { ascending: false }).limit(20).then((r: any) => r.data ?? []).catch(() => []),
-    (supabase as any).from('notification_templates').select('key,label,title,body,emoji').order('sort_order').then((r: any) => r.data ?? []).catch(() => []),
-    (supabase as any).from('social_posts').select('id,post_type,author_id,content,media_url,ai_flagged,ai_flag_reason,moderation_priority,is_visible,created_at,users!inner(full_name,role)').or('ai_flagged.eq.true,moderation_priority.in.(high,critical)').order('moderation_priority').order('created_at', { ascending: false }).limit(50).then((r: any) => (r.data ?? []).map((p: Record<string, unknown>) => { const u = Array.isArray(p.users) ? p.users[0] : p.users; return { id: p.id as string, type: ((p.post_type as string) ?? 'post') as 'post' | 'story' | 'reel', authorId: p.author_id as string, authorName: (u as { full_name?: string })?.full_name ?? '—', authorRole: (u as { role?: string })?.role ?? '—', content: (p.content as string) ?? '', mediaUrl: (p.media_url as string | null) ?? null, aiFlagged: (p.ai_flagged as boolean) ?? false, aiFlagReason: (p.ai_flag_reason as string | null) ?? null, moderationPriority: ((p.moderation_priority as string) ?? 'normal') as 'low' | 'normal' | 'high' | 'critical', reportCount: 0, isVisible: (p.is_visible as boolean) ?? true, createdAt: p.created_at as string }; })).catch(() => []),
+    asUntyped(supabase).from('notification_schedules').select('id,title,body,target_role,status,sent_count,created_at,sent_at').order('created_at', { ascending: false }).limit(20).then((r: { data: unknown[] | null }) => r.data ?? []).catch(() => []),
+    asUntyped(supabase).from('notification_templates').select('key,label,title,body,emoji').order('sort_order').then((r: { data: unknown[] | null }) => r.data ?? []).catch(() => []),
+    asUntyped(supabase).from('social_posts').select('id,post_type,author_id,content,media_url,ai_flagged,ai_flag_reason,moderation_priority,is_visible,created_at,users!inner(full_name,role)').or('ai_flagged.eq.true,moderation_priority.in.(high,critical)').order('moderation_priority').order('created_at', { ascending: false }).limit(50).then((r: { data: unknown[] | null }) => ((r.data ?? []) as Record<string, unknown>[]).map((p) => { const u = Array.isArray(p.users) ? p.users[0] : p.users; return { id: p.id as string, type: ((p.post_type as string) ?? 'post') as 'post' | 'story' | 'reel', authorId: p.author_id as string, authorName: (u as { full_name?: string })?.full_name ?? '—', authorRole: (u as { role?: string })?.role ?? '—', content: (p.content as string) ?? '', mediaUrl: (p.media_url as string | null) ?? null, aiFlagged: (p.ai_flagged as boolean) ?? false, aiFlagReason: (p.ai_flag_reason as string | null) ?? null, moderationPriority: ((p.moderation_priority as string) ?? 'normal') as 'low' | 'normal' | 'high' | 'critical', reportCount: 0, isVisible: (p.is_visible as boolean) ?? true, createdAt: p.created_at as string }; })).catch(() => []),
   ]);
 
   const pendingUsers = users.filter(u => !u.is_verified);
@@ -471,8 +470,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       {currentTab === 'approvals' && (
         <AdminApprovalHub
-          bankTransfers={bankTransfers as any}
-          pendingUsers={pendingUsers as any}
+          bankTransfers={bankTransfers}
+          pendingUsers={pendingUsers}
           studentDocuments={studentDocuments}
         />
       )}

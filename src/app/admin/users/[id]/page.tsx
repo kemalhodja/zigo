@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
 import { AdminUser360View } from "@/components/admin-user-360-view";
 import { StateCard } from "@/components/state-card";

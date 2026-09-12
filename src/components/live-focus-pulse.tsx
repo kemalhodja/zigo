@@ -1,7 +1,7 @@
 "use client";
 
+import { Flame } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Users, Flame } from "lucide-react";
 
 export function LiveFocusPulse() {
   const [activeCount, setActiveCount] = useState<number>(1420);

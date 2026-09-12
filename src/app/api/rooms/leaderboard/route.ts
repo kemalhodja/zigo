@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { respondWithDomainError } from "@/lib/domain/api-errors";
-import { getCurrentProfile } from "@/lib/domain/profiles";
-import { createClient } from "@/lib/supabase/server";
 import { type RoomCompetitor } from "@/lib/domain/focus-rooms";
+import { getCurrentProfile } from "@/lib/domain/profiles";
+import { asUntyped } from "@/lib/supabase/helpers";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Oda kodu gerekli." }, { status: 400 });
     }
 
-    const { data, error } = await (supabase as any).rpc("get_room_leaderboard", {
+    const { data, error } = await asUntyped(supabase).rpc("get_room_leaderboard", {
       p_slug: slug,
       p_limit: 10,
     });
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Geçersiz parametreler." }, { status: 400 });
     }
 
-    const { data, error } = await (supabase as any).rpc("complete_focus_block", {
+    const { data, error } = await asUntyped(supabase).rpc("complete_focus_block", {
       p_user_id: profile.id,
       p_room_slug: slug,
       p_block_index: blockIndex,

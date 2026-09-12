@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createTeacherReviewSchema, submitTeacherReview, getTeacherReviewSummary, getTeacherReviews } from "@/lib/domain/teacher-reviews";
+import { type NextRequest, NextResponse } from "next/server";
+
+import { createTeacherReviewSchema, getTeacherReviews,getTeacherReviewSummary, submitTeacherReview } from "@/lib/domain/teacher-reviews";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {

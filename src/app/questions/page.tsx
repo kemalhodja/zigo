@@ -57,7 +57,7 @@ export default async function QuestionsPage() {
       </section>
 
       {profile.role === "teacher" ? (
-        <AnswerForm questions={(questions as any[]).filter((question: any) => !question.is_resolved)} />
+        <AnswerForm questions={questions.filter((question) => !question.is_resolved)} />
       ) : (
         <QuestionForm areas={matchedAreas} />
       )}
@@ -70,7 +70,7 @@ export default async function QuestionsPage() {
             action={<Link className="font-black text-crystal" href="/onboarding">{m.common.updateAreas}</Link>}
           />
         ) : (
-          questions.map((question: any) => (
+          questions.map((question) => (
             <article className="-mx-4 border-b border-slate-100 bg-white px-4 py-4 space-y-3" key={question.id}>
               <div className="flex gap-3">
                 <SocialAvatar className="size-10 shrink-0" label={question.title} ring={false} />
@@ -94,7 +94,11 @@ export default async function QuestionsPage() {
                       src={question.image_url}
                       alt={question.title}
                       className="max-h-72 w-full object-contain cursor-pointer transition hover:scale-102"
-                      onClick={() => window.open(question.image_url, "_blank")}
+                      onClick={() => {
+                        if (question.image_url) {
+                          window.open(question.image_url, "_blank");
+                        }
+                      }}
                     />
                   </div>
                 </div>
@@ -106,7 +110,7 @@ export default async function QuestionsPage() {
                   <p className="text-xs font-black uppercase tracking-wider text-emerald-600 flex items-center gap-1">
                     <span>🎓</span> Öğretmen Çözümleri ({question.answers.length})
                   </p>
-                  {question.answers.map((answer: any) => (
+                  {question.answers.map((answer) => (
                     <div key={answer.id} className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

@@ -81,7 +81,6 @@ async function withOptionalBundleAnalyzer(config: NextConfig): Promise<NextConfi
 
   try {
     const pkg = "@next/bundle-analyzer";
-    // @ts-ignore - optional package
     const { default: bundleAnalyzer } = await import(pkg);
     return bundleAnalyzer({ enabled: true })(config);
   } catch {

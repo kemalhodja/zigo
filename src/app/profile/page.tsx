@@ -36,7 +36,7 @@ import {
   type ProfileSocialStats,
   type SuggestedCreator,
 } from "@/lib/domain/social";
-import { getTeacherReviews, getTeacherReviewSummary } from "@/lib/domain/teacher-reviews";
+import { getTeacherReviews, getTeacherReviewSummary, type TeacherReviewItem } from "@/lib/domain/teacher-reviews";
 import { LocaleSwitcher } from "@/lib/i18n/locale-switcher";
 import { getServerMessages, type Messages } from "@/lib/i18n/server";
 import type { SocialPostRow } from "@/lib/supabase/database.types";
@@ -74,7 +74,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   let parentChildProfiles: { id: string; name: string }[] = [];
   let teacherMatchedPosts: Awaited<ReturnType<typeof getMatchedLessonPostsForTeacher>> = [];
   let teacherReviewSummary = { total_reviews: 0, avg_rating: 5, avg_clarity: 5, avg_communication: 5, avg_pedagogy: 5, recommendation_rate: 100 };
-  let teacherReviewsList: any[] = [];
+  let teacherReviewsList: TeacherReviewItem[] = [];
 
   if (hasSupabaseEnv() && !profile.isSignedOut) {
     const supabase = await createClient();
