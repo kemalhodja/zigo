@@ -376,7 +376,7 @@ export const messagesTr = {
       orgOpenStudio: "Stüdyo",
       orgOpenCreate: "İçerik oluştur",
       orgOpenQuestions: "Sorular",
-      orgOpenAdvertise: "Profil / öne çıkar",
+      orgOpenAdvertise: "Profil / Reklam Ver",
     },
     focus: {
       signInTitle: "Odak oturumu başlatmak için giriş yap",

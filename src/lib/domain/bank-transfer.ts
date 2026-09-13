@@ -6,6 +6,8 @@ import {
   findPlanGroup,
   resolveSubscriptionPeriodEnd,
 } from "@/lib/domain/subscription-plans";
+import { activateSponsorBoost } from "@/lib/domain/sponsor-activation";
+import type { SponsorPackageDuration } from "@/lib/domain/sponsored-pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   BankTransferRequestStatus,
@@ -76,6 +78,34 @@ export function getBankTransferConfig(): BankTransferConfig | null {
 }
 
 export function resolveBankTransferPlan(planId: string, userCreatedAt?: string | Date | null) {
+  if (planId.startsWith("sponsor-") || planId.includes("sponsor")) {
+    const days = planId.includes("30") ? 30 : 7;
+    const isPlatform = planId.includes("platform");
+    const isInstitution = planId.includes("institution");
+    const priceTry = isPlatform
+      ? (days === 30 ? 8000 : 2500)
+      : isInstitution
+        ? (days === 30 ? 10000 : 3000)
+        : (days === 30 ? 3000 : 1000);
+    const label = `${days} Günlük Sponsorlu Reklam Paketi`;
+
+    return {
+      group: {
+        id: "sponsor",
+        title: "Sponsorlu Reklam Paketi",
+        description: `${days} günlük afiş ve video sponsorlu reklam gösterimi.`,
+      },
+      plan: {
+        id: planId,
+        title: label,
+        intervalLabel: `${days} Günlük`,
+        priceTry,
+        compareAtTry: priceTry,
+        interval: days === 30 ? "monthly" : "weekly",
+      },
+    };
+  }
+
   const group = findPlanGroup(planId, userCreatedAt);
   const plan = findPlanById(planId, userCreatedAt);
   if (!group || !plan) {
@@ -134,36 +164,53 @@ export async function reviewBankTransferRequest(
 
   if (error) throw error;
 
-  // Havale onaylandıysa users.is_premium ve user_subscriptions'ı doğrudan senkronize et
+  // Havale onaylandıysa senkronize et (Abonelik veya Sponsorlu Reklam)
   if (parsed.status === "approved" && reqData.user_id) {
     const db = createAdminClient() ?? supabase;
     const now = new Date();
     const periodEndIso = periodEnd ? new Date(periodEnd).toISOString() : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    try {
-      await (db.from("users") as unknown as {
-        update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
-      })
-        .update({ is_premium: true, ad_free_until: periodEndIso })
-        .eq("id", reqData.user_id);
-    } catch (err) {
-      console.warn("reviewBankTransferRequest users update notice:", err);
-    }
+    if (reqData.plan_id.startsWith("sponsor-") || reqData.plan_id.includes("sponsor")) {
+      const days: SponsorPackageDuration = reqData.plan_id.includes("30") ? 30 : 7;
+      try {
+        const { data: userProfile } = await db.from("users").select("id, full_name").eq("id", reqData.user_id).single();
+        if (userProfile) {
+          await activateSponsorBoost(db, {
+            userId: userProfile.id,
+            fullName: userProfile.full_name || "Sponsor",
+            packageDays: days,
+            priceTry: reqData.amount_try,
+          });
+        }
+      } catch (err) {
+        console.warn("reviewBankTransferRequest sponsor boost notice:", err);
+      }
+    } else {
+      try {
+        await (db.from("users") as unknown as {
+          update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
+        })
+          .update({ is_premium: true, ad_free_until: periodEndIso })
+          .eq("id", reqData.user_id);
+      } catch (err) {
+        console.warn("reviewBankTransferRequest users update notice:", err);
+      }
 
-    try {
-      await (db.from("user_subscriptions") as unknown as {
-        upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
-      }).upsert(
-        {
-          user_id: reqData.user_id,
-          tier: "zigo_plus",
-          current_period_end: periodEndIso,
-          updated_at: now.toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
-    } catch (err) {
-      console.warn("reviewBankTransferRequest user_subscriptions notice:", err);
+      try {
+        await (db.from("user_subscriptions") as unknown as {
+          upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+        }).upsert(
+          {
+            user_id: reqData.user_id,
+            tier: "zigo_plus",
+            current_period_end: periodEndIso,
+            updated_at: now.toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+      } catch (err) {
+        console.warn("reviewBankTransferRequest user_subscriptions notice:", err);
+      }
     }
   }
 

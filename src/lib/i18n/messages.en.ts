@@ -377,7 +377,7 @@ nav: {
       orgOpenStudio: "Studio",
       orgOpenCreate: "Create content",
       orgOpenQuestions: "Questions",
-      orgOpenAdvertise: "Profile / boost",
+      orgOpenAdvertise: "Profile / Advertise",
     },
     focus: {
       signInTitle: "Sign in to start focus sessions",

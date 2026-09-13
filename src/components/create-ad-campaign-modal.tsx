@@ -41,6 +41,9 @@ export function CreateAdCampaignModal({
   const [isOpen, setIsOpen] = useState(false);
   const [method, setMethod] = useState<"existing" | "new">(existingPostId ? "existing" : "new");
 
+  // Mobile navigation tab between form editing and live preview
+  const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
+
   // Multi-select Target Audience: "student", "parent"
   const [selectedAudiences, setSelectedAudiences] = useState<("student" | "parent")[]>(["student", "parent"]);
   const [targetAll, setTargetAll] = useState(true);
@@ -67,6 +70,8 @@ export function CreateAdCampaignModal({
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+  const [selectedFileIsVideo, setSelectedFileIsVideo] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(existingPostId || null);
 
@@ -80,6 +85,15 @@ export function CreateAdCampaignModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Revoke object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (localPreviewUrl && localPreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+    };
+  }, [localPreviewUrl]);
 
   // Fetch profile phone if available
   useEffect(() => {
@@ -163,6 +177,18 @@ export function CreateAdCampaignModal({
     else setIsUploading(true);
     setError(null);
 
+    // Instant local preview for instant visual feedback (0ms)
+    if (!isAudio) {
+      const isVid = file.type.startsWith("video/");
+      setSelectedFileIsVideo(isVid);
+      try {
+        const localBlob = URL.createObjectURL(file);
+        setLocalPreviewUrl(localBlob);
+      } catch {
+        // ignore
+      }
+    }
+
     let fileToUpload = file;
     // Compress only non-audio images (skip videos & audio)
     if (!isAudio && file.type.startsWith("image/")) {
@@ -173,14 +199,12 @@ export function CreateAdCampaignModal({
     formData.append("file", fileToUpload);
 
     try {
-      // Use /api/social/upload so videos are accepted and stored in social-media bucket
-      const uploadEndpoint = isAudio ? "/api/social/upload" : "/api/social/upload";
+      const uploadEndpoint = "/api/social/upload";
       const res = await fetch(uploadEndpoint, {
         method: "POST",
         body: formData,
       });
       const data = await res.json().catch(() => ({}));
-      // /api/social/upload returns { data: { mediaUrl, mediaType, objectPath } }
       if (!res.ok || !data.data?.mediaUrl) {
         throw new Error(data.error || "Dosya yüklenemedi");
       }
@@ -197,12 +221,17 @@ export function CreateAdCampaignModal({
     }
   }
 
-  // Detect video: check extension, mime hint in URL, or proxy path containing a video extension
-  const isVideoMedia = mediaUrl
-    ? /\.(mp4|webm|mov|ogg)$/i.test(mediaUrl) ||
-      mediaUrl.includes("video") ||
-      /path=.*%2F[^&]*\.(mp4|webm|mov|ogg)/i.test(mediaUrl)
-    : false;
+  // Active media URL for preview (prefers instant local blob URL then uploaded URL)
+  const activePreviewMediaUrl = localPreviewUrl || mediaUrl;
+
+  // Detect video: check file selection type, extension, or mime hint in URL
+  const isVideoMedia = selectedFileIsVideo || Boolean(
+    activePreviewMediaUrl && (
+      /\.(mp4|webm|mov|ogg)$/i.test(activePreviewMediaUrl) ||
+      activePreviewMediaUrl.includes("video") ||
+      /path=.*%2F[^&]*\.(mp4|webm|mov|ogg)/i.test(activePreviewMediaUrl)
+    )
+  );
 
   // Resolve Target URL & CTA Label based on channel choice
   function getResolvedTargetUrl() {
@@ -330,6 +359,28 @@ export function CreateAdCampaignModal({
               </button>
             </div>
 
+            {/* Mobile Tab Switcher (Visible on < lg screens) */}
+            <div className="mt-3 flex rounded-xl bg-slate-800 p-1 lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileTab("edit")}
+                className={`flex-1 rounded-lg py-2 text-xs font-black transition ${
+                  mobileTab === "edit" ? "bg-amber-400 text-slate-950 shadow-xs" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                📝 Reklam Formu
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileTab("preview")}
+                className={`flex-1 rounded-lg py-2 text-xs font-black transition ${
+                  mobileTab === "preview" ? "bg-amber-400 text-slate-950 shadow-xs" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                👁️ Canlı Önizleme {activePreviewMediaUrl ? "✓" : ""}
+              </button>
+            </div>
+
             {success ? (
               <div className="my-8 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 p-6 text-center">
                 <span className="text-4xl">🎉</span>
@@ -341,7 +392,10 @@ export function CreateAdCampaignModal({
             ) : (
               <div className="mt-4 grid gap-4 lg:grid-cols-12 lg:gap-6">
                 {/* Form Inputs (Left Column - 7 Cols) */}
-                <form onSubmit={handleSubmit} className="space-y-4 lg:col-span-7">
+                <form
+                  onSubmit={handleSubmit}
+                  className={`space-y-4 lg:col-span-7 ${mobileTab === "preview" ? "hidden lg:block" : "block"}`}
+                >
                   {/* Method Selection */}
                   <div className="flex rounded-xl bg-slate-800 p-1">
                     <button
@@ -379,8 +433,15 @@ export function CreateAdCampaignModal({
                               type="button"
                               onClick={() => {
                                 setSelectedPostId(post.id);
-                                if (post.caption) setTitle(post.caption.substring(0, 40));
-                                if (post.media_url) setMediaUrl(post.media_url);
+                                if (post.caption) {
+                                  setTitle(post.caption.substring(0, 40));
+                                  setCaption(post.caption);
+                                }
+                                if (post.media_url) {
+                                  setMediaUrl(post.media_url);
+                                  setLocalPreviewUrl(null);
+                                  setSelectedFileIsVideo(/\.(mp4|webm|mov|ogg)$/i.test(post.media_url));
+                                }
                               }}
                               className={`flex w-full items-center gap-3 rounded-lg p-2 text-left transition ${
                                 selectedPostId === post.id ? "bg-amber-500/20 border border-amber-400" : "hover:bg-slate-700/50"
@@ -421,7 +482,7 @@ export function CreateAdCampaignModal({
                       rows={2}
                       value={caption}
                       onChange={(e) => setCaption(e.target.value)}
-                      placeholder="Reklam detaylarını ve sunduğunuz fırsatları yazın..."
+                      placeholder="Örn: Birebir dersler, haftalık deneme takibi ve derece garantili çalışma programı."
                       className="mt-1 w-full rounded-xl bg-slate-800 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
                     />
                   </div>
@@ -452,7 +513,7 @@ export function CreateAdCampaignModal({
                           ctaChannel === "dm" ? "bg-violet-600 text-white shadow-xs" : "bg-slate-800 text-slate-400 hover:text-white"
                         }`}
                       >
-                        💬 Zigo DM (Direkt Mesaj)
+                        💬 Zigo DM
                       </button>
                       <button
                         type="button"
@@ -510,7 +571,7 @@ export function CreateAdCampaignModal({
 
                   {/* Ready CTA Phrases */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300">Buton Üzerindeki Yazı (Hazır Alternatif Cümleler)</label>
+                    <label className="block text-xs font-bold text-slate-300">Buton Üzerindeki Yazı</label>
                     <select
                       value={ctaText}
                       onChange={(e) => setCtaText(e.target.value)}
@@ -529,34 +590,74 @@ export function CreateAdCampaignModal({
 
                   {/* Media Upload & Audio Option */}
                   {method === "new" ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-300">Görsel veya Video Afiş</label>
-                        <input
-                          type="file"
-                          accept="image/*,video/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload(file, false);
-                          }}
-                          className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-400 file:px-3 file:py-1.5 file:text-xs file:font-black file:text-slate-950 hover:file:bg-amber-300"
-                        />
-                        {isUploading ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Medya yükleniyor...</p> : null}
+                    <div className="space-y-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300">Görsel veya Video Afiş</label>
+                          <input
+                            type="file"
+                            accept="image/*,video/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload(file, false);
+                            }}
+                            className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-400 file:px-3 file:py-1.5 file:text-xs file:font-black file:text-slate-950 hover:file:bg-amber-300 cursor-pointer"
+                          />
+                          {isUploading ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Medya yükleniyor...</p> : null}
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-300">İsteğe Bağlı Arka Plan Sesi (Audio)</label>
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload(file, true);
+                            }}
+                            className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-slate-600 cursor-pointer"
+                          />
+                          {isUploadingAudio ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Ses yükleniyor...</p> : null}
+                        </div>
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-bold text-slate-300">İsteğe Bağlı Arka Plan Sesi (Audio)</label>
-                        <input
-                          type="file"
-                          accept="audio/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload(file, true);
-                          }}
-                          className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-slate-600"
-                        />
-                        {isUploadingAudio ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Ses yükleniyor...</p> : null}
-                      </div>
+                      {/* Inline Media Preview inside the form itself */}
+                      {activePreviewMediaUrl ? (
+                        <div className="relative rounded-2xl border border-amber-400/50 bg-slate-950 p-2 overflow-hidden shadow-inner">
+                          <div className="flex items-center justify-between mb-1.5 px-1">
+                            <span className="text-[0.68rem] font-black uppercase tracking-wider text-amber-300">
+                              {isVideoMedia ? "🎬 Yüklenen Video Önizlemesi" : "🖼️ Yüklenen Görsel Önizlemesi"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMediaUrl(null);
+                                setLocalPreviewUrl(null);
+                              }}
+                              className="text-[0.65rem] font-bold text-rose-400 hover:text-rose-300 hover:underline"
+                            >
+                              ✕ Kaldır / Değiştir
+                            </button>
+                          </div>
+                          <div className="max-h-48 overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center">
+                            {isVideoMedia ? (
+                              <video
+                                src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
+                                controls
+                                playsInline
+                                className="max-h-48 w-full object-contain"
+                              />
+                            ) : (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
+                                alt="Afiş Önizleme"
+                                className="max-h-48 w-full object-contain"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
 
@@ -593,60 +694,48 @@ export function CreateAdCampaignModal({
                             : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                         }`}
                       >
-                        👨‍👩‍👧 Veliler
+                        👨‍👩‍👦 Veliler
                       </button>
                     </div>
                   </div>
 
-                  {/* Multi-Select City & Location */}
+                  {/* City Selection */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300">Lokasyon / İl Seçimi (Birden Fazla İl Seçilebilir)</label>
-                    <div className="mt-1.5 flex flex-wrap gap-1.5 max-h-32 overflow-y-auto rounded-xl bg-slate-800/60 p-2 border border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-300">Konum / Şehir Hedefleme</label>
                       <button
                         type="button"
                         onClick={toggleAllCities}
-                        className={`rounded-lg px-2.5 py-1 text-[0.7rem] font-bold transition ${
-                          isAllCities ? "bg-amber-400 text-slate-950 font-black" : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                        }`}
+                        className={`text-[0.68rem] font-bold ${isAllCities ? "text-amber-400 underline font-black" : "text-slate-400 hover:text-white"}`}
                       >
-                        🇹🇷 Tüm Türkiye
+                        {isAllCities ? "✓ Tüm Türkiye Seçili" : "Tüm Türkiye'yi Hedefle"}
                       </button>
-                      {TURKEY_CITIES.map((city) => {
-                        const isSelected = !isAllCities && selectedCities.includes(city);
-                        return (
-                          <button
-                            key={city}
-                            type="button"
-                            onClick={() => toggleCity(city)}
-                            className={`rounded-lg px-2.5 py-1 text-[0.7rem] font-bold transition ${
-                              isSelected ? "bg-amber-400 text-slate-950 font-black" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-                            }`}
-                          >
-                            {isSelected ? `✓ ${city}` : city}
-                          </button>
-                        );
-                      })}
                     </div>
-                    {!isAllCities && selectedCities.length > 0 ? (
-                      <p className="mt-1 text-[0.68rem] text-amber-300 font-semibold">
-                        Seçilen İller ({selectedCities.length}): {selectedCities.join(", ")}
-                      </p>
-                    ) : null}
-                  </div>
 
-                  {/* Dynamic Multi-Select District Section */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300">İlçe Seçimi (Birden Fazla İlçe Seçilebilir)</label>
-                    {isAllCities ? (
-                      <p className="mt-1 text-xs text-slate-500 italic">Tüm Türkiye seçildiğinde ilçe hedeflemesi yapılmaz.</p>
-                    ) : selectedCities.length > 1 ? (
-                      <p className="mt-1 text-xs text-amber-300/90 font-medium bg-amber-950/40 p-2 rounded-lg border border-amber-400/20">
-                        ℹ️ Birden fazla il seçildiği için ilçe seçimi devre dışıdır. Seçilen illerin tüm ilçeleri hedeflenir.
-                      </p>
-                    ) : selectedCities.length === 1 ? (
-                      <div className="mt-1.5">
-                        <p className="text-[0.68rem] text-slate-400 font-semibold mb-1">
-                          {selectedCities[0]} İli İçin Hedeflemek İstediğiniz İlçeleri Seçin:
+                    <div className="mt-1.5 max-h-36 overflow-y-auto rounded-xl bg-slate-800/80 p-2 border border-slate-700">
+                      <div className="flex flex-wrap gap-1">
+                        {TURKEY_CITIES.map((cityName) => {
+                          const isSelected = !isAllCities && selectedCities.includes(cityName);
+                          return (
+                            <button
+                              key={cityName}
+                              type="button"
+                              onClick={() => toggleCity(cityName)}
+                              className={`rounded-lg px-2 py-1 text-[0.65rem] font-bold transition ${
+                                isSelected ? "bg-amber-400 text-slate-950 font-black shadow-xs" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                              }`}
+                            >
+                              {isSelected ? `✓ ${cityName}` : cityName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {!isAllCities && selectedCities.length === 1 ? (
+                      <div className="mt-2.5">
+                        <p className="text-xs font-bold text-amber-300 mb-1">
+                          📍 {selectedCities[0]} İli İçin İlçe Hedefleme (Opsiyonel):
                         </p>
                         <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto rounded-xl bg-slate-800/60 p-2 border border-slate-700">
                           {getDistrictsForCity(selectedCities[0]).map((dName) => {
@@ -696,57 +785,92 @@ export function CreateAdCampaignModal({
                   </div>
                 </form>
 
-                {/* Live Ad Preview Card (Right Column - 5 Cols) */}
-                <div className="lg:col-span-5 border-t border-slate-800 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
-                  <p className="text-xs font-black uppercase tracking-widest text-amber-300">👁️ Canlı Reklam Önizlemesi</p>
-                  <p className="mt-0.5 text-[0.68rem] text-slate-400">Öğrencilerin ve velilerin akışında böyle görünecek:</p>
+                {/* Live Ad Preview Card (Right Column - 5 Cols on Desktop, Tab on Mobile) */}
+                <div
+                  className={`lg:col-span-5 border-t border-slate-800 pt-4 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0 ${
+                    mobileTab === "edit" ? "hidden lg:block" : "block"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-widest text-amber-300">👁️ Canlı Reklam Önizlemesi</p>
+                      <p className="mt-0.5 text-[0.68rem] text-slate-400">Öğrencilerin ve velilerin akışında böyle görünecek:</p>
+                    </div>
+                    {/* Switch back to form on mobile */}
+                    <button
+                      type="button"
+                      onClick={() => setMobileTab("edit")}
+                      className="rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-amber-300 hover:bg-slate-700 lg:hidden"
+                    >
+                      ✏️ Formu Düzenle
+                    </button>
+                  </div>
 
-                  <div className="mt-3 overflow-hidden rounded-2xl border border-amber-400/40 bg-slate-950 p-3.5 shadow-xl">
+                  <div className="mt-3 overflow-hidden rounded-2xl border-2 border-amber-400/50 bg-slate-950 p-4 shadow-2xl space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[0.6rem] font-black uppercase text-slate-950">
-                        Sponsorlu Reklam
+                      <span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-[0.65rem] font-black uppercase text-slate-950 shadow-xs">
+                        ✨ Sponsorlu Reklam
                       </span>
-                      <span className="text-[0.65rem] font-bold text-slate-400">
+                      <span className="text-[0.68rem] font-bold text-slate-400">
                         {isAllCities ? "🇹🇷 Tüm Türkiye" : selectedCities.join(", ")}
                       </span>
                     </div>
 
-                    <h4 className="mt-2 text-sm font-black text-white leading-snug">
-                      {title || "Reklamınızın Başlığı Burada Görünecek"}
+                    <h4 className="text-sm font-black text-white leading-snug break-words">
+                      {title || "Reklamınızın Başlığı / Sloganı"}
                     </h4>
 
-                    {caption ? <p className="mt-1 text-xs text-slate-300 leading-relaxed">{caption}</p> : null}
+                    {caption ? (
+                      <p className="text-xs text-slate-300 leading-relaxed break-words whitespace-pre-wrap">
+                        {caption}
+                      </p>
+                    ) : null}
 
                     {/* Media Container */}
-                    {mediaUrl ? (
-                      <div className="mt-2.5 overflow-hidden rounded-xl bg-slate-900 border border-slate-800">
+                    {activePreviewMediaUrl ? (
+                      <div className="overflow-hidden rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center">
                         {isVideoMedia ? (
-                          <video src={getMediaPlaybackUrl(mediaUrl)} controls autoPlay muted={false} className="max-h-48 w-full object-cover" />
+                          <video
+                            key={activePreviewMediaUrl}
+                            src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
+                            controls
+                            playsInline
+                            autoPlay
+                            muted
+                            className="max-h-56 w-full object-cover"
+                          />
                         ) : (
-                          <Image src={getMediaPlaybackUrl(mediaUrl)} alt="Reklam Afişi" width={400} height={192} className="h-48 w-full object-cover" />
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
+                            alt="Reklam Afişi"
+                            className="max-h-56 w-full object-cover"
+                          />
                         )}
                       </div>
                     ) : (
-                      <div className="mt-2.5 flex h-32 items-center justify-center rounded-xl bg-slate-800/60 border border-dashed border-slate-700 text-xs text-slate-500">
-                        🖼️ Görsel / Video Afiş Alanı
+                      <div className="flex h-40 flex-col items-center justify-center rounded-xl bg-slate-900/80 border-2 border-dashed border-amber-400/30 p-4 text-center">
+                        <span className="text-2xl">🖼️</span>
+                        <p className="mt-1 text-xs font-bold text-slate-300">Görsel veya Video Afiş Bekleniyor</p>
+                        <p className="mt-0.5 text-[0.65rem] text-slate-500">Dosya yüklediğinizde anında burada oynatılacak ve görüntülenecektir.</p>
                       </div>
                     )}
 
                     {/* Background Audio Player if provided */}
                     {audioUrl ? (
-                      <div className="mt-2 rounded-lg bg-slate-900 p-2 border border-amber-400/30">
-                        <p className="text-[0.62rem] font-bold text-amber-300">🎵 Arka Plan Seslendirmesi / Müzik</p>
-                        <audio src={audioUrl} controls className="mt-1 h-7 w-full" />
+                      <div className="rounded-xl bg-slate-900 p-2.5 border border-amber-400/30">
+                        <p className="text-[0.65rem] font-bold text-amber-300">🎵 Arka Plan Seslendirmesi / Müzik</p>
+                        <audio src={audioUrl} controls className="mt-1 h-8 w-full" />
                       </div>
                     ) : null}
 
                     {/* Target Link CTA */}
-                    <div className="mt-3">
+                    <div>
                       <a
                         href={getResolvedTargetUrl() || "#"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-2.5 text-xs font-black text-slate-950 shadow-md"
+                        className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 py-2.5 text-xs font-black text-slate-950 shadow-md hover:brightness-105 transition"
                       >
                         {ctaText} ↗
                       </a>

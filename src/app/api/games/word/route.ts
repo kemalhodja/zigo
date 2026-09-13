@@ -45,23 +45,23 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No words found for this length" }, { status: 404 });
     }
 
+    // Filter list for clear, recognizable, high-frequency words (avoid archaic/slang/obscure)
+    const filteredWords = wordList.filter((item) => {
+      const m = item.meaning || "";
+      if (m.startsWith("►") || m.includes("halk ağzı") || m.includes("eskimiş") || m.includes("argo") || m.includes("Osmanlı")) {
+        return false;
+      }
+      if (/[^ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ]/i.test(item.word)) return false;
+      return true;
+    });
+
+    const pool = filteredWords.length > 0 ? filteredWords : wordList;
+
     if (isDaily) {
       // Turkey Time (UTC+3) deterministic day string YYYY-MM-DD
       const now = new Date();
       const trTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
       const dateKey = trTime.toISOString().split("T")[0]; // e.g. "2026-09-03"
-      
-      // Filter list for clear, recognizable, high-frequency words (avoid archaic/slang/obscure)
-      const filteredWords = wordList.filter((item) => {
-        const m = item.meaning || "";
-        if (m.startsWith("►") || m.includes("halk ağzı") || m.includes("eskimiş") || m.includes("argo") || m.includes("Osmanlı")) {
-          return false;
-        }
-        if (/[^ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ]/i.test(item.word)) return false;
-        return true;
-      });
-
-      const pool = filteredWords.length > 0 ? filteredWords : wordList;
 
       let hash = 0;
       for (let i = 0; i < dateKey.length; i++) {
@@ -73,7 +73,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ ...dailyWord, dateKey, isDaily: true });
     }
 
-    const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
+    const randomWord = pool[Math.floor(Math.random() * pool.length)];
 
     return NextResponse.json(randomWord);
 

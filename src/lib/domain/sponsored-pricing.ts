@@ -36,7 +36,7 @@ export function getSponsorPricingOptions(
         label: "Haftalık Sponsorlu Paket",
         durationLabel: "7 Günlük Gösterim",
         priceTry: 2500,
-        description: "Eğitim platformunuzu 1 hafta boyunca Zigo keşfet ve akışında öne çıkarın.",
+        description: "Eğitim platformunuz için 1 hafta boyunca Zigo akışında sponsorlu reklam yayınlayın.",
         features: [
           "Profil vitrininde ✨ Sponsorlu Platform rozeti",
           "Öğrenci ve veli akışlarında öncelikli gösterim",
@@ -68,7 +68,7 @@ export function getSponsorPricingOptions(
         label: "Haftalık Kurumsal Sponsorluk",
         durationLabel: "7 Günlük Gösterim",
         priceTry: 3000,
-        description: "Okul veya kurs merkezinizi 1 hafta boyunca bölgenizde ve tüm akışta öne çıkarın.",
+        description: "Okul veya kurs merkeziniz için 1 hafta boyunca bölgenizde ve tüm akışta sponsorlu reklam yayınlayın.",
         features: [
           "Profil vitrininde ✨ Sponsorlu Eğitim Kurumu rozeti",
           "Hedeflenen kademe veya genel akışta üst sırada gösterim",
@@ -100,7 +100,7 @@ export function getSponsorPricingOptions(
       label: "Haftalık Öğretmen Sponsorluğu",
       durationLabel: "7 Günlük Gösterim",
       priceTry: 1000,
-      description: "Bireysel profilinizi ve özel ders ilanınızı 1 hafta boyunca öne çıkarın.",
+      description: "Özel ders ilanınız ve branşınız için 1 hafta boyunca sponsorlu reklam yayınlayın.",
       features: [
         "Profil vitrininde ✨ Sponsorlu Öğretmen rozeti",
         "Ders talebi arayan veli akışlarında öncelikli gösterim",
@@ -113,7 +113,7 @@ export function getSponsorPricingOptions(
       label: "Aylık Öğretmen Sponsorluğu",
       durationLabel: "30 Günlük Gösterim (Avantajlı)",
       priceTry: 3000,
-      description: "1 ay boyunca branşınızda en çok öne çıkan ve tercih edilen öğretmen olun.",
+      description: "1 ay boyunca branşınızda kesintisiz sponsorlu reklam gösterimi sağlayın.",
       features: [
         "Profil vitrininde ✨ Sponsorlu Öğretmen rozeti",
         "Ders talebi arayan veli akışlarında öncelikli gösterim",

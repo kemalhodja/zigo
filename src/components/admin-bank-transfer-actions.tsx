@@ -119,7 +119,13 @@ export function AdminBankTransferActions({ request }: { request: AdminBankTransf
         ) : null}
       </div>
       <p className="text-[0.65rem] font-bold text-slate-500">
-        {plan?.intervalLabel ?? request.plan_id} · {formatTryPrice(request.amount_try)} · {request.reference_code}
+        <span className={request.plan_id.includes("sponsor") ? "rounded-md bg-amber-100 px-1.5 py-0.5 text-amber-900 font-extrabold" : ""}>
+          {request.plan_id.includes("sponsor")
+            ? (request.plan_id.includes("30") ? "📢 30 Günlük Sponsorlu Reklam" : "📢 7 Günlük Sponsorlu Reklam")
+            : (plan?.intervalLabel ?? request.plan_id)}
+        </span>
+        {" · "}
+        {formatTryPrice(request.amount_try)} · {request.reference_code}
       </p>
       {message ? <p className="rounded-lg bg-slate-50 px-2 py-1 text-[0.65rem] font-bold text-slate-600">{message}</p> : null}
     </div>

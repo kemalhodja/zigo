@@ -1,4 +1,4 @@
-export const catalogTr = {
+﻿export const catalogTr = {
   locale: {
     language: "Dil",
     turkish: "Türkçe",
@@ -1466,7 +1466,7 @@ export const catalogTr = {
   teacherCampaign: {
     eyebrow: "Kampanya sayfası",
     title: "Kendi reklamını oluştur",
-    desc: "Ücretsiz tanıtım sayfanı düzenle; istersen Zigo Plus ile sponsorlu öne çıkar.",
+    desc: "Ücretsiz tanıtım sayfanı düzenle; istersen Zigo Plus ile sponsorlu reklam ver.",
     headline: "Başlık",
     headlinePlaceholder: "9. sınıf matematikte birebir destek",
     tagline: "Kısa slogan",
@@ -1487,11 +1487,11 @@ export const catalogTr = {
     openPublic: "Kampanya sayfasını aç",
     statsViews: "görüntülenme",
     statsClicks: "tıklama",
-    sponsoredTitle: "Sponsorlu öne çıkarma",
+    sponsoredTitle: "Sponsorlu Reklam",
     sponsoredDesc: "Keşfet ve profil alanlarında sponsorlu rozetle daha görünür ol.",
     sponsoredOn: "Sponsorlu yayında",
     sponsoredOff: "Ücretsiz yayın",
-    sponsoredRequiresPlus: "Sponsorlu öne çıkarma Zigo Plus gerektirir.",
+    sponsoredRequiresPlus: "Sponsorlu reklam Zigo Plus gerektirir.",
     sponsoredBadge: "Sponsorlu",
     freeBadge: "Ücretsiz tanıtım",
     manageLink: "Kampanya sayfası",
@@ -1508,7 +1508,7 @@ export const catalogTr = {
     sponsorPackage: "Sponsorluk paketi",
     sponsor7Days: "7 gün",
     sponsor30Days: "30 gün",
-    sponsorPackageHint: "Sponsorlu kampanya Keşfet bandında seçtiğin süre boyunca öne çıkar.",
+    sponsorPackageHint: "Sponsorlu kampanya Keşfet bandında seçtiğin süre boyunca yayınlanır.",
     sponsorExpires: "Sponsorluk bitişi",
     targetingTitle: "Hedef kitle ve konum",
     targetingDesc: "Sponsorlu kampanyanın nerede görüneceğini ve hangi veli/öğrencilere ulaşacağını seç.",
@@ -1821,21 +1821,21 @@ export const catalogTr = {
     sponsorRefreshing: "Profiliniz yenileniyor...",
     adGateTitle: "Zigo Plus ile {action}",
     adGateDesc:
-      "Gelişmiş analitik, kişisel çalışma planları ve odak panelleri için Zigo Plus’a geçebilirsiniz. Uygulama tüketici reklamı göstermez; yalnızca öğretmen sponsorlu içerikleri öne çıkar.",
+      "Gelişmiş analitik, kişisel çalışma planları ve odak panelleri için Zigo Plus’a geçebilirsiniz. Uygulama tüketici reklamı göstermez; yalnızca öğretmen sponsorlu afiş ve video reklamları yayınlanır.",
     adGateWatch: "Devam et",
     adGateWatching: "Hazırlanıyor...",
     adGateUpgrade: "Zigo Plus’a geç",
     adGateOpenPlans: "Planları gör ve abone ol",
     adGateBack: "Geri Dön",
     adGateCancel: "İptal",
-    sponsoredPanelEyebrow: "Öne çıkarma",
+    sponsoredPanelEyebrow: "Sponsorlu Reklamlar",
     sponsoredPanelTitle: "Sponsorlu içerikleriniz",
     sponsoredPanelDesc:
-      "Creator Plus ile öne çıkan paylaşımlarınızın durumu, tıklama ve CTR metrikleri burada görünür.",
+      "Creator Plus ile aktif sponsorlu reklamlarınızın durumu, tıklama ve CTR metrikleri burada görünür.",
     sponsoredPanelLoading: "Yükleniyor…",
     sponsoredPanelEmpty: "Henüz sponsorlu içerik yok.",
     sponsoredPanelEmptyHint:
-      "Öne çıkarmak istediğiniz bir gönderiye sponsor etiketi ekleyin veya profil sponsorluk paketini başlatın.",
+      "Bir gönderiye sponsorlu reklam etiketi ekleyin veya afiş/video kampanya oluşturun.",
     sponsoredPanelCreateHint: "Gönderi oluştur",
     sponsoredPanelPlansHint: "Planları gör",
     sponsoredPanelClicks: "{count} tık",

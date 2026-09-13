@@ -115,7 +115,7 @@ const ROLE_OPTIONS = [
       "Soru bankası ve materyal dağıtımı",
       "Branş bazlı Match-Feed erişimi",
       "Kurumsal raporlama ve Creator Plus araçları",
-      "Marka görünürlüğü ve vitrin öne çıkarma",
+      "Marka görünürlüğü ve sponsorlu reklam yayınlama",
     ],
   },
 ] as const;

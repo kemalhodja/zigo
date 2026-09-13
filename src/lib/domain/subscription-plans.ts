@@ -228,6 +228,16 @@ export function findPlanById(planId: string, userCreatedAt?: string | Date | nul
 }
 
 export function resolveSubscriptionPeriodEnd(planId: string, from = new Date()) {
+  if (planId.startsWith("sponsor-") || planId.includes("sponsor")) {
+    const end = new Date(from);
+    if (planId.includes("30") || planId.includes("monthly")) {
+      end.setDate(end.getDate() + 30);
+    } else {
+      end.setDate(end.getDate() + 7);
+    }
+    return end.toISOString();
+  }
+
   const plan = findPlanById(planId);
   if (!plan) {
     throw new Error("Geçersiz abonelik planı.");

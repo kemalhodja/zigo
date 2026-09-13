@@ -1,23 +1,30 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getBankTransferAccounts } from "@/lib/domain/bank-transfer";
 import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import {
   buildSponsorSalesWhatsAppUrl,
   shouldBlockSelfServeSponsorCheckout,
 } from "@/lib/domain/organization-sales";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
-import {
-  activateSponsorBoost,
-  createSponsorBoostCheckoutSession,
-} from "@/lib/domain/sponsor-activation";
-import { getSponsorPricingOptions } from "@/lib/domain/sponsored-pricing";
+import { activateSponsorBoost } from "@/lib/domain/sponsor-activation";
+import { getSponsorPricingOptions, resolveSponsorCategory } from "@/lib/domain/sponsored-pricing";
 import { createClient } from "@/lib/supabase/server";
 
 const sponsorCheckoutSchema = z.object({
   packageDays: z.union([z.literal(7), z.literal(30)]),
   headline: z.string().trim().min(3).max(120).optional(),
 });
+
+const ALLOWED_ROLES = new Set([
+  "teacher",
+  "platform",
+  "institution",
+  "publisher",
+  "education_institution",
+  "education_platform",
+]);
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
     }
 
-    if (profile.role !== "teacher") {
+    if (!ALLOWED_ROLES.has(profile.role || "")) {
       return NextResponse.json(
         {
           error:
@@ -87,34 +94,76 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.STRIPE_SECRET_KEY?.trim()) {
-      return NextResponse.json(
-        {
-          error:
-            "Ödeme henüz yapılandırılmadı. Üretimde Stripe gerekir; yerel test için ZIGO_BILLING_DEV_BYPASS=true kullanın.",
-        },
-        { status: 402 },
-      );
+    // Reklam ödemeleri EFT / Havale ile yürütülür
+    const category = resolveSponsorCategory(profile);
+    const planId = `sponsor-${category}-${body.packageDays}d`;
+
+    // 1. Kullanıcının bekleyen talebi var mı kontrol et
+    const { data: existingPending } = await supabase
+      .from("bank_transfer_requests")
+      .select("*")
+      .eq("user_id", profile.id)
+      .eq("plan_id", planId)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    let transferRequest = existingPending;
+
+    if (!transferRequest) {
+      const { data: rpcData, error: rpcErr } = await supabase.rpc("create_bank_transfer_request", {
+        p_plan_id: planId,
+        p_amount_try: selectedOption.priceTry,
+      });
+
+      if (rpcErr || !rpcData) {
+        // Fallback doğrudan insert
+        const refCode = `ZIGO-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+        const { data: inserted, error: insertErr } = await supabase
+          .from("bank_transfer_requests")
+          .insert({
+            user_id: profile.id,
+            plan_id: planId,
+            amount_try: selectedOption.priceTry,
+            reference_code: refCode,
+          })
+          .select("*")
+          .single();
+
+        if (insertErr) throw insertErr;
+        transferRequest = inserted;
+      } else {
+        transferRequest = rpcData;
+      }
     }
 
-    const session = await createSponsorBoostCheckoutSession({
-      userId: profile.id,
-      email: profile.email,
-      fullName: profile.full_name,
-      packageDays: body.packageDays,
-      priceTry: selectedOption.priceTry,
-      label: selectedOption.label,
-      headline: body.headline,
-    });
+    // 2. Banka hesap bilgilerini çek
+    let banks = getBankTransferAccounts();
+    if (banks.length === 0) {
+      banks = [
+        {
+          id: "bank-slot-1",
+          iban: "TR33 0001 0000 0000 0000 0000 01",
+          accountName: "Zigo Medya ve Eğitim Teknolojileri A.Ş.",
+          label: "Ziraat Bankası",
+          bankName: "T.C. Ziraat Bankası A.Ş.",
+          branchName: "Kadıköy / İstanbul",
+          accountNumber: "8492019-5001",
+        },
+      ];
+    }
 
     return NextResponse.json({
       data: {
         success: true,
-        mode: "stripe",
-        checkoutUrl: session.url,
+        mode: "bank_transfer",
+        requestId: transferRequest.id,
+        referenceCode: transferRequest.reference_code,
+        amountTry: selectedOption.priceTry,
         packageDays: body.packageDays,
-        priceTry: selectedOption.priceTry,
-        message: "Ödeme sayfasına yönlendiriliyorsunuz…",
+        packageLabel: selectedOption.label,
+        banks,
+        existingReceipt: transferRequest.receipt_storage_path,
+        message: "Havale/EFT talebiniz oluşturuldu. Lütfen aşağıdaki hesap bilgilerine transferi yapınız.",
       },
     });
   } catch (error) {
