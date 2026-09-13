@@ -13,7 +13,7 @@ type AdCampaign = {
   media_url: string | null;
   sponsored_label: string | null;
   sponsored_target_url: string | null;
-  sponsored_status: "pending" | "approved" | "rejected";
+  sponsored_status: "pending" | "approved" | "active" | "rejected" | "paused" | "expired";
   view_count: number;
   click_count: number;
   city: string | null;
@@ -83,7 +83,7 @@ export function AdCampaignsManager() {
         <div className="grid gap-3 sm:grid-cols-2">
           {campaigns.map((ad) => {
             const ctr = ad.view_count > 0 ? ((ad.click_count / ad.view_count) * 100).toFixed(1) : "0.0";
-            const isApproved = ad.sponsored_status === "approved";
+            const isApproved = ad.sponsored_status === "approved" || ad.sponsored_status === "active";
             const isPending = ad.sponsored_status === "pending";
 
             return (
