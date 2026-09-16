@@ -6,13 +6,13 @@ import { useEffect, useState } from "react";
 import { compressImage } from "@/lib/client/compress-image";
 import { getDistrictsForCity } from "@/lib/domain/turkey-cities-districts";
 import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
+import {
+  formatSponsorPriceTry,
+  getSponsorPricingOptions,
+  type SponsorPackageDuration,
+} from "@/lib/domain/sponsored-pricing";
 import { useMessages } from "@/lib/i18n/locale-context";
 
-type CreateAdCampaignModalProps = {
-  existingPostId?: string;
-  onSuccess?: () => void;
-  triggerLabel?: string;
-};
 
 const TURKEY_CITIES = [
   "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
@@ -25,6 +25,34 @@ const TURKEY_CITIES = [
   "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce"
 ];
 
+type BankAccount = {
+  id: string;
+  label: string | null;
+  iban: string;
+  accountName: string;
+  bankName: string | null;
+  branchName: string | null;
+  accountNumber: string | null;
+};
+
+type BankTransferResponseData = {
+  requestId: string;
+  referenceCode: string;
+  amountTry: number;
+  packageDays: number;
+  packageLabel: string;
+  banks: BankAccount[];
+  existingReceipt?: string | null;
+  message?: string;
+};
+
+type CreateAdCampaignModalProps = {
+  existingPostId?: string;
+  onSuccess?: () => void;
+  triggerLabel?: string;
+  profile?: { role?: string | null; organization_type?: string | null; full_name?: string | null } | null;
+};
+
 type UserPost = {
   id: string;
   caption?: string | null;
@@ -36,10 +64,26 @@ export function CreateAdCampaignModal({
   existingPostId,
   onSuccess,
   triggerLabel,
+  profile = null,
 }: CreateAdCampaignModalProps) {
   const _m = useMessages();
   const [isOpen, setIsOpen] = useState(false);
   const [method, setMethod] = useState<"existing" | "new">(existingPostId ? "existing" : "new");
+  const [step, setStep] = useState<"form" | "payment">("form");
+
+  // Image fit mode toggle (cover = crop, contain = letterbox)
+  const [imageFit, setImageFit] = useState<"cover" | "contain">("cover");
+
+  // Package selection (payment)
+  const pricingOptions = getSponsorPricingOptions(profile);
+  const [selectedDays, setSelectedDays] = useState<SponsorPackageDuration>(7);
+  const selectedPricingOption = pricingOptions.find((o) => o.days === selectedDays) ?? pricingOptions[0];
+
+  // Bank transfer state
+  const [bankTransferData, setBankTransferData] = useState<BankTransferResponseData | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isUploadingReceipt, setIsUploadingReceipt] = useState(false);
+  const [receiptSuccess, setReceiptSuccess] = useState(false);
 
   // Mobile navigation tab between form editing and live preview
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
@@ -72,7 +116,6 @@ export function CreateAdCampaignModal({
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
   const [selectedFileIsVideo, setSelectedFileIsVideo] = useState(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(existingPostId || null);
 
   // User posts for selection
@@ -81,7 +124,6 @@ export function CreateAdCampaignModal({
 
   // Uploading & Submitting
   const [isUploading, setIsUploading] = useState(false);
-  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -172,52 +214,79 @@ export function CreateAdCampaignModal({
     setSelectedCities([]);
   }
 
-  async function handleFileUpload(file: File, isAudio = false) {
-    if (isAudio) setIsUploadingAudio(true);
-    else setIsUploading(true);
+  async function handleFileUpload(file: File) {
+    // IMAGE ONLY — only accept image files for banner ads
+    if (!file.type.startsWith("image/")) {
+      setError("Sadece görsel dosyası (JPEG, PNG, WEBP) kabul edilir. Video ve ses desteklenmez.");
+      return;
+    }
+    setIsUploading(true);
     setError(null);
 
-    // Instant local preview for instant visual feedback (0ms)
-    if (!isAudio) {
-      const isVid = file.type.startsWith("video/");
-      setSelectedFileIsVideo(isVid);
-      try {
-        const localBlob = URL.createObjectURL(file);
-        setLocalPreviewUrl(localBlob);
-      } catch {
-        // ignore
-      }
+    // Instant local preview
+    try {
+      const localBlob = URL.createObjectURL(file);
+      setLocalPreviewUrl(localBlob);
+      setSelectedFileIsVideo(false);
+    } catch {
+      // ignore
     }
 
-    let fileToUpload = file;
-    // Compress only non-audio images (skip videos & audio)
-    if (!isAudio && file.type.startsWith("image/")) {
-      fileToUpload = await compressImage(file, 1600, 0.85);
-    }
+    // Compress image before upload
+    const fileToUpload = await compressImage(file, 1600, 0.85);
 
     const formData = new FormData();
     formData.append("file", fileToUpload);
 
     try {
-      const uploadEndpoint = "/api/social/upload";
-      const res = await fetch(uploadEndpoint, {
+      const res = await fetch("/api/social/upload", {
         method: "POST",
         body: formData,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.data?.mediaUrl) {
-        throw new Error(data.error || "Dosya yüklenemedi");
+        throw new Error(data.error || "Görsel yüklenemedi");
       }
-      if (isAudio) {
-        setAudioUrl(data.data.mediaUrl);
-      } else {
-        setMediaUrl(data.data.mediaUrl);
-      }
+      setMediaUrl(data.data.mediaUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Yükleme hatası");
     } finally {
-      if (isAudio) setIsUploadingAudio(false);
-      else setIsUploading(false);
+      setIsUploading(false);
+    }
+  }
+
+  function copyToClipboard(text: string, fieldId: string) {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    } else if (typeof document !== "undefined") {
+      const t = document.createElement("textarea");
+      t.value = text;
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand("copy");
+      document.body.removeChild(t);
+    }
+    setCopiedField(fieldId);
+    setTimeout(() => setCopiedField(null), 2500);
+  }
+
+  async function handleReceiptUpload(file: File) {
+    if (!bankTransferData?.requestId) return;
+    setIsUploadingReceipt(true);
+    setError(null);
+    try {
+      const compressed = file.type.startsWith("image/") ? await compressImage(file, 1600, 0.85) : file;
+      const formData = new FormData();
+      formData.append("requestId", bankTransferData.requestId);
+      formData.append("file", compressed);
+      const res = await fetch("/api/billing/bank-transfer/receipt", { method: "POST", body: formData });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "Dekont yüklenemedi.");
+      setReceiptSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Dekont yükleme hatası.");
+    } finally {
+      setIsUploadingReceipt(false);
     }
   }
 
@@ -247,9 +316,8 @@ export function CreateAdCampaignModal({
     return websiteUrl.trim();
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmitForm(e: React.FormEvent) {
     e.preventDefault();
-    setIsSubmitting(true);
     setError(null);
 
     // Validation for WhatsApp Channel
@@ -257,16 +325,22 @@ export function CreateAdCampaignModal({
       const cleanPhone = whatsappPhone.replace(/\D/g, "");
       if (!cleanPhone || cleanPhone.length < 10) {
         setError("WhatsApp reklamı verebilmek için geçerli bir telefon numarası girilmesi veya profilde kayıtlı olması zorunludur.");
-        setIsSubmitting(false);
         return;
       }
     }
 
     if (ctaChannel === "website" && !websiteUrl.trim()) {
       setError("Lütfen yönlendirilecek web sitesi bağlantısını girin.");
-      setIsSubmitting(false);
       return;
     }
+
+    // Proceed to payment step
+    setStep("payment");
+  }
+
+  async function handlePaymentSubmit() {
+    setIsSubmitting(true);
+    setError(null);
 
     const finalTargetUrl = getResolvedTargetUrl();
 
@@ -286,7 +360,8 @@ export function CreateAdCampaignModal({
     const cityStr = isAllCities || selectedCities.length === 0 ? null : selectedCities.join(", ");
 
     try {
-      const res = await fetch("/api/ads/campaigns", {
+      // 1. Create the ad campaign
+      const adRes = await fetch("/api/ads/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -296,26 +371,42 @@ export function CreateAdCampaignModal({
           targetUrl: finalTargetUrl || undefined,
           buttonText: ctaText,
           mediaUrl: mediaUrl || undefined,
-          audioUrl: audioUrl || undefined,
           targetAudience: audienceStr,
           city: cityStr,
           district: selectedDistricts.length > 0 ? selectedDistricts.join(", ") : undefined,
         }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const adJson = await adRes.json().catch(() => ({}));
 
-      if (!res.ok) {
-        if (res.status === 403 || json.code === "SUBSCRIPTION_REQUIRED" || json.error?.includes("abonelik")) {
-          setError("Sponsorlu reklam yayınlamak için aktif bir Zigo Plus aboneliğiniz olması gerekmektedir. Abonelik sayfasına yönlendiriliyorsunuz...");
-          setTimeout(() => {
-            window.location.href = "/profile#zigo-plus-plans";
-          }, 1500);
+      if (!adRes.ok) {
+        if (adRes.status === 403 || adJson.code === "SUBSCRIPTION_REQUIRED" || adJson.error?.includes("abonelik")) {
+          setError("Sponsorlu reklam yayınlamak için aktif bir Zigo Plus abonelik gerekiyor.");
           return;
         }
-        throw new Error(json.error || "Reklam oluşturulamadı");
+        throw new Error(adJson.error || "Reklam oluşturulamadı");
       }
 
+      // 2. Create bank transfer request for payment
+      const checkoutRes = await fetch("/api/ads/sponsor-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageDays: selectedDays }),
+      });
+
+      const checkoutJson = await checkoutRes.json().catch(() => ({}));
+
+      if (!checkoutRes.ok) {
+        throw new Error(checkoutJson.error || "Havale talebi oluşturulamadı.");
+      }
+
+      if (checkoutJson.data?.mode === "bank_transfer") {
+        setBankTransferData(checkoutJson.data as BankTransferResponseData);
+        if (checkoutJson.data.existingReceipt) setReceiptSuccess(true);
+        return;
+      }
+
+      // dev bypass
       setSuccess(true);
       setTimeout(() => {
         setIsOpen(false);
@@ -393,7 +484,7 @@ export function CreateAdCampaignModal({
               <div className="mt-4 grid gap-4 lg:grid-cols-12 lg:gap-6">
                 {/* Form Inputs (Left Column - 7 Cols) */}
                 <form
-                  onSubmit={handleSubmit}
+                  onSubmit={handleSubmitForm}
                   className={`space-y-4 lg:col-span-7 ${mobileTab === "preview" ? "hidden lg:block" : "block"}`}
                 >
                   {/* Method Selection */}
@@ -588,45 +679,32 @@ export function CreateAdCampaignModal({
                     </select>
                   </div>
 
-                  {/* Media Upload & Audio Option */}
+                  {/* Media Upload (Görsel Afiş Sadece & Küçültme/Büyütme Ayarı) */}
                   {method === "new" ? (
                     <div className="space-y-3">
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-300">Görsel veya Video Afiş</label>
-                          <input
-                            type="file"
-                            accept="image/*,video/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleFileUpload(file, false);
-                            }}
-                            className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-400 file:px-3 file:py-1.5 file:text-xs file:font-black file:text-slate-950 hover:file:bg-amber-300 cursor-pointer"
-                          />
-                          {isUploading ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Medya yükleniyor...</p> : null}
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <label className="block text-xs font-bold text-slate-300">Sponsorlu Afiş Görseli</label>
+                          <span className="text-[0.65rem] text-slate-400">JPEG, PNG, WebP (Maks 10MB)</span>
                         </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-300">İsteğe Bağlı Arka Plan Sesi (Audio)</label>
-                          <input
-                            type="file"
-                            accept="audio/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleFileUpload(file, true);
-                            }}
-                            className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white hover:file:bg-slate-600 cursor-pointer"
-                          />
-                          {isUploadingAudio ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Ses yükleniyor...</p> : null}
-                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file);
+                          }}
+                          className="mt-1 block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-amber-400 file:px-3 file:py-1.5 file:text-xs file:font-black file:text-slate-950 hover:file:bg-amber-300 cursor-pointer"
+                        />
+                        {isUploading ? <p className="mt-1 text-[0.65rem] text-amber-300 animate-pulse">Görsel yükleniyor ve optimize ediliyor...</p> : null}
                       </div>
 
-                      {/* Inline Media Preview inside the form itself */}
+                      {/* Görsel Önizleme ve Büyütme/Küçültme (Fit / Fill) Ayarı */}
                       {activePreviewMediaUrl ? (
-                        <div className="relative rounded-2xl border border-amber-400/50 bg-slate-950 p-2 overflow-hidden shadow-inner">
-                          <div className="flex items-center justify-between mb-1.5 px-1">
+                        <div className="relative rounded-2xl border border-amber-400/50 bg-slate-950 p-2.5 overflow-hidden shadow-inner space-y-2">
+                          <div className="flex items-center justify-between px-1">
                             <span className="text-[0.68rem] font-black uppercase tracking-wider text-amber-300">
-                              {isVideoMedia ? "🎬 Yüklenen Video Önizlemesi" : "🖼️ Yüklenen Görsel Önizlemesi"}
+                              🖼️ Afiş Önizlemesi & Yerleşim
                             </span>
                             <button
                               type="button"
@@ -639,22 +717,43 @@ export function CreateAdCampaignModal({
                               ✕ Kaldır / Değiştir
                             </button>
                           </div>
-                          <div className="max-h-48 overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center">
-                            {isVideoMedia ? (
-                              <video
-                                src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
-                                controls
-                                playsInline
-                                className="max-h-48 w-full object-contain"
-                              />
-                            ) : (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
-                                alt="Afiş Önizleme"
-                                className="max-h-48 w-full object-contain"
-                              />
-                            )}
+
+                          {/* Büyütme / Küçültme (Object Fit) Butonları */}
+                          <div className="flex items-center justify-between bg-slate-900/90 rounded-xl px-2.5 py-1.5 border border-slate-800">
+                            <span className="text-[0.7rem] text-slate-300 font-medium">Görsel Yerleşimi:</span>
+                            <div className="inline-flex rounded-lg bg-slate-950 p-0.5 border border-slate-700">
+                              <button
+                                type="button"
+                                onClick={() => setImageFit("contain")}
+                                className={`px-2.5 py-1 text-[0.68rem] font-bold rounded-md transition ${
+                                  imageFit === "contain"
+                                    ? "bg-amber-400 text-slate-950 shadow-xs"
+                                    : "text-slate-400 hover:text-white"
+                                }`}
+                              >
+                                🔍 Küçült (Tam Göster / Boşluklu)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setImageFit("cover")}
+                                className={`px-2.5 py-1 text-[0.68rem] font-bold rounded-md transition ${
+                                  imageFit === "cover"
+                                    ? "bg-amber-400 text-slate-950 shadow-xs"
+                                    : "text-slate-400 hover:text-white"
+                                }`}
+                              >
+                                📐 Büyüt (Alana Yay / Kırp)
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="h-44 w-full overflow-hidden rounded-xl bg-slate-900 flex items-center justify-center border border-slate-800">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
+                              alt="Afiş Önizleme"
+                              className={`h-full w-full ${imageFit === "contain" ? "object-contain" : "object-cover"}`}
+                            />
                           </div>
                         </div>
                       ) : null}
@@ -777,10 +876,10 @@ export function CreateAdCampaignModal({
                     </button>
                     <button
                       type="submit"
-                      disabled={isSubmitting || isUploading || isUploadingAudio}
+                      disabled={isSubmitting || isUploading}
                       className="tap-scale rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-2.5 text-xs font-black text-slate-950 shadow-md hover:brightness-105 disabled:opacity-60"
                     >
-                      {isSubmitting ? "Onaya Gönderiliyor..." : "🚀 Onaya Gönder"}
+                      {isSubmitting ? "İlerleniyor..." : "Ödeme Adımına Geç 💳"}
                     </button>
                   </div>
                 </form>
@@ -844,25 +943,17 @@ export function CreateAdCampaignModal({
                           <img
                             src={activePreviewMediaUrl.startsWith("blob:") ? activePreviewMediaUrl : getMediaPlaybackUrl(activePreviewMediaUrl)}
                             alt="Reklam Afişi"
-                            className="max-h-56 w-full object-cover"
+                            className={`max-h-56 w-full ${imageFit === "contain" ? "object-contain" : "object-cover"}`}
                           />
                         )}
                       </div>
                     ) : (
                       <div className="flex h-40 flex-col items-center justify-center rounded-xl bg-slate-900/80 border-2 border-dashed border-amber-400/30 p-4 text-center">
                         <span className="text-2xl">🖼️</span>
-                        <p className="mt-1 text-xs font-bold text-slate-300">Görsel veya Video Afiş Bekleniyor</p>
-                        <p className="mt-0.5 text-[0.65rem] text-slate-500">Dosya yüklediğinizde anında burada oynatılacak ve görüntülenecektir.</p>
+                        <p className="mt-1 text-xs font-bold text-slate-300">Sponsorlu Afiş Görseli Bekleniyor</p>
+                        <p className="mt-0.5 text-[0.65rem] text-slate-500">Görsel yüklediğinizde anında burada görüntülenecektir.</p>
                       </div>
                     )}
-
-                    {/* Background Audio Player if provided */}
-                    {audioUrl ? (
-                      <div className="rounded-xl bg-slate-900 p-2.5 border border-amber-400/30">
-                        <p className="text-[0.65rem] font-bold text-amber-300">🎵 Arka Plan Seslendirmesi / Müzik</p>
-                        <audio src={audioUrl} controls className="mt-1 h-8 w-full" />
-                      </div>
-                    ) : null}
 
                     {/* Target Link CTA */}
                     <div>

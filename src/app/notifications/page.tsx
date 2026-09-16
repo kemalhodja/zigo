@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { AutoMarkNotificationsRead } from "@/components/auto-mark-notifications-read";
+import { HomeAgendaAlert } from "@/components/agenda/home-agenda-alert";
 import { FollowRequestActions } from "@/components/follow-request-actions";
 import { MarkNotificationsReadButton } from "@/components/mark-notifications-read-button";
 import { NotificationItemLink } from "@/components/notification-item-link";
@@ -118,6 +119,11 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         unreadCount={unreadCount}
       />
       {!isSignedOut ? <PushNotificationPanel role={profileRole} /> : null}
+      {!isSignedOut && (profileRole === "student" || profileRole === "parent") ? (
+        <div className="pt-2">
+          <HomeAgendaAlert viewerRole={profileRole} targetUserId={profileId} />
+        </div>
+      ) : null}
       <section className="-mx-4 border-b border-pink-100 bg-white px-4 py-3">
         <div className="grid grid-cols-4 gap-2">
           {activityFilters.map((filter) => (

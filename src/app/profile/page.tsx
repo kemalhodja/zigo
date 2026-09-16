@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
+import { AgendaManager } from "@/components/agenda/agenda-manager";
 import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
 import { ProfileCover } from "@/components/profile-cover";
 import { ProfileHighlights } from "@/components/profile-highlights";
@@ -65,7 +66,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         ? "saved"
         : params.tab === "market" || params.tab === "lessons"
           ? "market"
-          : "posts";
+          : params.tab === "agenda"
+            ? "agenda"
+            : "posts";
   const profile = await getProfileData(activeTab);
 
   // Private lesson marketplace data
@@ -294,6 +297,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
               {profile.isSignedOut ? p.feed : p.saved}
             </Link>
+            <Link className="zigo-action-chip tap-scale rounded-lg border border-indigo-200 bg-indigo-50/50 text-indigo-900 font-black" href="/profile?tab=agenda">
+              🗓️ Ajanda
+            </Link>
             {profile.role === "parent" && !profile.isSignedOut ? (
               <CreatePrivateLessonModal
                 areas={educationAreas}
@@ -325,7 +331,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
       <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} role={profile.role} />
 
-      <section className={`-mx-4 mt-2 grid ${profile.role === "teacher" ? "grid-cols-4" : "grid-cols-3"} border-y border-slate-100 bg-white`}>
+      <section className={`-mx-4 mt-2 grid ${profile.role === "teacher" ? "grid-cols-5" : "grid-cols-4"} border-y border-slate-100 bg-white`}>
         <Link
           className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
             activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
@@ -362,6 +368,15 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <path d="M6 3h12v18l-6-4-6 4z" />
           </svg>
         </Link>
+        <Link
+          className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
+            activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+          }`}
+          href="/profile?tab=agenda"
+        >
+          <span className="text-sm">🗓️</span>
+          <span className="text-[0.62rem] font-bold">Ajanda</span>
+        </Link>
         {profile.role === "teacher" ? (
           <Link
             className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
@@ -375,7 +390,16 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         ) : null}
       </section>
 
-      {activeTab === "market" && profile.role === "teacher" ? (
+      {activeTab === "agenda" ? (
+        <section className="px-4 py-4 bg-white rounded-2xl border border-slate-100 mt-2">
+          <AgendaManager
+            targetUserId={profile.id}
+            isParentView={profile.role === "parent"}
+            childProfiles={parentChildProfiles}
+            currentUserName={profile.name}
+          />
+        </section>
+      ) : activeTab === "market" && profile.role === "teacher" ? (
         <TeacherLessonMarketplaceTab
           posts={teacherMatchedPosts}
           teacherBranches={profile.branches}
@@ -710,7 +734,7 @@ type ProfileSuggestedCreator = {
   isFollowing?: boolean;
 };
 
-async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market"): Promise<{
+async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market" | "agenda"): Promise<{
   id: string;
   name: string;
   handle: string;
@@ -861,8 +885,8 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market")
 
   const [stats, posts, suggested, branches, children] = await Promise.all([
     getProfileSocialStats(supabase, profile.id),
-    // "market" sekmesinde grid varsayılan gönderileri gösterir; ilanlar ayrı bileşenlerde listelenir.
-    getProfileGridPosts(supabase, profile.id, activeTab === "market" ? "posts" : activeTab),
+    // "market" ve "agenda" sekmelerinde grid varsayılan gönderileri gösterir; ilgili içerikler ayrı bileşenlerde listelenir.
+    getProfileGridPosts(supabase, profile.id, activeTab === "market" || activeTab === "agenda" ? "posts" : activeTab),
     getProfileSuggestedCreators(supabase, profile.id),
     profile.role === "teacher" ? getUserInterestAreaNames(supabase, profile.id) : Promise.resolve([]),
     profile.role === "parent" ? getChildProfiles(supabase).catch(() => []) : Promise.resolve([]),

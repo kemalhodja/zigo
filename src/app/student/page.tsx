@@ -117,6 +117,19 @@ export default async function StudentPage() {
         <DashboardLink accent="from-berry to-peach" href="/avatar" label={d.student.avatar} text={d.student.equipRewards} />
       </section>
 
+      <div className="rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 p-4 text-white shadow-xs flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🗓️</span>
+          <div>
+            <h3 className="text-sm font-black">Ders Programı & Sınav Takvimi</h3>
+            <p className="text-xs text-violet-100">Haftalık derslerini, yaklaşan sınavlarını ve ödevlerini yönet.</p>
+          </div>
+        </div>
+        <Link href="/profile?tab=agenda" className="rounded-xl bg-white px-3 py-2 text-xs font-black text-indigo-900 shadow-xs hover:bg-violet-50 transition shrink-0">
+          Ajandaya Git ➔
+        </Link>
+      </div>
+
       <div className="-mx-4 sm:mx-0 my-2">
         <MiniGamesArcadeSection isPremium={data.isPremium} isStudent />
       </div>

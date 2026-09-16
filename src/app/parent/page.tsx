@@ -135,6 +135,9 @@ export default async function ParentPage() {
                             Raporu Gör
                           </Link>
                         )}
+                        <Link href="/profile?tab=agenda" className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-md transition-colors">
+                          🗓️ Ders & Sınav Programı
+                        </Link>
                       </div>
                       <div className="px-2 pb-2">
                         <LimitSettingsCard childId={child.id} childName={child.name} />

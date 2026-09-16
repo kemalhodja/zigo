@@ -2,6 +2,7 @@ import type { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { PublicAgendaViewer } from "@/components/agenda/public-agenda-viewer";
 import { BackButton } from "@/components/back-button";
 import { FollowButton } from "@/components/follow-button";
 import { ProfileCover } from "@/components/profile-cover";
@@ -75,7 +76,12 @@ export async function generateMetadata(
 export default async function PublicProfilePage({ params, searchParams }: PublicProfilePageProps) {
   const { id } = await params;
   const query = await searchParams;
-  const activeTab = query.tab === "micro" || query.tab === "reels" ? "reels" : "posts";
+  const activeTab =
+    query.tab === "agenda"
+      ? "agenda"
+      : query.tab === "micro" || query.tab === "reels"
+        ? "reels"
+        : "posts";
 
   const m = await getServerMessages();
 
@@ -181,6 +187,9 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-slate-100 px-2 text-xs font-black text-night hover:bg-slate-200 transition whitespace-nowrap" href="/questions">
               ❓ Soru sor
             </Link>
+            <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 px-2 text-xs font-black text-indigo-900 hover:bg-indigo-100 transition whitespace-nowrap" href={`/profile/${profile.id}?tab=agenda`}>
+              🗓️ Ajanda
+            </Link>
           </div>
 
           {/* Stats row */}
@@ -254,7 +263,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
 
       <ProfileHighlights />
 
-      <section className="-mx-4 mt-2 grid grid-cols-2 border-y border-slate-100 bg-white">
+      <section className="-mx-4 mt-2 grid grid-cols-3 border-y border-slate-100 bg-white">
         <Link
           className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 ${
             activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
@@ -280,9 +289,22 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             <path d="M11 12l4 2.5-4 2.5z" />
           </svg>
         </Link>
+        <Link
+          className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 flex flex-col items-center justify-center gap-0.5 ${
+            activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+          }`}
+          href={`/profile/${profile.id}?tab=agenda`}
+        >
+          <span className="text-sm">🗓️</span>
+          <span className="text-[0.62rem] font-bold">Ajanda</span>
+        </Link>
       </section>
 
-      {isLockedPrivate ? (
+      {activeTab === "agenda" ? (
+        <section className="px-4 py-4">
+          <PublicAgendaViewer userId={profile.id} userName={profile.full_name} />
+        </section>
+      ) : isLockedPrivate ? (
         <section className="-mx-4 border-t border-slate-100 bg-white px-6 py-16 text-center">
           <div className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 shadow-inner">
             <svg aria-hidden="true" className="size-9" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

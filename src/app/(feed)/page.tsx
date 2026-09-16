@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 
 const AiMentorCard = dynamic(() => import("@/components/ai-mentor-card").then(mod => mod.AiMentorCard));
+import { HomeAgendaAlert } from "@/components/agenda/home-agenda-alert";
 import { PublicPreviewFeed } from "@/components/public-preview-feed";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCachedUserProfile } from "@/lib/domain/profiles.server";
@@ -68,6 +69,7 @@ export default async function HomePage() {
       </div>
 
       <StoryTray stories={stories} feedExtras={m.feedExtras} feedEnhancements={m.feedEnhancements} />
+      <HomeAgendaAlert viewerRole={viewer.role} targetUserId={profile.id} />
 
       {viewer.role === null ? (
         <section className="relative overflow-hidden mx-4 md:mx-0 md:rounded-3xl bg-slate-950/80 px-8 py-10 text-white backdrop-blur-xl border border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
