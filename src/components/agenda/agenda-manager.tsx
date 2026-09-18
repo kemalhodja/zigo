@@ -36,6 +36,7 @@ type AgendaManagerProps = {
   isParentView?: boolean;
   childProfiles?: { id: string; name: string }[];
   currentUserName?: string;
+  userRole?: string;
 };
 
 type ViewMode = "day" | "week";
@@ -47,7 +48,9 @@ export function AgendaManager({
   isParentView = false,
   childProfiles = [],
   currentUserName = "Öğrenci",
+  userRole,
 }: AgendaManagerProps) {
+  const isAllowedRole = userRole === "student" || userRole === "parent" || isParentView;
   const [selectedChildId, setSelectedChildId] = useState<string | undefined>(
     targetUserId || (childProfiles[0]?.id ?? undefined)
   );
@@ -85,6 +88,15 @@ export function AgendaManager({
 
   // Form States
   const [newLesson, setNewLesson] = useState({
+    subject: "",
+    startTime: "09:00",
+    endTime: "09:40",
+    teacherName: "",
+    classroom: "",
+  });
+
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [editingLesson, setEditingLesson] = useState({
     subject: "",
     startTime: "09:00",
     endTime: "09:40",
@@ -205,6 +217,42 @@ export function AgendaManager({
     setAgenda(nextState);
     saveAgendaState(nextState, selectedChildId);
     setDeletedItem({ type: "lesson", item: lesson });
+  };
+
+  const handleEditLessonClick = (lesson: ScheduleLesson) => {
+    setEditingLessonId(lesson.id);
+    setEditingLesson({
+      subject: lesson.subject,
+      startTime: lesson.startTime,
+      endTime: lesson.endTime,
+      teacherName: lesson.teacherName || "",
+      classroom: lesson.classroom || "",
+    });
+  };
+
+  const handleUpdateLesson = (e: React.FormEvent, lessonId: string) => {
+    e.preventDefault();
+    if (!editingLesson.subject.trim()) return;
+
+    triggerHaptic(20);
+    const nextLessons = agenda.lessons.map((l) => {
+      if (l.id === lessonId) {
+        return {
+          ...l,
+          subject: editingLesson.subject.trim(),
+          startTime: editingLesson.startTime,
+          endTime: editingLesson.endTime,
+          teacherName: editingLesson.teacherName.trim(),
+          classroom: editingLesson.classroom.trim(),
+        };
+      }
+      return l;
+    });
+
+    const nextState = { ...agenda, lessons: nextLessons };
+    setAgenda(nextState);
+    saveAgendaState(nextState, selectedChildId);
+    setEditingLessonId(null);
   };
 
   // Şablon yükleme
@@ -698,29 +746,31 @@ export function AgendaManager({
             <h3 className="text-xs font-black text-slate-700">
               {DAYS_OF_WEEK.find((d) => d.value === selectedDay)?.label} Dersleri
             </h3>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setShowTemplateModal(true)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-              >
-                ⚡ Hazır Şablon
-              </button>
-              <button
-                onClick={handlePrint}
-                className="inline-flex sm:hidden items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700"
-              >
-                🖨️
-              </button>
-              <button
-                onClick={() => {
-                  triggerHaptic();
-                  setShowAddLesson(true);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-700 shadow-xs transition"
-              >
-                <span>+</span> Ders Ekle
-              </button>
-            </div>
+            {isAllowedRole && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                >
+                  ⚡ Hazır Şablon
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="inline-flex sm:hidden items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700"
+                >
+                  🖨️
+                </button>
+                <button
+                  onClick={() => {
+                    triggerHaptic();
+                    setShowAddLesson(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-700 shadow-xs transition"
+                >
+                  <span>+</span> Ders Ekle
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Hazır Müfredat Şablonu Modal */}
@@ -876,31 +926,82 @@ export function AgendaManager({
           ) : (
             <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
               {lessonsForSelectedDay.map((lesson) => (
-                <div
-                  key={lesson.id}
-                  className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 size-11 shrink-0 font-black">
-                      <span className="text-xs">{lesson.startTime}</span>
-                      <span className="text-[0.62rem] text-indigo-400">{lesson.endTime}</span>
+                <div key={lesson.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
+                  {editingLessonId === lesson.id ? (
+                    <form onSubmit={(e) => handleUpdateLesson(e, lesson.id)} className="p-4 space-y-3 bg-indigo-50/30">
+                      <div>
+                        <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Ders Adı *</label>
+                        <input
+                          type="text"
+                          required
+                          value={editingLesson.subject}
+                          onChange={(e) => setEditingLesson({ ...editingLesson, subject: e.target.value })}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Başlangıç Saati *</label>
+                          <input
+                            type="time"
+                            required
+                            value={editingLesson.startTime}
+                            onChange={(e) => setEditingLesson({ ...editingLesson, startTime: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Bitiş Saati *</label>
+                          <input
+                            type="time"
+                            required
+                            value={editingLesson.endTime}
+                            onChange={(e) => setEditingLesson({ ...editingLesson, endTime: e.target.value })}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-1">
+                        <button type="button" onClick={() => setEditingLessonId(null)} className="rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700">İptal</button>
+                        <button type="submit" className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700">Güncelle</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="flex items-center justify-between p-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 size-11 shrink-0 font-black">
+                          <span className="text-xs">{lesson.startTime}</span>
+                          <span className="text-[0.62rem] text-indigo-400">{lesson.endTime}</span>
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-night">{lesson.subject}</h4>
+                          <p className="text-[0.7rem] text-slate-400 mt-0.5">
+                            {lesson.teacherName && `${lesson.teacherName}`}
+                            {lesson.teacherName && lesson.classroom && " · "}
+                            {lesson.classroom && `${lesson.classroom}`}
+                          </p>
+                        </div>
+                      </div>
+                      {isAllowedRole && (
+                        <div className="flex items-center gap-1 opacity-60 hover:opacity-100 transition no-print">
+                          <button
+                            onClick={() => handleEditLessonClick(lesson)}
+                            className="text-slate-400 hover:text-indigo-600 p-1.5 transition text-xs"
+                            title="Dersi Düzenle"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLesson(lesson)}
+                            className="text-slate-400 hover:text-rose-500 p-1.5 transition text-xs"
+                            title="Dersi Sil"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <h4 className="text-xs font-black text-night">{lesson.subject}</h4>
-                      <p className="text-[0.7rem] text-slate-400 mt-0.5">
-                        {lesson.teacherName && `${lesson.teacherName}`}
-                        {lesson.teacherName && lesson.classroom && " · "}
-                        {lesson.classroom && `${lesson.classroom}`}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteLesson(lesson)}
-                    className="text-slate-300 hover:text-rose-500 p-1.5 transition text-xs no-print"
-                    title="Dersi Sil"
-                  >
-                    🗑️
-                  </button>
+                  )}
                 </div>
               ))}
             </div>

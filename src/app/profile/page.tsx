@@ -297,9 +297,11 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
               {profile.isSignedOut ? p.feed : p.saved}
             </Link>
-            <Link className="zigo-action-chip tap-scale rounded-lg border border-indigo-200 bg-indigo-50/50 text-indigo-900 font-black" href="/profile?tab=agenda">
-              🗓️ Ajanda
-            </Link>
+            {(profile.role === "student" || profile.role === "parent") && (
+              <Link className="zigo-action-chip tap-scale rounded-lg border border-indigo-200 bg-indigo-50/50 text-indigo-900 font-black" href="/profile?tab=agenda">
+                🗓️ Ajanda
+              </Link>
+            )}
             {profile.role === "parent" && !profile.isSignedOut ? (
               <CreatePrivateLessonModal
                 areas={educationAreas}
@@ -368,15 +370,17 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <path d="M6 3h12v18l-6-4-6 4z" />
           </svg>
         </Link>
-        <Link
-          className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
-            activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-          }`}
-          href="/profile?tab=agenda"
-        >
-          <span className="text-sm">🗓️</span>
-          <span className="text-[0.62rem] font-bold">Ajanda</span>
-        </Link>
+        {(profile.role === "student" || profile.role === "parent") && (
+          <Link
+            className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
+              activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+            }`}
+            href="/profile?tab=agenda"
+          >
+            <span className="text-sm">🗓️</span>
+            <span className="text-[0.62rem] font-bold">Ajanda</span>
+          </Link>
+        )}
         {profile.role === "teacher" ? (
           <Link
             className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
@@ -397,6 +401,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             isParentView={profile.role === "parent"}
             childProfiles={parentChildProfiles}
             currentUserName={profile.name}
+            userRole={profile.role}
           />
         </section>
       ) : activeTab === "market" && profile.role === "teacher" ? (
