@@ -24,9 +24,6 @@ export async function POST(
 
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const body = gradeSchema.parse(await request.json().catch(() => ({})));
 
@@ -36,7 +33,7 @@ export async function POST(
       .eq("id", id)
       .maybeSingle();
 
-    if (!quiz || (quiz.status !== "approved" && quiz.creator_id !== profile.id)) {
+    if (!quiz || (quiz.status !== "approved" && quiz.creator_id !== profile?.id)) {
       return NextResponse.json({ error: "Quiz bulunamadı." }, { status: 404 });
     }
 
@@ -48,43 +45,46 @@ export async function POST(
     }));
     const correct = results.filter((r) => r.isCorrect).length;
 
-    // Spaced-repetition ingest (#12): wrong answers become review cards.
-    const wrongRows = results
-      .map((r, i) => ({ isCorrect: r.isCorrect, index: i }))
-      .filter((entry) => !entry.isCorrect)
-      .map((entry) => {
-        const q = questions[entry.index];
-        return {
-          user_id: profile.id,
-          source: "ugc_quiz",
-          source_ref: `${id}:${entry.index}`,
-          question_text: q.text,
-          options: q.options,
-          correct_index: q.correctIndex,
-          due_at: dueDateFrom(new Date(), 1).toISOString(),
-        };
-      });
-    if (wrongRows.length > 0) {
-      const { error: reviewError } = await supabase
-        .from("review_items")
-        .upsert(wrongRows, { onConflict: "user_id,source,source_ref" });
-      if (reviewError) {
-        console.warn("[quiz-grade] review ingest failed:", reviewError.message);
+    if (profile) {
+      // Spaced-repetition ingest (#12): wrong answers become review cards.
+      const wrongRows = results
+        .map((r, i) => ({ isCorrect: r.isCorrect, index: i }))
+        .filter((entry) => !entry.isCorrect)
+        .map((entry) => {
+          const q = questions[entry.index];
+          return {
+            user_id: profile.id,
+            source: "ugc_quiz",
+            source_ref: `${id}:${entry.index}`,
+            question_text: q.text,
+            options: q.options,
+            correct_index: q.correctIndex,
+            due_at: dueDateFrom(new Date(), 1).toISOString(),
+          };
+        });
+      if (wrongRows.length > 0) {
+        const { error: reviewError } = await supabase
+          .from("review_items")
+          .upsert(wrongRows, { onConflict: "user_id,source,source_ref" });
+        if (reviewError) {
+          console.warn("[quiz-grade] review ingest failed:", reviewError.message);
+        }
       }
-    }
 
-    void captureServerEvent(profile.id, "ugc_quiz_graded", {
-      quiz_id: id,
-      total: questions.length,
-      correct,
-      wrong_ingested: wrongRows.length,
-    });
+      void captureServerEvent(profile.id, "ugc_quiz_graded", {
+        quiz_id: id,
+        total: questions.length,
+        correct,
+        wrong_ingested: wrongRows.length,
+      });
+    }
 
     return NextResponse.json({
       data: {
         correct,
         total: questions.length,
         score: correct * 10,
+        isGuest: !profile,
         results: results.map((r) => ({ correctIndex: r.correctIndex })),
       },
     });

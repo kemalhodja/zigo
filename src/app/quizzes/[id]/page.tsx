@@ -2,6 +2,11 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Keyboard, Monitor, Sparkles, UserPlus } from "lucide-react";
+
+import { KeyboardShortcutsModal } from "@/components/ui/keyboard-shortcuts-modal";
+import { SmartBoardPresenter } from "@/components/classroom/smart-board-presenter";
 
 type SolvePayload = {
   id: string;
@@ -16,7 +21,7 @@ type Phase =
   | { kind: "error"; message: string }
   | { kind: "playing" }
   | { kind: "grading" }
-  | { kind: "done"; correct: number; total: number; score: number };
+  | { kind: "done"; correct: number; total: number; score: number; isGuest?: boolean };
 
 export default function SolveQuizPage() {
   const params = useParams<{ id: string }>();
@@ -29,6 +34,11 @@ export default function SolveQuizPage() {
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
   const [copied, setCopied] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
+
+  // Modal states
+  const [isKeyboardHelpOpen, setIsKeyboardHelpOpen] = useState(false);
+  const [isSmartBoardOpen, setIsSmartBoardOpen] = useState(false);
 
   useEffect(() => {
     fetch(`/api/quizzes/user/${quizId}/solve`, { method: "POST" })
@@ -56,11 +66,15 @@ export default function SolveQuizPage() {
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) throw new Error(body?.error ?? "Değerlendirilemedi");
+      if (body.data?.isGuest) {
+        setIsGuest(true);
+      }
       setPhase({
         kind: "done",
         correct: body.data.correct,
         total: body.data.total,
         score: body.data.score,
+        isGuest: body.data?.isGuest,
       });
     } catch {
       setPhase({ kind: "error", message: "Değerlendirme başarısız oldu." });
@@ -80,6 +94,50 @@ export default function SolveQuizPage() {
     setIndex((i) => i + 1);
     setSelected(null);
   }
+
+  // Keyboard navigation shortcuts
+  useEffect(() => {
+    if (phase.kind !== "playing" || !quiz) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const key = e.key.toUpperCase();
+      const num = parseInt(e.key, 10);
+
+      // Option selection via A, B, C, D, E or 1, 2, 3, 4, 5
+      const currentQuestion = quiz?.questions[index];
+      const optCount = currentQuestion?.options.length || 0;
+
+      let chosenIndex: number | null = null;
+      if (key === "A" || num === 1) chosenIndex = 0;
+      else if (key === "B" || num === 2) chosenIndex = 1;
+      else if (key === "C" || num === 3) chosenIndex = 2;
+      else if (key === "D" || num === 4) chosenIndex = 3;
+      else if (key === "E" || num === 5) chosenIndex = 4;
+
+      if (chosenIndex !== null && chosenIndex < optCount) {
+        e.preventDefault();
+        setSelected(chosenIndex);
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+      } else if (e.key === "Enter" || e.key === " ") {
+        if (selected !== null) {
+          e.preventDefault();
+          next();
+        }
+      } else if (e.key === "?") {
+        e.preventDefault();
+        setIsKeyboardHelpOpen((o) => !o);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [phase.kind, quiz, index, selected, answers]);
 
   if (phase.kind === "loading" || phase.kind === "grading") {
     return (
@@ -118,6 +176,27 @@ export default function SolveQuizPage() {
             {phase.correct}/{phase.total} doğru!
           </h1>
           <p className="mt-1 text-4xl font-black text-indigo-600">{phase.score} puan</p>
+
+          {/* Guest PLG Conversion Callout */}
+          {phase.isGuest && (
+            <div className="mt-5 rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-4 text-left shadow-xs">
+              <div className="flex items-center gap-2 text-purple-900 font-black text-xs mb-1">
+                <Sparkles className="size-4 text-purple-600" />
+                <span>Lig Puanını Kaydet!</span>
+              </div>
+              <p className="text-xs font-semibold text-purple-950 leading-relaxed">
+                Tebrikler! Misafir olarak çözdün. Kazandığın <strong>{phase.score} puanı</strong> Zigo Lig sıralamasına eklemek ve rozet kazanmak için ücretsiz hesap açabilirsin.
+              </p>
+              <Link
+                href="/auth"
+                className="tap-scale mt-3 flex items-center justify-center gap-2 rounded-xl bg-purple-700 py-2.5 text-xs font-black text-white hover:bg-purple-800 shadow-xs"
+              >
+                <UserPlus className="size-3.5" />
+                <span>Ücretsiz Hesap Aç & Puanı Kaydet</span>
+              </Link>
+            </div>
+          )}
+
           <div className="mt-6 space-y-2">
             <button
               type="button"
@@ -144,14 +223,67 @@ export default function SolveQuizPage() {
 
   const question = quiz!.questions[index];
 
+  // Schema.org Structured Data for Google SEO Rich Snippets
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Quiz",
+    name: quiz!.title,
+    description: quiz!.description || "Zigo MEB müfredatı interaktif quiz ve test soruları",
+    educationalAlignment: {
+      "@type": "AlignmentObject",
+      alignmentType: "educationalSubject",
+      educationalFramework: "MEB",
+      targetName: "MEB Kazanım Testleri",
+    },
+    hasPart: quiz!.questions.map((q, qIdx) => ({
+      "@type": "Question",
+      name: `Soru ${qIdx + 1}`,
+      text: q.text,
+      suggestedAnswer: q.options.map((opt) => ({
+        "@type": "Answer",
+        text: opt,
+      })),
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Schema.org JSON-LD Script for Google SEO Crawler */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 py-3 backdrop-blur-md">
-        <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600">
-          {index + 1} / {quiz!.totalQuestions}
-        </span>
-        <h1 className="truncate px-3 text-sm font-bold text-night">{quiz!.title}</h1>
-        <span className="text-xs font-black text-slate-400">✏️</span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-600">
+            {index + 1} / {quiz!.totalQuestions}
+          </span>
+          <h1 className="truncate px-2 text-sm font-bold text-night max-w-[180px] sm:max-w-xs">{quiz!.title}</h1>
+        </div>
+
+        {/* Desktop Presentation & Shortcuts Actions */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsSmartBoardOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-700 hover:bg-slate-100 shadow-2xs"
+            title="Sınıf & Akıllı Tahta Modu (Projeksiyon)"
+          >
+            <Monitor className="size-3.5 text-amber-500" />
+            <span>Akıllı Tahta</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsKeyboardHelpOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 shadow-2xs"
+            title="Klavye Kısayolları (?)"
+          >
+            <Keyboard className="size-3.5" />
+            <kbd className="font-mono text-[0.65rem] font-black">?</kbd>
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-xl lg:max-w-2xl p-4">
@@ -173,16 +305,23 @@ export default function SolveQuizPage() {
               type="button"
               onClick={() => setSelected(oi)}
               disabled={selected !== null && selected !== oi}
-              className={`tap-scale w-full rounded-2xl border p-4 text-left text-sm font-bold transition ${
+              className={`tap-scale w-full rounded-2xl border p-4 text-left text-sm font-bold transition flex items-center justify-between ${
                 selected === oi
                   ? "!border-indigo-500 !bg-indigo-50 ring-2 ring-indigo-200"
                   : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/50 disabled:opacity-60"
               }`}
             >
-              <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-500">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-500">
+                  {String.fromCharCode(65 + oi)}
+                </span>
+                <span>{opt}</span>
+              </div>
+
+              {/* Desktop key hint [A], [B], [C] */}
+              <kbd className="hidden sm:inline-block rounded-md border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[0.65rem] font-mono font-bold text-slate-400">
                 {String.fromCharCode(65 + oi)}
-              </span>
-              {opt}
+              </kbd>
             </button>
           ))}
         </div>
@@ -193,10 +332,25 @@ export default function SolveQuizPage() {
             onClick={next}
             className="tap-scale mt-6 w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-blue-600 py-4 text-sm font-black text-white shadow-lg transition hover:brightness-110"
           >
-            {index + 1 >= quiz!.totalQuestions ? "Bitir ve Sonucu Gör" : "Sonraki Soru →"}
+            {index + 1 >= quiz!.totalQuestions ? "Bitir ve Sonucu Gör" : "Sonraki Soru (Enter) →"}
           </button>
         ) : null}
       </main>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isKeyboardHelpOpen}
+        onClose={() => setIsKeyboardHelpOpen(false)}
+      />
+
+      {/* Classroom Smart Board Presenter Fullscreen Mode */}
+      <SmartBoardPresenter
+        isOpen={isSmartBoardOpen}
+        onClose={() => setIsSmartBoardOpen(false)}
+        title={quiz!.title}
+        questions={quiz!.questions}
+        initialIndex={index}
+      />
     </div>
   );
 }

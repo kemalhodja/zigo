@@ -5,6 +5,7 @@ import { ChildGradeLevelForm } from "@/components/child-grade-level-form";
 import { ChildProfileForm } from "@/components/child-profile-form";
 import { ChildQuizActivityPanel } from "@/components/child-quiz-activity-panel";
 import { ChildRewardPanel } from "@/components/child-reward-panel";
+import { ParentAnalyticsCockpit } from "@/components/parent/parent-analytics-cockpit";
 import { StateCard } from "@/components/state-card";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { getChildInterestAreaIds, getChildPersonalizedFeed, getChildProfiles } from "@/lib/domain/children";
@@ -152,6 +153,16 @@ export default async function FamilyPage() {
                   completed: f.quizActivityCompleted,
                 }}
               />
+
+              {/* Desktop Parent Analytics Cockpit */}
+              <div className="mt-4">
+                <ParentAnalyticsCockpit
+                  childName={child.display_name}
+                  totalPoints={child.total_points ?? 0}
+                  gradeLevel={child.grade_level}
+                  quizCount={quizActivity.length}
+                />
+              </div>
 
               <ChildRewardPanel childProfileId={child.id} />
             </article>

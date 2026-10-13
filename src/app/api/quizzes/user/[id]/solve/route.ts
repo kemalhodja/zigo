@@ -18,9 +18,6 @@ export async function POST(
 
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
-    if (!profile) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { data: quiz } = await supabase
       .from("user_quizzes")
@@ -28,11 +25,13 @@ export async function POST(
       .eq("id", id)
       .maybeSingle();
 
-    if (!quiz || (quiz.status !== "approved" && quiz.creator_id !== profile.id)) {
+    if (!quiz || (quiz.status !== "approved" && quiz.creator_id !== profile?.id)) {
       return NextResponse.json({ error: "Quiz bulunamadı." }, { status: 404 });
     }
 
-    void captureServerEvent(profile.id, "ugc_quiz_solved", { quiz_id: id });
+    if (profile) {
+      void captureServerEvent(profile.id, "ugc_quiz_solved", { quiz_id: id });
+    }
 
     await supabase.rpc("increment_user_quiz_play_count", { p_quiz_id: id }).then(({ error }) => {
       // RPC may not exist yet in older bundles — play count is best-effort.

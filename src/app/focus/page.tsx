@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { LiveFocusPulse } from "@/components/live-focus-pulse";
+import { PipPomodoroWidget } from "@/components/focus/pip-pomodoro-widget";
 import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
 import { createClient } from "@/lib/supabase/client";
@@ -411,6 +412,12 @@ export default function FocusPage() {
           )}
         </div>
       </div>
+
+      {/* Picture-in-Picture & Desktop Floating Focus Widget */}
+      <PipPomodoroWidget
+        initialSeconds={timeLeft}
+        topic={selectedTopic}
+      />
     </div>
   );
 }
@@ -430,5 +437,3 @@ function StatCard({ label, value, icon, color }: { label: string; value: string 
     </div>
   );
 }
-
-import { useRef } from "react";

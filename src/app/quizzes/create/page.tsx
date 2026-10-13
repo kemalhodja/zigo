@@ -11,11 +11,14 @@ type DraftQuestion = {
 
 const EMPTY_QUESTION: DraftQuestion = { text: "", options: ["", "", "", ""], correctIndex: 0 };
 
+import { MathFormulaHelper } from "@/components/teacher/math-formula-helper";
+
 export default function CreateQuizPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<DraftQuestion[]>([{ ...EMPTY_QUESTION }]);
+  const [activeQuestionIdx, setActiveQuestionIdx] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ id: string; status: string } | null>(null);
@@ -121,6 +124,18 @@ export default function CreateQuizPage() {
           />
         </div>
 
+        {/* Math & Science Formula Assistant */}
+        <MathFormulaHelper
+          onInsert={(symbol) => {
+            if (questions[activeQuestionIdx]) {
+              updateQuestion(activeQuestionIdx, {
+                text: questions[activeQuestionIdx].text + symbol,
+              });
+            }
+          }}
+          previewText={questions[activeQuestionIdx]?.text}
+        />
+
         {questions.map((q, qi) => (
           <div key={qi} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
@@ -139,8 +154,9 @@ export default function CreateQuizPage() {
             </div>
             <input
               value={q.text}
+              onFocus={() => setActiveQuestionIdx(qi)}
               onChange={(e) => updateQuestion(qi, { text: e.target.value })}
-              placeholder="Soru metni"
+              placeholder="Soru metni (örn: 2³ + √16 işleminin sonucu kaçtır?)"
               maxLength={240}
               className="w-full rounded-xl border border-slate-200 p-3 text-sm font-bold outline-none focus:border-indigo-400"
             />
