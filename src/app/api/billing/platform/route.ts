@@ -9,9 +9,9 @@ export async function GET(request: Request) {
   return Response.json({
     data: {
       webCheckout,
-      playStoreBilling: !webCheckout,
+      playStoreBilling: true,
       stripeConfigured: hasStripeConfigured(),
-      message: webCheckout ? null : getBillingPlatformMessage(locale),
+      message: getBillingPlatformMessage(locale),
     },
   });
 }

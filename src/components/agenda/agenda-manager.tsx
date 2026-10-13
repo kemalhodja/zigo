@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   DAYS_OF_WEEK,
   HOMEWORK_PRIORITY_LABELS,
+  REMINDER_OPTIONS,
   type ArchivedExam,
   type DayOfWeek,
   type ExamItem,
@@ -14,7 +15,6 @@ import {
 } from "@/lib/domain/agenda/types";
 import {
   getCurrentAndNextClass,
-  getCurriculumTemplate,
   getLessonsForDay,
   getNationalExamTemplates,
   getTodayDayOfWeek,
@@ -51,10 +51,25 @@ export function AgendaManager({
   userRole,
 }: AgendaManagerProps) {
   const isAllowedRole = userRole === "student" || userRole === "parent" || isParentView;
+
+  if (!isAllowedRole) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs">
+        <span className="text-3xl mb-2 block">🗓️</span>
+        <h3 className="text-base font-black text-slate-800">Ders Programı Bulunmuyor</h3>
+        <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+          Ders programı özelliği yalnızca öğrenci ve veli hesapları için geçerlidir. Diğer kullanıcı rollerinde ders programı bulunmamaktadır.
+        </p>
+      </div>
+    );
+  }
+
   const [selectedChildId, setSelectedChildId] = useState<string | undefined>(
     targetUserId || (childProfiles[0]?.id ?? undefined)
   );
-  const [activeTab, setActiveTab] = useState<"schedule" | "exams" | "homework" | "archive">("schedule");
+  const [activeTab, setActiveTab] = useState<"schedule" | "exams" | "homework" | "archive">(
+    "schedule"
+  );
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(getTodayDayOfWeek());
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [homeworkFilter, setHomeworkFilter] = useState<HomeworkFilter>("all");
@@ -71,7 +86,6 @@ export function AgendaManager({
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [showAddExam, setShowAddExam] = useState(false);
   const [showAddHomework, setShowAddHomework] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   // Archive modal state
   const [archivingExam, setArchivingExam] = useState<ExamItem | null>(null);
@@ -87,8 +101,18 @@ export function AgendaManager({
   );
 
   // Form States
-  const [newLesson, setNewLesson] = useState({
+  const [newLesson, setNewLesson] = useState<{
+    subject: string;
+    entryType: "time" | "period";
+    lessonNumber: number;
+    startTime: string;
+    endTime: string;
+    teacherName: string;
+    classroom: string;
+  }>({
     subject: "",
+    entryType: "period",
+    lessonNumber: 1,
     startTime: "09:00",
     endTime: "09:40",
     teacherName: "",
@@ -96,8 +120,18 @@ export function AgendaManager({
   });
 
   const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
-  const [editingLesson, setEditingLesson] = useState({
+  const [editingLesson, setEditingLesson] = useState<{
+    subject: string;
+    entryType: "time" | "period";
+    lessonNumber: number;
+    startTime: string;
+    endTime: string;
+    teacherName: string;
+    classroom: string;
+  }>({
     subject: "",
+    entryType: "period",
+    lessonNumber: 1,
     startTime: "09:00",
     endTime: "09:40",
     teacherName: "",
@@ -109,6 +143,7 @@ export function AgendaManager({
     examDate: "",
     topics: "",
     durationMinutes: 40,
+    reminderMinutes: 30,
   });
 
   const [newHomework, setNewHomework] = useState({
@@ -117,6 +152,7 @@ export function AgendaManager({
     dueDate: "",
     priority: "medium" as "low" | "medium" | "high" | "urgent",
     notes: "",
+    reminderMinutes: 60,
   });
 
   // Undo mechanism
@@ -181,14 +217,20 @@ export function AgendaManager({
   const handleAddLesson = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLesson.subject.trim()) return;
+    if (newLesson.entryType === "time" && newLesson.startTime >= newLesson.endTime) {
+      window.alert("Bitiş saati başlangıç saatinden sonra olmalıdır.");
+      return;
+    }
 
     triggerHaptic(20);
     const lesson: ScheduleLesson = {
       id: `lesson-${Date.now()}`,
       dayOfWeek: selectedDay,
       subject: newLesson.subject.trim(),
-      startTime: newLesson.startTime,
-      endTime: newLesson.endTime,
+      entryType: newLesson.entryType,
+      lessonNumber: newLesson.entryType === "period" ? Number(newLesson.lessonNumber) : undefined,
+      startTime: newLesson.entryType === "time" ? newLesson.startTime : `${newLesson.lessonNumber}. Ders`,
+      endTime: newLesson.entryType === "time" ? newLesson.endTime : "",
       teacherName: newLesson.teacherName.trim(),
       classroom: newLesson.classroom.trim(),
       targetUserId: selectedChildId,
@@ -200,8 +242,12 @@ export function AgendaManager({
     setAgenda(nextState);
     saveAgendaState(nextState, selectedChildId);
 
+    // Bir sonraki ders numarasını otomatik 1 artır
+    const nextNum = Math.min(20, (newLesson.lessonNumber || 1) + 1);
     setNewLesson({
       subject: "",
+      entryType: newLesson.entryType,
+      lessonNumber: nextNum,
       startTime: "09:00",
       endTime: "09:40",
       teacherName: "",
@@ -221,10 +267,13 @@ export function AgendaManager({
 
   const handleEditLessonClick = (lesson: ScheduleLesson) => {
     setEditingLessonId(lesson.id);
+    const isPeriod = lesson.entryType === "period" || (!lesson.startTime?.includes(":") && Boolean(lesson.lessonNumber));
     setEditingLesson({
       subject: lesson.subject,
-      startTime: lesson.startTime,
-      endTime: lesson.endTime,
+      entryType: isPeriod ? "period" : "time",
+      lessonNumber: lesson.lessonNumber || 1,
+      startTime: lesson.startTime || "09:00",
+      endTime: lesson.endTime || "09:40",
       teacherName: lesson.teacherName || "",
       classroom: lesson.classroom || "",
     });
@@ -233,6 +282,10 @@ export function AgendaManager({
   const handleUpdateLesson = (e: React.FormEvent, lessonId: string) => {
     e.preventDefault();
     if (!editingLesson.subject.trim()) return;
+    if (editingLesson.entryType === "time" && editingLesson.startTime >= editingLesson.endTime) {
+      window.alert("Bitiş saati başlangıç saatinden sonra olmalıdır.");
+      return;
+    }
 
     triggerHaptic(20);
     const nextLessons = agenda.lessons.map((l) => {
@@ -240,8 +293,10 @@ export function AgendaManager({
         return {
           ...l,
           subject: editingLesson.subject.trim(),
-          startTime: editingLesson.startTime,
-          endTime: editingLesson.endTime,
+          entryType: editingLesson.entryType,
+          lessonNumber: editingLesson.entryType === "period" ? Number(editingLesson.lessonNumber) : undefined,
+          startTime: editingLesson.entryType === "time" ? editingLesson.startTime : `${editingLesson.lessonNumber}. Ders`,
+          endTime: editingLesson.entryType === "time" ? editingLesson.endTime : "",
           teacherName: editingLesson.teacherName.trim(),
           classroom: editingLesson.classroom.trim(),
         };
@@ -255,21 +310,15 @@ export function AgendaManager({
     setEditingLessonId(null);
   };
 
-  // Şablon yükleme
-  const handleApplyTemplate = (level: "ortaokul" | "lise") => {
-    triggerHaptic([20, 30, 20]);
-    const template = getCurriculumTemplate(level);
-    const mapped: ScheduleLesson[] = template.map((t, idx) => ({
-      ...t,
-      id: `tpl-${level}-${idx}-${Date.now()}`,
-      targetUserId: selectedChildId,
-      createdAt: new Date().toISOString(),
-    }));
-
-    const nextState = { ...agenda, lessons: mapped };
+  // Programı Sıfırla (Kullanıcı sıfırdan manuel girsin)
+  const handleResetSchedule = () => {
+    if (typeof window !== "undefined" && !window.confirm("Ders programınızdaki tüm dersler silinecek. Sıfırdan girmek istediğinize emin misiniz?")) {
+      return;
+    }
+    triggerHaptic([30, 40]);
+    const nextState = { ...agenda, lessons: [] };
     setAgenda(nextState);
     saveAgendaState(nextState, selectedChildId);
-    setShowTemplateModal(false);
   };
 
   // --- Actions: Sınavlar ---
@@ -291,6 +340,7 @@ export function AgendaManager({
             .map((t, idx) => ({ id: `sub-${idx}-${Date.now()}`, title: t, isDone: false }))
         : [],
       durationMinutes: Number(newExam.durationMinutes) || 40,
+      reminderMinutes: Number(newExam.reminderMinutes) || 0,
       targetUserId: selectedChildId,
       createdAt: new Date().toISOString(),
     };
@@ -305,6 +355,7 @@ export function AgendaManager({
       examDate: "",
       topics: "",
       durationMinutes: 40,
+      reminderMinutes: 30,
     });
     setShowAddExam(false);
   };
@@ -391,6 +442,7 @@ export function AgendaManager({
       dueDate: new Date(newHomework.dueDate).toISOString(),
       priority: newHomework.priority || "medium",
       notes: newHomework.notes.trim(),
+      reminderMinutes: Number(newHomework.reminderMinutes) || 0,
       isCompleted: false,
       targetUserId: selectedChildId,
       createdAt: new Date().toISOString(),
@@ -407,6 +459,7 @@ export function AgendaManager({
       dueDate: "",
       priority: "medium",
       notes: "",
+      reminderMinutes: 60,
     });
     setShowAddHomework(false);
   };
@@ -665,21 +718,23 @@ export function AgendaManager({
         </div>
       )}
 
-      {/* Ajanda Sekmeleri: Ders Programı / Sınavlar / Ödevler */}
-      <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1 no-print">
-        <button
-          onClick={() => {
-            triggerHaptic();
-            setActiveTab("schedule");
-          }}
-          className={`rounded-lg py-2 text-xs font-black transition ${
-            activeTab === "schedule"
-              ? "bg-white text-indigo-900 shadow-xs"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          📚 Ders Programı ({agenda.lessons.length})
-        </button>
+      {/* Ajanda Sekmeleri: Ders Programı (sadece öğrenci/veli) / Sınavlar / Ödevler */}
+      <div className={`grid ${isAllowedRole ? "grid-cols-3" : "grid-cols-2"} gap-1 rounded-xl bg-slate-100 p-1 no-print`}>
+        {isAllowedRole && (
+          <button
+            onClick={() => {
+              triggerHaptic();
+              setActiveTab("schedule");
+            }}
+            className={`rounded-lg py-2 text-xs font-black transition ${
+              activeTab === "schedule"
+                ? "bg-white text-indigo-900 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            📚 Ders Programı ({agenda.lessons.length})
+          </button>
+        )}
         <button
           onClick={() => {
             triggerHaptic();
@@ -708,8 +763,8 @@ export function AgendaManager({
         </button>
       </div>
 
-      {/* TAB 1: DERS PROGRAMI */}
-      {activeTab === "schedule" && (
+      {/* TAB 1: DERS PROGRAMI (Sadece Öğrenci & Veli) */}
+      {isAllowedRole && activeTab === "schedule" && (
         <div className="space-y-3">
           {/* Gün Seçici Butonları */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-print">
@@ -741,19 +796,22 @@ export function AgendaManager({
             })}
           </div>
 
-          {/* Aksiyon Butonları: Ders Ekle & Hazır Şablon & Yazdır */}
+          {/* Aksiyon Butonları: Manuel Ders Ekle & Sıfırla & Yazdır */}
           <div className="flex items-center justify-between pt-1 no-print">
             <h3 className="text-xs font-black text-slate-700">
               {DAYS_OF_WEEK.find((d) => d.value === selectedDay)?.label} Dersleri
             </h3>
             {isAllowedRole && (
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setShowTemplateModal(true)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
-                >
-                  ⚡ Hazır Şablon
-                </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {agenda.lessons.length > 0 && (
+                  <button
+                    onClick={handleResetSchedule}
+                    className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50/60 px-2 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                    title="Ders programını tamamen sıfırla"
+                  >
+                    🗑️ Sıfırla
+                  </button>
+                )}
                 <button
                   onClick={handlePrint}
                   className="inline-flex sm:hidden items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700"
@@ -767,47 +825,11 @@ export function AgendaManager({
                   }}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-700 shadow-xs transition"
                 >
-                  <span>+</span> Ders Ekle
+                  <span>+</span> Manuel Ders Ekle
                 </button>
               </div>
             )}
           </div>
-
-          {/* Hazır Müfredat Şablonu Modal */}
-          {showTemplateModal && (
-            <div className="rounded-2xl border border-indigo-200 bg-white p-4 shadow-sm space-y-3 animate-in fade-in duration-150 no-print">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-indigo-950">
-                  ⚡ Hazır Okul Müfredat Şablonu Yükle
-                </h4>
-                <button
-                  onClick={() => setShowTemplateModal(false)}
-                  className="text-slate-400 hover:text-slate-600 text-xs font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-[0.7rem] text-slate-500 leading-relaxed">
-                Tüm haftayı tek tıkla standart MEB ders programıyla doldurun.
-              </p>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <button
-                  onClick={() => handleApplyTemplate("ortaokul")}
-                  className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-left hover:bg-indigo-100/60 transition"
-                >
-                  <p className="text-xs font-black text-indigo-900">🎒 Ortaokul Programı</p>
-                  <p className="text-[0.65rem] text-slate-500 mt-0.5">5-8. sınıflar için 20 ders</p>
-                </button>
-                <button
-                  onClick={() => handleApplyTemplate("lise")}
-                  className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-left hover:bg-blue-100/60 transition"
-                >
-                  <p className="text-xs font-black text-blue-900">🎓 Lise Programı</p>
-                  <p className="text-[0.65rem] text-slate-500 mt-0.5">9-12. sınıflar için 20 ders</p>
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Yeni Ders Ekleme Formu */}
           {showAddLesson && (
@@ -828,9 +850,40 @@ export function AgendaManager({
                 </button>
               </div>
 
+              {/* Giriş Tipi Seçici: 1. Ders mi / Saatli mi */}
               <div>
                 <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
-                  Ders Adı *
+                  Giriş Şekli
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewLesson({ ...newLesson, entryType: "period" })}
+                    className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
+                      newLesson.entryType === "period"
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    🔢 1. Ders, 2. Ders Şeklinde
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewLesson({ ...newLesson, entryType: "time" })}
+                    className={`py-2 px-3 rounded-xl text-xs font-black border transition ${
+                      newLesson.entryType === "time"
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    ⏰ Saatli (09:00 - 09:40)
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
+                  Ders Adı * (Manuel girin veya listeden seçin)
                 </label>
                 <input
                   type="text"
@@ -840,34 +893,77 @@ export function AgendaManager({
                   onChange={(e) => setNewLesson({ ...newLesson, subject: e.target.value })}
                   className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {[
+                    "Matematik", "Türkçe", "Fen Bilimleri", "İngilizce",
+                    "Sosyal Bilgiler", "Fizik", "Kimya", "Biyoloji",
+                    "Tarih", "Coğrafya", "Geometri", "Din Kültürü",
+                    "Beden Eğitimi", "Müzik", "Görsel Sanatlar", "Bilişim"
+                  ].map((sub) => (
+                    <button
+                      key={sub}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic(15);
+                        setNewLesson({ ...newLesson, subject: sub });
+                      }}
+                      className={`rounded-lg px-2 py-1 text-[0.68rem] font-bold border transition ${
+                        newLesson.subject === sub
+                          ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      {sub}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              {newLesson.entryType === "period" ? (
                 <div>
                   <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
-                    Başlangıç Saati *
+                    Kaçıncı Ders? (Sıra No) *
                   </label>
-                  <input
-                    type="time"
-                    required
-                    value={newLesson.startTime}
-                    onChange={(e) => setNewLesson({ ...newLesson, startTime: e.target.value })}
+                  <select
+                    value={newLesson.lessonNumber}
+                    onChange={(e) => setNewLesson({ ...newLesson, lessonNumber: Number(e.target.value) })}
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                  >
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                      <option key={num} value={num}>
+                        {num}. Ders
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div>
-                  <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
-                    Bitiş Saati *
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={newLesson.endTime}
-                    onChange={(e) => setNewLesson({ ...newLesson, endTime: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
+                      Başlangıç Saati *
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={newLesson.startTime}
+                      onChange={(e) => setNewLesson({ ...newLesson, startTime: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
+                      Bitiş Saati *
+                    </label>
+                    <input
+                      type="time"
+                      required
+                      value={newLesson.endTime}
+                      onChange={(e) => setNewLesson({ ...newLesson, endTime: e.target.value })}
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -916,12 +1012,21 @@ export function AgendaManager({
 
           {/* Günün Ders Listesi */}
           {lessonsForSelectedDay.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-6 text-center no-print">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center no-print">
               <span className="text-3xl">📖</span>
-              <p className="mt-2 text-xs font-bold text-slate-700">Bu gün için ders eklenmemiş.</p>
+              <p className="mt-2 text-xs font-bold text-slate-700">Bu gün için henüz ders eklenmemiş.</p>
               <p className="mt-1 text-[0.7rem] text-slate-400">
-                Yukarıdaki "Ders Ekle" veya "⚡ Hazır Şablon" butonuyla derslerinizi oluşturabilirsiniz.
+                Ders programınızı manuel olarak girmek için aşağıdaki butona dokunun.
               </p>
+              <button
+                onClick={() => {
+                  triggerHaptic();
+                  setShowAddLesson(true);
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-black text-white hover:bg-indigo-700 shadow-xs transition"
+              >
+                <span>+</span> Manuel Ders Ekle
+              </button>
             </div>
           ) : (
             <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
@@ -929,6 +1034,32 @@ export function AgendaManager({
                 <div key={lesson.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
                   {editingLessonId === lesson.id ? (
                     <form onSubmit={(e) => handleUpdateLesson(e, lesson.id)} className="p-4 space-y-3 bg-indigo-50/30">
+                      {/* Düzenleme Giriş Şekli */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingLesson({ ...editingLesson, entryType: "period" })}
+                          className={`py-1.5 px-2 rounded-lg text-[0.7rem] font-black border transition ${
+                            editingLesson.entryType === "period"
+                              ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                              : "bg-white text-slate-600 border-slate-200"
+                          }`}
+                        >
+                          🔢 Ders No
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingLesson({ ...editingLesson, entryType: "time" })}
+                          className={`py-1.5 px-2 rounded-lg text-[0.7rem] font-black border transition ${
+                            editingLesson.entryType === "time"
+                              ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                              : "bg-white text-slate-600 border-slate-200"
+                          }`}
+                        >
+                          ⏰ Saatli
+                        </button>
+                      </div>
+
                       <div>
                         <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Ders Adı *</label>
                         <input
@@ -939,28 +1070,47 @@ export function AgendaManager({
                           className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+
+                      {editingLesson.entryType === "period" ? (
                         <div>
-                          <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Başlangıç Saati *</label>
-                          <input
-                            type="time"
-                            required
-                            value={editingLesson.startTime}
-                            onChange={(e) => setEditingLesson({ ...editingLesson, startTime: e.target.value })}
+                          <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Kaçıncı Ders? *</label>
+                          <select
+                            value={editingLesson.lessonNumber}
+                            onChange={(e) => setEditingLesson({ ...editingLesson, lessonNumber: Number(e.target.value) })}
                             className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+                              <option key={num} value={num}>
+                                {num}. Ders
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                        <div>
-                          <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Bitiş Saati *</label>
-                          <input
-                            type="time"
-                            required
-                            value={editingLesson.endTime}
-                            onChange={(e) => setEditingLesson({ ...editingLesson, endTime: e.target.value })}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Başlangıç Saati *</label>
+                            <input
+                              type="time"
+                              required
+                              value={editingLesson.startTime}
+                              onChange={(e) => setEditingLesson({ ...editingLesson, startTime: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">Bitiş Saati *</label>
+                            <input
+                              type="time"
+                              required
+                              value={editingLesson.endTime}
+                              onChange={(e) => setEditingLesson({ ...editingLesson, endTime: e.target.value })}
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
                         </div>
-                      </div>
+                      )}
+
                       <div className="flex justify-end gap-2 pt-1">
                         <button type="button" onClick={() => setEditingLessonId(null)} className="rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700">İptal</button>
                         <button type="submit" className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700">Güncelle</button>
@@ -970,8 +1120,17 @@ export function AgendaManager({
                     <div className="flex items-center justify-between p-3.5">
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 size-11 shrink-0 font-black">
-                          <span className="text-xs">{lesson.startTime}</span>
-                          <span className="text-[0.62rem] text-indigo-400">{lesson.endTime}</span>
+                          {lesson.entryType === "period" || (!lesson.startTime?.includes(":") && lesson.lessonNumber) ? (
+                            <span className="text-xs text-center leading-tight font-black">
+                              {lesson.lessonNumber ? `${lesson.lessonNumber}.` : lesson.startTime}
+                              <span className="block text-[0.6rem] font-bold text-indigo-400">Ders</span>
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-xs">{lesson.startTime}</span>
+                              <span className="text-[0.62rem] text-indigo-400">{lesson.endTime}</span>
+                            </>
+                          )}
                         </div>
                         <div>
                           <h4 className="text-xs font-black text-night">{lesson.subject}</h4>
@@ -1122,6 +1281,28 @@ export function AgendaManager({
                 />
               </div>
 
+              <div>
+                <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
+                  🔔 Hatırlatıcı Bildirimi
+                </label>
+                <select
+                  value={newExam.reminderMinutes}
+                  onChange={(e) =>
+                    setNewExam({ ...newExam, reminderMinutes: Number(e.target.value) })
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500"
+                >
+                  {REMINDER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[0.65rem] text-slate-400 mt-1">
+                  Belirlenen süre öncesinde anasayfada otomatik canlı hatırlatıcı kutusu görünür.
+                </p>
+              </div>
+
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
@@ -1187,6 +1368,11 @@ export function AgendaManager({
                           <span className="text-[0.7rem] font-bold text-slate-500">
                             📅 {formattedDate} ({exam.durationMinutes} dk)
                           </span>
+                          {exam.reminderMinutes && exam.reminderMinutes > 0 ? (
+                            <span className="rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[0.62rem] font-bold text-amber-700">
+                              🔔 {REMINDER_OPTIONS.find((r) => r.value === exam.reminderMinutes)?.label || `${exam.reminderMinutes} dk`}
+                            </span>
+                          ) : null}
                         </div>
                         <h4 className="text-sm font-black text-night">{exam.subject}</h4>
                       </div>
@@ -1357,6 +1543,28 @@ export function AgendaManager({
                 />
               </div>
 
+              <div>
+                <label className="text-[0.7rem] font-bold text-slate-600 block mb-1">
+                  🔔 Hatırlatıcı Bildirimi
+                </label>
+                <select
+                  value={newHomework.reminderMinutes}
+                  onChange={(e) =>
+                    setNewHomework({ ...newHomework, reminderMinutes: Number(e.target.value) })
+                  }
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {REMINDER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[0.65rem] text-slate-400 mt-1">
+                  Belirlenen süre öncesinde anasayfada otomatik canlı hatırlatıcı kutusu görünür.
+                </p>
+              </div>
+
               <div className="flex justify-end gap-2 pt-1">
                 <button
                   type="button"
@@ -1425,6 +1633,11 @@ export function AgendaManager({
                           >
                             ⏳ Son: {formattedDate}
                           </span>
+                          {hw.reminderMinutes && hw.reminderMinutes > 0 ? (
+                            <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[0.62rem] font-bold text-emerald-700">
+                              🔔 {REMINDER_OPTIONS.find((r) => r.value === hw.reminderMinutes)?.label || `${hw.reminderMinutes} dk`}
+                            </span>
+                          ) : null}
                         </div>
                         <h4
                           className={`text-xs font-black mt-1 text-night ${

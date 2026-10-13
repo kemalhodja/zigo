@@ -115,35 +115,6 @@ export function GooglePlaySubscriptionModal({
     }
   }
 
-  async function handleSandboxActivate() {
-    setInternalLoading(true);
-    setInternalError(null);
-    try {
-      const res = await fetch("/api/billing/google-play", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planId,
-          productId: planId,
-          purchaseToken: `sandbox_test_token_${Date.now()}`,
-          packageName: "com.zigo.education",
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok) {
-        throw new Error(data?.error || "Sandbox aktivasyonu başarısız");
-      }
-      const { triggerConfetti } = await import("@/lib/client/confetti");
-      triggerConfetti();
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      window.location.href = "/billing/success?kind=google_play";
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setInternalError(msg);
-      setInternalLoading(false);
-    }
-  }
-
   async function handleRestore() {
     setInternalLoading(true);
     setInternalError(null);
@@ -296,20 +267,12 @@ export function GooglePlaySubscriptionModal({
                     <span>Play Store</span>
                     <ExternalLink className="size-3" />
                   </a>
-                  <button
-                    type="button"
-                    onClick={handleSandboxActivate}
-                    disabled={isLoading}
-                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-emerald-600 px-2 py-2 text-xs font-black text-white hover:bg-emerald-700 transition disabled:opacity-60 text-center"
-                  >
-                    <span>🧪 Test Onayı</span>
-                  </button>
                   <Link
                     href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
                     onClick={() => onClose()}
-                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-amber-500 px-2 py-2 text-xs font-black text-slate-950 hover:bg-amber-600 transition text-center"
+                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 hover:bg-amber-600 transition text-center col-span-2 sm:col-span-1"
                   >
-                    <span>Havale</span>
+                    <span>Havale / FAST</span>
                     <ExternalLink className="size-3" />
                   </Link>
                 </div>
@@ -365,26 +328,16 @@ export function GooglePlaySubscriptionModal({
                   )}
                 </button>
               )}
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
-                  onClick={() => {
-                    if (onFallbackHavale) onFallbackHavale();
-                    onClose();
-                  }}
-                  className="rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-center text-xs font-bold text-slate-800 transition hover:bg-slate-100 flex items-center justify-center gap-1.5"
-                >
-                  <span>🏦 Havale / FAST</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleSandboxActivate}
-                  disabled={isLoading}
-                  className="rounded-xl border border-emerald-200 bg-emerald-50 py-2.5 px-3 text-center text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 disabled:opacity-60 flex items-center justify-center gap-1.5"
-                >
-                  <span>🧪 Test Onayı (Demo)</span>
-                </button>
-              </div>
+              <Link
+                href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
+                onClick={() => {
+                  if (onFallbackHavale) onFallbackHavale();
+                  onClose();
+                }}
+                className="rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-center text-xs font-bold text-slate-800 transition hover:bg-slate-100 flex items-center justify-center gap-1.5"
+              >
+                <span>🏦 Havale / FAST ile Öde</span>
+              </Link>
             </div>
           )}
 

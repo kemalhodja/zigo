@@ -187,9 +187,11 @@ export default async function PublicProfilePage({ params, searchParams }: Public
             <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-slate-100 px-2 text-xs font-black text-night hover:bg-slate-200 transition whitespace-nowrap" href="/questions">
               ❓ Soru sor
             </Link>
-            <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 px-2 text-xs font-black text-indigo-900 hover:bg-indigo-100 transition whitespace-nowrap" href={`/profile/${profile.id}?tab=agenda`}>
-              🗓️ Ajanda
-            </Link>
+            {profile.role === "student" || profile.role === "parent" ? (
+              <Link className="tap-scale flex h-9.5 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-200 px-2 text-xs font-black text-indigo-900 hover:bg-indigo-100 transition whitespace-nowrap" href={`/profile/${profile.id}?tab=agenda`}>
+                🗓️ Ders Programı
+              </Link>
+            ) : null}
           </div>
 
           {/* Stats row */}
@@ -263,44 +265,46 @@ export default async function PublicProfilePage({ params, searchParams }: Public
 
       <ProfileHighlights />
 
-      <section className="-mx-4 mt-2 grid grid-cols-3 border-y border-slate-100 bg-white">
-        <Link
-          className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 ${
-            activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-          }`}
-          href={`/profile/${profile.id}`}
-        >
-          <span className="sr-only">Posts</span>
-          <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M4 4h16v16H4z" />
-            <path d="M4 12h16" />
-            <path d="M12 4v16" />
-          </svg>
-        </Link>
-        <Link
-          className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 ${
-            activeTab === "reels" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-          }`}
-          href={`/profile/${profile.id}?tab=micro`}
-        >
-          <span className="sr-only">Micro</span>
-          <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <rect height="16" rx="4" width="18" x="3" y="4" />
-            <path d="M11 12l4 2.5-4 2.5z" />
-          </svg>
-        </Link>
-        <Link
-          className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 flex flex-col items-center justify-center gap-0.5 ${
-            activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-          }`}
-          href={`/profile/${profile.id}?tab=agenda`}
-        >
-          <span className="text-sm">🗓️</span>
-          <span className="text-[0.62rem] font-bold">Ajanda</span>
-        </Link>
+      <section className={`-mx-4 mt-2 grid ${profile.role === "student" || profile.role === "parent" ? "grid-cols-3" : "grid-cols-2"} border-y border-slate-100 bg-white`}>
+              <Link
+                className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 ${
+                  activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+                }`}
+                href={`/profile/${profile.id}`}
+              >
+                <span className="sr-only">Posts</span>
+                <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M4 4h16v16H4z" />
+                  <path d="M4 12h16" />
+                  <path d="M12 4v16" />
+                </svg>
+              </Link>
+              <Link
+                className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 ${
+                  activeTab === "reels" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+                }`}
+                href={`/profile/${profile.id}?tab=micro`}
+              >
+                <span className="sr-only">Micro</span>
+                <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect height="16" rx="4" width="18" x="3" y="4" />
+                  <path d="M11 12l4 2.5-4 2.5z" />
+                </svg>
+              </Link>
+              {profile.role === "student" || profile.role === "parent" ? (
+                <Link
+                  className={`tap-scale active:scale-95 border-b-[3px] px-3 py-3 text-center text-xs font-black transition-all duration-300 flex flex-col items-center justify-center gap-0.5 ${
+                    activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+                  }`}
+                  href={`/profile/${profile.id}?tab=agenda`}
+                >
+                  <span className="text-sm">🗓️</span>
+                  <span className="text-[0.62rem] font-bold">Ders Programı</span>
+                </Link>
+              ) : null}
       </section>
 
-      {activeTab === "agenda" ? (
+      {activeTab === "agenda" && (profile.role === "student" || profile.role === "parent") ? (
         <section className="px-4 py-4">
           <PublicAgendaViewer userId={profile.id} userName={profile.full_name} />
         </section>

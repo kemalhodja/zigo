@@ -119,7 +119,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
         unreadCount={unreadCount}
       />
       {!isSignedOut ? <PushNotificationPanel role={profileRole} /> : null}
-      {!isSignedOut && (profileRole === "student" || profileRole === "parent") ? (
+      {!isSignedOut ? (
         <div className="pt-2">
           <HomeAgendaAlert viewerRole={profileRole} targetUserId={profileId} />
         </div>

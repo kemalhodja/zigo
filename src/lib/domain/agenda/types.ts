@@ -65,8 +65,10 @@ export const scheduleLessonSchema = z.object({
     z.literal(7),
   ]),
   subject: z.string().trim().min(1, "Ders adı zorunludur").max(60),
-  startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Başlangıç saati SS:DD formatında olmalıdır"),
-  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Bitiş saati SS:DD formatında olmalıdır"),
+  startTime: z.string().optional().default(""),
+  endTime: z.string().optional().default(""),
+  entryType: z.enum(["period", "time"]).optional(), // "period": 1. Ders, 2. Ders | "time": 09:00 - 09:40
+  lessonNumber: z.number().int().min(1).max(20).optional(), // 1, 2, 3...
   teacherName: z.string().trim().max(60).optional(),
   classroom: z.string().trim().max(40).optional(),
   targetUserId: z.string().optional(),
@@ -85,6 +87,15 @@ export const examSubtopicSchema = z.object({
 export type ExamSubtopic = z.infer<typeof examSubtopicSchema>;
 
 // --- Sınav Şeması ---
+export const REMINDER_OPTIONS = [
+  { value: 0,    label: "Hatırlatıcı yok" },
+  { value: 15,   label: "15 dakika önce" },
+  { value: 30,   label: "30 dakika önce" },
+  { value: 60,   label: "1 saat önce" },
+  { value: 120,  label: "2 saat önce" },
+  { value: 1440, label: "1 gün önce" },
+] as const;
+
 export const examItemSchema = z.object({
   id: z.string().min(1),
   subject: z.string().trim().min(1, "Ders adı zorunludur").max(60),
@@ -92,6 +103,7 @@ export const examItemSchema = z.object({
   topics: z.string().trim().max(300).optional().default(""),
   subtopics: z.array(examSubtopicSchema).optional(),
   durationMinutes: z.number().int().min(10).max(300).optional().default(40),
+  reminderMinutes: z.number().int().optional(),
   targetUserId: z.string().optional(),
   createdAt: z.string().optional(),
 });
@@ -107,6 +119,7 @@ export const homeworkItemSchema = z.object({
   isCompleted: z.boolean().optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
   notes: z.string().trim().max(500).optional(),
+  reminderMinutes: z.number().int().optional(),
   targetUserId: z.string().optional(),
   createdAt: z.string().optional(),
 });
@@ -139,6 +152,6 @@ export type ArchivedExam = z.infer<typeof archivedExamSchema>;
 export type AgendaAlertSummary = {
   tomorrowDayName: string;
   tomorrowLessons: ScheduleLesson[];
-  upcomingExams: (ExamItem & { hoursLeft: number; isTomorrow: boolean; isToday: boolean })[];
-  pendingHomeworks: (HomeworkItem & { hoursLeft: number; isUrgent: boolean })[];
+  upcomingExams: (ExamItem & { hoursLeft: number; isTomorrow: boolean; isToday: boolean; reminderTriggered: boolean })[];
+  pendingHomeworks: (HomeworkItem & { hoursLeft: number; isUrgent: boolean; reminderTriggered: boolean })[];
 };

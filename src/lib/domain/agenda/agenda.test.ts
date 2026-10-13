@@ -6,6 +6,7 @@ import {
   getCurriculumTemplate,
   getCurrentAndNextClass,
   getNationalExamTemplates,
+  getLessonsForDay,
   getTomorrowDayOfWeek,
   getTomorrowLessons,
   getUpcomingExams,
@@ -98,6 +99,15 @@ describe("Agenda Domain Business Rules", () => {
     expect(tomorrowLessons[1].subject).toBe("Tarih"); // 10:30
   });
 
+  it("sorts manually entered period lessons by lesson number", () => {
+    const lessons: ScheduleLesson[] = [
+      { id: "l2", dayOfWeek: 1, subject: "Türkçe", entryType: "period", lessonNumber: 2, startTime: "2. Ders", endTime: "" },
+      { id: "l1", dayOfWeek: 1, subject: "Matematik", entryType: "period", lessonNumber: 1, startTime: "1. Ders", endTime: "" },
+    ];
+
+    expect(getLessonsForDay(lessons, 1).map((lesson) => lesson.id)).toEqual(["l1", "l2"]);
+  });
+
   it("generates upcoming exam alerts within 48 hours with tomorrow and today flags", () => {
     const baseNow = new Date("2026-09-16T12:00:00Z");
 
@@ -178,5 +188,12 @@ describe("Agenda Domain Business Rules", () => {
     const lise = getCurriculumTemplate("lise");
     expect(ortaokul.length).toBe(20);
     expect(lise.length).toBe(20);
+  });
+
+  it("ensures student and parent lesson schedule starts completely reset and empty", async () => {
+    const { getStoredAgenda, migrateAgendaStorage } = await import("./storage");
+    migrateAgendaStorage("test-student");
+    const agenda = getStoredAgenda("test-student");
+    expect(agenda.lessons).toEqual([]);
   });
 });

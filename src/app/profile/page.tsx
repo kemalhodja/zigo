@@ -297,11 +297,11 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             <Link className="zigo-action-chip tap-scale rounded-lg border border-slate-200 bg-white text-night" href={profile.isSignedOut ? "/" : "/collections"}>
               {profile.isSignedOut ? p.feed : p.saved}
             </Link>
-            {(profile.role === "student" || profile.role === "parent") && (
+            {(profile.role === "student" || profile.role === "parent") && !profile.isSignedOut ? (
               <Link className="zigo-action-chip tap-scale rounded-lg border border-indigo-200 bg-indigo-50/50 text-indigo-900 font-black" href="/profile?tab=agenda">
-                🗓️ Ajanda
+                🗓️ Ders Programı
               </Link>
-            )}
+            ) : null}
             {profile.role === "parent" && !profile.isSignedOut ? (
               <CreatePrivateLessonModal
                 areas={educationAreas}
@@ -333,68 +333,76 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
       <ProfileActionBar isSignedOut={profile.isSignedOut} messages={m} role={profile.role} />
 
-      <section className={`-mx-4 mt-2 grid ${profile.role === "teacher" ? "grid-cols-5" : "grid-cols-4"} border-y border-slate-100 bg-white`}>
-        <Link
-          className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
-            activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-          }`}
-          href="/profile"
-        >
-          <span className="sr-only">{m.common.posts}</span>
-          <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M4 4h16v16H4z" />
-            <path d="M4 12h16" />
-            <path d="M12 4v16" />
-          </svg>
-        </Link>
-        <Link
-          className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
-            activeTab === "reels" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-          }`}
-          href="/profile?tab=micro"
-        >
-          <span className="sr-only">{m.zigo.micro}</span>
-          <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <rect height="16" rx="4" width="18" x="3" y="4" />
-            <path d="M11 12l4 2.5-4 2.5z" />
-          </svg>
-        </Link>
-        <Link
-          className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
-            activeTab === "saved" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-          }`}
-          href="/profile?tab=saved"
-        >
-          <span className="sr-only">{p.saved}</span>
-          <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M6 3h12v18l-6-4-6 4z" />
-          </svg>
-        </Link>
-        {(profile.role === "student" || profile.role === "parent") && (
-          <Link
-            className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
-              activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-            }`}
-            href="/profile?tab=agenda"
-          >
-            <span className="text-sm">🗓️</span>
-            <span className="text-[0.62rem] font-bold">Ajanda</span>
-          </Link>
-        )}
-        {profile.role === "teacher" ? (
-          <Link
-            className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
-              activeTab === "market" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
-            }`}
-            href="/profile?tab=market"
-          >
-            <span className="text-sm">🎯</span>
-            <span className="text-[0.65rem] font-bold">İlanlar</span>
-          </Link>
-        ) : null}
-      </section>
+      {(() => {
+        const canViewAgenda = (profile.role === "student" || profile.role === "parent") && !profile.isSignedOut;
+        const isTeacherRole = profile.role === "teacher";
+        const gridColsClass = canViewAgenda && isTeacherRole ? "grid-cols-5" : canViewAgenda || isTeacherRole ? "grid-cols-4" : "grid-cols-3";
 
-      {activeTab === "agenda" ? (
+        return (
+          <section className={`-mx-4 mt-2 grid ${gridColsClass} border-y border-slate-100 bg-white`}>
+            <Link
+              className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
+                activeTab === "posts" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+              }`}
+              href="/profile"
+            >
+              <span className="sr-only">{m.common.posts}</span>
+              <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M4 4h16v16H4z" />
+                <path d="M4 12h16" />
+                <path d="M12 4v16" />
+              </svg>
+            </Link>
+            <Link
+              className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
+                activeTab === "reels" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+              }`}
+              href="/profile?tab=micro"
+            >
+              <span className="sr-only">{m.zigo.micro}</span>
+              <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect height="16" rx="4" width="18" x="3" y="4" />
+                <path d="M11 12l4 2.5-4 2.5z" />
+              </svg>
+            </Link>
+            <Link
+              className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition ${
+                activeTab === "saved" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+              }`}
+              href="/profile?tab=saved"
+            >
+              <span className="sr-only">{p.saved}</span>
+              <svg aria-hidden="true" className="mx-auto size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M6 3h12v18l-6-4-6 4z" />
+              </svg>
+            </Link>
+            {canViewAgenda ? (
+              <Link
+                className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
+                  activeTab === "agenda" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+                }`}
+                href="/profile?tab=agenda"
+              >
+                <span className="text-sm">🗓️</span>
+                <span className="text-[0.62rem] font-bold">Ders Programı</span>
+              </Link>
+            ) : null}
+            {isTeacherRole ? (
+              <Link
+                className={`border-b-[3px] px-3 py-3 text-center text-xs font-black transition flex flex-col items-center justify-center gap-0.5 ${
+                  activeTab === "market" ? "zigo-tab-active-underline" : "zigo-tab-inactive-underline"
+                }`}
+                href="/profile?tab=market"
+              >
+                <span className="text-sm">🎯</span>
+                <span className="text-[0.65rem] font-bold">İlanlar</span>
+              </Link>
+            ) : null}
+          </section>
+        );
+      })()}
+
+      {activeTab === "agenda" && ((profile.role === "student" || profile.role === "parent") && !profile.isSignedOut) ? (
         <section className="px-4 py-4 bg-white rounded-2xl border border-slate-100 mt-2">
           <AgendaManager
             targetUserId={profile.id}
@@ -544,7 +552,7 @@ function ProfileGridModeStrip({
   messages,
   tileCount,
 }: {
-  activeTab: "posts" | "reels" | "saved" | "market";
+  activeTab: "posts" | "reels" | "saved" | "market" | "agenda";
   isSignedOut: boolean;
   messages: Messages;
   tileCount: number;

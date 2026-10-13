@@ -60,22 +60,38 @@ export function getTomorrowDayOfWeek(now: Date = new Date()): DayOfWeek {
 }
 
 /**
- * Yarınki ders programını filtreler ve başlangıç saatine göre sıralar.
+ * Dersleri ders numarasına veya saatine göre sıralayan yardımcı
+ */
+export function sortLessons(a: ScheduleLesson, b: ScheduleLesson): number {
+  if (a.entryType === "period" && b.entryType === "period") {
+    return (a.lessonNumber ?? 0) - (b.lessonNumber ?? 0);
+  }
+  if (a.entryType === "period" && b.entryType !== "period") {
+    return -1;
+  }
+  if (a.entryType !== "period" && b.entryType === "period") {
+    return 1;
+  }
+  return (a.startTime || "").localeCompare(b.startTime || "");
+}
+
+/**
+ * Yarınki ders programını filtreler ve sıralar.
  */
 export function getTomorrowLessons(lessons: ScheduleLesson[], now: Date = new Date()): ScheduleLesson[] {
   const tomorrowDay = getTomorrowDayOfWeek(now);
   return lessons
     .filter((lesson) => lesson.dayOfWeek === tomorrowDay)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    .sort(sortLessons);
 }
 
 /**
- * Belirli bir güne ait dersleri saat sırasına göre döner.
+ * Belirli bir güne ait dersleri sıralı döner.
  */
 export function getLessonsForDay(lessons: ScheduleLesson[], dayOfWeek: DayOfWeek): ScheduleLesson[] {
   return lessons
     .filter((lesson) => lesson.dayOfWeek === dayOfWeek)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    .sort(sortLessons);
 }
 
 /**
@@ -93,6 +109,7 @@ export function getUpcomingExams(
     .map((exam) => {
       const examMs = new Date(exam.examDate).getTime();
       const hoursLeft = Math.max(0, Math.round((examMs - nowMs) / (1000 * 60 * 60)));
+      const minutesLeft = Math.max(0, Math.round((examMs - nowMs) / (1000 * 60)));
       const examDate = new Date(exam.examDate);
 
       const isToday =
@@ -107,11 +124,20 @@ export function getUpcomingExams(
         examDate.getMonth() === tomorrow.getMonth() &&
         examDate.getFullYear() === tomorrow.getFullYear();
 
+      // Hatırlatıcı: belirtilen sþre kala tetiklenir (varsayılan 0 = tetiklenmiyor)
+      const reminderMinutes = exam.reminderMinutes ?? 0;
+      const reminderTriggered =
+        reminderMinutes > 0 &&
+        minutesLeft <= reminderMinutes &&
+        minutesLeft >= 0 &&
+        examMs > nowMs;
+
       return {
         ...exam,
         hoursLeft,
         isToday,
         isTomorrow,
+        reminderTriggered,
       };
     })
     .filter((e) => e.hoursLeft <= windowHours)
@@ -133,10 +159,20 @@ export function getPendingHomeworkAlerts(
     .map((hw) => {
       const dueMs = new Date(hw.dueDate).getTime();
       const hoursLeft = Math.max(0, Math.round((dueMs - nowMs) / (1000 * 60 * 60)));
+      const minutesLeft = Math.max(0, Math.round((dueMs - nowMs) / (1000 * 60)));
+
+      const reminderMinutes = hw.reminderMinutes ?? 0;
+      const reminderTriggered =
+        reminderMinutes > 0 &&
+        minutesLeft <= reminderMinutes &&
+        minutesLeft >= 0 &&
+        dueMs > nowMs;
+
       return {
         ...hw,
         hoursLeft,
         isUrgent: hoursLeft <= 24,
+        reminderTriggered,
       };
     })
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
@@ -200,6 +236,9 @@ export function getCurrentAndNextClass(
   let minutesUntilNext = 0;
 
   for (const lesson of todayLessons) {
+    if (!lesson.startTime || !lesson.endTime || !lesson.startTime.includes(":") || !lesson.endTime.includes(":")) {
+      continue;
+    }
     const [startH, startM] = lesson.startTime.split(":").map(Number);
     const [endH, endM] = lesson.endTime.split(":").map(Number);
     const startTotal = startH * 60 + startM;
