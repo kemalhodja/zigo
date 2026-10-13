@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { redeemChildStoreProduct, redeemStoreProduct } from "@/lib/domain/store";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -12,6 +13,14 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const subscription = await getUserSubscription(supabase, profile.id);
+    if (!subscription.isPremium) {
+      return NextResponse.json(
+        { error: "Mağaza erişimi ve puan harcama için Zigo Plus aboneliği gereklidir." },
+        { status: 403 },
+      );
     }
 
     const body = await request.json();

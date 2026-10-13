@@ -166,9 +166,10 @@ export async function getExplorePosts(
 
     if (isMissingRpc) {
       const page = await getSocialFeed(supabase, viewerId, { limit: safeLimit });
-      if (page.posts.length > 0) return page.posts;
+      const filtered = page.posts.filter((p) => p.author?.role !== "student" && p.author?.role !== "parent");
+      if (filtered.length > 0) return filtered;
       const globalPage = await getSocialFeed(supabase, undefined, { limit: safeLimit });
-      return globalPage.posts;
+      return globalPage.posts.filter((p) => p.author?.role !== "student" && p.author?.role !== "parent");
     }
 
     throw error;

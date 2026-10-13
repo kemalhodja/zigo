@@ -46,11 +46,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: userUpdateError.message || "Kullanıcı güncellenemedi." }, { status: 400 });
     }
 
-    // 3. Sync subscription tier RPC
+    // 3. Direct sync to user_subscriptions table
+    try {
+      await (adminClient.from("user_subscriptions") as unknown as {
+        upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<unknown>;
+      }).upsert(
+        {
+          user_id: body.userId,
+          tier: "zigo_plus",
+          current_period_end: periodEndsAt,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+    } catch (e) {
+      console.warn("[ADMIN_GRANT_USER_SUBS_WARN]", e);
+    }
+
+    // 4. Sync subscription tier RPC
     try {
       await adminClient.rpc("set_user_subscription_tier", {
         p_user_id: body.userId,
         p_tier: "zigo_plus",
+        p_current_period_end: periodEndsAt,
       });
     } catch {
       // Fallback is non-fatal

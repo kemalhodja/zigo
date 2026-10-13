@@ -19,6 +19,7 @@ describe("POST /api/admin/users/grant-plus", () => {
   const insert = vi.fn();
   const eq = vi.fn();
   const update = vi.fn();
+  const upsert = vi.fn();
   const rpc = vi.fn();
 
   beforeEach(() => {
@@ -26,13 +27,15 @@ describe("POST /api/admin/users/grant-plus", () => {
     insert.mockResolvedValue({ error: null });
     eq.mockResolvedValue({ error: null });
     update.mockReturnValue({ eq });
+    upsert.mockResolvedValue({ error: null });
     rpc.mockResolvedValue({ error: null });
 
     const mockAdminDb = {
       from: vi.fn((table: string) => {
         if (table === "admin_billing_grants") return { insert };
         if (table === "users") return { update };
-        return { insert, update };
+        if (table === "user_subscriptions") return { upsert };
+        return { insert, update, upsert };
       }),
       rpc,
     };

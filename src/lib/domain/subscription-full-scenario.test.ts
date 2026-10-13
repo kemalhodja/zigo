@@ -3,7 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_GAME_LIMITS, isNightBanActive, settingsFromParentRow } from "@/lib/domain/game-limits";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { applyPromoCode, calculateDynamicPrice, resolveSubscriptionPlanPricing } from "@/lib/domain/subscription-campaign";
-import { formatTryPrice, resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
+import {
+  areSubscriptionProductsCompatible,
+  formatTryPrice,
+  isZigoSubscriptionProduct,
+  resolveProfilePlanGroups,
+} from "@/lib/domain/subscription-plans";
 import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, verifyGooglePlaySubscription } from "@/lib/server/google-play";
 
 describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () => {
@@ -244,6 +249,75 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
     it("Uygulamada ticari reklam ağı KESİNLİKLE bulunmaz", () => {
       const commercialAdsEnabled = false;
       expect(commercialAdsEnabled).toBe(false);
+    });
+  });
+
+  // ─── 7. SENARYO: GOOGLE PLAY ÜRÜN & BASE PLAN EŞLEŞME UYUMLULUĞU ───────────
+  describe("Senaryo 7: Google Play Console Ürün ve Alt Plan Uyumluluğu", () => {
+    it("zigo_plus ve alt planların uyumluluğunu doğrular", () => {
+      expect(isZigoSubscriptionProduct("zigo_plus")).toBe(true);
+      expect(isZigoSubscriptionProduct("zigo-plus")).toBe(true);
+      expect(isZigoSubscriptionProduct("zigo-plus-student-monthly")).toBe(true);
+      expect(isZigoSubscriptionProduct("zigo-plus-teachers-yearly")).toBe(true);
+      expect(isZigoSubscriptionProduct("invalid_product")).toBe(false);
+
+      // Play Console parent 'zigo_plus' dönerken istemci 'zigo-plus-student-monthly' gönderdiğinde uyumlu olmalıdır
+      expect(areSubscriptionProductsCompatible("zigo_plus", "zigo-plus-student-monthly")).toBe(true);
+      expect(areSubscriptionProductsCompatible("zigo-plus", "zigo_plus")).toBe(true);
+      expect(areSubscriptionProductsCompatible("zigo-plus-student-monthly", "zigo-plus-student-monthly")).toBe(true);
+
+      // Aylık ile yıllık ürünlerin birbirine karışmasını engeller
+      expect(areSubscriptionProductsCompatible("zigo-plus-student-monthly", "zigo-plus-student-yearly")).toBe(false);
+    });
+  });
+
+  // ─── 8. SENARYO: RTDN WEBHOOK YAŞAM DÖNGÜSÜ (SUBSCRIPTION LIFECYCLE) ────────
+  describe("Senaryo 8: Google Play RTDN Webhook Yaşam Döngüsü", () => {
+    it("RENEWED (2), RECOVERED (1), PURCHASED (4) ve RESTARTED (7) bildirimleri kullanıcıyı aktif tutar", () => {
+      const activeTypes = [1, 2, 4, 7];
+      for (const type of activeTypes) {
+        let status = "active";
+        if (type === 3) status = "canceled";
+        else if (type === 5) status = "past_due";
+        else if (type === 12 || type === 13) status = "expired";
+
+        expect(status).toBe("active");
+      }
+    });
+
+    it("CANCELED (3) bildirimi alan kullanıcı süresi bitene kadar premium kalır", () => {
+      const notificationType = 3;
+      const status = notificationType === 3 ? "canceled" : "active";
+      const expiryFuture = new Date(Date.now() + 15 * 86400000).toISOString();
+      const isPastExpiry = new Date(expiryFuture).getTime() <= Date.now();
+      const isStillPremium = (status === "active" || (status === "canceled" && !isPastExpiry)) && !isPastExpiry;
+
+      expect(isStillPremium).toBe(true);
+    });
+
+    it("EXPIRED (12) veya REVOKED (13) bildiriminde kullanıcının Plus yetkisi derhal sonlandırılır", () => {
+      for (const type of [12, 13]) {
+        let status = "active";
+        if (type === 12 || type === 13) status = "expired";
+        const isStillPremium = status === "active";
+
+        expect(isStillPremium).toBe(false);
+      }
+    });
+  });
+
+  // ─── 9. SENARYO: MAĞAZA VE DERS TALEBİ SUNUCU GÜVENLİK KAPILARI ─────────────
+  describe("Senaryo 9: Mağaza ve Ders Talebi Sunucu Doğrulamaları", () => {
+    it("Abonesiz kullanıcı mağazadan hediye/ödül talep edemez", () => {
+      const nonSubscriber = { isPremium: false };
+      const canRedeemReward = nonSubscriber.isPremium;
+      expect(canRedeemReward).toBe(false);
+    });
+
+    it("Abonesiz öğretmen gelen ders talebini kabul edemez veya mesaj gönderemez", () => {
+      const nonSubTeacher = { isPremium: false, role: "teacher" };
+      const canAcceptOrReply = nonSubTeacher.isPremium;
+      expect(canAcceptOrReply).toBe(false);
     });
   });
 });

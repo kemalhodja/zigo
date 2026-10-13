@@ -77,6 +77,19 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Students cannot update lesson requests." }, { status: 403 });
     }
 
+    if (profile.role === "teacher") {
+      const subscription = await getUserSubscription(supabase, profile.id);
+      if (!subscription.isPremium) {
+        return NextResponse.json(
+          {
+            error: "Özel ders talebini yanıtlamak için Zigo Plus aboneliği gereklidir.",
+            requiresSubscription: true,
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     const body = await request.json();
     const updated = await updateLessonRequestStatus(supabase, {
       requestId: id,
@@ -113,6 +126,19 @@ export async function POST(request: Request, context: RouteContext) {
       if (!subscription.isPremium) {
         return NextResponse.json(
           { error: "Öğretmene mesaj göndermek için Veli Aboneliği (Zigo Plus) gereklidir." },
+          { status: 403 },
+        );
+      }
+    }
+
+    if (profile.role === "teacher") {
+      const subscription = await getUserSubscription(supabase, profile.id);
+      if (!subscription.isPremium) {
+        return NextResponse.json(
+          {
+            error: "Özel ders mesajı göndermek için Zigo Plus aboneliği gereklidir.",
+            requiresSubscription: true,
+          },
           { status: 403 },
         );
       }
