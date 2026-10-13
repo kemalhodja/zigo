@@ -132,9 +132,9 @@ if (!existsSync(aabSource)) {
 
 copyFileSync(aabSource, aabTarget);
 const standardReleaseTarget = join(root, "Zigo-release.aab");
-const build34Target = join(root, "Zigo-release-34.aab");
+const build35Target = join(root, "Zigo-release-35.aab");
 copyFileSync(aabSource, standardReleaseTarget);
-copyFileSync(aabSource, build34Target);
+copyFileSync(aabSource, build35Target);
 console.log(`\nPASS AAB ready: ${aabTarget}`);
 console.log(`PASS AAB also copied to: ${standardReleaseTarget}`);
-console.log(`PASS AAB also copied to: ${build34Target}`);
+console.log(`PASS AAB also copied to: ${build35Target}`);
