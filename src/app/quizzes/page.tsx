@@ -44,7 +44,7 @@ export default async function UserQuizzesPage() {
         <div className="w-10" />
       </header>
 
-      <main className="mx-auto max-w-xl space-y-6 p-4">
+      <main className="mx-auto max-w-xl lg:max-w-3xl space-y-6 p-4">
         <div className="rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 p-5 text-white shadow-md">
           <h2 className="text-lg font-black">Kendi quizini yap, herkesle yarış 🏆</h2>
           <p className="mt-1 text-sm font-medium text-white/85">

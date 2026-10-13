@@ -227,7 +227,7 @@ export default function DuelsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-6 px-4 pb-20">
-      <div className="mx-auto max-w-lg">
+      <div className="mx-auto max-w-lg lg:max-w-2xl">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <Link href="/learn" className="tap-scale flex items-center gap-1.5 text-xs font-black text-slate-500 hover:text-night">

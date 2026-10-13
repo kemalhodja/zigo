@@ -124,7 +124,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
           <HomeAgendaAlert viewerRole={profileRole} targetUserId={profileId} />
         </div>
       ) : null}
-      <section className="-mx-4 border-b border-pink-100 bg-white px-4 py-3">
+      <section className="-mx-4 sm:mx-0 border-b border-pink-100 bg-white px-4 py-3 sm:rounded-2xl sm:border sm:shadow-xs">
         <div className="grid grid-cols-4 gap-2">
           {activityFilters.map((filter) => (
             <Link
@@ -159,7 +159,7 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
 
       <ActivityCategorySummary counts={categoryCounts} messages={m} />
 
-      <section className="-mx-4 divide-y divide-slate-100 bg-white">
+      <section className="-mx-4 sm:mx-0 divide-y divide-slate-100 bg-white sm:rounded-2xl sm:border sm:shadow-xs sm:overflow-hidden">
         {filteredNotifications.length === 0 ? (
           <div className="px-6 py-14 text-center">
             <span className="mx-auto flex size-16 items-center justify-center rounded-lg bg-gradient-to-br from-crystal via-berry to-aqua text-white">
@@ -229,7 +229,7 @@ function ActivityDigestHero({
 }) {
   const n = messages.notifications;
   return (
-    <section className="-mx-4 overflow-hidden border-b border-violet-100 bg-white">
+    <section className="-mx-4 sm:mx-0 overflow-hidden border-b border-violet-100 bg-white sm:rounded-3xl sm:border sm:shadow-md">
       <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-5 text-white">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-white/65">{n.digest}</p>
         <h2 className="mt-2 text-2xl font-black leading-tight">

@@ -39,7 +39,7 @@ export default async function CreatePage({ searchParams }: CreatePageProps) {
 
   return (
     <div className="space-y-0 pb-3">
-      <section className="-mx-4 -mt-4 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
+      <section className="-mx-4 sm:mx-0 -mt-4 sm:mt-0 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 sm:rounded-2xl sm:border sm:shadow-xs sm:mb-4">
         <BackButton className="tap-scale flex size-9 items-center justify-center text-night" fallbackHref="/" />
         <h1 className="text-xl font-black text-night">{m.createStudio.title}</h1>
         <span className="w-9" />
@@ -102,7 +102,7 @@ function CreateStudioHero({
         : createStudio.post;
 
   return (
-    <section className="-mx-4 border-b border-slate-100 bg-white">
+    <section className="-mx-4 sm:mx-0 border-b border-slate-100 bg-white sm:rounded-2xl sm:border sm:shadow-xs sm:overflow-hidden sm:mb-4">
       <div className="bg-gradient-to-br from-night via-violet-900 to-crystal px-4 py-4 text-white">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-white/70">{createStudio.creatorStudio}</p>
         <h2 className="mt-1.5 text-xl font-black leading-tight">{createStudio.publishFeed}</h2>

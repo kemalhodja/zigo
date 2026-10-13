@@ -154,7 +154,7 @@ export default function SolveQuizPage() {
         <span className="text-xs font-black text-slate-400">✏️</span>
       </header>
 
-      <main className="mx-auto max-w-xl p-4">
+      <main className="mx-auto max-w-xl lg:max-w-2xl p-4">
         <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
           <div
             className="h-full rounded-full bg-indigo-500 transition-all"

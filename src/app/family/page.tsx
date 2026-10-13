@@ -73,7 +73,7 @@ export default async function FamilyPage() {
 
   return (
     <div className="space-y-5">
-      <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
+      <section className="-mx-4 sm:mx-0 border-b border-pink-100 bg-white px-4 pb-4 sm:rounded-2xl sm:border sm:shadow-xs sm:p-5">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{f.familySpace}</p>
         <h2 className="mt-1 text-2xl font-black text-night">{f.linkChildProfiles}</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">{f.linkChildDesc}</p>
@@ -89,7 +89,7 @@ export default async function FamilyPage() {
           description={f.noChildProfilesDesc}
         />
       ) : (
-        <section className="-mx-4 divide-y divide-slate-100 bg-white">
+        <section className="-mx-4 sm:mx-0 divide-y divide-slate-100 bg-white sm:rounded-2xl sm:border sm:shadow-xs sm:overflow-hidden">
           {childDetails.map(({ child, selectedAreaIds, feedPreview, quizActivity }) => (
             <article className="space-y-4 px-4 py-5" key={child.id}>
               <div className="flex items-end justify-between gap-4">

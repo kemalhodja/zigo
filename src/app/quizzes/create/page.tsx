@@ -98,7 +98,7 @@ export default function CreateQuizPage() {
         <div className="w-10" />
       </header>
 
-      <main className="mx-auto max-w-xl space-y-5 p-4">
+      <main className="mx-auto max-w-xl lg:max-w-2xl space-y-5 p-4">
         <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
           <label className="text-xs font-black uppercase tracking-wider text-slate-400">
             Başlık
