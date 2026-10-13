@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, BookOpen, GraduationCap, Printer, ShieldCheck, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
+import { Award, BookOpen, Check, GraduationCap, MessageCircle, Printer, ShieldCheck, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -8,6 +8,7 @@ import type { ChildQuizActivityItem } from "@/lib/domain/parent-dashboard";
 import {
   buildParentAnalyticsSummary,
   buildParentDigest,
+  buildParentWhatsAppWeeklyReport,
   type ParentInsightLevel,
 } from "@/lib/domain/parent-analytics";
 
@@ -40,8 +41,34 @@ type Tab = "overview" | "quizzes" | "screen_time";
 
 export function ParentAnalyticsCockpit({ childName, totalPoints, gradeLevel, activity }: ParentAnalyticsCockpitProps) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
   const summary = useMemo(() => buildParentAnalyticsSummary(activity), [activity]);
   const digest = useMemo(() => buildParentDigest(childName, summary), [childName, summary]);
+
+  const handleWhatsAppShare = () => {
+    const reportText = buildParentWhatsAppWeeklyReport(
+      childName,
+      summary,
+      totalPoints,
+      gradeLevel,
+      typeof window !== "undefined" ? window.location.href : undefined
+    );
+
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      void navigator.clipboard.writeText(reportText);
+    }
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate?.(20);
+    }
+
+    setCopiedWhatsApp(true);
+    setTimeout(() => setCopiedWhatsApp(false), 2500);
+
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(reportText)}`;
+    if (typeof window !== "undefined") {
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Genel Bakış" },
@@ -60,18 +87,36 @@ export function ParentAnalyticsCockpit({ childName, totalPoints, gradeLevel, act
           </p>
         </div>
 
-        <div className="flex items-center gap-2 print:hidden">
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <button
+            type="button"
+            onClick={handleWhatsAppShare}
+            className="tap-scale flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-3.5 py-2.5 text-xs font-black text-white shadow-xs hover:brightness-105"
+            title="Haftalık veli karnesini WhatsApp ile paylaş"
+          >
+            {copiedWhatsApp ? (
+              <>
+                <Check className="size-3.5" />
+                <span>Kopyalandı & Açılıyor</span>
+              </>
+            ) : (
+              <>
+                <MessageCircle className="size-3.5 fill-current" />
+                <span>WhatsApp Karnesi</span>
+              </>
+            )}
+          </button>
           <button
             type="button"
             onClick={() => window.print()}
-            className="tap-scale flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-100"
+            className="tap-scale flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-black text-slate-700 hover:bg-slate-100"
           >
             <Printer className="size-3.5" />
             <span>Yazdır / PDF</span>
           </button>
           <Link
             href="/teacher/lessons"
-            className="tap-scale flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 px-4 py-2.5 text-xs font-black text-white shadow-md hover:brightness-105"
+            className="tap-scale flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 px-3.5 py-2.5 text-xs font-black text-white shadow-md hover:brightness-105"
           >
             <GraduationCap className="size-3.5" />
             <span>Özel Ders Talep Et</span>

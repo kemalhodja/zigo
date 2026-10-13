@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { SmartBoardPresenter } from "@/components/classroom/smart-board-presenter";
+import { WhatsAppChallengeCard } from "@/components/share/whatsapp-challenge-card";
 import { useAudio } from "@/hooks/use-audio";
 import { createClient } from "@/lib/supabase/client";
 
@@ -426,7 +427,18 @@ export default function DuelsPage() {
               </div>
             </div>
 
-            <div className="mt-6 flex flex-col gap-2.5">
+            {/* Viral WhatsApp Challenge Component */}
+            <div className="mt-5">
+              <WhatsAppChallengeCard
+                title="MEB Canlı Soru Düellosu"
+                score={userScore}
+                type="duel"
+                detailText={`Düello Skoru: ${userScore} - ${opponent.score}`}
+                rewardPoints={50}
+              />
+            </div>
+
+            <div className="mt-5 flex flex-col gap-2.5">
               <button
                 type="button"
                 onClick={startDuel}

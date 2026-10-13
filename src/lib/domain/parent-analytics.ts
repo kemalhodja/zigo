@@ -120,3 +120,66 @@ export function buildParentDigest(childName: string, summary: ParentAnalyticsSum
 
   return parts.join(" ");
 }
+
+export function buildParentWhatsAppWeeklyReport(
+  childName: string,
+  summary: ParentAnalyticsSummary,
+  totalPoints: number,
+  gradeLevel?: string | number | null,
+  shareUrl?: string,
+): string {
+  const gradeText = gradeLevel ? `${gradeLevel}. Sınıf` : "Öğrenci";
+  const accuracyText = summary.accuracy !== null ? `%${summary.accuracy}` : "Henüz hesaplanmadı";
+
+  if (summary.totalAttempts === 0) {
+    const emptyLines = [
+      `📊 *ZİGO HAFTALIK ÖĞRENCİ KARNESİ*`,
+      `👤 *Öğrenci:* ${childName} (${gradeText})`,
+      `✨ *Toplam Puan:* ${totalPoints} Lig Puanı`,
+      `--------------------------------`,
+      `ℹ️ ${childName} bu hafta henüz quiz tamamlamadı.`,
+      `🎯 Zigo'da her gün çözülen 10 soru, LGS ve okul başarısını %40 artırır!`,
+      `--------------------------------`,
+      `💡 *Öneri:* Bugün 1 adet MEB müfredat quizi çözerek lig yarışına katılabilir.`,
+    ];
+    if (shareUrl) {
+      emptyLines.push(`🔗 *Çalışma Paneli:* ${shareUrl}`);
+    }
+    return emptyLines.join("\n");
+  }
+
+  const lines = [
+    `📊 *ZİGO HAFTALIK ÖĞRENCİ KARNESİ*`,
+    `👤 *Öğrenci:* ${childName} (${gradeText})`,
+    `✨ *Toplam Puan:* ${totalPoints} Lig Puanı`,
+    `--------------------------------`,
+    `📈 *Haftalık Başarı Göstergeleri:*`,
+    `• Çözülen Toplam Soru: ${summary.totalQuestions}`,
+    `• Doğru Cevap: ${summary.totalCorrect}`,
+    `• Doğruluk Oranı: ${accuracyText}`,
+    `• Tamamlanan Quiz: ${summary.totalAttempts}`,
+    `• Son 7 Gün Aktivitesi: ${summary.last7DaysAttempts} deneme`,
+  ];
+
+  if (summary.weeklyTrendPercent !== null) {
+    const trendSymbol = summary.weeklyTrendPercent >= 0 ? "📈" : "📉";
+    const trendPrefix = summary.weeklyTrendPercent >= 0 ? "+" : "";
+    lines.push(`• Haftalık Tempo Değişimi: ${trendSymbol} ${trendPrefix}%${summary.weeklyTrendPercent}`);
+  }
+
+  if (summary.strongest) {
+    lines.push(`🌟 *En Başarılı Olduğu Konu:* ${summary.strongest.quizTitle} (%${summary.strongest.accuracy})`);
+  }
+  if (summary.weakest) {
+    lines.push(`🎯 *Destek Önerilen Konu:* ${summary.weakest.quizTitle} (%${summary.weakest.accuracy})`);
+  }
+
+  lines.push(`--------------------------------`);
+  lines.push(`💡 *Veli Notu:* Düzenli soru çözümü ve günlük tekrar Zigo Lig başarısını artırır.`);
+  if (shareUrl) {
+    lines.push(`🔗 *Detaylı Rapor:* ${shareUrl}`);
+  }
+
+  return lines.join("\n");
+}
+

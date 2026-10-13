@@ -5,7 +5,9 @@ import { respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { dueDateFrom } from "@/lib/domain/spaced-repetition";
 import type { UserQuizQuestion } from "@/lib/domain/user-quizzes";
+import { getClientIp } from "@/lib/server/client-ip";
 import { captureServerEvent } from "@/lib/server/analytics";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const gradeSchema = z.object({
@@ -24,6 +26,20 @@ export async function POST(
 
     const supabase = await createClient();
     const profile = await getCurrentProfile(supabase);
+
+    // Architecture: Rate limiting defense against evaluation spam
+    const rateLimitKey = profile
+      ? `quiz-grade:${profile.id}`
+      : `quiz-grade-guest:${getClientIp(request)}`;
+    const limitMax = profile ? 30 : 10;
+    const rateLimit = await checkRateLimitAsync(rateLimitKey, limitMax, 60_000);
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla istek gönderildi. Lütfen bir süre bekleyin." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
 
     const body = gradeSchema.parse(await request.json().catch(() => ({})));
 

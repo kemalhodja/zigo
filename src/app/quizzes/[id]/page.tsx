@@ -7,6 +7,7 @@ import { Keyboard, Monitor, Sparkles, UserPlus } from "lucide-react";
 
 import { KeyboardShortcutsModal } from "@/components/ui/keyboard-shortcuts-modal";
 import { SmartBoardPresenter } from "@/components/classroom/smart-board-presenter";
+import { WhatsAppChallengeCard } from "@/components/share/whatsapp-challenge-card";
 
 type SolvePayload = {
   id: string;
@@ -197,21 +198,22 @@ export default function SolveQuizPage() {
             </div>
           )}
 
-          <div className="mt-6 space-y-2">
-            <button
-              type="button"
-              onClick={() => {
-                void navigator.clipboard?.writeText(window.location.href);
-                setCopied(true);
-              }}
-              className="tap-scale w-full rounded-xl bg-gradient-to-r from-fuchsia-500 to-purple-600 py-3.5 text-sm font-black text-white shadow-lg transition hover:brightness-110"
-            >
-              {copied ? "✅ Link kopyalandı!" : "🔗 Meydan okumak için linki paylaş"}
-            </button>
+          {/* Viral WhatsApp Challenge Component */}
+          <div className="mt-5">
+            <WhatsAppChallengeCard
+              title={quiz?.title || "Zigo MEB Quiz"}
+              score={phase.score}
+              type="quiz"
+              detailText={`${phase.correct}/${phase.total} Doğru`}
+              rewardPoints={50}
+            />
+          </div>
+
+          <div className="mt-4">
             <button
               type="button"
               onClick={() => router.push("/quizzes")}
-              className="tap-scale w-full rounded-xl border border-slate-200 py-3 text-sm font-black text-slate-600 transition hover:bg-slate-50"
+              className="tap-scale w-full rounded-2xl border border-slate-200 py-3 text-xs font-black text-slate-600 transition hover:bg-slate-50"
             >
               Quiz Arena&apos;ya Dön
             </button>

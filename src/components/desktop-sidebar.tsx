@@ -4,6 +4,7 @@ import {
   Bell,
   Compass,
   Crown,
+  Download,
   Film,
   Gamepad2,
   GraduationCap,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -43,6 +45,51 @@ export function DesktopSidebar({
 }: DesktopSidebarProps) {
   const pathname = usePathname();
   const m = useMessages();
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (window.matchMedia("(display-mode: standalone)").matches) {
+        setIsInstalled(true);
+      }
+
+      const handleBeforeInstallPrompt = (e: Event) => {
+        e.preventDefault();
+        setInstallPrompt(e);
+      };
+
+      const handleAppInstalled = () => {
+        setIsInstalled(true);
+        setInstallPrompt(null);
+      };
+
+      window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.addEventListener("appinstalled", handleAppInstalled);
+
+      return () => {
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+        window.removeEventListener("appinstalled", handleAppInstalled);
+      };
+    }
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice?.outcome === "accepted") {
+        setIsInstalled(true);
+      }
+      setInstallPrompt(null);
+    } else {
+      if (typeof window !== "undefined") {
+        window.alert(
+          "Zigo'yu masaüstü uygulaması olarak yüklemek için tarayıcınızın adres çubuğundaki (veya ayarlar menüsündeki) 'Uygulamayı Yükle' simgesini tıklayabilirsiniz."
+        );
+      }
+    }
+  };
 
   // Primary navigation items
   const mainNavItems = [
@@ -281,8 +328,20 @@ export function DesktopSidebar({
             </Link>
           </div>
 
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={handleInstallClick}
+              className="tap-scale flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition shadow-2xs"
+              title="Zigo'yu masaüstüne yükleyin"
+            >
+              <Download className="size-3.5 text-indigo-600" />
+              <span>Masaüstüne Yükle (PWA)</span>
+            </button>
+          )}
+
           <div className="px-2 flex items-center justify-between text-[11px] font-bold text-slate-400">
-            <span>Zigo v1.3.4</span>
+            <span>Zigo v1.3.5</span>
             <div className="flex gap-2">
               <Link href="/legal/terms" className="hover:text-slate-600">Koşullar</Link>
               <span>·</span>
