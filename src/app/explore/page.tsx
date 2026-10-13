@@ -180,9 +180,9 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       ) : null}
 
       {/* Post grid */}
-      <section className="-mx-4 grid grid-cols-3 gap-[2px] bg-white">
+      <section className="-mx-4 sm:mx-0 grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-4 gap-[2px] bg-white sm:rounded-2xl sm:overflow-hidden">
         {tilesToRender.length === 0 && activeFormat !== "teachers" ? (
-          <div className="col-span-3 px-6 py-14 text-center">
+          <div className="col-span-3 sm:col-span-4 lg:col-span-4 px-6 py-14 text-center">
             <span className="mx-auto flex size-20 items-center justify-center rounded-2xl bg-slate-100 shadow-lg shadow-slate-100">
               <svg aria-hidden="true" className="size-9 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="7" />

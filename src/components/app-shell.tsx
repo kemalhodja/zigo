@@ -23,6 +23,7 @@ import {
 } from "@/lib/domain/role-navigation";
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
+import { DesktopSidebar } from "@/components/desktop-sidebar";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;
@@ -181,68 +182,99 @@ export function AppShell({
 
   return (
     <div
-      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 flex-col ${
+      className={`safe-screen safe-x zigo-shell-bg mx-auto flex w-full min-w-0 flex-col lg:flex-row lg:max-w-7xl lg:items-start lg:gap-8 lg:px-6 lg:py-6 lg:min-h-screen ${
         pathname === "/"
           ? "max-w-full"
-          : `max-w-md overflow-x-hidden md:my-6 md:min-h-[calc(100vh-3rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-white/8 md:shadow-[0_32px_80px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,71,255,0.08)] ${isImmersive ? "relative bg-night" : ""}`
+          : isImmersive
+            ? "max-w-md relative bg-night lg:max-w-7xl"
+            : "max-w-md lg:max-w-7xl overflow-x-hidden md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[2rem] md:border md:border-white/8 md:shadow-[0_32px_80px_rgba(0,0,0,0.45),0_0_0_1px_rgba(0,71,255,0.08)] lg:my-0 lg:rounded-none lg:border-none lg:shadow-none lg:overflow-visible"
       } ${getRoleThemeClass(viewerRole)}`}
     >
-      {isPreviewMode ? <PreviewModeBanner /> : null}
-      {isImmersive ? null : <Header canCreateSocialPost={canCreateSocialPost} isPlatformAdmin={isPlatformAdmin} roleAccentLabel={roleAccentLabel} unreadCount={unreadCount} viewerRole={viewerRole} />}
-
-      {!isImmersive ? (
-        <a
-          className="sr-only z-50 rounded-lg bg-night px-4 py-2 text-sm font-black text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
-          data-testid="skip-to-content"
-          href="#main-content"
-        >
-          {m.nav.skipToContent}
-        </a>
+      {/* Desktop Persistent Left Navigation Sidebar (Hidden on Mobile/Tablet) */}
+      {!isStories && !pathname.startsWith("/auth") ? (
+        <DesktopSidebar
+          canCreateSocialPost={canCreateSocialPost}
+          isPlatformAdmin={isPlatformAdmin}
+          roleAccentLabel={roleAccentLabel}
+          teacherInboxCount={teacherInboxCount}
+          unreadCount={unreadCount}
+          viewerRole={viewerRole}
+        />
       ) : null}
 
-      <main
-        key={pathname}
-        className={`min-w-0 flex-1 page-transition-fade ${
-          isImmersive
-            ? "overflow-hidden p-0"
-            : pathname === "/"
-              ? "p-0"
-              : `px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-[4.5rem] py-3`
-        }`}
-        id="main-content"
-      >
-        {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin && pathname !== "/" ? (
-          <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
-        ) : null}
-        {children}
-        {hideQuickDock || isPlatformAdmin || pathname === "/" ? null : (
-          <div className="-mx-1 mt-6">
-            <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
+      <div className="flex min-w-0 flex-1 flex-col w-full">
+        {isPreviewMode ? <PreviewModeBanner /> : null}
+
+        {/* Mobile Header (Hidden on Desktop where DesktopSidebar is active) */}
+        {isImmersive ? null : (
+          <div className="lg:hidden w-full">
+            <Header
+              canCreateSocialPost={canCreateSocialPost}
+              isPlatformAdmin={isPlatformAdmin}
+              roleAccentLabel={roleAccentLabel}
+              unreadCount={unreadCount}
+              viewerRole={viewerRole}
+            />
           </div>
         )}
-      </main>
 
-      {pathname.startsWith("/auth") ? <LegalFooter /> : null}
+        {!isImmersive ? (
+          <a
+            className="sr-only z-50 rounded-lg bg-night px-4 py-2 text-sm font-black text-white focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
+            data-testid="skip-to-content"
+            href="#main-content"
+          >
+            {m.nav.skipToContent}
+          </a>
+        ) : null}
 
-      {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
+        <main
+          key={pathname}
+          className={`min-w-0 flex-1 w-full page-transition-fade ${
+            isImmersive
+              ? "overflow-hidden p-0"
+              : pathname === "/"
+                ? "p-0"
+                : `px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-[4.5rem] lg:pb-12 lg:px-0 py-3`
+          }`}
+          id="main-content"
+        >
+          {!isImmersive && !pathname.startsWith("/auth") && !isPlatformAdmin && pathname !== "/" ? (
+            <div className="lg:hidden">
+              <RoleNextActionBar canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
+            </div>
+          ) : null}
+          {children}
+          {hideQuickDock || isPlatformAdmin || pathname === "/" ? null : (
+            <div className="-mx-1 mt-6 lg:hidden">
+              <QuickActionDock canCreateSocialPost={canCreateSocialPost} viewerRole={viewerRole} />
+            </div>
+          )}
+        </main>
 
-      {isStories || isPost ? null : (
-        <div className={`md:hidden ${isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}`}>
-          <BottomNav
-            canCreateSocialPost={canCreateSocialPost}
-            isPlatformAdmin={isPlatformAdmin}
-            teacherInboxCount={teacherInboxCount}
-            unreadCount={unreadCount}
-            variant={isReels ? "overlay" : "default"}
-            viewerRole={viewerRole}
-          />
-        </div>
-      )}
+        {pathname.startsWith("/auth") ? <LegalFooter /> : null}
 
-      <FirstLaunchWelcome />
-      {pathname.startsWith("/auth") ? null : <RegistrationCampaignAnnouncement />}
-      <PullToRefresh />
-      <ScrollToTopOnLogoTap />
+        {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
+
+        {/* Mobile Bottom Navigation (Hidden on Desktop) */}
+        {isStories || isPost ? null : (
+          <div className={`lg:hidden ${isReels ? "absolute inset-x-0 bottom-0 z-20" : ""}`}>
+            <BottomNav
+              canCreateSocialPost={canCreateSocialPost}
+              isPlatformAdmin={isPlatformAdmin}
+              teacherInboxCount={teacherInboxCount}
+              unreadCount={unreadCount}
+              variant={isReels ? "overlay" : "default"}
+              viewerRole={viewerRole}
+            />
+          </div>
+        )}
+
+        <FirstLaunchWelcome />
+        {pathname.startsWith("/auth") ? null : <RegistrationCampaignAnnouncement />}
+        <PullToRefresh />
+        <ScrollToTopOnLogoTap />
+      </div>
     </div>
   );
 }

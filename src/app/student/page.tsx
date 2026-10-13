@@ -110,7 +110,7 @@ export default async function StudentPage() {
         <HomeLearningPulse />
       </div>
 
-      <section className="grid grid-cols-2 gap-2">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <DashboardLink accent="from-crystal to-berry" href="/micro" label={z.micro} text={d.student.watchEarn} />
         <DashboardLink accent="from-aqua to-mint" href="/learn" label={m.dock.learn} text={d.student.quizzes} />
         <DashboardLink accent="from-sun to-peach" href="/store" label={d.student.store} text={d.student.spendPoints} />

@@ -7,41 +7,33 @@ import type { ReactNode } from "react";
  * Desktop (lg): left nav + feed + right panel (3 columns, centered, max-w-7xl)
  */
 export function AppShell({
-  leftNav,
   children,
   rightPanel,
 }: {
-  leftNav: ReactNode;
+  leftNav?: ReactNode;
   children: ReactNode;
-  rightPanel: ReactNode;
+  rightPanel?: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
-      <div className="mx-auto max-w-7xl">
-        {/* Desktop & Tablet: Flex row side-by-side */}
-        <div className="hidden md:flex flex-row justify-center items-start gap-6 lg:gap-8 px-4 lg:px-8 pt-6 pb-12">
-          {/* Left Nav: sticky sidebar */}
-          <aside className="sticky top-20 w-[220px] lg:w-[240px] shrink-0 self-start">
-            {leftNav}
-          </aside>
+    <div className="w-full">
+      {/* Desktop (lg:): Feed + Right Panel side-by-side */}
+      <div className="hidden lg:flex flex-row items-start justify-center gap-6 xl:gap-8 w-full">
+        {/* Main Feed: centered, generous width */}
+        <div className="w-full max-w-[640px] min-w-0">
+          {children}
+        </div>
 
-          {/* Main Feed: centered, generous width */}
-          <main className="w-full max-w-[620px] min-w-0" id="main-content">
-            {children}
-          </main>
-
-          {/* Right Panel: sticky widgets */}
-          <aside className="hidden lg:block sticky top-20 w-[300px] xl:w-[320px] shrink-0 self-start">
+        {/* Right Panel: sticky widgets */}
+        {rightPanel ? (
+          <aside className="sticky top-6 w-[300px] xl:w-[320px] shrink-0 self-start">
             {rightPanel}
           </aside>
-        </div>
+        ) : null}
+      </div>
 
-        {/* Mobile: clean single column */}
-        <div className="md:hidden pb-20">
-          <main id="main-content" className="w-full max-w-lg mx-auto">
-            {children}
-          </main>
-        </div>
+      {/* Mobile & Tablet (< lg:): clean single column */}
+      <div className="lg:hidden w-full max-w-lg mx-auto">
+        {children}
       </div>
     </div>
   );

@@ -251,7 +251,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
 
       <StoreApprovalCheckpoint approvalCount={products.filter((product) => product.requires_parent_approval).length} messages={m} />
 
-      <section className="space-y-3">
+      <section className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
         {filteredProducts.length === 0 ? (
           <section className="-mx-4 bg-white px-6 py-12 text-center">
             <p className="text-sm font-black text-night">{s.noRewards}</p>
@@ -469,7 +469,7 @@ async function StorePreview({ mode, messages }: { mode: "preview" | "signed-out"
         </div>
       </section>
 
-      <section className="grid gap-3">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {demoProducts.map((product) => (
           <article className="-mx-4 border-b border-slate-100 bg-white" key={product.id}>
             <div className={`bg-gradient-to-br ${product.accent} px-4 py-5 text-white`}>
