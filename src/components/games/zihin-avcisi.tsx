@@ -319,7 +319,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   else cols = 4;
 
   return (
-    <div className="w-full max-w-sm mx-auto select-none">
+    <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto select-none">
       <style dangerouslySetInnerHTML={{
         __html: `
           .preserve-3d { transform-style: preserve-3d; }

@@ -340,7 +340,7 @@ export function SudokuGame({ userId = "guest", onGameEnd }: SudokuGameProps) {
   const selectedValue = selectedCell ? board[selectedCell[0]][selectedCell[1]] : null;
 
   return (
-    <div className="w-full max-w-sm mx-auto select-none relative">
+    <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto select-none relative">
       {/* Header Banner */}
       <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-600 rounded-3xl p-4 mb-3 border border-indigo-400/20 shadow-2xl shadow-blue-500/20">
         <div className="flex items-center justify-between mb-3">

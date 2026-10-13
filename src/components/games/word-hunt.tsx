@@ -451,7 +451,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   }
 
   return (
-    <div className="w-full max-w-sm mx-auto select-none relative">
+    <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto select-none relative">
       <style
         dangerouslySetInnerHTML={{
           __html: `

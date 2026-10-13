@@ -40,7 +40,7 @@ export default async function BlockGamePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-3 sm:p-6 flex flex-col items-center">
-      <div className="w-full max-w-sm flex items-center justify-between mb-4">
+      <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg flex items-center justify-between mb-4">
         <Link
           href={back.href}
           className="tap-scale flex items-center gap-1 text-xs font-black text-slate-300 bg-white/10 px-3 py-2 rounded-xl shadow-xs border border-white/10 hover:bg-white/20 transition backdrop-blur-sm"

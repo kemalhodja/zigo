@@ -280,7 +280,7 @@ function LearnQuestHero({
   const lp = messages.learnPage;
 
   return (
-    <section className="-mx-4 overflow-hidden border-b border-violet-100 bg-white">
+    <section className="-mx-4 sm:mx-0 overflow-hidden border-b border-violet-100 bg-white sm:rounded-3xl sm:border sm:shadow-md">
       <div className="relative overflow-hidden bg-gradient-to-br from-night via-slate-900 to-indigo-950 px-5 py-7 text-white shadow-md">
         <div className="aurora-glow" />
         <div className="relative">
@@ -482,7 +482,7 @@ async function StudentLearnContent({
         </div>
       </section>
 
-      <section className="-mx-4 bg-white px-4 py-4">
+      <section className="-mx-4 sm:mx-0 bg-white px-4 py-4 sm:rounded-2xl sm:border sm:shadow-xs">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-crystal">
@@ -502,7 +502,9 @@ async function StudentLearnContent({
         {quizzes.length === 0 ? (
           <StateCard title={l.noQuizzes} description={l.noQuizzesDesc} action={<Link className="font-black text-crystal" href="/onboarding">{messages.common.updateAreas}</Link>} />
         ) : (
-          quizzes.map((quiz) => <LearnQuizCard key={quiz.id} quiz={quiz} />)
+          <div className="grid gap-3 sm:grid-cols-2">
+            {quizzes.map((quiz) => <LearnQuizCard key={quiz.id} quiz={quiz} />)}
+          </div>
         )}
       </section>
 
@@ -511,7 +513,9 @@ async function StudentLearnContent({
         {videos.length === 0 ? (
           <StateCard title={l.noVideos} description={l.noVideosDesc} action={<Link className="font-black text-crystal" href="/micro">{l.openMicro}</Link>} />
         ) : (
-          videos.map((post) => <LearnVideoCard key={post.id} post={post} />)
+          <div className="grid gap-3 sm:grid-cols-2">
+            {videos.map((post) => <LearnVideoCard key={post.id} post={post} />)}
+          </div>
         )}
       </section>
     </div>

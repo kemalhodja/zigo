@@ -407,7 +407,7 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const disabled = isGameOver;
 
   return (
-    <div className="w-full max-w-sm mx-auto select-none relative touch-none">
+    <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto select-none relative touch-none">
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes jellyDrop {
           0% { transform: scale(1); }

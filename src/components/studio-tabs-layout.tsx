@@ -20,7 +20,7 @@ export function StudioTabsLayout({
   return (
     <div className="space-y-4">
       {/* Studio Navigation Tabs */}
-      <div className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto border-b border-slate-200/80 bg-white px-4 py-2 shadow-2xs">
+      <div className="no-scrollbar -mx-4 sm:mx-0 flex gap-1.5 overflow-x-auto border-b border-slate-200/80 bg-white px-4 py-2.5 shadow-2xs sm:rounded-2xl sm:border">
         <button
           type="button"
           onClick={() => setActiveTab("content")}

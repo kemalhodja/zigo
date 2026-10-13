@@ -24,6 +24,7 @@ import {
 import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { DesktopSidebar } from "@/components/desktop-sidebar";
+import { DesktopTopBar } from "@/components/desktop-top-bar";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;
@@ -217,6 +218,18 @@ export function AppShell({
             />
           </div>
         )}
+
+        {/* Desktop Global Top Bar (Hidden on Mobile) */}
+        {!isImmersive && !pathname.startsWith("/auth") ? (
+          <DesktopTopBar
+            canCreateSocialPost={canCreateSocialPost}
+            isPlatformAdmin={isPlatformAdmin}
+            roleAccentLabel={roleAccentLabel}
+            teacherInboxCount={teacherInboxCount}
+            unreadCount={unreadCount}
+            viewerRole={viewerRole}
+          />
+        ) : null}
 
         {!isImmersive ? (
           <a

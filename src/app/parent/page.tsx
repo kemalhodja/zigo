@@ -52,7 +52,7 @@ export default async function ParentPage() {
 
   return (
     <div className="space-y-4 pb-3">
-      <section className="-mx-4 border-b border-pink-100 bg-white px-4 pb-4">
+      <section className="-mx-4 sm:mx-0 border-b border-pink-100 bg-white px-4 pb-4 sm:rounded-2xl sm:border sm:shadow-xs sm:p-5">
         <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">{d.parent.mode}</p>
         <h1 className="mt-1 text-2xl font-black leading-tight text-night">{d.parent.title}</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">Çocuklarının öğrenme yolculuğunu takip et, ödülleri onayla.</p>
@@ -63,7 +63,7 @@ export default async function ParentPage() {
       </div>
 
       {mode === "parent" && pendingApprovals.length > 0 ? (
-        <section className="-mx-4 border-y border-amber-100 bg-amber-50 p-4">
+        <section className="-mx-4 sm:mx-0 border-y border-amber-100 bg-amber-50 p-4 sm:rounded-2xl sm:border sm:shadow-xs">
           <h2 className="text-sm font-black text-amber-900 mb-3">⏳ Onay Bekleyen Ödüller ({pendingApprovals.length})</h2>
           <ParentApprovalQueue items={pendingApprovals} />
         </section>
@@ -90,7 +90,7 @@ export default async function ParentPage() {
           }
         />
       ) : (
-        <section className="-mx-4 divide-y divide-slate-100 bg-white">
+        <section className="-mx-4 sm:mx-0 divide-y divide-slate-100 bg-white sm:rounded-2xl sm:border sm:shadow-xs sm:overflow-hidden">
           <div className="p-4 bg-gradient-to-br from-indigo-50 to-blue-50">
             <h2 className="text-sm font-black text-indigo-900 mb-3">Çocuk Gelişim Raporu</h2>
             {children.length === 0 ? (
@@ -99,7 +99,7 @@ export default async function ParentPage() {
                 <Link href="/family" className="mt-3 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-xs font-black text-white">Aile Kurulumuna Git</Link>
               </div>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {children.map(child => {
                   const focusPoints = childActivityById[child.id]?.reduce((acc, curr) => acc + (curr.points_awarded || 0), 0) || 0;
                   return (
@@ -156,12 +156,12 @@ export default async function ParentPage() {
       )}
 
       {/* Zigo Mini Oyunlar Salonu */}
-      <div className="-mx-4 bg-white p-4 border-b border-slate-100">
+      <div className="-mx-4 sm:mx-0 bg-white p-4 border-b border-slate-100 sm:rounded-2xl sm:border sm:shadow-xs">
         <MiniGamesArcadeSection isPremium={isPremium} />
       </div>
 
       {mode === "parent" ? (
-        <div className="-mx-4 bg-white p-4 border-b border-slate-100">
+        <div className="-mx-4 sm:mx-0 bg-white p-4 border-b border-slate-100 sm:rounded-2xl sm:border sm:shadow-xs">
           <ClassGroupManager
             isSubscriber={isPremium}
             initialCity={city}

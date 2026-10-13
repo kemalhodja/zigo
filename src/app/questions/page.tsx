@@ -51,7 +51,7 @@ export default async function QuestionsPage() {
 
   return (
     <div className="space-y-4">
-      <section className="-mx-4 border-b border-slate-100 bg-white px-4 pb-3">
+      <section className="-mx-4 sm:mx-0 border-b border-slate-100 bg-white px-4 pb-3 sm:rounded-2xl sm:border sm:shadow-xs sm:p-5">
         <h1 className="text-2xl font-black text-night">{m.questions.title}</h1>
         <p className="mt-1 text-sm font-semibold text-slate-500">{m.questions.subtitle}</p>
       </section>
@@ -71,7 +71,7 @@ export default async function QuestionsPage() {
           />
         ) : (
           questions.map((question) => (
-            <article className="-mx-4 border-b border-slate-100 bg-white px-4 py-4 space-y-3" key={question.id}>
+            <article className="-mx-4 sm:mx-0 border-b border-slate-100 bg-white px-4 py-4 space-y-3 sm:rounded-2xl sm:border sm:shadow-xs" key={question.id}>
               <div className="flex gap-3">
                 <SocialAvatar className="size-10 shrink-0" label={question.title} ring={false} />
                 <div className="min-w-0 flex-1">

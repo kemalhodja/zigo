@@ -146,7 +146,7 @@ export default async function TeacherPage({
   return (
     <div className="space-y-5 pb-3">
       {/* Studio Header Banner */}
-      <section className="-mx-4 bg-gradient-to-br from-night via-violet-950 to-crystal px-5 py-6 text-white shadow-md">
+      <section className="-mx-4 sm:mx-0 bg-gradient-to-br from-night via-violet-950 to-crystal px-5 py-6 text-white shadow-md sm:rounded-3xl">
         <div className="flex items-center justify-between">
           <div>
             <span className="inline-block rounded-md bg-white/15 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.16em] text-white/90 backdrop-blur">

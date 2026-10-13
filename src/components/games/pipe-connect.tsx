@@ -229,7 +229,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
   }
 
   return (
-    <div className="w-full max-w-sm mx-auto select-none">
+    <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto select-none">
       {/* Header */}
       <div className="bg-gradient-to-br from-slate-900 to-cyan-950 rounded-3xl p-4 mb-3 border border-cyan-500/20 shadow-2xl shadow-cyan-500/10">
         <div className="flex items-center justify-between mb-3">

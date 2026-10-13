@@ -37,7 +37,7 @@ export default async function Game2048Page() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-3 sm:p-6 flex flex-col items-center">
-      <div className="w-full max-w-sm flex items-center justify-between mb-4">
+      <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg flex items-center justify-between mb-4">
         <Link
           href={back.href}
           className="tap-scale flex items-center gap-1 text-xs font-black text-slate-600 bg-white px-3 py-2 rounded-xl shadow-xs border border-slate-200 hover:bg-slate-50 transition"

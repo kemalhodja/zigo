@@ -254,7 +254,7 @@ export function Game2048({ userId = "guest", onGameEnd }: Game2048Props) {
 
   return (
     <div
-      className="w-full max-w-sm mx-auto select-none relative"
+      className="w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto select-none relative"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
