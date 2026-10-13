@@ -9,6 +9,8 @@ interface PipPomodoroWidgetProps {
   onSessionComplete?: () => void;
 }
 
+const STORAGE_KEY = "zigo_pomodoro_state_v1";
+
 export function PipPomodoroWidget({
   initialSeconds = 1500, // 25 min default
   topic = "MEB Odaklanma Seansı",
@@ -18,28 +20,102 @@ export function PipPomodoroWidget({
   const [isRunning, setIsRunning] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentTopic, setCurrentTopic] = useState(topic);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const targetTimeRef = useRef<number | null>(null);
 
-  // Countdown timer
+  // Restore state from localStorage on mount (Rule 5: State Persistence)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved.topic) setCurrentTopic(saved.topic);
+        if (typeof saved.isMinimized === "boolean") setIsMinimized(saved.isMinimized);
+        if (typeof saved.isVisible === "boolean") setIsVisible(saved.isVisible);
+
+        if (saved.isRunning && saved.targetTimestamp) {
+          const remaining = Math.max(0, Math.round((saved.targetTimestamp - Date.now()) / 1000));
+          if (remaining > 0) {
+            setSecondsLeft(remaining);
+            setIsRunning(true);
+            targetTimeRef.current = saved.targetTimestamp;
+          } else {
+            setSecondsLeft(0);
+            setIsRunning(false);
+          }
+        } else if (typeof saved.secondsLeft === "number") {
+          setSecondsLeft(saved.secondsLeft);
+        }
+      }
+    } catch {
+      // Safe fallback
+    }
+  }, []);
+
+  // Sync state to localStorage whenever changed
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          secondsLeft,
+          isRunning,
+          targetTimestamp: targetTimeRef.current,
+          topic: currentTopic,
+          isMinimized,
+          isVisible,
+        })
+      );
+    } catch {
+      // Safe fallback
+    }
+  }, [secondsLeft, isRunning, currentTopic, isMinimized, isVisible]);
+
+  // Global event listener to toggle widget from TopBar or other components
+  useEffect(() => {
+    function handleToggle(e: Event) {
+      const customEvent = e as CustomEvent<{ topic?: string }>;
+      if (customEvent.detail?.topic) {
+        setCurrentTopic(customEvent.detail.topic);
+      }
+      setIsVisible((prev) => !prev);
+    }
+
+    window.addEventListener("toggle-pip-pomodoro", handleToggle);
+    return () => window.removeEventListener("toggle-pip-pomodoro", handleToggle);
+  }, []);
+
+  // Timer countdown based on real clock targetTimestamp to survive tab throttling
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isRunning && secondsLeft > 0) {
+
+    if (isRunning) {
+      if (!targetTimeRef.current) {
+        targetTimeRef.current = Date.now() + secondsLeft * 1000;
+      }
+
       interval = setInterval(() => {
-        setSecondsLeft((s) => {
-          if (s <= 1) {
-            setIsRunning(false);
-            if (onSessionComplete) onSessionComplete();
-            return 0;
-          }
-          return s - 1;
-        });
+        if (!targetTimeRef.current) return;
+        const diff = Math.max(0, Math.round((targetTimeRef.current - Date.now()) / 1000));
+        setSecondsLeft(diff);
+
+        if (diff <= 0) {
+          setIsRunning(false);
+          targetTimeRef.current = null;
+          if (onSessionComplete) onSessionComplete();
+        }
       }, 1000);
+    } else {
+      targetTimeRef.current = null;
     }
+
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, secondsLeft, onSessionComplete]);
+  }, [isRunning, onSessionComplete, secondsLeft]);
 
   // Format time mm:ss
   const minutes = Math.floor(secondsLeft / 60);
@@ -65,12 +141,13 @@ export function PipPomodoroWidget({
         ctx.fillText(timeFormatted, 30, 130);
         ctx.fillStyle = "#94a3b8";
         ctx.font = "16px sans-serif";
-        ctx.fillText(topic, 30, 180);
+        ctx.fillText(currentTopic, 30, 180);
       }
 
       if (!videoRef.current) {
         const video = document.createElement("video");
         video.muted = true;
+        video.playsInline = true;
         const canvasWithStream = canvas as HTMLCanvasElement & { captureStream?: (fps: number) => MediaStream };
         const stream = typeof canvasWithStream.captureStream === "function" ? canvasWithStream.captureStream(10) : null;
         if (stream) {
@@ -87,22 +164,24 @@ export function PipPomodoroWidget({
     }
   }
 
+  function handleStartPause() {
+    if (!isRunning) {
+      targetTimeRef.current = Date.now() + secondsLeft * 1000;
+      setIsRunning(true);
+    } else {
+      setIsRunning(false);
+      targetTimeRef.current = null;
+    }
+  }
+
+  function handleReset() {
+    setIsRunning(false);
+    targetTimeRef.current = null;
+    setSecondsLeft(initialSeconds);
+  }
+
   if (!isVisible) {
-    return (
-      <div className="hidden lg:block fixed bottom-6 right-6 z-40">
-        <button
-          type="button"
-          onClick={() => {
-            setIsVisible(true);
-            setIsRunning(true);
-          }}
-          className="tap-scale flex items-center gap-2.5 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-xs font-black text-white shadow-xl hover:brightness-110"
-        >
-          <Timer className="size-4 animate-spin" style={{ animationDuration: "12s" }} />
-          <span>📌 Yüzen Pomodoro & PiP Sayacı</span>
-        </button>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -114,7 +193,7 @@ export function PipPomodoroWidget({
             <span className="flex size-6 items-center justify-center rounded-lg bg-violet-600 text-xs">
               ⏱️
             </span>
-            <span className="text-xs font-black text-slate-200 truncate max-w-[130px]">{topic}</span>
+            <span className="text-xs font-black text-slate-200 truncate max-w-[130px]">{currentTopic}</span>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -136,10 +215,7 @@ export function PipPomodoroWidget({
             </button>
             <button
               type="button"
-              onClick={() => {
-                setIsRunning(false);
-                setIsVisible(false);
-              }}
+              onClick={() => setIsVisible(false)}
               className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
               title="Kapat"
             >
@@ -154,7 +230,7 @@ export function PipPomodoroWidget({
             <span className="text-xl font-black font-mono text-violet-400">{timeFormatted}</span>
             <button
               type="button"
-              onClick={() => setIsRunning((r) => !r)}
+              onClick={handleStartPause}
               className="rounded-xl bg-violet-600 px-3 py-1 text-xs font-black"
             >
               {isRunning ? "Durdur" : "Başlat"}
@@ -175,7 +251,7 @@ export function PipPomodoroWidget({
             <div className="flex items-center justify-center gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => setIsRunning((r) => !r)}
+                onClick={handleStartPause}
                 className={`tap-scale flex items-center gap-2 rounded-2xl px-6 py-2.5 text-xs font-black shadow-md ${
                   isRunning
                     ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
@@ -188,10 +264,7 @@ export function PipPomodoroWidget({
 
               <button
                 type="button"
-                onClick={() => {
-                  setSecondsLeft(initialSeconds);
-                  setIsRunning(false);
-                }}
+                onClick={handleReset}
                 className="rounded-2xl border border-slate-700 bg-slate-800 p-2.5 text-slate-300 hover:bg-slate-700 hover:text-white"
                 title="Sıfırla"
               >

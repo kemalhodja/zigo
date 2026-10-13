@@ -261,18 +261,20 @@ export function SmartBoardPresenter({
             <span>{showOptions ? "Şıkları Gizle" : "Şıkları Göster"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setRevealedAnswer((r) => !r)}
-            className={`flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-black shadow-lg transition-all ${
-              revealedAnswer
-                ? "bg-emerald-600 text-white hover:bg-emerald-500 ring-2 ring-emerald-400"
-                : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:brightness-110"
-            }`}
-          >
-            <CheckCircle2 className="size-5" />
-            <span>{revealedAnswer ? "Doğru Cevap Açıklandı ✅" : "Doğru Cevabı Göster (Enter)"}</span>
-          </button>
+          {currentQ.correctIndex !== undefined ? (
+            <button
+              type="button"
+              onClick={() => setRevealedAnswer((r) => !r)}
+              className={`flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-black shadow-lg transition-all ${
+                revealedAnswer
+                  ? "bg-emerald-600 text-white hover:bg-emerald-500 ring-2 ring-emerald-400"
+                  : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:brightness-110"
+              }`}
+            >
+              <CheckCircle2 className="size-5" />
+              <span>{revealedAnswer ? "Doğru Cevap Açıklandı ✅" : "Doğru Cevabı Göster (Enter)"}</span>
+            </button>
+          ) : null}
         </div>
 
         <button

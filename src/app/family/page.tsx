@@ -160,7 +160,7 @@ export default async function FamilyPage() {
                   childName={child.display_name}
                   totalPoints={child.total_points ?? 0}
                   gradeLevel={child.grade_level}
-                  quizCount={quizActivity.length}
+                  activity={quizActivity}
                 />
               </div>
 

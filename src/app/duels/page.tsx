@@ -1,10 +1,11 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { CheckCircle2, Clock, RotateCcw, Swords, Trophy, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Monitor, RotateCcw, Swords, Trophy, XCircle } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef,useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { SmartBoardPresenter } from "@/components/classroom/smart-board-presenter";
 import { useAudio } from "@/hooks/use-audio";
 import { createClient } from "@/lib/supabase/client";
 
@@ -77,6 +78,7 @@ export default function DuelsPage() {
   const [userScore, setUserScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [isSmartBoardOpen, setIsSmartBoardOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const [opponentAnswered, setOpponentAnswered] = useState(false);
 
@@ -233,9 +235,20 @@ export default function DuelsPage() {
           <Link href="/learn" className="tap-scale flex items-center gap-1.5 text-xs font-black text-slate-500 hover:text-night">
             ← Öğren Hub'a Dön
           </Link>
-          <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-white text-xs font-black shadow-xs">
-            <Swords className="size-3.5" />
-            1v1 Canlı Soru Düellosu
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSmartBoardOpen(true)}
+              className="hidden sm:flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-black text-amber-800 hover:bg-amber-100 shadow-2xs"
+              title="Sınıf & Akıllı Tahta Modu (Projeksiyon)"
+            >
+              <Monitor className="size-3 text-amber-600" />
+              <span>Akıllı Tahta</span>
+            </button>
+            <div className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-white text-xs font-black shadow-xs">
+              <Swords className="size-3.5" />
+              1v1 Canlı Soru Düellosu
+            </div>
           </div>
         </div>
 
@@ -432,6 +445,18 @@ export default function DuelsPage() {
           </div>
         )}
       </div>
+
+      {/* Classroom Smart Board Presenter Mode */}
+      <SmartBoardPresenter
+        isOpen={isSmartBoardOpen}
+        onClose={() => setIsSmartBoardOpen(false)}
+        title="1v1 MEB Soru Düellosu Arenası"
+        questions={DUEL_QUESTIONS.map((q) => ({
+          text: q.question,
+          options: q.options,
+          correctIndex: q.correctIndex,
+        }))}
+      />
     </div>
   );
 }

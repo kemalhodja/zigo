@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Command, Crown, MessageSquare, Plus, Search } from "lucide-react";
+import { Bell, Command, Crown, MessageSquare, Plus, Search, Timer } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -86,6 +86,19 @@ export function DesktopTopBar({
             %50 Fırsat
           </span>
         </Link>
+
+        {/* Global Focus Pomodoro Trigger */}
+        <button
+          type="button"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent("toggle-pip-pomodoro"));
+          }}
+          className="tap-scale flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-slate-100/90 px-3 py-1.5 text-xs font-black text-slate-700 hover:bg-slate-200/90 transition shadow-2xs"
+          title="Odaklanma & Pomodoro PiP Sayacı"
+        >
+          <Timer className="h-3.5 w-3.5 text-violet-600" />
+          <span>Odak Modu</span>
+        </button>
 
         {/* Lesson Requests (Teachers / Platform / Parent) */}
         {viewerRole === "teacher" || isPlatformAdmin ? (

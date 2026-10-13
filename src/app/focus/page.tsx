@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { LiveFocusPulse } from "@/components/live-focus-pulse";
-import { PipPomodoroWidget } from "@/components/focus/pip-pomodoro-widget";
 import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
 import { createClient } from "@/lib/supabase/client";
@@ -413,11 +412,20 @@ export default function FocusPage() {
         </div>
       </div>
 
-      {/* Picture-in-Picture & Desktop Floating Focus Widget */}
-      <PipPomodoroWidget
-        initialSeconds={timeLeft}
-        topic={selectedTopic}
-      />
+      {/* Picture-in-Picture & Desktop Floating Focus Widget Trigger */}
+      <div className="hidden lg:flex justify-end mt-4">
+        <button
+          type="button"
+          onClick={() => {
+            window.dispatchEvent(
+              new CustomEvent("toggle-pip-pomodoro", { detail: { topic: selectedTopic } })
+            );
+          }}
+          className="tap-scale flex items-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3 text-xs font-black text-white shadow-md hover:brightness-110"
+        >
+          <span>📌 Yüzen Pomodoro & PiP Sayacını Aç</span>
+        </button>
+      </div>
     </div>
   );
 }

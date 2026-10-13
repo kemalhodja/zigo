@@ -25,6 +25,7 @@ import { getRoleThemeClass, type ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { DesktopSidebar } from "@/components/desktop-sidebar";
 import { DesktopTopBar } from "@/components/desktop-top-bar";
+import { PipPomodoroWidget } from "@/components/focus/pip-pomodoro-widget";
 
 type AppShellProps = {
   canCreateSocialPost: boolean;
@@ -287,6 +288,7 @@ export function AppShell({
         {pathname.startsWith("/auth") ? null : <RegistrationCampaignAnnouncement />}
         <PullToRefresh />
         <ScrollToTopOnLogoTap />
+        <PipPomodoroWidget />
       </div>
     </div>
   );
