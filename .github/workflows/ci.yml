@@ -378,7 +378,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
-          packageName: com.zigo.app
+          packageName: com.zigo.education
           releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
           track: internal
           status: completed

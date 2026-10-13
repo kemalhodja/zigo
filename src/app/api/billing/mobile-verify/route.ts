@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { verifyAppleSubscription } from "@/lib/server/apple-iap";
-import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, resolveTargetPackageName, verifyGooglePlaySubscription } from "@/lib/server/google-play";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,6 +29,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Satın alma fişi / token eksik." }, { status: 400 });
     }
 
+    const token = body.purchaseToken.trim();
+    if (
+      token.startsWith("sandbox_") ||
+      token.startsWith("dummy_") ||
+      token.startsWith("test_")
+    ) {
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: "Geçersiz veya test amaçlı satın alma fişi/tokenı." }, { status: 400 });
+      }
+    }
+
     const planId = body.planId || body.productId || "zigo-plus-student-monthly";
     const now = new Date();
     let expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -38,7 +49,7 @@ export async function POST(request: Request) {
     if (body.platform === "ios") {
       if (process.env.APPLE_IAP_SHARED_SECRET) {
         try {
-          const verified = await verifyAppleSubscription(body.purchaseToken);
+          const verified = await verifyAppleSubscription(token);
           expiresAt = verified.expiryTime;
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "Bilinmeyen hata";
@@ -56,9 +67,9 @@ export async function POST(request: Request) {
     } else {
       // Android / Google Play (default)
       try {
-        const packageName = body.packageName || DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+        const packageName = resolveTargetPackageName(body.packageName);
         const verified = await verifyGooglePlaySubscription(
-          body.purchaseToken,
+          token,
           body.productId || planId,
           packageName,
         );

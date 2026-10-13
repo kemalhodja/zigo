@@ -3,7 +3,12 @@ import { z } from "zod";
 
 import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
-import { getGooglePlayPackageName, verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { areSubscriptionProductsCompatible } from "@/lib/domain/subscription-plans";
+import {
+  isAllowedGooglePlayPackage,
+  resolveTargetPackageName,
+  verifyGooglePlaySubscription,
+} from "@/lib/server/google-play";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,6 +30,16 @@ export async function POST(request: Request) {
 
     const body = googlePlaySchema.parse(await request.json().catch(() => ({})));
 
+    // Reject fake/test token injections in production
+    const token = body.purchaseToken.trim();
+    if (
+      token.startsWith("sandbox_") ||
+      token.startsWith("dummy_") ||
+      token.startsWith("test_")
+    ) {
+      return NextResponse.json({ error: "Geçersiz veya test amaçlı satın alma fişi/tokenı." }, { status: 400 });
+    }
+
     if (shouldBlockSelfServeOrgCheckout(parseOrganizationType(profile.organization_type), body.planId)) {
       return NextResponse.json(
         {
@@ -35,18 +50,26 @@ export async function POST(request: Request) {
       );
     }
 
-    const packageName = getGooglePlayPackageName();
-    if (body.packageName && body.packageName !== packageName) {
+    if (body.packageName && !isAllowedGooglePlayPackage(body.packageName)) {
       return NextResponse.json({ error: "Geçersiz Android paket adı." }, { status: 400 });
     }
+    const packageName = resolveTargetPackageName(body.packageName);
 
-    const verifiedPurchase = await verifyGooglePlaySubscription(body.purchaseToken, body.productId, packageName);
+    const verifiedPurchase = await verifyGooglePlaySubscription(token, body.productId, packageName);
     if (!verifiedPurchase.isValid || !verifiedPurchase.expiryTimeIso) {
       return NextResponse.json({ error: "Google Play satın alımı doğrulanamadı." }, { status: 400 });
     }
-    if (verifiedPurchase.productId && verifiedPurchase.productId !== body.productId) {
+
+    const isCompatible =
+      areSubscriptionProductsCompatible(verifiedPurchase.productId, body.productId) ||
+      areSubscriptionProductsCompatible(verifiedPurchase.basePlanId, body.planId);
+
+    if (!isCompatible) {
       return NextResponse.json({ error: "Satın alınan ürün seçilen planla eşleşmiyor." }, { status: 400 });
     }
+
+    const resolvedProductId = verifiedPurchase.productId || body.productId;
+    const resolvedPlanId = verifiedPurchase.basePlanId || body.planId;
 
     const now = new Date();
     const finalExpiryTime = verifiedPurchase.expiryTimeIso;
@@ -72,9 +95,9 @@ export async function POST(request: Request) {
     // 1. Record Google Play Purchase via RPC
     const { data: rpcData, error: rpcError } = await supabase.rpc("record_google_play_purchase", {
       p_user_id: profile.id,
-      p_plan_id: body.planId,
-      p_product_id: body.productId,
-      p_purchase_token: body.purchaseToken,
+      p_plan_id: resolvedPlanId,
+      p_product_id: resolvedProductId,
+      p_purchase_token: token,
       p_order_id: verifiedOrderId ?? undefined,
       p_package_name: packageName,
       p_expiry_time: finalExpiryTime,
@@ -109,9 +132,9 @@ export async function POST(request: Request) {
       }).upsert(
         {
           user_id: profile.id,
-          plan_id: body.planId,
-          product_id: body.productId,
-          purchase_token: body.purchaseToken,
+          plan_id: resolvedPlanId,
+          product_id: resolvedProductId,
+          purchase_token: token,
           order_id: verifiedOrderId ?? null,
           package_name: packageName,
           expiry_time: finalExpiryTime,

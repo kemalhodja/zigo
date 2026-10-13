@@ -1,8 +1,11 @@
-// src/app/api/subscriptions/verify/route.ts
-
 import { NextResponse } from "next/server";
 
-import { getGooglePlayPackageName, verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { areSubscriptionProductsCompatible } from "@/lib/domain/subscription-plans";
+import {
+  isAllowedGooglePlayPackage,
+  resolveTargetPackageName,
+  verifyGooglePlaySubscription,
+} from "@/lib/server/google-play";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,6 +26,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "receipt (veya purchaseToken) ve productId gerekli" }, { status: 400 });
     }
 
+    if (
+      token.startsWith("sandbox_") ||
+      token.startsWith("dummy_") ||
+      token.startsWith("test_")
+    ) {
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json({ error: "Geçersiz veya test amaçlı satın alma fişi/tokenı." }, { status: 400 });
+      }
+    }
+
     const supabase = await createClient();
     const dbClient = (hasServiceRoleEnv() ? createAdminClient() : null) ?? supabase;
 
@@ -34,16 +47,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
     }
 
-    const packageName = getGooglePlayPackageName();
-    if (body.packageName && body.packageName !== packageName) {
+    if (body.packageName && !isAllowedGooglePlayPackage(body.packageName)) {
       return NextResponse.json({ error: "Geçersiz Android paket adı." }, { status: 400 });
     }
+    const packageName = resolveTargetPackageName(body.packageName);
 
-    // Verify with Google Play (supports Subscriptions v2 + v1 + sandbox fallback)
+    // Verify with Google Play
     const verification = await verifyGooglePlaySubscription(token, productId, packageName);
 
-    if (!verification.isValid || !verification.expiryTimeIso || (verification.productId && verification.productId !== productId)) {
-      return NextResponse.json({ error: "Google Play aboneliği doğrulanamadı veya geçerli değil." }, { status: 400 });
+    const isCompatible =
+      areSubscriptionProductsCompatible(verification.productId, productId) ||
+      areSubscriptionProductsCompatible(verification.basePlanId, productId);
+
+    if (!verification.isValid || !verification.expiryTimeIso || !isCompatible) {
+      return NextResponse.json({ error: "Google Play aboneliği doğrulanamadı veya seçilen planla eşleşmiyor." }, { status: 400 });
     }
 
     const now = new Date();

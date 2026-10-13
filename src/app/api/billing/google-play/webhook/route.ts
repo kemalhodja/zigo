@@ -96,11 +96,8 @@ export async function POST(request: Request) {
 
     const purchaseToken = subNotif.purchaseToken;
     const subscriptionId = subNotif.subscriptionId ?? "zigo_plus";
+    const notificationType = subNotif.notificationType;
     const packageName = notification.packageName ?? DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
-    if (packageName !== process.env.GOOGLE_PLAY_PACKAGE_NAME && process.env.GOOGLE_PLAY_PACKAGE_NAME) {
-      return NextResponse.json({ error: "Invalid Google Play package name" }, { status: 400 });
-    }
-    const notificationType = subNotif.notificationType ?? 0;
 
     const adminClient = createAdminClient();
     if (!adminClient) {
@@ -109,8 +106,8 @@ export async function POST(request: Request) {
     }
 
     // Determine status from notificationType
-    // 1: RECOVERED, 2: RENEWED, 4: PURCHASED -> 'active'
-    // 3: CANCELED -> 'canceled'
+    // 1: RECOVERED, 2: RENEWED, 4: PURCHASED, 7: RESTARTED -> 'active'
+    // 3: CANCELED -> 'canceled' (still active until expiry_time)
     // 5: ON_HOLD -> 'past_due'
     // 12: EXPIRED, 13: REVOKED -> 'expired'
     let newStatus = "active";
@@ -121,52 +118,66 @@ export async function POST(request: Request) {
     let expiresAtIso: string | null = null;
 
     // Verify expiry time from Google Play API if configured
-    if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
-      try {
-        const verifiedPurchase = await verifyGooglePlaySubscription(purchaseToken, subscriptionId, packageName);
-        if (verifiedPurchase.expiryTimeIso) {
-          expiresAtIso = verifiedPurchase.expiryTimeIso;
-        } else if (verifiedPurchase.expiryTimeMillis) {
-          expiresAtIso = new Date(Number(verifiedPurchase.expiryTimeMillis)).toISOString();
-        }
-      } catch (err) {
-        console.warn("[GOOGLE_PLAY_WEBHOOK] API verify error:", err);
+    try {
+      const verifiedPurchase = await verifyGooglePlaySubscription(purchaseToken, subscriptionId, packageName);
+      if (verifiedPurchase.expiryTimeIso) {
+        expiresAtIso = verifiedPurchase.expiryTimeIso;
+      } else if (verifiedPurchase.expiryTimeMillis) {
+        expiresAtIso = new Date(Number(verifiedPurchase.expiryTimeMillis)).toISOString();
       }
+    } catch (err) {
+      console.warn("[GOOGLE_PLAY_WEBHOOK] API verify error:", err);
     }
 
     const now = new Date().toISOString();
 
-    // 1. Find existing subscription by purchase token
-    const { data: subRecord } = await (adminClient
-      .from("user_subscriptions") as unknown as {
-      select: (cols: string) => { eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: { user_id: string; id: string } | null }> } };
-    })
-      .select("id, user_id")
-      .eq("receipt_token", purchaseToken)
+    // 1. Find existing purchase by purchase_token in google_play_purchases
+    const { data: gpRecord } = await adminClient
+      .from("google_play_purchases")
+      .select("user_id, plan_id, product_id, expiry_time")
+      .eq("purchase_token", purchaseToken)
       .maybeSingle();
 
-    if (subRecord?.user_id) {
-      const targetUserId = subRecord.user_id;
+    if (gpRecord?.user_id) {
+      const targetUserId = gpRecord.user_id;
 
-      // Update user_subscriptions
+      // Determine active premium entitlement:
+      // If canceled, user stays premium until expiry_time passes
+      const finalExpiry = expiresAtIso || gpRecord.expiry_time;
+      const isPastExpiry = finalExpiry ? new Date(finalExpiry).getTime() <= Date.now() : false;
+      const isStillPremium = (newStatus === "active" || (newStatus === "canceled" && !isPastExpiry)) && !isPastExpiry;
+
+      // Update google_play_purchases table
+      if (expiresAtIso) {
+        await adminClient
+          .from("google_play_purchases")
+          .update({
+            expiry_time: expiresAtIso,
+            verified_at: now,
+          })
+          .eq("purchase_token", purchaseToken);
+      }
+
+      // Update user_subscriptions table (schema: user_id, tier, current_period_end, updated_at)
       await (adminClient.from("user_subscriptions") as unknown as {
-        update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
-      })
-        .update({
-          status: newStatus,
+        upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<unknown>;
+      }).upsert(
+        {
+          user_id: targetUserId,
+          tier: isStillPremium ? "zigo_plus" : "free",
+          current_period_end: finalExpiry ?? (isStillPremium ? null : "1970-01-01T00:00:00.000Z"),
           updated_at: now,
-          ...(expiresAtIso ? { current_period_end: expiresAtIso, expires_at: expiresAtIso } : {}),
-        })
-        .eq("receipt_token", purchaseToken);
+        },
+        { onConflict: "user_id" },
+      );
 
-      // Update users.is_premium (the field getUserSubscription reads)
-      const newIsPremium = newStatus === "active";
+      // Update users table (schema: is_premium, ad_free_until)
       await (adminClient.from("users") as unknown as {
         update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
       })
         .update({
-          is_premium: newIsPremium,
-          updated_at: now,
+          is_premium: isStillPremium,
+          ad_free_until: isStillPremium ? finalExpiry : null,
         })
         .eq("id", targetUserId);
 
@@ -175,12 +186,13 @@ export async function POST(request: Request) {
         userId: targetUserId,
         notificationType,
         subscriptionStatus: newStatus,
+        isPremium: isStillPremium,
       });
     }
 
     return NextResponse.json({
       status: "acknowledged",
-      message: "Subscription record not found for token",
+      message: "Subscription record not found for token in google_play_purchases",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Webhook processing failed";

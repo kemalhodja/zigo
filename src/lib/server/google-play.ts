@@ -2,30 +2,48 @@
 
 export const DEFAULT_GOOGLE_PLAY_PACKAGE_NAME = "com.zigo.education";
 
+/** Validates whether the given package name belongs to the Zigo Android application. */
+export function isAllowedGooglePlayPackage(name?: string | null): boolean {
+  if (!name) return true;
+  const trimmed = name.trim();
+  return trimmed === "com.zigo.education" || trimmed === "com.zigo.app";
+}
+
+/** Resolves the canonical package name for Google Play API calls. */
+export function resolveTargetPackageName(callerPackageName?: string | null): string {
+  if (callerPackageName && isAllowedGooglePlayPackage(callerPackageName)) {
+    return callerPackageName.trim();
+  }
+  const envPkg = process.env.GOOGLE_PLAY_PACKAGE_NAME?.trim()
+    || process.env.NEXT_PUBLIC_GOOGLE_PLAY_PACKAGE_NAME?.trim();
+  if (envPkg && isAllowedGooglePlayPackage(envPkg)) {
+    return envPkg;
+  }
+  return DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+}
+
 /** The Android package is a server configuration, never caller-controlled. */
 export function getGooglePlayPackageName() {
-  return process.env.GOOGLE_PLAY_PACKAGE_NAME?.trim()
-    || process.env.NEXT_PUBLIC_GOOGLE_PLAY_PACKAGE_NAME?.trim()
-    || DEFAULT_GOOGLE_PLAY_PACKAGE_NAME;
+  return resolveTargetPackageName();
 }
 
 function getGooglePlayServiceAccount() {
-  // Accept the old deployment name during the migration, but use one canonical
-  // name in new environments.
   return process.env.GOOGLE_PLAY_SERVICE_ACCOUNT?.trim()
     || process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON?.trim()
     || "";
 }
 
 function allowTestPurchaseFallback() {
-  return process.env.NODE_ENV === "test"
-    || (process.env.NODE_ENV !== "production" && process.env.GOOGLE_PLAY_ALLOW_TEST_PURCHASES === "true");
+  // Test purchase mock fallback is strictly prohibited in production
+  if (process.env.NODE_ENV === "production") return false;
+  return process.env.NODE_ENV === "test";
 }
 
 export type GooglePlayVerificationResult = {
   isValid: boolean;
   orderId?: string | null;
   productId?: string;
+  basePlanId?: string;
   expiryTimeMillis?: string | number;
   expiryTimeIso?: string;
   paymentState?: number;
@@ -33,6 +51,7 @@ export type GooglePlayVerificationResult = {
   isTrial?: boolean;
   isTestPurchase?: boolean;
   autoRenewing?: boolean;
+  isAcknowledged?: boolean;
   raw?: unknown;
 };
 
@@ -77,25 +96,36 @@ function parseServiceAccountJson(raw: string): Record<string, unknown> | null {
 /**
  * Verify a Google Play subscription purchase token.
  * Supports Subscriptions v2 (modern) with fallback to Subscriptions v1/v3.
- * Gracefully handles sandbox/preview mode when GOOGLE_PLAY_SERVICE_ACCOUNT is unset.
+ * Gracefully handles sandbox/preview mode when GOOGLE_PLAY_SERVICE_ACCOUNT is unset in test environment.
  */
 export async function verifyGooglePlaySubscription(
   receiptToken: string,
   productId?: string,
   packageName?: string,
 ): Promise<GooglePlayVerificationResult> {
-  const configuredPackageName = getGooglePlayPackageName();
-  if (packageName && packageName !== configuredPackageName) {
+  if (packageName && !isAllowedGooglePlayPackage(packageName)) {
     throw new Error("Google Play paket adı yapılandırılmış Android uygulamasıyla eşleşmiyor.");
   }
-  const targetPackageName = configuredPackageName;
+  const targetPackageName = resolveTargetPackageName(packageName);
   const targetProductId = productId || "zigo-plus-student-monthly";
+
+  // Prevent mock token injection in production
+  const trimmedToken = receiptToken.trim();
+  if (
+    trimmedToken.startsWith("sandbox_") ||
+    trimmedToken.startsWith("dummy_") ||
+    trimmedToken.startsWith("test_")
+  ) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Geçersiz veya test amaçlı satın alma fişi/tokenı.");
+    }
+  }
 
   const rawEnv = getGooglePlayServiceAccount();
 
-  // If service account is not configured in this environment (preview, local dev, or staging before credentials added)
+  // If service account is not configured in test environment only
   if (!rawEnv && allowTestPurchaseFallback()) {
-    console.warn("[GOOGLE_PLAY_VERIFY] Using explicitly non-production test purchase fallback.");
+    console.warn("[GOOGLE_PLAY_VERIFY] Using test purchase fallback (test runner only).");
     const now = Date.now();
     const expiryMs = now + 30 * 24 * 60 * 60 * 1000;
     return {
@@ -104,11 +134,13 @@ export async function verifyGooglePlaySubscription(
       isTestPurchase: true,
       orderId: "GPA.SANDBOX-" + now,
       productId: targetProductId,
+      basePlanId: targetProductId,
       expiryTimeMillis: expiryMs,
       expiryTimeIso: new Date(expiryMs).toISOString(),
       paymentState: 1,
       subscriptionState: "SUBSCRIPTION_STATE_ACTIVE",
       autoRenewing: true,
+      isAcknowledged: true,
       raw: { sandbox: true },
     };
   }
@@ -142,7 +174,7 @@ export async function verifyGooglePlaySubscription(
       if (androidpublisher.purchases?.subscriptionsv2?.get) {
         const v2Response = await androidpublisher.purchases.subscriptionsv2.get({
           packageName: targetPackageName,
-          token: receiptToken,
+          token: trimmedToken,
         });
 
         const v2Data = v2Response.data;
@@ -163,11 +195,28 @@ export async function verifyGooglePlaySubscription(
           }
 
           const resolvedProductId = firstItem?.productId || targetProductId;
+          const basePlanId = firstItem?.offerDetails?.basePlanId;
+          const isAcknowledged = v2Data.acknowledgementState === "ACKNOWLEDGEMENT_STATE_ACKNOWLEDGED";
+
+          // Ensure subscription is acknowledged on the server (Google Play requires acknowledgment within 72h)
+          if (!isAcknowledged && androidpublisher.purchases?.subscriptions?.acknowledge) {
+            try {
+              await androidpublisher.purchases.subscriptions.acknowledge({
+                packageName: targetPackageName,
+                subscriptionId: resolvedProductId,
+                token: trimmedToken,
+              });
+              console.log("[GOOGLE_PLAY_SERVER_ACK] Subscriptions v2 acknowledged on server.");
+            } catch (ackErr) {
+              console.warn("[GOOGLE_PLAY_ACK_NOTICE] Server acknowledge notice:", (ackErr as Error)?.message);
+            }
+          }
 
           return {
             isValid: isActive,
             orderId: v2Data.latestOrderId || null,
             productId: resolvedProductId,
+            basePlanId,
             expiryTimeMillis: expiryMs,
             expiryTimeIso: expiryIso,
             subscriptionState: state,
@@ -175,6 +224,7 @@ export async function verifyGooglePlaySubscription(
               item.offerDetails?.offerTags?.some((tag: string) => /trial|free|promo/i.test(tag)),
             ),
             autoRenewing: firstItem?.autoRenewingPlan != null,
+            isAcknowledged: true,
             raw: v2Data,
           };
         }
@@ -187,7 +237,7 @@ export async function verifyGooglePlaySubscription(
     const v1Response = await androidpublisher.purchases.subscriptions.get({
       packageName: targetPackageName,
       subscriptionId: targetProductId,
-      token: receiptToken,
+      token: trimmedToken,
     });
 
     const v1Data = v1Response.data;
@@ -196,6 +246,20 @@ export async function verifyGooglePlaySubscription(
     const isValid = paymentState === 1 || paymentState === 2;
     const isTrial = paymentState === 2;
     const expiryMs = v1Data?.expiryTimeMillis ? Number(v1Data.expiryTimeMillis) : undefined;
+
+    // Acknowledge if pending in v1
+    if (v1Data && v1Data.acknowledgementState === 0 && androidpublisher.purchases?.subscriptions?.acknowledge) {
+      try {
+        await androidpublisher.purchases.subscriptions.acknowledge({
+          packageName: targetPackageName,
+          subscriptionId: targetProductId,
+          token: trimmedToken,
+        });
+        console.log("[GOOGLE_PLAY_SERVER_ACK] Subscriptions v1 acknowledged on server.");
+      } catch (ackErr) {
+        console.warn("[GOOGLE_PLAY_ACK_NOTICE] v1 acknowledge notice:", (ackErr as Error)?.message);
+      }
+    }
 
     return {
       isValid,
@@ -206,6 +270,7 @@ export async function verifyGooglePlaySubscription(
       paymentState: paymentState ?? undefined,
       isTrial,
       autoRenewing: v1Data?.autoRenewing ?? false,
+      isAcknowledged: true,
       raw: v1Data,
     };
   } catch (err: unknown) {

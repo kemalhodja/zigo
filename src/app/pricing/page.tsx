@@ -417,7 +417,7 @@ function usePricingSubscription(): SubscriptionState {
 }
 
 export default function PricingPage() {
-  const { isTrial, trialDaysRemaining, isLoading } = usePricingSubscription();
+  const { isPremium, isTrial, trialDaysRemaining, isLoading } = usePricingSubscription();
   const [selectedRole, setSelectedRole] = useState<RoleKey | null>("student");
 
   const [modalState, setModalState] = useState<{
@@ -430,6 +430,48 @@ export default function PricingPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
+
+  // Auto-restore previously purchased Google Play subscriptions on Android devices
+  useEffect(() => {
+    let cancelled = false;
+
+    async function attemptAutoRestore() {
+      if (typeof window === "undefined" || !isGooglePlayBillingAvailable() || isPremium) return;
+      try {
+        const purchases = await restoreGooglePlayPurchases();
+        if (cancelled || !purchases || purchases.length === 0) return;
+
+        for (const p of purchases) {
+          if (!p.purchaseToken) continue;
+          const res = await fetch("/api/billing/google-play", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              planId: p.planId || "zigo-plus-student-monthly",
+              productId: p.productId || "zigo-plus-student-monthly",
+              purchaseToken: p.purchaseToken,
+              packageName: p.packageName || "com.zigo.education",
+              orderId: p.orderId,
+            }),
+          });
+          if (res.ok && !cancelled) {
+            window.location.reload();
+            break;
+          }
+        }
+      } catch {
+        // Silent catch: auto-restore shouldn't interrupt regular page load
+      }
+    }
+
+    if (!isLoading && !isPremium) {
+      attemptAutoRestore();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoading, isPremium]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

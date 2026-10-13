@@ -254,3 +254,62 @@ export function resolveSubscriptionPeriodEnd(planId: string, from = new Date()) 
 
   return end.toISOString();
 }
+
+/**
+ * Checks if a given productId or planId is a recognized Zigo Plus subscription product.
+ */
+export function isZigoSubscriptionProduct(productId?: string | null): boolean {
+  if (!productId) return false;
+  const normalized = productId.toLowerCase().trim().replace(/[-_]/g, "");
+  return (
+    normalized.includes("zigoplus") ||
+    normalized.includes("studentmonthly") ||
+    normalized.includes("studentyearly") ||
+    normalized.includes("teachersmonthly") ||
+    normalized.includes("teachersyearly") ||
+    normalized.includes("institutionsmonthly") ||
+    normalized.includes("institutionsyearly") ||
+    normalized.includes("platformsmonthly") ||
+    normalized.includes("platformsyearly") ||
+    normalized.includes("publishersmonthly") ||
+    normalized.includes("publishersyearly") ||
+    normalized === "monthly" ||
+    normalized === "yearly"
+  );
+}
+
+/**
+ * Checks whether a verified Google Play product is compatible with the requested subscription plan.
+ * Handles cases where Google Play Console uses parent subscription ID (e.g. zigo_plus) while
+ * client requested a specific base plan (e.g. zigo-plus-student-monthly), or vice versa.
+ */
+export function areSubscriptionProductsCompatible(
+  verifiedProductId?: string | null,
+  requestedProductId?: string | null,
+): boolean {
+  if (!verifiedProductId || !requestedProductId) return false;
+  const v = verifiedProductId.trim().toLowerCase();
+  const r = requestedProductId.trim().toLowerCase();
+
+  // Exact match
+  if (v === r) return true;
+
+  // Hyphen vs underscore match (zigo-plus vs zigo_plus)
+  if (v.replace(/-/g, "_") === r.replace(/-/g, "_")) return true;
+
+  // Both belong to recognized Zigo Plus family
+  if (isZigoSubscriptionProduct(v) && isZigoSubscriptionProduct(r)) {
+    // If interval can be determined, ensure they don't mix monthly with yearly
+    const vIsYearly = v.includes("year") || v.includes("yil") || v.includes("annual");
+    const rIsYearly = r.includes("year") || r.includes("yil") || r.includes("annual");
+    const vIsGeneric = v === "zigo_plus" || v === "zigo-plus";
+    const rIsGeneric = r === "zigo_plus" || r === "zigo-plus";
+
+    if (vIsGeneric || rIsGeneric) {
+      return true;
+    }
+    return vIsYearly === rIsYearly;
+  }
+
+  return false;
+}
