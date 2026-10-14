@@ -251,7 +251,28 @@ export default async function TeacherPage({
                 </Link>
 
                 <Link
-                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 p-4 text-white shadow-sm transition hover:shadow-md"
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4 text-white shadow-sm transition hover:shadow-md col-span-2"
+                  href="/quizzes/create"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M9 11l3 3L22 4" />
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/90 bg-white/20 rounded-md px-2 py-0.5">
+                      LGS · YKS · D/Y
+                    </span>
+                  </div>
+                  <p className="mt-3 text-base font-black">🎯 Sınav & Quiz Hazırla</p>
+                  <p className="mt-0.5 text-xs font-semibold text-white/85">
+                    LGS, YKS (5 şık), Doğru/Yanlış testleri hazırla, çözümler ekle ve canlı önizle
+                  </p>
+                </Link>
+
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 p-4 text-white shadow-sm transition hover:shadow-md col-span-2 sm:col-span-1"
                   href="/profile"
                 >
                   <div className="flex items-center justify-between">

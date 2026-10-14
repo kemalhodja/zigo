@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "10 soruluk quiz için başlık, alan ve her soruda 4 benzersiz seçenek ile doğru cevap gerekli.",
+            "Sınav için başlık, alan ve her soruda 2-5 benzersiz seçenek ile geçerli doğru cevap seçimi gerekli.",
         },
         { status: 400 },
       );

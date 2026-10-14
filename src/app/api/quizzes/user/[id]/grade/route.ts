@@ -11,7 +11,7 @@ import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const gradeSchema = z.object({
-  answers: z.array(z.number().int().min(-1).max(3)).min(1).max(10),
+  answers: z.array(z.number().int().min(-1).max(4)).min(1).max(10),
 });
 
 export async function POST(
@@ -99,9 +99,12 @@ export async function POST(
       data: {
         correct,
         total: questions.length,
-        score: correct * 10,
+        score: Math.round((correct / (questions.length || 1)) * 100),
         isGuest: !profile,
-        results: results.map((r) => ({ correctIndex: r.correctIndex })),
+        results: results.map((r, i) => ({
+          correctIndex: r.correctIndex,
+          explanation: questions[i]?.explanation ?? null,
+        })),
       },
     });
   } catch (error) {

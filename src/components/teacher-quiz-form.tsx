@@ -31,15 +31,17 @@ type QuizDraftQuestion = {
   options: string[];
   correctOption: number;
   imageUrl?: string; // Optional image URL for the question
+  explanation?: string; // Teacher solution explanation
 };
 
-const OPTION_LABELS = ["A", "B", "C", "D"] as const;
+const OPTION_LABELS = ["A", "B", "C", "D", "E"] as const;
 
-function emptyQuestion(): QuizDraftQuestion {
+function emptyQuestion(optCount = 4): QuizDraftQuestion {
   return {
     questionText: "",
-    options: Array.from({ length: TEACHER_QUIZ_OPTION_COUNT }, () => ""),
+    options: Array.from({ length: optCount }, () => ""),
     correctOption: 0,
+    explanation: "",
   };
 }
 
@@ -48,11 +50,12 @@ function _createEmptyQuiz(): QuizDraftQuestion[] {
 }
 
 function isQuestionComplete(question: QuizDraftQuestion) {
-  if (question.questionText.trim().length < 10) return false;
+  if (question.questionText.trim().length < 5) return false;
+  if (question.options.length < 2 || question.options.length > 5) return false;
   if (question.options.some((option) => option.trim().length === 0)) return false;
-  if (question.correctOption < 0 || question.correctOption >= TEACHER_QUIZ_OPTION_COUNT) return false;
+  if (question.correctOption < 0 || question.correctOption >= question.options.length) return false;
   const unique = new Set(question.options.map((option) => option.trim().toLocaleLowerCase("tr-TR")));
-  return unique.size === TEACHER_QUIZ_OPTION_COUNT;
+  return unique.size === question.options.length;
 }
 
 export function TeacherQuizForm({
@@ -118,6 +121,23 @@ export function TeacherQuizForm({
     });
   }
 
+  function setActiveQuestionFormat(count: number, isTF = false) {
+    if (isTF) {
+      updateActiveQuestion({
+        options: ["Doğru", "Yanlış"],
+        correctOption: Math.min(activeQuestion.correctOption, 1),
+      });
+      return;
+    }
+    const current = [...activeQuestion.options];
+    while (current.length < count) current.push("");
+    const newOptions = current.slice(0, count);
+    updateActiveQuestion({
+      options: newOptions,
+      correctOption: Math.min(activeQuestion.correctOption, count - 1),
+    });
+  }
+
   async function submitQuiz() {
     if (!canCreateQuizzes) {
       setStatus("error");
@@ -153,6 +173,7 @@ export function TeacherQuizForm({
             options: question.options.map((option) => option.trim()),
             correctOption: question.correctOption,
             imageUrl: question.imageUrl, // optional image URL
+            explanation: question.explanation?.trim() || undefined,
           })),
         }),
       });
@@ -191,6 +212,22 @@ export function TeacherQuizForm({
         title={t.proQuizLockTitle}
       >
         <>
+          {/* Advanced Studio Direct Shortcut */}
+          <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/70 p-3">
+            <div>
+              <p className="text-xs font-black text-indigo-950">✨ Gelişmiş Sınav & Quiz Stüdyosu</p>
+              <p className="text-[0.68rem] font-semibold text-indigo-700">
+                Öğrenci canlı önizleme, matematik formül desteği ve tek tıkla hazır şablonlar
+              </p>
+            </div>
+            <a
+              href="/quizzes/create"
+              className="tap-scale shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-black text-white hover:bg-indigo-700 transition"
+            >
+              Stüdyoyu Aç ↗
+            </a>
+          </div>
+
           {/* Soru Sayısı Belirleme & İlerleme */}
           <div className="rounded-xl border border-violet-100 bg-violet-50/70 p-3 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-violet-100 pb-2.5">
@@ -332,19 +369,68 @@ export function TeacherQuizForm({
           </label>
 
           <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h4 className="text-sm font-black text-night">
                 {t.quizQuestionHeading.replace("{n}", String(activeIndex + 1))}
               </h4>
-              <span
-                className={`rounded-lg px-2 py-1 text-[0.65rem] font-black uppercase tracking-[0.08em] ${
-                  isQuestionComplete(activeQuestion)
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}
-              >
-                {isQuestionComplete(activeQuestion) ? t.quizQuestionReady : t.quizQuestionDraft}
-              </span>
+              <div className="flex items-center gap-1.5">
+                {/* Format buttons */}
+                <div className="flex rounded-lg bg-white border border-slate-200 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuestionFormat(4)}
+                    className={`rounded px-2 py-0.5 text-[0.65rem] font-bold ${
+                      activeQuestion.options.length === 4 && activeQuestion.options[0] !== "Doğru"
+                        ? "bg-violet-600 text-white font-black"
+                        : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    4 Şık (LGS)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuestionFormat(5)}
+                    className={`rounded px-2 py-0.5 text-[0.65rem] font-bold ${
+                      activeQuestion.options.length === 5
+                        ? "bg-purple-600 text-white font-black"
+                        : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    5 Şık (YKS)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuestionFormat(2, true)}
+                    className={`rounded px-2 py-0.5 text-[0.65rem] font-bold ${
+                      activeQuestion.options.length === 2
+                        ? "bg-emerald-600 text-white font-black"
+                        : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    D / Y
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveQuestionFormat(3)}
+                    className={`rounded px-2 py-0.5 text-[0.65rem] font-bold ${
+                      activeQuestion.options.length === 3
+                        ? "bg-amber-600 text-white font-black"
+                        : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    3 Şık
+                  </button>
+                </div>
+                <span
+                  className={`rounded-lg px-2 py-1 text-[0.65rem] font-black uppercase tracking-[0.08em] ${
+                    isQuestionComplete(activeQuestion)
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {isQuestionComplete(activeQuestion) ? t.quizQuestionReady : t.quizQuestionDraft}
+                </span>
+              </div>
             </div>
 
             <textarea
@@ -409,6 +495,19 @@ export function TeacherQuizForm({
                 </div>
               ))}
               <p className="text-xs font-semibold text-slate-500">{t.quizCorrectHint}</p>
+            </div>
+
+            {/* Explanation / Solution Tip */}
+            <div className="border-t border-slate-200 pt-2.5">
+              <label className="text-[0.68rem] font-black uppercase tracking-wider text-amber-700">
+                💡 Öğretmenin Çözüm Açıklaması / Püf Noktası (İsteğe bağlı)
+              </label>
+              <input
+                className="mt-1 w-full rounded-lg border border-amber-200 bg-amber-50/40 px-3 py-2 text-xs outline-none focus:border-amber-400 focus:bg-white"
+                onChange={(e) => updateActiveQuestion({ explanation: e.target.value })}
+                placeholder="Öğrencinin sınav bitiminde göreceği formül, ipucu veya çözüm adımları."
+                value={activeQuestion.explanation ?? ""}
+              />
             </div>
           </section>
 

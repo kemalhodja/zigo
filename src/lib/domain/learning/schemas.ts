@@ -5,12 +5,14 @@ export const TEACHER_QUIZ_QUESTION_COUNT = 10;
 export const TEACHER_QUIZ_OPTION_COUNT = 4;
 
 export const quizQuestionInputSchema = z.object({
-  questionText: z.string().trim().min(10).max(1000),
+  questionText: z.string().trim().min(5).max(1000),
   options: z
     .array(z.string().trim().min(1).max(255))
-    .length(TEACHER_QUIZ_OPTION_COUNT),
-  correctOption: z.coerce.number().int().min(0).max(TEACHER_QUIZ_OPTION_COUNT - 1),
+    .min(2)
+    .max(5),
+  correctOption: z.coerce.number().int().min(0).max(4),
   imageUrl: z.string().url().optional(), // optional image URL
+  explanation: z.string().trim().max(600).optional(),
 });
 
 export const createQuizSchema = z
@@ -18,7 +20,7 @@ export const createQuizSchema = z
     teacherId: z.string().uuid(),
     areaId: z.coerce.number().int().positive(),
     title: z.string().trim().min(3).max(255),
-    questions: z.array(quizQuestionInputSchema).length(TEACHER_QUIZ_QUESTION_COUNT),
+    questions: z.array(quizQuestionInputSchema).min(3).max(20),
     pointsReward: z.coerce.number().int().min(10).max(200).default(100),
   })
   .superRefine((value, ctx) => {
