@@ -104,6 +104,15 @@ const ROLE_PLANS = {
 
 type RoleKey = keyof typeof ROLE_PLANS;
 
+function getPlanId(role: RoleKey, interval: "monthly" | "yearly"): string {
+  if (role === "teacher") return `zigo-plus-teachers-${interval}`;
+  if (role === "institution") return `zigo-plus-educational-institutions-${interval}`;
+  if (role === "platform") return `zigo-plus-platform-${interval}`;
+  if (role === "publisher") return `zigo-plus-publisher-${interval}`;
+  // student ve parent aynı learner planını kullanır
+  return `zigo-plus-student-${interval}`;
+}
+
 function PlanCard({
   role,
   isCurrentRole: _isCurrentRole,
@@ -251,17 +260,7 @@ function PlanCard({
 
             <div className="flex items-center justify-between px-1">
               <Link
-                href={`/billing/havale?planId=${
-                  role === "teacher"
-                    ? `zigo-plus-teachers-${interval}`
-                    : role === "institution"
-                      ? `zigo-plus-educational-institutions-${interval}`
-                      : role === "platform"
-                        ? `zigo-plus-platform-${interval}`
-                        : role === "publisher"
-                          ? `zigo-plus-publisher-${interval}`
-                          : `zigo-plus-student-${interval}`
-                }`}
+                href={`/billing/havale?planId=${getPlanId(role, interval)}`}
                 className="text-xs font-bold text-slate-600 hover:text-amber-600 flex items-center gap-1 transition"
               >
                 <span>🏦 Alternatif: Havale / FAST ile Öde</span>
@@ -274,17 +273,7 @@ function PlanCard({
           /* Web Ortamı: Google Play gösterilmez, doğrudan Havale / FAST ile ödeme butonu ana aksiyon olarak yer alır */
           <>
             <Link
-              href={`/billing/havale?planId=${
-                role === "teacher"
-                  ? `zigo-plus-teachers-${interval}`
-                  : role === "institution"
-                    ? `zigo-plus-educational-institutions-${interval}`
-                    : role === "platform"
-                      ? `zigo-plus-platform-${interval}`
-                      : role === "publisher"
-                        ? `zigo-plus-publisher-${interval}`
-                        : `zigo-plus-student-${interval}`
-              }`}
+              href={`/billing/havale?planId=${getPlanId(role, interval)}`}
               className="tap-scale w-full py-3.5 px-5 rounded-2xl text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 hover:brightness-105 transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600"
             >
               <span>🏦 Havale / FAST ile Hemen Başlat</span>
@@ -606,20 +595,20 @@ export default function PricingPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const isNative = isGooglePlayBillingAvailable() || isCapacitorAndroidClient();
     const params = new URLSearchParams(window.location.search);
     const openPlay = params.get("openPlay");
     const requestedPlan = params.get("planId");
     const requestedRole = params.get("role") as RoleKey | null;
 
-    if (openPlay || requestedPlan || requestedRole) {
+    // Web ortamında Google Play modalı otomatik AÇILMAZ (sadece native Android telefonda açılır)
+    if (isNative && (openPlay || requestedPlan || requestedRole)) {
       const activeRole = userRole || (requestedRole && requestedRole in ROLE_PLANS ? requestedRole : "student");
       const targetRole: RoleKey = activeRole;
       const isYearly = Boolean(requestedPlan?.includes("yearly"));
       const interval = isYearly ? "yearly" : "monthly";
       const priceTry = isYearly ? ROLE_PLANS[targetRole].yearly : ROLE_PLANS[targetRole].monthly;
-      const planId = requestedPlan || (targetRole === "teacher" 
-        ? `zigo-plus-teachers-${interval}` 
-        : `zigo-plus-${targetRole === "student" ? "student" : targetRole}-${interval}`);
+      const planId = requestedPlan || getPlanId(targetRole, interval);
       
       setModalState({
         role: targetRole,
@@ -634,15 +623,7 @@ export default function PricingPage() {
     setModalError(null);
     const planConfig = ROLE_PLANS[role];
     const priceTry = interval === "yearly" ? planConfig.yearly : planConfig.monthly;
-    const planId = role === "teacher"
-      ? `zigo-plus-teachers-${interval}`
-      : role === "institution"
-        ? `zigo-plus-educational-institutions-${interval}`
-        : role === "platform"
-          ? `zigo-plus-platform-${interval}`
-          : role === "publisher"
-            ? `zigo-plus-publisher-${interval}`
-            : `zigo-plus-student-${interval}`;
+    const planId = getPlanId(role, interval);
 
     setModalState({
       role,
@@ -857,6 +838,12 @@ export default function PricingPage() {
       <main className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {userRole && userRole in ROLE_PLANS ? (
           <div className="mx-auto max-w-md">
+            <div className="mb-4 text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-violet-50 border border-violet-200 px-4 py-1.5 text-xs font-black text-violet-700">
+                <span>✦</span>
+                <span>Hesabınıza özel {ROLE_PLANS[userRole].title} planı gösteriliyor</span>
+              </span>
+            </div>
             <PlanCard
               isCurrentRole={true}
               isSelected={true}
@@ -866,7 +853,8 @@ export default function PricingPage() {
               role={userRole}
             />
           </div>
-        ) : (
+        ) : !isPremium && !isTrial ? (
+          // Giriş yapmamış veya rolü bilinmeyen kullanıcılara tüm planlar
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {Object.keys(ROLE_PLANS).map((role) => (
               <PlanCard
@@ -878,6 +866,24 @@ export default function PricingPage() {
                 role={role as RoleKey}
               />
             ))}
+          </div>
+        ) : (
+          // Giriş yapmış, rolü belirlenememiş kullanıcıya student planı (varsayılan)
+          <div className="mx-auto max-w-md">
+            <div className="mb-4 text-center">
+              <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-4 py-1.5 text-xs font-black text-amber-700">
+                <span>⚡</span>
+                <span>Standart Zigo Plus planı</span>
+              </span>
+            </div>
+            <PlanCard
+              isCurrentRole={true}
+              isSelected={true}
+              key="student"
+              onOpenModal={handleOpenModal}
+              onSelect={setSelectedRole}
+              role="student"
+            />
           </div>
         )}
 
