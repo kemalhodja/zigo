@@ -8,16 +8,31 @@ import { createClient } from "@/lib/supabase/client";
 
 type ActivationStatus = "pending" | "active" | "timeout";
 
-function useActivationPoller(skip: boolean): ActivationStatus {
+type PollerResult = {
+  status: ActivationStatus;
+  role: string | null;
+};
+
+function useActivationPoller(skip: boolean): PollerResult {
   const [status, setStatus] = useState<ActivationStatus>("pending");
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
+    const supabase = createClient();
+
+    // Rolü bağımsız olarak hemen çek
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        supabase.from("users").select("role").eq("id", user.id).maybeSingle().then(({ data }) => {
+          if (data?.role) setRole(data.role);
+        });
+      }
+    });
+
     if (skip) {
       setStatus("active");
       return;
     }
-
-    const supabase = createClient();
     let attempts = 0;
     const MAX_ATTEMPTS = 12; // 12 × 5s = 60s max
 
@@ -94,9 +109,13 @@ function useActivationPoller(skip: boolean): ActivationStatus {
         // Fallback: check users.is_premium
         const { data: userData } = await supabase
           .from("users")
-          .select("is_premium")
+          .select("is_premium, role")
           .eq("id", user.id)
           .maybeSingle();
+
+        if (userData?.role) {
+          setRole(userData.role);
+        }
 
         if (userData?.is_premium === true) {
           setStatus("active");
@@ -118,7 +137,7 @@ function useActivationPoller(skip: boolean): ActivationStatus {
     return () => clearInterval(interval);
   }, [skip]);
 
-  return status;
+  return { status, role };
 }
 
 export default function BillingSuccessPage() {
@@ -127,7 +146,7 @@ export default function BillingSuccessPage() {
   const isSponsor = kind === "sponsor";
   const isGooglePlay = kind === "google_play";
   // Google Play activates synchronously; Stripe needs webhook — poll for it
-  const activationStatus = useActivationPoller(isSponsor || isGooglePlay);
+  const { status: activationStatus, role } = useActivationPoller(isSponsor || isGooglePlay);
 
   const title = isSponsor
     ? "Sponsorluk ödemesi alındı"
@@ -191,16 +210,34 @@ export default function BillingSuccessPage() {
           ) : (
             <>
               <Link
-                href="/student"
+                href={
+                  role === "teacher"
+                    ? "/teacher"
+                    : role === "parent"
+                      ? "/parent"
+                      : role === "education_institution" || role === "education_platform" || role === "publisher"
+                        ? "/teacher"
+                        : role === "student"
+                          ? "/student"
+                          : "/profile"
+                }
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-black text-sm shadow hover:brightness-105 transition"
               >
-                Öğrenci Panelim
+                {role === "teacher"
+                  ? "Öğretmen Stüdyom"
+                  : role === "parent"
+                    ? "Veli Panelim"
+                    : role === "education_institution" || role === "education_platform" || role === "publisher"
+                      ? "Kurumsal Yönetim Paneli"
+                      : role === "student"
+                        ? "Öğrenci Panelim"
+                        : "Panelime Git"}
               </Link>
               <Link
-                href="/learn"
+                href={role === "parent" ? "/family" : role === "teacher" ? "/questions" : "/learn"}
                 className="w-full py-3 rounded-xl border border-slate-200 text-slate-700 font-black text-sm hover:bg-slate-50 transition"
               >
-                Öğrenmeye Başla
+                {role === "parent" ? "Aile ve Çocuklar" : role === "teacher" ? "Topluluk Soruları" : "Öğrenmeye Başla"}
               </Link>
             </>
           )}

@@ -155,9 +155,18 @@ export function DesktopSidebar({
     viewerRole === "education_platform" ||
     viewerRole === "publisher"
   ) {
+    const studioTitle =
+      viewerRole === "education_institution"
+        ? "Kurum Paneli"
+        : viewerRole === "education_platform"
+          ? "Platform Paneli"
+          : viewerRole === "publisher"
+            ? "Yayınevi Paneli"
+            : "Öğretmen Stüdyosu";
+
     roleNavItems.push(
       {
-        name: "Öğretmen Stüdyosu",
+        name: studioTitle,
         href: "/teacher",
         icon: Sparkles,
         isActive: pathname.startsWith("/teacher") && !pathname.startsWith("/teacher/lessons"),

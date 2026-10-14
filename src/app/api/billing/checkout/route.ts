@@ -44,7 +44,20 @@ export async function POST(request: Request) {
         : profile.role === "student" || profile.role === "parent"
           ? "zigo-plus-student-monthly"
           : "zigo-plus-student-monthly";
-    const planId = body.planId ?? defaultPlanId;
+    let planId = body.planId ?? defaultPlanId;
+
+    // Rol-plan uyum kontrolü: kullanıcının rolüyle uyuşmayan plan talep edilirse doğru plana eşle
+    const isTeacherPlan = planId.includes("teachers");
+    const isInstitutionPlan = planId.includes("institution") || planId.includes("platform") || planId.includes("publisher");
+    const isStudentOrParent = profile.role === "student" || profile.role === "parent";
+
+    if (isStudentOrParent && (isTeacherPlan || isInstitutionPlan)) {
+      const interval = planId.includes("yearly") ? "yearly" : "monthly";
+      planId = `zigo-plus-student-${interval}`;
+    } else if (profile.role === "teacher" && !isTeacherPlan && !isInstitutionPlan) {
+      const interval = planId.includes("yearly") ? "yearly" : "monthly";
+      planId = `zigo-plus-teachers-${interval}`;
+    }
 
     if (!findPlanGroup(planId)) {
       return NextResponse.json({ error: "Geçersiz abonelik planı." }, { status: 400 });

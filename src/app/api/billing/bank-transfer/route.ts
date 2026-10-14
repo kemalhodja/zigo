@@ -66,9 +66,24 @@ export async function POST(request: Request) {
     }
 
     const body = createBankTransferSchema.parse(await request.json());
-    resolveBankTransferPlan(body.planId);
 
-    if (shouldBlockSelfServeOrgCheckout(parseOrganizationType(profile.organization_type), body.planId)) {
+    // Rol-plan uyum kontrolü: kullanıcının rolüyle uyuşmayan plan talep edilirse doğru plana eşle
+    let targetPlanId = body.planId;
+    const isTeacherPlan = targetPlanId.includes("teachers");
+    const isInstitutionPlan = targetPlanId.includes("institution") || targetPlanId.includes("platform") || targetPlanId.includes("publisher");
+    const isStudentOrParent = profile.role === "student" || profile.role === "parent";
+
+    if (isStudentOrParent && (isTeacherPlan || isInstitutionPlan)) {
+      const interval = targetPlanId.includes("yearly") ? "yearly" : "monthly";
+      targetPlanId = `zigo-plus-student-${interval}`;
+    } else if (profile.role === "teacher" && !isTeacherPlan && !isInstitutionPlan) {
+      const interval = targetPlanId.includes("yearly") ? "yearly" : "monthly";
+      targetPlanId = `zigo-plus-teachers-${interval}`;
+    }
+
+    resolveBankTransferPlan(targetPlanId, profile.created_at);
+
+    if (shouldBlockSelfServeOrgCheckout(parseOrganizationType(profile.organization_type), targetPlanId)) {
       return NextResponse.json(
         {
           error: h.apiOrgBlocked,
@@ -78,7 +93,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const transferRequest = await createBankTransferRequest(supabase, body.planId);
+    const transferRequest = await createBankTransferRequest(supabase, targetPlanId, profile.created_at);
 
     return NextResponse.json({
       data: {

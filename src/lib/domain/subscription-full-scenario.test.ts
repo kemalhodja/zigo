@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { resolveBankTransferPlan } from "@/lib/domain/bank-transfer";
 import { DEFAULT_GAME_LIMITS, isNightBanActive, settingsFromParentRow } from "@/lib/domain/game-limits";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { applyPromoCode, calculateDynamicPrice, resolveSubscriptionPlanPricing } from "@/lib/domain/subscription-campaign";
@@ -318,6 +319,98 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
       const nonSubTeacher = { isPremium: false, role: "teacher" };
       const canAcceptOrReply = nonSubTeacher.isPremium;
       expect(canAcceptOrReply).toBe(false);
+    });
+  });
+
+  // ─── 10. SENARYO: ROL-PLAN UYUM GÜVENCESİ (ROLE-PLAN GUARDS) ────────────────
+  describe("Senaryo 10: Rol-Plan Güvenlik Kapısı (Role-Plan Guards)", () => {
+    function enforceRolePlan(role: string, requestedPlanId: string) {
+      const isTeacherPlan = requestedPlanId.includes("teachers");
+      const isInstitutionPlan = requestedPlanId.includes("institution") || requestedPlanId.includes("platform") || requestedPlanId.includes("publisher");
+      const isStudentOrParent = role === "student" || role === "parent";
+
+      if (isStudentOrParent && (isTeacherPlan || isInstitutionPlan)) {
+        const interval = requestedPlanId.includes("yearly") ? "yearly" : "monthly";
+        return `zigo-plus-student-${interval}`;
+      }
+      if (role === "teacher" && !isTeacherPlan && !isInstitutionPlan) {
+        const interval = requestedPlanId.includes("yearly") ? "yearly" : "monthly";
+        return `zigo-plus-teachers-${interval}`;
+      }
+      return requestedPlanId;
+    }
+
+    it("Öğrenci veya veli öğretmen planını seçse bile otomatik olarak öğrenci planına çevrilir", () => {
+      const normalizedStudent = enforceRolePlan("student", "zigo-plus-teachers-monthly");
+      expect(normalizedStudent).toBe("zigo-plus-student-monthly");
+
+      const normalizedParent = enforceRolePlan("parent", "zigo-plus-teachers-yearly");
+      expect(normalizedParent).toBe("zigo-plus-student-yearly");
+
+      const normalizedInst = enforceRolePlan("student", "zigo-plus-educational-institutions-monthly");
+      expect(normalizedInst).toBe("zigo-plus-student-monthly");
+    });
+
+    it("Öğretmen yanlışlıkla öğrenci planına gitse bile otomatik öğretmen planına yönlendirilir", () => {
+      const normalizedTeacherMonthly = enforceRolePlan("teacher", "zigo-plus-student-monthly");
+      expect(normalizedTeacherMonthly).toBe("zigo-plus-teachers-monthly");
+
+      const normalizedTeacherYearly = enforceRolePlan("teacher", "zigo-plus-student-yearly");
+      expect(normalizedTeacherYearly).toBe("zigo-plus-teachers-yearly");
+    });
+  });
+
+  // ─── 11. SENARYO: HAVALE DİNAMİK FİYAT ENTEGRASYONU ─────────────────────────
+  describe("Senaryo 11: Havale Taleplerinde Dinamik Fiyat Koruması", () => {
+    it("Kayıttan sonraki ilk 7 gün içinde havale talebi %50 indirimli fiyat üretir", () => {
+      const recentUserCreatedAt = new Date(Date.now() - 2 * 86400000).toISOString();
+      const planBundle = resolveBankTransferPlan("zigo-plus-student-monthly", recentUserCreatedAt);
+      expect(planBundle.plan.priceTry).toBe(25);
+      expect(planBundle.plan.compareAtTry).toBe(49);
+    });
+
+    it("Kayıttan 7 gün sonra oluşturulan havale talebi tam liste fiyatı (49 TL) üretir", () => {
+      const olderUserCreatedAt = new Date(Date.now() - 10 * 86400000).toISOString();
+      const planBundle = resolveBankTransferPlan("zigo-plus-student-monthly", olderUserCreatedAt);
+      expect(planBundle.plan.priceTry).toBe(49);
+      expect(planBundle.plan.compareAtTry).toBe(49);
+    });
+  });
+
+  // ─── 12. SENARYO: BAŞARILI ÖDEME SONRASI ROL BAZLI YÖNLENDİRME ──────────────
+  describe("Senaryo 12: Başarılı Ödeme Sonrası Role Uygun Panel Yönlendirmesi", () => {
+    function resolveSuccessCta(role: string | null) {
+      if (role === "teacher") return { href: "/teacher", label: "Öğretmen Stüdyom" };
+      if (role === "parent") return { href: "/parent", label: "Veli Panelim" };
+      if (role === "education_institution" || role === "education_platform" || role === "publisher") {
+        return { href: "/teacher", label: "Kurumsal Yönetim Paneli" };
+      }
+      if (role === "student") return { href: "/student", label: "Öğrenci Panelim" };
+      return { href: "/profile", label: "Panelime Git" };
+    }
+
+    it("Öğrenci ödeme yaptıktan sonra Öğrenci Paneline (/student) yönlendirilir", () => {
+      const cta = resolveSuccessCta("student");
+      expect(cta.href).toBe("/student");
+      expect(cta.label).toBe("Öğrenci Panelim");
+    });
+
+    it("Öğretmen ödeme yaptıktan sonra asla Öğrenci Paneline gitmez, Öğretmen Stüdyosuna (/teacher) yönlendirilir", () => {
+      const cta = resolveSuccessCta("teacher");
+      expect(cta.href).toBe("/teacher");
+      expect(cta.label).toBe("Öğretmen Stüdyom");
+    });
+
+    it("Veli ödeme yaptıktan sonra Veli Paneline (/parent) yönlendirilir", () => {
+      const cta = resolveSuccessCta("parent");
+      expect(cta.href).toBe("/parent");
+      expect(cta.label).toBe("Veli Panelim");
+    });
+
+    it("Kurumsal hesaplar Kurumsal Yönetim Paneline yönlendirilir", () => {
+      const cta = resolveSuccessCta("education_institution");
+      expect(cta.href).toBe("/teacher");
+      expect(cta.label).toBe("Kurumsal Yönetim Paneli");
     });
   });
 });
