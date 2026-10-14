@@ -1,4 +1,4 @@
-const CACHE_NAME = "zigo-offline-shell-v3";
+const CACHE_NAME = "zigo-offline-shell-v4";
 
 const OFFLINE_URLS = [
   "/",
@@ -9,9 +9,12 @@ const OFFLINE_URLS = [
   "/games/word",
   "/games/blocks",
   "/games/2048",
-  "/favicon.ico",
+  "/offline.html",
   "/icon.svg",
   "/icon-maskable.svg",
+  "/icon-192.png",
+  "/play-store-icon-512.png",
+  "/manifest.json",
 ];
 
 self.addEventListener("install", (event) => {
@@ -40,23 +43,28 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Cache first for static chunks, fonts, icons and app shell assets
+  // Skip non-GET and cross-origin requests
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+  // Cache-first for static assets
   const isStaticCacheable =
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/images/") ||
     url.pathname.endsWith(".svg") ||
     url.pathname.endsWith(".ico") ||
+    url.pathname.endsWith(".png") ||
     url.pathname.endsWith(".webp") ||
     url.pathname.endsWith(".avif") ||
     url.pathname.endsWith(".woff2") ||
+    url.pathname === "/manifest.json" ||
     url.pathname.includes("/storage/v1/object/public/avatars/") ||
     url.pathname.startsWith("/games");
 
-  if (request.method === "GET" && isStaticCacheable) {
+  if (isStaticCacheable) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         if (cachedResponse) {
-          // Return cache and fetch in background to update (Stale-While-Revalidate)
+          // Stale-While-Revalidate
           fetch(request)
             .then((networkResponse) => {
               if (networkResponse && networkResponse.status === 200) {
@@ -77,10 +85,30 @@ self.addEventListener("fetch", (event) => {
           })
           .catch(() => {
             if (request.destination === "document") {
-              return caches.match("/games");
+              return caches.match("/offline.html");
             }
           });
       })
+    );
+    return;
+  }
+
+  // Network-first for HTML navigation (pages)
+  if (request.destination === "document") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then((cached) => {
+            return cached || caches.match("/offline.html");
+          });
+        })
     );
   }
 });

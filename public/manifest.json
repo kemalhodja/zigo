@@ -1,38 +1,76 @@
 {
-  "name": "Zigo",
+  "name": "Zigo — Eğitim Sosyal Ağı",
   "short_name": "Zigo",
-  "description": "The Smart, Verified, and Gamified Social Feed for Education.",
-  "start_url": "/",
+  "description": "Öğrenci, öğretmen ve veli için akıllı eğitim platformu. Soru çöz, video izle, oyun oyna.",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#FFFFFF",
   "theme_color": "#101828",
+  "lang": "tr",
+  "dir": "ltr",
   "categories": ["education", "social", "productivity"],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "/og-image.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Zigo Ana Sayfa"
+    }
+  ],
   "shortcuts": [
     {
-      "name": "Open Micro",
+      "name": "Keşfet",
+      "short_name": "Keşfet",
+      "description": "Eğitim içeriklerini keşfet",
+      "url": "/explore?source=pwa_shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Micro Dersler",
       "short_name": "Micro",
-      "description": "Watch verified micro lessons.",
-      "url": "/micro",
-      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "description": "Kısa ve etkili micro dersler izle",
+      "url": "/micro?source=pwa_shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Create",
-      "short_name": "Create",
-      "description": "Publish a verified post as a teacher.",
-      "url": "/create",
-      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "name": "Zeka Oyunları",
+      "short_name": "Oyunlar",
+      "description": "Zeka oyunları salonuna git",
+      "url": "/games?source=pwa_shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Student Progress",
-      "short_name": "Progress",
-      "description": "Open learning points and avatar progress.",
-      "url": "/student",
-      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "name": "Profilim",
+      "short_name": "Profil",
+      "description": "Profil ve abonelik yönetimi",
+      "url": "/profile?source=pwa_shortcut",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/play-store-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/play-store-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/icon.svg",
       "sizes": "any",
@@ -41,15 +79,9 @@
     },
     {
       "src": "/icon-maskable.svg",
-      "sizes": "512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"
-    },
-    {
-      "src": "/apple-touch-icon.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ]
 }

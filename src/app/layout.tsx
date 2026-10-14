@@ -7,7 +7,7 @@ import { cache } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
-import { IosPwaInstallPrompt } from "@/components/ios-pwa-install-prompt";
+import { PwaInstallBanner } from "@/components/pwa-install-banner";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { OneSignalProvider } from "@/components/providers/onesignal-provider";
@@ -150,7 +150,7 @@ export default async function RootLayout({
             <AnalyticsProvider />
             <AuthSessionKeepAlive />
             <OneSignalProvider userId={shellState.userId} userRole={shellState.viewerRole} />
-            <IosPwaInstallPrompt />
+            <PwaInstallBanner />
             <AppShell
               canCreateSocialPost={shellState.canCreateSocialPost}
               isPreviewMode={!hasSupabaseEnv()}
