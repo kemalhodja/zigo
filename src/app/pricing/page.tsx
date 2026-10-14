@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
+import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
 import {
   isGooglePlayBillingAvailable,
   purchaseGooglePlaySubscription,
@@ -125,7 +126,7 @@ function PlanCard({
   const [isNativePlay, setIsNativePlay] = useState(false);
 
   useEffect(() => {
-    setIsNativePlay(isGooglePlayBillingAvailable());
+    setIsNativePlay(isGooglePlayBillingAvailable() || isCapacitorAndroidClient());
   }, []);
 
   const currentPrice = interval === "yearly" ? yearly : monthly;
@@ -231,49 +232,73 @@ function PlanCard({
 
       {/* Satın Alma & Aksiyon Alanı */}
       <div className="pt-4 border-t border-slate-100 space-y-3">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(role);
-            onOpenModal(role, interval);
-          }}
-          className={`tap-scale w-full py-3.5 px-5 rounded-2xl text-white font-black text-sm shadow-lg hover:brightness-105 transition flex items-center justify-center gap-2 ${
-            isNativePlay
-              ? "bg-gradient-to-r from-emerald-500 to-teal-600"
-              : "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black shadow-amber-500/20"
-          }`}
-        >
-          {isNativePlay ? (
-            <svg aria-hidden="true" className="size-5 fill-current" viewBox="0 0 24 24">
-              <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-            </svg>
-          ) : (
-            <span className="text-base">✦</span>
-          )}
-          <span>{isNativePlay ? "Google Play ile Abone Ol" : "Zigo Plus'ı Hemen Başlat"}</span>
-        </button>
+        {isNativePlay ? (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(role);
+                onOpenModal(role, interval);
+              }}
+              className="tap-scale w-full py-3.5 px-5 rounded-2xl text-white font-black text-sm shadow-lg hover:brightness-105 transition flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600"
+            >
+              <svg aria-hidden="true" className="size-5 fill-current" viewBox="0 0 24 24">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+              </svg>
+              <span>Google Play ile Abone Ol</span>
+            </button>
 
-        <div className="flex items-center justify-between px-1">
-          <Link
-            href={`/billing/havale?planId=${
-              role === "teacher"
-                ? `zigo-plus-teachers-${interval}`
-                : role === "institution"
-                  ? `zigo-plus-educational-institutions-${interval}`
-                  : role === "platform"
-                    ? `zigo-plus-platform-${interval}`
-                    : role === "publisher"
-                      ? `zigo-plus-publisher-${interval}`
-                      : `zigo-plus-student-${interval}`
-            }`}
-            className="text-xs font-bold text-slate-600 hover:text-amber-600 flex items-center gap-1 transition"
-          >
-            <span>🏦 Banka Havalesi / FAST ile Öde</span>
-            <span>↗</span>
-          </Link>
-          <span className="text-[11px] font-semibold text-slate-400">Anında Aktivasyon</span>
-        </div>
+            <div className="flex items-center justify-between px-1">
+              <Link
+                href={`/billing/havale?planId=${
+                  role === "teacher"
+                    ? `zigo-plus-teachers-${interval}`
+                    : role === "institution"
+                      ? `zigo-plus-educational-institutions-${interval}`
+                      : role === "platform"
+                        ? `zigo-plus-platform-${interval}`
+                        : role === "publisher"
+                          ? `zigo-plus-publisher-${interval}`
+                          : `zigo-plus-student-${interval}`
+                }`}
+                className="text-xs font-bold text-slate-600 hover:text-amber-600 flex items-center gap-1 transition"
+              >
+                <span>🏦 Alternatif: Havale / FAST ile Öde</span>
+                <span>↗</span>
+              </Link>
+              <span className="text-[11px] font-semibold text-slate-400">Anında Aktivasyon</span>
+            </div>
+          </>
+        ) : (
+          /* Web Ortamı: Google Play gösterilmez, doğrudan Havale / FAST ile ödeme butonu ana aksiyon olarak yer alır */
+          <>
+            <Link
+              href={`/billing/havale?planId=${
+                role === "teacher"
+                  ? `zigo-plus-teachers-${interval}`
+                  : role === "institution"
+                    ? `zigo-plus-educational-institutions-${interval}`
+                    : role === "platform"
+                      ? `zigo-plus-platform-${interval}`
+                      : role === "publisher"
+                        ? `zigo-plus-publisher-${interval}`
+                        : `zigo-plus-student-${interval}`
+              }`}
+              className="tap-scale w-full py-3.5 px-5 rounded-2xl text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 hover:brightness-105 transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600"
+            >
+              <span>🏦 Havale / FAST ile Hemen Başlat</span>
+              <span>↗</span>
+            </Link>
+
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-bold text-slate-500">7/24 Anında Onay ve Aktivasyon</span>
+              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Komisyonsuz
+              </span>
+            </div>
+          </>
+        )}
 
         {/* Güven Rozetleri (Trust Badges) */}
         <div className="pt-2 grid grid-cols-3 gap-2 border-t border-slate-100 text-center">
@@ -531,6 +556,11 @@ export default function PricingPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
+  const [isNativeClient, setIsNativeClient] = useState(false);
+
+  useEffect(() => {
+    setIsNativeClient(isGooglePlayBillingAvailable() || isCapacitorAndroidClient());
+  }, []);
 
   // Auto-restore previously purchased Google Play subscriptions on Android devices
   useEffect(() => {
@@ -804,20 +834,22 @@ export default function PricingPage() {
               </div>
             )}
 
-            <div className="mt-6 flex flex-col items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={handleRestorePurchases}
-                disabled={restoreLoading}
-                className="tap-scale inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
-              >
-                <span>🔄</span>
-                <span>{restoreLoading ? "Google Play Kontrol Ediliyor…" : "Mevcut Google Play Aboneliğimi Senkronize Et"}</span>
-              </button>
-              {restoreMessage && (
-                <p className="text-xs font-bold text-amber-700">{restoreMessage}</p>
-              )}
-            </div>
+            {isNativeClient && (
+              <div className="mt-6 flex flex-col items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleRestorePurchases}
+                  disabled={restoreLoading}
+                  className="tap-scale inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+                >
+                  <span>🔄</span>
+                  <span>{restoreLoading ? "Google Play Kontrol Ediliyor…" : "Mevcut Google Play Aboneliğimi Senkronize Et"}</span>
+                </button>
+                {restoreMessage && (
+                  <p className="text-xs font-bold text-amber-700">{restoreMessage}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </header>
