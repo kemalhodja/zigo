@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Building2, CheckCircle2, Crown, GraduationCap, MonitorPlay, Sparkles, Users, XCircle } from "lucide-react";
+import { BookOpen, Building2, CheckCircle2, Crown, GraduationCap, MonitorPlay, ShieldCheck, Sparkles, Users, XCircle, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -120,90 +120,175 @@ function PlanCard({
   const monthly = config.monthly;
   const yearly = config.yearly;
   const yearlySavings = Math.round(((monthly * 12 - yearly) / (monthly * 12)) * 100);
+  const effectiveMonthly = Math.round(yearly / 12);
+  const [interval, setInterval] = useState<"monthly" | "yearly">("yearly");
   const [isNativePlay, setIsNativePlay] = useState(false);
 
   useEffect(() => {
     setIsNativePlay(isGooglePlayBillingAvailable());
   }, []);
 
+  const currentPrice = interval === "yearly" ? yearly : monthly;
+
   return (
     <div
       onClick={() => onSelect(role)}
-      className="linear-card relative flex flex-col h-full rounded-3xl p-6 transition-all hover:border-slate-300 shadow-sm"
+      className="linear-card relative flex flex-col h-full rounded-3xl p-6 md:p-8 transition-all hover:border-slate-300 shadow-xl border border-white/40 bg-white/80 backdrop-blur-xl"
     >
       <div className="aurora-glow" />
-      <div className="relative flex items-center gap-3 mb-4">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr ${config.gradient} text-white shadow-md`}>
-          <config.icon className="h-6 w-6" />
+      
+      {/* Üst Başlık ve Rol İkonu */}
+      <div className="relative flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr ${config.gradient} text-white shadow-lg`}>
+            <config.icon className="h-7 w-7" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-night leading-tight">{config.title}</h3>
+            <span className="inline-flex items-center gap-1 text-[11px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 uppercase tracking-wider">
+              ✦ Zigo Plus
+            </span>
+          </div>
         </div>
-        <div>
-          <h3 className="text-xl font-black text-night leading-tight">{config.title}</h3>
-          <span className="text-[11px] font-black text-crystal uppercase tracking-wider">Zigo Plus</span>
-        </div>
+
+        {interval === "yearly" && (
+          <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-black text-emerald-700 animate-pulse">
+            %{yearlySavings} İndirim 🔥
+          </span>
+        )}
       </div>
 
-      <div className="relative mb-5 space-y-1">
-        <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-black text-night tabular-nums">{monthly.toLocaleString("tr-TR")} ₺</span>
-          <span className="text-sm font-bold text-slate-500">/ay</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-400 line-through tabular-nums">{monthly * 12} ₺</span>
-          <span className="text-xl font-black text-emerald-600 tabular-nums">{yearly.toLocaleString("tr-TR")} ₺</span>
-          <span className="text-xs font-bold text-slate-500">/yıl</span>
-        </div>
+      {/* İnteraktif Plan Switcher (Aylık / Yıllık) */}
+      <div className="relative mb-5 flex p-1 rounded-2xl bg-slate-100 border border-slate-200">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setInterval("monthly");
+          }}
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
+            interval === "monthly"
+              ? "bg-white text-night shadow-md"
+              : "text-slate-500 hover:text-night"
+          }`}
+        >
+          Aylık Ödeme
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setInterval("yearly");
+          }}
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+            interval === "yearly"
+              ? "bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow-md font-black"
+              : "text-slate-500 hover:text-night"
+          }`}
+        >
+          <span>Yıllık Ödeme</span>
+          <span className="text-[10px] bg-slate-950/20 text-slate-950 px-1.5 py-0.5 rounded-full font-black">
+            2 Ay Hediye
+          </span>
+        </button>
       </div>
 
-      <ul className="flex-1 space-y-2 mb-4">
-        {config.features.map((feature, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm font-bold text-slate-600">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500 mt-0.5" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
+      {/* Fiyat Gösterimi (Psikolojik / Efektif Fiyat) */}
+      <div className="relative mb-6 rounded-2xl bg-gradient-to-br from-slate-50 to-amber-50/40 p-4 border border-slate-100">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-4xl font-black text-night tabular-nums tracking-tight">
+            {currentPrice.toLocaleString("tr-TR")} ₺
+          </span>
+          <span className="text-sm font-bold text-slate-500">
+            /{interval === "yearly" ? "yıl" : "ay"}
+          </span>
+        </div>
 
-      <div className="pt-3 border-t border-slate-100">
+        {interval === "yearly" ? (
+          <p className="mt-1 text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5 fill-current" />
+            <span>Aylık sadece <strong>{effectiveMonthly} ₺</strong> (Yılda {monthly * 12 - yearly} ₺ cebinizde kalır)</span>
+          </p>
+        ) : (
+          <p className="mt-1 text-xs font-medium text-slate-500">
+            Dilediğiniz an tek tıkla iptal edilebilir, taahhütsüz.
+          </p>
+        )}
+      </div>
+
+      {/* Özellik Listesi */}
+      <div className="mb-6 flex-1">
+        <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-3">Bu Planda Dahil Olanlar</p>
+        <ul className="space-y-2.5">
+          {config.features.map((feature, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-sm font-bold text-slate-700">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Satın Alma & Aksiyon Alanı */}
+      <div className="pt-4 border-t border-slate-100 space-y-3">
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onSelect(role);
-            onOpenModal(role, "monthly");
+            onOpenModal(role, interval);
           }}
-          className={`tap-scale w-full py-2.5 px-4 rounded-xl text-white font-black text-xs shadow-md hover:brightness-105 transition flex items-center justify-center gap-1.5 ${
+          className={`tap-scale w-full py-3.5 px-5 rounded-2xl text-white font-black text-sm shadow-lg hover:brightness-105 transition flex items-center justify-center gap-2 ${
             isNativePlay
               ? "bg-gradient-to-r from-emerald-500 to-teal-600"
-              : "bg-gradient-to-r from-violet-600 to-indigo-600"
+              : "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black shadow-amber-500/20"
           }`}
         >
           {isNativePlay ? (
-            <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="size-5 fill-current" viewBox="0 0 24 24">
               <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
             </svg>
           ) : (
-            <span className="text-xs">✦</span>
+            <span className="text-base">✦</span>
           )}
-          <span>{isNativePlay ? "Google Play ile Abone Ol" : "Zigo Plus'a Katıl"}</span>
+          <span>{isNativePlay ? "Google Play ile Abone Ol" : "Zigo Plus'ı Hemen Başlat"}</span>
         </button>
-        <div className="mt-2.5 flex items-center justify-between text-[11px] font-bold text-slate-500">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(role);
-              onOpenModal(role, "yearly");
-            }}
-            className="hover:text-emerald-700 underline underline-offset-2"
-          >
-            Yıllık Plan (%{yearlySavings} İndirim)
-          </button>
+
+        <div className="flex items-center justify-between px-1">
           <Link
-            href={`/billing/havale?planId=zigo-plus-${role === "teacher" ? "teachers" : "student"}-monthly`}
-            className="hover:text-amber-600 underline underline-offset-2"
+            href={`/billing/havale?planId=${
+              role === "teacher"
+                ? `zigo-plus-teachers-${interval}`
+                : role === "institution"
+                  ? `zigo-plus-educational-institutions-${interval}`
+                  : role === "platform"
+                    ? `zigo-plus-platform-${interval}`
+                    : role === "publisher"
+                      ? `zigo-plus-publisher-${interval}`
+                      : `zigo-plus-student-${interval}`
+            }`}
+            className="text-xs font-bold text-slate-600 hover:text-amber-600 flex items-center gap-1 transition"
           >
-            Havale / FAST ↗
+            <span>🏦 Banka Havalesi / FAST ile Öde</span>
+            <span>↗</span>
           </Link>
+          <span className="text-[11px] font-semibold text-slate-400">Anında Aktivasyon</span>
+        </div>
+
+        {/* Güven Rozetleri (Trust Badges) */}
+        <div className="pt-2 grid grid-cols-3 gap-2 border-t border-slate-100 text-center">
+          <div className="flex flex-col items-center gap-1">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <span className="text-[10px] font-bold text-slate-600">256-Bit SSL</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <Zap className="h-4 w-4 text-amber-600" />
+            <span className="text-[10px] font-bold text-slate-600">Anında Erişim</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <CheckCircle2 className="h-4 w-4 text-blue-600" />
+            <span className="text-[10px] font-bold text-slate-600">Kolay İptal</span>
+          </div>
         </div>
       </div>
     </div>
@@ -264,6 +349,7 @@ type SubscriptionState = {
   isTrial: boolean;
   trialDaysRemaining: number;
   isLoading: boolean;
+  role: RoleKey | null;
 };
 
 function usePricingSubscription(): SubscriptionState {
@@ -272,6 +358,7 @@ function usePricingSubscription(): SubscriptionState {
     isTrial: false,
     trialDaysRemaining: 0,
     isLoading: true,
+    role: null,
   });
   const supabase = createClient();
 
@@ -319,7 +406,9 @@ function usePricingSubscription(): SubscriptionState {
             });
 
             if (isActive) {
-              if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+              const { data: roleData } = await supabase.from("users").select("role").eq("id", user.id).maybeSingle();
+              const userRole = (roleData?.role && roleData.role in ROLE_PLANS ? roleData.role : null) as RoleKey | null;
+              if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false, role: userRole });
               return;
             }
           }
@@ -355,7 +444,9 @@ function usePricingSubscription(): SubscriptionState {
             });
 
             if (isActive) {
-              if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+              const { data: roleData } = await supabase.from("users").select("role").eq("id", user.id).maybeSingle();
+              const userRole = (roleData?.role && roleData.role in ROLE_PLANS ? roleData.role : null) as RoleKey | null;
+              if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false, role: userRole });
               return;
             }
           }
@@ -363,15 +454,17 @@ function usePricingSubscription(): SubscriptionState {
           // silent
         }
 
-        // 2. users tablosu: is_premium & created_at
+        // 2. users tablosu: role, is_premium & created_at
         const { data: userData } = await supabase
           .from("users")
-          .select("is_premium, created_at")
+          .select("role, is_premium, created_at")
           .eq("id", user.id)
           .maybeSingle();
 
+        const userRole = (userData?.role && userData.role in ROLE_PLANS ? userData.role : null) as RoleKey | null;
+
         if (userData?.is_premium === true) {
-          if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+          if (mounted) setState({ isPremium: true, isTrial: false, trialDaysRemaining: 0, isLoading: false, role: userRole });
           return;
         }
 
@@ -394,10 +487,11 @@ function usePricingSubscription(): SubscriptionState {
             isTrial: isTrialActive,
             trialDaysRemaining,
             isLoading: false,
+            role: userRole,
           });
         }
       } catch {
-        if (mounted) setState({ isPremium: false, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+        if (mounted) setState({ isPremium: false, isTrial: false, trialDaysRemaining: 0, isLoading: false, role: null });
       }
     }
 
@@ -417,8 +511,15 @@ function usePricingSubscription(): SubscriptionState {
 }
 
 export default function PricingPage() {
-  const { isPremium, isTrial, trialDaysRemaining, isLoading } = usePricingSubscription();
+  const { isPremium, isTrial, trialDaysRemaining, isLoading, role: userRole } = usePricingSubscription();
   const [selectedRole, setSelectedRole] = useState<RoleKey | null>("student");
+
+  // Kullanıcının kayıtlı rolü varsa otomatik olarak sadece kendi rolünü seç ve göster
+  useEffect(() => {
+    if (userRole && userRole in ROLE_PLANS) {
+      setSelectedRole(userRole);
+    }
+  }, [userRole]);
 
   const [modalState, setModalState] = useState<{
     role: RoleKey;
@@ -481,7 +582,8 @@ export default function PricingPage() {
     const requestedRole = params.get("role") as RoleKey | null;
 
     if (openPlay || requestedPlan || requestedRole) {
-      const targetRole: RoleKey = requestedRole && requestedRole in ROLE_PLANS ? requestedRole : "student";
+      const activeRole = userRole || (requestedRole && requestedRole in ROLE_PLANS ? requestedRole : "student");
+      const targetRole: RoleKey = activeRole;
       const isYearly = Boolean(requestedPlan?.includes("yearly"));
       const interval = isYearly ? "yearly" : "monthly";
       const priceTry = isYearly ? ROLE_PLANS[targetRole].yearly : ROLE_PLANS[targetRole].monthly;
@@ -496,7 +598,7 @@ export default function PricingPage() {
         planId,
       });
     }
-  }, []);
+  }, [userRole]);
 
   function handleOpenModal(role: RoleKey, interval: "monthly" | "yearly") {
     setModalError(null);
@@ -671,21 +773,34 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-100 bg-white">
-        <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <header className="relative overflow-hidden border-b border-slate-100 bg-gradient-to-b from-white via-slate-50/50 to-slate-100/30">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-200/20 via-transparent to-transparent pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8 relative">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-500 to-fuchsia-500 text-white shadow-lg">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-white shadow-xl shadow-amber-500/20">
               <Crown className="h-8 w-8" />
             </div>
-            <h1 className="mt-6 text-4xl font-black tracking-tight text-night">Zigo Plus Aboneliği</h1>
-            <p className="mt-4 text-lg font-bold text-slate-500">
-              Rolüne göre özel fiyatlandırma. İlk 7 gün içinde <span className="text-amber-500">%50 indirim</span> (Promo: <span className="font-mono">ZIGO50</span>)
+            
+            <h1 className="mt-6 text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-night">
+              {userRole === "parent"
+                ? "Çocuğunuzun Başarısını Zigo Plus ile Zirveye Taşıyın"
+                : userRole === "student"
+                  ? "Sınavlara Hazırlık ve Zeka Oyunları Dünyası Seni Bekliyor"
+                  : userRole === "teacher"
+                    ? "İçerik Stüdyosu ve Özel Ders Talepleriyle Fark Yaratın"
+                    : "Zigo Plus Ayrıcalıkları"}
+            </h1>
+            
+            <p className="mt-4 text-base sm:text-lg font-bold text-slate-600">
+              {userRole
+                ? "Hesabınıza özel avantajlı plan. İlk 7 gün içinde %50 indirim fırsatı!"
+                : "Rolünüze göre özel fiyatlandırma. İlk 7 gün içinde %50 indirim (Promo: ZIGO50)"}
             </p>
             
             {isTrial && trialDaysRemaining > 0 && (
-              <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-black text-amber-700 border border-amber-200">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100">⏳</span>
-                <span>Deneme süreniz: <strong>{trialDaysRemaining} gün</strong> kaldı</span>
+              <div className="mt-5 inline-flex items-center gap-2.5 rounded-full bg-amber-500/10 px-4 py-2 text-sm font-black text-amber-800 border border-amber-500/30 shadow-sm backdrop-blur-md">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-night text-xs">⏳</span>
+                <span>7 Günlük Denemenizin Bitmesine <strong>{trialDaysRemaining} Gün Kaldı</strong> (%50 İndirim Fırsatı)</span>
               </div>
             )}
 
@@ -708,20 +823,33 @@ export default function PricingPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {Object.keys(ROLE_PLANS).map((role) => (
+        {userRole && userRole in ROLE_PLANS ? (
+          <div className="mx-auto max-w-md">
             <PlanCard
-              key={role}
-              role={role as RoleKey}
-              isCurrentRole={false}
-              isSelected={selectedRole === role}
-              onSelect={setSelectedRole}
+              isCurrentRole={true}
+              isSelected={true}
+              key={userRole}
               onOpenModal={handleOpenModal}
+              onSelect={setSelectedRole}
+              role={userRole}
             />
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {Object.keys(ROLE_PLANS).map((role) => (
+              <PlanCard
+                isCurrentRole={false}
+                isSelected={selectedRole === role}
+                key={role}
+                onOpenModal={handleOpenModal}
+                onSelect={setSelectedRole}
+                role={role as RoleKey}
+              />
+            ))}
+          </div>
+        )}
 
-        <FeatureMatrix />
+        {!userRole && <FeatureMatrix />}
 
         <section className="mt-12 -mx-4 border-y border-slate-100 bg-white px-4 py-8">
           <h2 className="text-xl font-black text-night mb-6 text-center">Sık Sorulan Sorular</h2>
