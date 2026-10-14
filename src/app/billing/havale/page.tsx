@@ -75,6 +75,23 @@ export default async function BillingHavalePage({ searchParams }: BillingHavaleP
     );
   }
 
+  // Rol-plan uyum kontrolü: kullanıcının rolüyle uyumsuz plan varsa doğru plana yönlendir
+  const role = profile.role;
+  const isTeacherPlan = planId.includes("teachers");
+  const isInstitutionPlan = planId.includes("institution") || planId.includes("platform") || planId.includes("publisher");
+  const isStudentOrParent = role === "student" || role === "parent";
+
+  if (isStudentOrParent && (isTeacherPlan || isInstitutionPlan)) {
+    const interval = planId.includes("yearly") ? "yearly" : "monthly";
+    redirect(`/billing/havale?planId=zigo-plus-student-${interval}`);
+  }
+
+  if (role === "teacher" && !isTeacherPlan && !isInstitutionPlan) {
+    const interval = planId.includes("yearly") ? "yearly" : "monthly";
+    redirect(`/billing/havale?planId=zigo-plus-teachers-${interval}`);
+  }
+
+
   const organizationType = parseOrganizationType(profile.organization_type);
   if (shouldBlockSelfServeOrgCheckout(organizationType, planId)) {
     const salesUrl = buildOrganizationSalesWhatsAppUrl({
