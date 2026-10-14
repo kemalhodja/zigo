@@ -394,7 +394,7 @@ function usePricingSubscription(): SubscriptionState {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          if (mounted) setState({ isPremium: false, isTrial: false, trialDaysRemaining: 0, isLoading: false });
+          if (mounted) setState({ isPremium: false, isTrial: false, trialDaysRemaining: 0, isLoading: false, role: null });
           return;
         }
 
