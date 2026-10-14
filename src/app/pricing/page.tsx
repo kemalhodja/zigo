@@ -146,7 +146,7 @@ function PlanCard({
       className="linear-card relative flex flex-col h-full rounded-3xl p-6 md:p-8 transition-all hover:border-slate-300 shadow-xl border border-white/40 bg-white/80 backdrop-blur-xl"
     >
       <div className="aurora-glow" />
-      
+
       {/* Üst Başlık ve Rol İkonu */}
       <div className="relative flex items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
@@ -176,11 +176,10 @@ function PlanCard({
             e.stopPropagation();
             setInterval("monthly");
           }}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
-            interval === "monthly"
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${interval === "monthly"
               ? "bg-white text-night shadow-md"
               : "text-slate-500 hover:text-night"
-          }`}
+            }`}
         >
           Aylık Ödeme
         </button>
@@ -190,11 +189,10 @@ function PlanCard({
             e.stopPropagation();
             setInterval("yearly");
           }}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-            interval === "yearly"
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${interval === "yearly"
               ? "bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow-md font-black"
               : "text-slate-500 hover:text-night"
-          }`}
+            }`}
         >
           <span>Yıllık Ödeme</span>
           <span className="text-[10px] bg-slate-950/20 text-slate-950 px-1.5 py-0.5 rounded-full font-black">
@@ -609,7 +607,7 @@ export default function PricingPage() {
       const interval = isYearly ? "yearly" : "monthly";
       const priceTry = isYearly ? ROLE_PLANS[targetRole].yearly : ROLE_PLANS[targetRole].monthly;
       const planId = requestedPlan || getPlanId(targetRole, interval);
-      
+
       setModalState({
         role: targetRole,
         interval,
@@ -791,7 +789,7 @@ export default function PricingPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-white shadow-xl shadow-amber-500/20">
               <Crown className="h-8 w-8" />
             </div>
-            
+
             <h1 className="mt-6 text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-night">
               {userRole === "parent"
                 ? "Çocuğunuzun Başarısını Zigo Plus ile Zirveye Taşıyın"
@@ -801,13 +799,13 @@ export default function PricingPage() {
                     ? "İçerik Stüdyosu ve Özel Ders Talepleriyle Fark Yaratın"
                     : "Zigo Plus Ayrıcalıkları"}
             </h1>
-            
+
             <p className="mt-4 text-base sm:text-lg font-bold text-slate-600">
               {userRole
                 ? "Hesabınıza özel avantajlı plan. İlk 7 gün içinde %50 indirim fırsatı!"
                 : "Rolünüze göre özel fiyatlandırma. İlk 7 gün içinde %50 indirim (Promo: ZIGO50)"}
             </p>
-            
+
             {isTrial && trialDaysRemaining > 0 && (
               <div className="mt-5 inline-flex items-center gap-2.5 rounded-full bg-amber-500/10 px-4 py-2 text-sm font-black text-amber-800 border border-amber-500/30 shadow-sm backdrop-blur-md">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-night text-xs">⏳</span>
