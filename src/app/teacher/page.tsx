@@ -251,7 +251,7 @@ export default async function TeacherPage({
                 </Link>
 
                 <Link
-                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4 text-white shadow-sm transition hover:shadow-md col-span-2"
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4 text-white shadow-sm transition hover:shadow-md col-span-2 sm:col-span-1"
                   href="/quizzes/create"
                 >
                   <div className="flex items-center justify-between">
@@ -265,9 +265,33 @@ export default async function TeacherPage({
                       LGS · YKS · D/Y
                     </span>
                   </div>
-                  <p className="mt-3 text-base font-black">🎯 Sınav & Quiz Hazırla</p>
-                  <p className="mt-0.5 text-xs font-semibold text-white/85">
-                    LGS, YKS (5 şık), Doğru/Yanlış testleri hazırla, çözümler ekle ve canlı önizle
+                  <p className="mt-3 text-sm font-black">🎯 Sınav & Quiz Hazırla</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/85">
+                    LGS, YKS (5 şık), D/Y testleri hazırla ve önizle
+                  </p>
+                </Link>
+
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-600 via-pink-600 to-amber-600 p-4 text-white shadow-sm transition hover:shadow-md col-span-2 sm:col-span-1"
+                  href="/quizzes/pdf"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <path d="M14 2v6h6" />
+                        <path d="M16 13H8" />
+                        <path d="M16 17H8" />
+                        <path d="M10 9H8" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/90 bg-white/20 rounded-md px-2 py-0.5">
+                      PDF & Optik
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">📄 PDF Test & Optik Kodlama</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/85">
+                    PDF deneme kitapçığı oku, optik forma kodla ve yazdır
                   </p>
                 </Link>
 
@@ -286,6 +310,139 @@ export default async function TeacherPage({
                   </div>
                   <p className="mt-3 text-sm font-black">İçerik Izgaran</p>
                   <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Paylaştığın tüm materyaller</p>
+                </Link>
+              </div>
+            </section>
+
+            {/* Öğretmen Akademi & Sınıf Yönetim Merkezi */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Akademi & Sınıf Araçları</p>
+                <span className="text-[0.62rem] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md px-2 py-0.5">
+                  Öğretmen Özel
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {/* 1. Öğrenci Başarı & Raporu */}
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/teacher/students"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Analiz</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">📊 Başarı Raporu</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Kazanım karnesi & sertifika</p>
+                </Link>
+
+                {/* 2. Ders Planı & Müfredat Takvimi */}
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-violet-800 p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/teacher/schedule"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">MEB Takvim</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">📅 Ders Planı</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Haftalık müfredat ve ajanda</p>
+                </Link>
+
+                {/* 3. Ödev Verme & Teslim Takibi */}
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/teacher/homework"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-white/80">Ödev</span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">📝 Ödev Takibi</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/80">Test ata, teslimleri izle</p>
+                </Link>
+
+                {/* 4. Canlı Quiz Arenası */}
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 p-4 text-white shadow-sm transition hover:shadow-md"
+                  href="/teacher/live"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-amber-200 bg-black/20 rounded-md px-1.5 py-0.5">
+                      Kahoot Tarzı
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">⚡ Canlı Quiz Arenası</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/90">Akıllı tahta ile yarışma</p>
+                </Link>
+
+                {/* 5. MEB Açık Uçlu Ortak Yazılı Sınavı */}
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-700 to-indigo-800 p-4 text-white shadow-sm transition hover:shadow-md col-span-2 sm:col-span-1"
+                  href="/teacher/written-exam"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <path d="M14 2v6h6" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <line x1="10" y1="9" x2="8" y2="9" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-emerald-300 bg-emerald-950/40 border border-emerald-500/30 rounded-md px-2 py-0.5">
+                      MEB Ortak
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">📄 MEB Açık Uçlu Yazılı</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/85">
+                    Açık uçlu sınav kağıdı, A4 çıktısı ve rubrik
+                  </p>
+                </Link>
+
+                {/* 6. Ders İçi Çıkış Bileti & Isı Haritası */}
+                <Link
+                  className="tap-scale group relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-600 via-pink-600 to-amber-600 p-4 text-white shadow-sm transition hover:shadow-md col-span-2 sm:col-span-1"
+                  href="/teacher/exit-tickets"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur">
+                      <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                      </svg>
+                    </span>
+                    <span className="text-[0.62rem] font-black uppercase tracking-wider text-amber-200 bg-black/20 rounded-md px-2 py-0.5">
+                      Son 5 Dk
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm font-black">🌡️ Çıkış Bileti & Isı Haritası</p>
+                  <p className="mt-0.5 text-[0.68rem] font-semibold text-white/85">
+                    Ders sonu anlık sınıf kavrayış ısı haritası
+                  </p>
                 </Link>
               </div>
             </section>

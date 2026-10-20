@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { DismissibleFeedPost } from "@/components/dismissible-feed-post";
+import { ExternalLinkCard } from "@/components/external-link-card";
 import { FollowButton } from "@/components/follow-button";
 import { SocialPostActions } from "@/components/social-post-actions";
 import { SocialAvatar } from "@/components/social-primitives";
@@ -45,14 +46,17 @@ export function FeedPostCard({
     <DismissibleFeedPost postKey={postKey}>
       <article className="zigo-feed-card zigo-feed-card-enter relative mb-0 md:mb-5 bg-white pb-3 border-b md:border border-slate-200/70 md:rounded-2xl md:overflow-hidden md:shadow-sm" style={containerStyle}>
         <FeedPostHeader post={post} postKey={postKey} teacherBadges={teacherBadges} theme="light" />
-        <div className={heroStyles}>
-          <FeedMediaViewer post={post} priorityMedia={priorityMedia} />
-          {isHero && post.caption && (
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent text-white pointer-events-none">
-              <p className="text-lg font-semibold line-clamp-2">{post.caption}</p>
-            </div>
-          )}
-        </div>
+        {/* Media or Scene (Hidden if post is purely link-based without uploaded photo) */}
+        {(post.mediaUrl || !post.externalUrl) && (
+          <div className={heroStyles}>
+            <FeedMediaViewer post={post} priorityMedia={priorityMedia} />
+            {isHero && post.caption && (
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent text-white pointer-events-none">
+                <p className="text-lg font-semibold line-clamp-2">{post.caption}</p>
+              </div>
+            )}
+          </div>
+        )}
         <div className="px-4 mt-3 space-y-2">
           <SocialPostActions 
             initialComments={post.comments} 
@@ -71,28 +75,11 @@ export function FeedPostCard({
         </div>
         {post.externalUrl && (
           <div className="px-4 mt-3">
-            <a 
-              href={post.externalUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className={`flex items-center justify-between gap-3 overflow-hidden rounded-xl p-3 transition-all active:scale-[0.98] ${
-                post.isSponsoredActive || post.showSponsored
-                  ? "border border-amber-400/40 bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-50 hover:border-amber-400 hover:shadow-sm"
-                  : "border border-slate-200 bg-slate-50 hover:bg-slate-100"
-              }`}
-            >
-              <div className="flex flex-col truncate">
-                <span className={`text-sm font-black ${post.isSponsoredActive || post.showSponsored ? "text-amber-900" : "text-slate-800"}`}>
-                  {post.sponsoredLabel || "Detaylı Bilgi Al"}
-                </span>
-                <span className="truncate text-xs font-semibold text-slate-500">{post.externalUrl}</span>
-              </div>
-              <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full shadow-sm ${
-                post.isSponsoredActive || post.showSponsored ? "bg-amber-500 text-white" : "bg-white text-slate-600"
-              }`}>
-                <ExternalLinkIcon className="h-4 w-4" />
-              </div>
-            </a>
+            <ExternalLinkCard
+              url={post.externalUrl}
+              sponsoredLabel={post.sponsoredLabel}
+              isSponsored={Boolean(post.isSponsoredActive || post.showSponsored)}
+            />
           </div>
         )}
         <div className="px-4 mt-0.5">

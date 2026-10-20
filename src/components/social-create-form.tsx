@@ -135,26 +135,10 @@ export function SocialCreateForm({
     }
 
     if (file.type.startsWith("video/")) {
-      const blobUrl = URL.createObjectURL(file);
-      setSelectedFile(file);
-      setMediaTypeValue("video");
-      setStatus("idle");
-      setMessage("");
-      setPreview({
-        url: blobUrl,
-        type: "video",
-      });
-
-      setIsValidating(true);
-      validateVideoLimits(file, { isReel: shareAsReel || forceReel }).then((result) => {
-        setIsValidating(false);
-        if (!result.valid) {
-          setStatus("error");
-          setMessage(result.error ?? "Video süresi veya boyutu sınırları aşıyor.");
-          setSelectedFile(null);
-          setPreview(null);
-        }
-      });
+      setStatus("error");
+      setMessage("Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Gönderinize YouTube veya Instagram video linkinizi ekleyebilirsiniz.");
+      setSelectedFile(null);
+      setPreview(null);
       return;
     }
 
@@ -424,7 +408,7 @@ export function SocialCreateForm({
             <span className="mt-1 block text-xs font-bold text-white/70">{sc.chooseMediaHint}</span>
           </span>
           <input
-            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             className="sr-only"
             name="file"
             onChange={(event) => {
@@ -446,7 +430,7 @@ export function SocialCreateForm({
               <label className="shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-night shadow-sm hover:bg-slate-100">
                 {sc.change}
                 <input
-                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   className="sr-only"
                   name="file"
                   onChange={(event) => {
@@ -680,11 +664,38 @@ export function SocialCreateForm({
               />
             </TeacherCreatorPlusLock>
           </div>
-        <div className="mt-3">
+        <div className="mt-3 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black text-slate-700">🔗 Video / Web Bağlantısı (YouTube, Instagram, Web)</span>
+            <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://youtube.com/watch?v=")}
+              className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 hover:bg-red-100"
+            >
+              🔴 YouTube
+            </button>
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://instagram.com/reel/")}
+              className="rounded-md border border-pink-200 bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-pink-700 hover:bg-pink-100"
+            >
+              📸 Instagram
+            </button>
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://")}
+              className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              🌐 Web Sitesi
+            </button>
+          </div>
           <input
             className="w-full rounded-lg bg-white px-4 py-3.5 text-sm font-semibold text-night shadow-sm outline-none ring-1 ring-inset ring-slate-100 placeholder:text-slate-400 focus:bg-slate-50 focus:ring-2 focus:ring-crystal"
             onChange={(event) => setExternalUrl(event.target.value)}
-            placeholder="Dış Bağlantı URL (İsteğe bağlı)"
+            placeholder="https://youtube.com/..., https://instagram.com/... veya site linkiniz"
             type="url"
             value={externalUrl}
           />

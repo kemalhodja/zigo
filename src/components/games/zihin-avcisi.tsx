@@ -68,6 +68,8 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     saveProgress,
   } = useGameProgress({ gameType: "memory_card", userId });
 
+  const STORAGE_KEY = `zigo_memory_state_${userId}`;
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const pausedElapsedRef = useRef(0);
@@ -84,8 +86,30 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     }, 1000);
   }, []);
 
-  // Kaydedilen ilerlemeyi yükle
+  // Kaydedilen ilerlemeyi yükle (localStorage önce, sonra server)
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data && Array.isArray(data.cards) && data.cards.length > 0 && !data.isLevelComplete) {
+            setCurrentLevel(data.currentLevel ?? 0);
+            setCards(data.cards);
+            setMoves(data.moves ?? 0);
+            setTotalScore(data.totalScore ?? 0);
+            setStartLevel(data.currentLevel ?? 0);
+            // Restart timer from saved elapsed
+            pausedElapsedRef.current = data.timeElapsed ?? 0;
+            setTimeElapsed(data.timeElapsed ?? 0);
+            startTimeRef.current = Date.now() - (data.timeElapsed ?? 0) * 1000;
+            return;
+          }
+        }
+      } catch {
+        // Ignore parse errors.
+      }
+    }
     if (userId === "guest") return;
     fetch("/api/games/progress?game_type=memory_card")
       .then((r) => r.json())
@@ -100,6 +124,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
       .catch(() => {
         setStartLevel(0);
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const initLevel = useCallback((lvlIndex: number) => {
@@ -150,6 +175,27 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     };
   }, [currentLevel, startLevel, initLevel]);
 
+  // Save active card state to localStorage
+  useEffect(() => {
+    if (typeof window === "undefined" || cards.length === 0 || isLevelComplete || isGameFinished) return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          currentLevel,
+          cards: cards.map((c) => ({ ...c, isFlipped: c.isMatched ? true : false })),
+          moves,
+          totalScore,
+          timeElapsed,
+          isLevelComplete,
+        })
+      );
+    } catch {
+      // Local persistence is best effort.
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards, moves, totalScore, timeElapsed, isLevelComplete]);
+
   const handlePause = useCallback(() => {
     if (isPaused || isLevelComplete || isGameFinished) return;
     pausedElapsedRef.current = timeElapsed;
@@ -178,6 +224,9 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
     if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched) return;
 
     playSound("pop");
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try { navigator.vibrate(10); } catch { /* ignore */ }
+    }
 
     if (!firstChoice) {
       setFirstChoice(clickedCard);
@@ -305,6 +354,7 @@ export function ZihinAvcisi({ userId = "guest", onGameEnd }: ZihinAvcisiProps) {
   const handleRestart = () => {
     setTotalScore(0);
     setCurrentLevel(0);
+    try { if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     initLevel(0);
   };
 

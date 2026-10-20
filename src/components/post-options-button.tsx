@@ -13,6 +13,7 @@ type PostOptionsButtonProps = {
   initialCaption?: string;
   initialLocationName?: string;
   initialAreaId?: number;
+  initialExternalUrl?: string;
   postId?: string;
   postKey?: string;
 };
@@ -24,6 +25,7 @@ export function PostOptionsButton({
   initialCaption = "",
   initialLocationName = "",
   initialAreaId,
+  initialExternalUrl = "",
   postId,
   postKey,
 }: PostOptionsButtonProps) {
@@ -33,6 +35,7 @@ export function PostOptionsButton({
   const [isEditing, setIsEditing] = useState(false);
   const [captionText, setCaptionText] = useState(initialCaption);
   const [locationName, setLocationName] = useState(initialLocationName);
+  const [externalUrl, setExternalUrl] = useState(initialExternalUrl);
   const [isSaved, setIsSaved] = useState(initialSaved);
   const [isMuted, setIsMuted] = useState(false);
   const [message, setMessage] = useState("");
@@ -187,6 +190,7 @@ export function PostOptionsButton({
           caption: captionText.trim(),
           areaId: initialAreaId,
           locationName: locationName.trim() || null,
+          externalUrl: externalUrl.trim() || null,
         }),
       });
 
@@ -393,6 +397,46 @@ export function PostOptionsButton({
                 onChange={(e) => setLocationName(e.target.value)}
                 placeholder="Örn: Kadıköy, İstanbul veya Okul Adı"
                 value={locationName}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <label htmlFor="edit-post-external-url" className="block text-xs font-bold text-slate-600">
+                  🔗 Video / Web Bağlantısı (YouTube, Instagram, Web)
+                </label>
+                <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1.5 mb-1.5">
+                <button
+                  type="button"
+                  onClick={() => setExternalUrl("https://youtube.com/watch?v=")}
+                  className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 hover:bg-red-100"
+                >
+                  🔴 YouTube
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExternalUrl("https://instagram.com/reel/")}
+                  className="rounded-md border border-pink-200 bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-pink-700 hover:bg-pink-100"
+                >
+                  📸 Instagram
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExternalUrl("https://")}
+                  className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100"
+                >
+                  🌐 Web Sitesi
+                </button>
+              </div>
+              <input
+                id="edit-post-external-url"
+                type="url"
+                className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-medium text-slate-800 focus:border-sky-500 focus:outline-none"
+                onChange={(e) => setExternalUrl(e.target.value)}
+                placeholder="https://youtube.com/... veya https://instagram.com/..."
+                value={externalUrl}
               />
             </div>
 

@@ -132,6 +132,19 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
   const { playSound } = useAudio();
   const { highScore, isLeaderboardOpen, setIsLeaderboardOpen, saveProgress } =
     useGameProgress({ gameType: "taboo", userId });
+
+  const triggerHaptic = useCallback((type: "light" | "medium" | "heavy" | "error" = "light") => {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        if (type === "error") navigator.vibrate([40, 60, 40]);
+        else if (type === "heavy") navigator.vibrate(35);
+        else if (type === "medium") navigator.vibrate(20);
+        else navigator.vibrate(10);
+      } catch {
+        // Ignored
+      }
+    }
+  }, []);
     
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -140,6 +153,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
   // Start a new game
   const startGame = useCallback(() => {
+    triggerHaptic("medium");
     setScore(0);
     scoreRef.current = 0;
     setCombo(0);
@@ -234,9 +248,10 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
   const endGame = useCallback(() => {
     setIsPlaying(false);
     setIsGameOver(true);
+    triggerHaptic("heavy");
     if (timerRef.current) clearInterval(timerRef.current);
     void saveProgress(scoreRef.current, 1, { finalCombo: combo });
-  }, [saveProgress, combo]);
+  }, [saveProgress, combo, triggerHaptic]);
 
   const createDuel = async () => {
     setIsGeneratingDuel(true);
@@ -279,8 +294,10 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
       // 3, 5, 10 combo'da streak sesi; ilk doğru ve diğerlerinde coin
       if (newCombo === 3 || newCombo === 5 || newCombo === 10) {
         playSound("streak");
+        triggerHaptic("heavy");
       } else {
         playSound("coin");
+        triggerHaptic("medium");
       }
 
       const earned = pointsForTaboo(newCombo);
@@ -301,6 +318,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
     } else {
       // Yanlış tahmin
       playSound("wrong");
+      triggerHaptic("error");
       setCombo(0);
       setIsError(true);
       setTimeout(() => setIsError(false), 400);
@@ -309,6 +327,7 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
 
   const toggleListening = () => {
     if (isListening) return; // Prevent multiple starts
+    triggerHaptic("light");
     
     try {
       const SpeechRecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -519,9 +538,10 @@ export function TabooGame({ userId = "guest" }: { userId?: string }) {
           <div className="flex-1 flex flex-col relative">
             {/* Draggable Card with Rotation + Stamp */}
             <DraggableCard
-              onSwipeLeft={() => { playSound("error"); setCombo(0); nextCard(); }}
+              onSwipeLeft={() => { playSound("error"); triggerHaptic("medium"); setCombo(0); nextCard(); }}
               onSwipeRight={() => {
                 if (difficulty === "zor" && !showHint) {
+                  triggerHaptic("light");
                   setShowHint(true);
                   setScore(prev => Math.max(0, prev - 10));
                 }

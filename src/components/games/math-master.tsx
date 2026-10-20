@@ -187,6 +187,51 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     saveProgress,
   } = useGameProgress({ gameType: "math_master", userId });
 
+  const STORAGE_KEY = `zigo_math_state_${userId}`;
+
+  // Save session state when it changes
+  useEffect(() => {
+    if (typeof window === "undefined" || isGameOver || mode === null) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        mode,
+        score,
+        currentLevel,
+        lives,
+        correctAnswers,
+        streak,
+      }));
+    } catch {
+      // Local persistence is best effort.
+    }
+  }, [STORAGE_KEY, mode, score, currentLevel, lives, correctAnswers, streak, isGameOver]);
+
+  // Restore session state on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data && data.mode && !data.isGameOver && data.lives > 0) {
+          setMode(data.mode);
+          setScore(data.score ?? 0);
+          scoreRef.current = data.score ?? 0;
+          setCurrentLevel(data.currentLevel ?? 1);
+          levelRef.current = data.currentLevel ?? 1;
+          setLives(data.lives ?? 3);
+          livesRef.current = data.lives ?? 3;
+          setCorrectAnswers(data.correctAnswers ?? 0);
+          correctRef.current = data.correctAnswers ?? 0;
+          setStreak(data.streak ?? 0);
+        }
+      }
+    } catch {
+      // Ignore parse errors.
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // UI States for Polish
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [floatingText, setFloatingText] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
@@ -268,10 +313,13 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
     setQuestion(generateQuestion(1, activeMode));
     setTimeLeft(100);
     zeroHandledRef.current = false;
+    endedRef.current = false;
     scoreRef.current = 0;
     levelRef.current = 1;
     correctRef.current = 0;
-  }, [generateQuestion]);
+    // Clear any saved session so the restored state doesn’t override the new game
+    try { if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  }, [generateQuestion, STORAGE_KEY]);
 
   useEffect(() => {
     if (mode) initGame(mode);
@@ -402,6 +450,8 @@ export function MathMaster({ userId = "guest", onGameEnd }: MathMasterProps) {
       playSound("wrong");
     }
     if (timerRef.current) clearInterval(timerRef.current);
+    // Clear saved session since game is over
+    try { if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 
     const finalScore = scoreRef.current;
     const finalLevel = levelRef.current;

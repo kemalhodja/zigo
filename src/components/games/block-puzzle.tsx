@@ -85,6 +85,13 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
   const [isGameOver, setIsGameOver] = useState(false);
   const [justCleared, setJustCleared] = useState<{ rows: number[]; cols: number[] } | null>(null);
   const [justDropped, setJustDropped] = useState<{row: number, col: number}[]>([]);
+  const [history, setHistory] = useState<{
+    board: string[][];
+    options: (ShapeType | null)[];
+    score: number;
+    linesClearedTotal: number;
+    level: number;
+  }[]>([]);
 
   const { playSound } = useAudio();
   const {
@@ -93,6 +100,8 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     setIsLeaderboardOpen,
     saveProgress,
   } = useGameProgress({ gameType: "block_puzzle", userId });
+
+  const STORAGE_KEY = `zigo_block_puzzle_state_${userId}`;
 
   // Refs to avoid stale closures in useEffect callbacks
   const scoreRef = useRef(0);
@@ -139,14 +148,71 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     setLevel(1);
     setIsGameOver(false);
     setJustCleared(null);
+    setHistory([]);
     scoreRef.current = 0;
     levelRef.current = 1;
     linesClearedRef.current = 0;
-  }, []);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+    }
+  }, [STORAGE_KEY]);
 
+  // Load saved state on mount if available
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data && Array.isArray(data.board) && Array.isArray(data.options) && !data.isGameOver) {
+          setBoard(data.board);
+          setOptions(data.options);
+          setScore(data.score || 0);
+          setLinesClearedTotal(data.linesClearedTotal || 0);
+          setLevel(data.level || 1);
+          scoreRef.current = data.score || 0;
+          levelRef.current = data.level || 1;
+          linesClearedRef.current = data.linesClearedTotal || 0;
+          return;
+        }
+      }
+    } catch {}
     initGame();
-  }, [initGame]);
+  }, [STORAGE_KEY, initGame]);
+
+  const handleUndo = useCallback(() => {
+    if (history.length === 0 || isGameOver) return;
+    const last = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, -1));
+    setBoard(last.board.map((r) => [...r]));
+    setOptions([...last.options]);
+    setScore(last.score);
+    setLinesClearedTotal(last.linesClearedTotal);
+    setLevel(last.level);
+    scoreRef.current = last.score;
+    levelRef.current = last.level;
+    linesClearedRef.current = last.linesClearedTotal;
+    playSound("pop");
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      try { navigator.vibrate(15); } catch {}
+    }
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          board: last.board,
+          options: last.options,
+          score: last.score,
+          linesClearedTotal: last.linesClearedTotal,
+          level: last.level,
+          isGameOver: false,
+        })
+      );
+    } catch {}
+  }, [history, isGameOver, playSound, STORAGE_KEY]);
+
 
   useEffect(() => {
     if (isGameOver || options.length === 0 || board.length === 0) return;
@@ -193,6 +259,18 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
         if (shape.matrix[r][c] === 1 && board[row + r][col + c] !== EMPTY_CELL) return;
       }
     }
+
+    // Save previous snapshot for Undo
+    setHistory((prev) => [
+      ...prev.slice(-10),
+      {
+        board: board.map((r) => [...r]),
+        options: [...options],
+        score,
+        linesClearedTotal,
+        level,
+      },
+    ]);
 
     // Parçayı yerleştir
     const newBoard = board.map((r) => [...r]);
@@ -283,6 +361,23 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
     scoreRef.current = newScore;
     levelRef.current = currentLevel;
     linesClearedRef.current = linesCleared > 0 ? linesClearedTotal + linesCleared : linesClearedTotal;
+
+    // Persist current state in localStorage
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            board: newBoard,
+            options: newOptions,
+            score: newScore,
+            linesClearedTotal: linesCleared > 0 ? linesClearedTotal + linesCleared : linesClearedTotal,
+            level: currentLevel,
+            isGameOver: false,
+          })
+        );
+      } catch {}
+    }
   };
 
   // Drag and Drop global listeners
@@ -436,6 +531,16 @@ export function BlockPuzzle({ userId = "guest", onGameEnd }: BlockPuzzleProps) {
               </div>
             )}
             <div className="flex gap-1">
+              {!isGameOver && history.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleUndo}
+                  aria-label="Hamleyi geri al"
+                  className="tap-scale bg-slate-700/90 hover:bg-slate-600 border border-slate-600/80 rounded-xl px-2.5 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1 shadow-xs"
+                >
+                  ↩️ Geri Al
+                </button>
+              )}
               {!isGameOver && (
                 <button 
                   onClick={() => {

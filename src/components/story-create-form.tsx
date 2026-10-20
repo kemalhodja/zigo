@@ -80,20 +80,19 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       return;
     }
 
+    if (file.type.startsWith("video/")) {
+      setStatus("error");
+      setMessage("Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Lütfen bir görsel seçin.");
+      setPreview(null);
+      setSelectedFile(null);
+      return;
+    }
+
     if (file.type.startsWith("image/")) {
       const imgVal = validateImageLimits(file);
       if (!imgVal.valid) {
         setStatus("error");
         setMessage(imgVal.error ?? sc.mediaSizeError);
-        setPreview(null);
-        setSelectedFile(null);
-        return;
-      }
-    } else if (file.type.startsWith("video/")) {
-      const videoVal = await validateVideoLimits(file);
-      if (!videoVal.valid) {
-        setStatus("error");
-        setMessage(videoVal.error ?? sc.mediaSizeError);
         setPreview(null);
         setSelectedFile(null);
         return;
@@ -233,7 +232,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
             <span className="mt-1 block text-xs font-bold text-white/70">{s.aspectHint}</span>
           </span>
           <input
-            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             className="sr-only"
             name="file"
             onChange={(event) => {
@@ -249,7 +248,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
           <label className="inline-flex cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night">
             {s.changeMedia}
             <input
-              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               className="sr-only"
               name="file"
               onChange={(event) => {

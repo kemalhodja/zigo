@@ -51,6 +51,19 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const winLatchRef = useRef(false);
   const validWordsRef = useRef<Record<number, Set<string>> | null>(null);
 
+  const triggerHaptic = useCallback((type: "light" | "medium" | "heavy" | "error" = "light") => {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        if (type === "error") navigator.vibrate([40, 60, 40]);
+        else if (type === "heavy") navigator.vibrate(35);
+        else if (type === "medium") navigator.vibrate(20);
+        else navigator.vibrate(10);
+      } catch {
+        // Vibrate not permitted or supported
+      }
+    }
+  }, []);
+
   // Classic mode progress hook
   const {
     highScore: classicHighScore,
@@ -69,7 +82,20 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const targetMeaning = targetWordObj?.meaning || "";
   const cols = targetWord.length || 5;
 
-  // Fetch initial classic progress
+  // Restore preferred language on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const pref = localStorage.getItem("zigo_wordhunt_preferred_lang");
+      if (pref === "TR" || pref === "EN") {
+        setSelectedLang(pref as Lang);
+      }
+    } catch {
+      // Ignored
+    }
+  }, []);
+
+  // Fetch initial classic progress from server
   useEffect(() => {
     if (userId === "guest") return;
     fetch(`/api/games/progress?game_type=word_hunt`)
@@ -111,9 +137,43 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     };
   }, [gameMode, isTimerRunning, isGameOver, dailyAlreadyPlayed]);
 
-  const initLevel = useCallback(async (level: number, lang: Lang, mode: GameMode) => {
+  const initLevel = useCallback(async (level: number, lang: Lang, mode: GameMode, forceFresh = false) => {
     setIsLoadingTarget(true);
     winLatchRef.current = false;
+
+    // Check for saved mid-game state in classic mode
+    if (mode === "classic" && !forceFresh && typeof window !== "undefined") {
+      try {
+        const stateKey = `zigo_wordhunt_classic_${userId}_${lang}`;
+        const savedStr = localStorage.getItem(stateKey);
+        if (savedStr) {
+          const saved = JSON.parse(savedStr);
+          if (
+            saved &&
+            saved.targetWordObj &&
+            saved.targetWordObj.word &&
+            saved.level === level &&
+            Array.isArray(saved.guesses) &&
+            !saved.isGameOver &&
+            !saved.hasWon
+          ) {
+            setTargetWordObj(saved.targetWordObj);
+            setGuesses(saved.guesses);
+            setCurrentRow(saved.currentRow || 0);
+            setScore(saved.score || 0);
+            setIsGameOver(false);
+            setHasWon(false);
+            setShakeRow(-1);
+            setToastMessage(null);
+            setIsLoadingTarget(false);
+            return;
+          }
+        }
+      } catch {
+        // Fall through to fresh fetch
+      }
+    }
+
     let wordObj: (WordEntry & { dateKey?: string }) | null = null;
 
     try {
@@ -156,7 +216,38 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
     setIsTimerRunning(mode === "daily");
     setCopiedShare(false);
     setIsLoadingTarget(false);
-  }, []);
+  }, [userId]);
+
+  // Save ongoing classic progress to localStorage
+  useEffect(() => {
+    if (typeof window === "undefined" || gameMode !== "classic" || !selectedLang || !targetWordObj || isGameOver || hasWon) return;
+    try {
+      const stateKey = `zigo_wordhunt_classic_${userId}_${selectedLang}`;
+      localStorage.setItem(
+        stateKey,
+        JSON.stringify({
+          level: currentLevel,
+          targetWordObj,
+          guesses,
+          currentRow,
+          score,
+          isGameOver: false,
+          hasWon: false,
+        })
+      );
+    } catch {
+      // Local persistence best effort
+    }
+  }, [gameMode, selectedLang, userId, currentLevel, targetWordObj, guesses, currentRow, score, isGameOver, hasWon]);
+
+  const clearSavedClassicState = useCallback(() => {
+    if (typeof window === "undefined" || !selectedLang) return;
+    try {
+      localStorage.removeItem(`zigo_wordhunt_classic_${userId}_${selectedLang}`);
+    } catch {
+      // Best effort
+    }
+  }, [userId, selectedLang]);
 
   useEffect(() => {
     if (selectedLang) {
@@ -184,6 +275,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     playSound("wrong");
+    triggerHaptic("error");
     setTimeout(() => setToastMessage(null), 2000);
   };
 
@@ -222,20 +314,33 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
       void saveDailyProgress(earnedScore, 1, { attempts: currentRow + 1, seconds: duelSeconds });
       if (onGameEnd) onGameEnd(earnedScore, { level: 1 });
     } else {
+      clearSavedClassicState();
       void saveClassicProgress(finalScore, newLevel, { level: newLevel });
       if (onGameEnd) onGameEnd(finalScore, { level: newLevel });
     }
   };
 
+  const handleClearRow = useCallback(() => {
+    if (isGameOver || !selectedLang) return;
+    if (!guesses[currentRow] || guesses[currentRow].length === 0) return;
+    setGuesses((prev) => {
+      const next = [...prev];
+      next[currentRow] = "";
+      return next;
+    });
+    playSound("pop");
+    triggerHaptic("medium");
+  }, [isGameOver, selectedLang, guesses, currentRow, playSound, triggerHaptic]);
+
   const onKeyPress = useCallback(
     (key: string) => {
       if (isGameOver || !selectedLang || !targetWord) return;
       if (gameMode === "daily" && dailyAlreadyPlayed) return;
-      playSound("pop");
 
       if (key === "ENTER") {
         if (guesses[currentRow].length !== cols) {
           setShakeRow(currentRow);
+          triggerHaptic("error");
           showToast(selectedLang === "TR" ? "Yeterli harf yok" : "Not enough letters");
           setTimeout(() => setShakeRow(-1), 500);
           return;
@@ -245,18 +350,20 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
         if (!isValidWord(guess, selectedLang, cols)) {
           setShakeRow(currentRow);
+          triggerHaptic("error");
           showToast(selectedLang === "TR" ? "Sözlükte bulunamadı" : "Not in dictionary");
           setTimeout(() => setShakeRow(-1), 500);
           return;
         }
 
         if (guess === targetWord) {
-        if (winLatchRef.current || isGameOver) return;
+          if (winLatchRef.current || isGameOver) return;
           winLatchRef.current = true;
           setHasWon(true);
           setIsGameOver(true);
           setIsTimerRunning(false);
-          // İlk denemede bulursa mükemmel, aksi halde başarı sesi
+          triggerHaptic("heavy");
+
           if (currentRow === 0) {
             playSound("perfect");
           } else if (currentRow <= 2) {
@@ -293,13 +400,18 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
             setIsGameOver(true);
             setIsTimerRunning(false);
             playSound("wrong");
+            triggerHaptic("error");
             showToast(targetWord);
             saveGameProgress(gameMode === "daily" ? 0 : score, currentLevel, false);
           } else {
+            playSound("pop");
+            triggerHaptic("medium");
             setCurrentRow((prev) => prev + 1);
           }
         }
       } else if (key === "BACKSPACE") {
+        playSound("pop");
+        triggerHaptic("light");
         setGuesses((prev) => {
           const newGuesses = [...prev];
           newGuesses[currentRow] = newGuesses[currentRow].slice(0, -1);
@@ -307,6 +419,8 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
         });
       } else {
         if (guesses[currentRow].length < cols) {
+          playSound("pop");
+          triggerHaptic("light");
           setGuesses((prev) => {
             const newGuesses = [...prev];
             newGuesses[currentRow] += key;
@@ -320,6 +434,7 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
       guesses,
       isGameOver,
       playSound,
+      triggerHaptic,
       targetWord,
       score,
       currentLevel,
@@ -434,14 +549,26 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => setSelectedLang("TR")}
-            className="w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition text-lg"
+            onClick={() => {
+              setSelectedLang("TR");
+              triggerHaptic("medium");
+              try {
+                localStorage.setItem("zigo_wordhunt_preferred_lang", "TR");
+              } catch {}
+            }}
+            className="tap-scale w-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition text-lg"
           >
             🇹🇷 Türkçe
           </button>
           <button
-            onClick={() => setSelectedLang("EN")}
-            className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition text-lg"
+            onClick={() => {
+              setSelectedLang("EN");
+              triggerHaptic("medium");
+              try {
+                localStorage.setItem("zigo_wordhunt_preferred_lang", "EN");
+              } catch {}
+            }}
+            className="tap-scale w-full bg-gradient-to-r from-indigo-500 to-blue-600 text-white font-black py-4 rounded-xl shadow-lg hover:brightness-110 transition text-lg"
           >
             🇬🇧 English
           </button>
@@ -546,7 +673,30 @@ export function WordHunt({ userId = "guest", onGameEnd }: WordHuntProps) {
                 </span>
               </div>
             )}
-            <div className="flex gap-1">
+            <div className="flex flex-wrap gap-1 justify-end">
+              {guesses[currentRow] && guesses[currentRow].length > 0 && !isGameOver && (
+                <button
+                  onClick={handleClearRow}
+                  aria-label="Satırı Temizle"
+                  className="tap-scale bg-amber-500/80 hover:bg-amber-500 border border-amber-300/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+                >
+                  🧹 {selectedLang === "TR" ? "Temizle" : "Clear"}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  const nextLang = selectedLang === "TR" ? "EN" : "TR";
+                  setSelectedLang(nextLang);
+                  triggerHaptic("medium");
+                  try {
+                    localStorage.setItem("zigo_wordhunt_preferred_lang", nextLang);
+                  } catch {}
+                }}
+                aria-label="Dili Değiştir"
+                className="tap-scale bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+              >
+                🌐 {selectedLang}
+              </button>
               {!isGameOver && gameMode === "classic" && (
                 <button
                   onClick={() => {

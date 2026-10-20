@@ -38,6 +38,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
   const [isLevelCompleted, setIsLevelCompleted] = useState(false);
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [levelScore, setLevelScore] = useState(0);
+  // Undo history: stores previous grid state
+  const [gridHistory, setGridHistory] = useState<CellData[][][]>([]);
 
   const { playSound } = useAudio();
   const {
@@ -47,17 +49,52 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     saveProgress,
   } = useGameProgress({ gameType: "pipe_connect", userId });
 
+  const STORAGE_KEY = `zigo_pipe_state_${userId}`;
+
   const saveLevelProgress = useCallback(
     (score: number, level: number) => {
-  void saveProgress(score, level, { levels: level, moves: totalMoves });
-  if (onGameEnd) onGameEnd(score, { levels: level, moves: totalMoves });
+      void saveProgress(score, level, { levels: level, moves: totalMoves });
+      if (onGameEnd) onGameEnd(score, { levels: level, moves: totalMoves });
     },
     [saveProgress, totalMoves, onGameEnd],
   );
 
-  // Kaydedilen ilerlemeyi yükle
+  // Save state on grid or score change
   useEffect(() => {
-    if (userId === "guest") return;
+    if (typeof window === "undefined" || grid.length === 0 || isLevelCompleted) return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ currentLevel, grid, moves, totalMoves, totalScore })
+      );
+    } catch {
+      // Local persistence is best effort.
+    }
+  }, [STORAGE_KEY, grid, currentLevel, moves, totalMoves, totalScore, isLevelCompleted]);
+
+  // Kaydedilen ilerlemeyi yükle (localStorage önce, sonra server)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data && Array.isArray(data.grid) && data.grid.length > 0 && !data.isLevelCompleted) {
+            setCurrentLevel(data.currentLevel ?? 0);
+            setGrid(data.grid);
+            setMoves(data.moves ?? 0);
+            setTotalMoves(data.totalMoves ?? 0);
+            setTotalScore(data.totalScore ?? 0);
+            setStartLevel(data.currentLevel ?? 0);
+            setGridHistory([]);
+            return;
+          }
+        }
+      } catch {
+        // Ignore parse errors.
+      }
+    }
+    if (userId === "guest") { setStartLevel(0); return; }
     fetch(`/api/games/progress?game_type=pipe_connect`)
       .then((r) => r.json())
       .then((data) => {
@@ -70,6 +107,7 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
         }
       })
       .catch(() => setStartLevel(0));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const loadLevel = useCallback((lvlIndex: number) => {
@@ -170,7 +208,12 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     if (cell.type === "empty" || cell.type === "source" || cell.type === "target") return;
 
     playSound("pop");
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try { navigator.vibrate(10); } catch { /* ignore */ }
+    }
 
+    // Push to undo history (max 10)
+    setGridHistory((prev) => [...prev.slice(-9), grid.map((r) => r.map((c) => ({ ...c })))]);
     setMoves((prev) => prev + 1);
     setTotalMoves((prev) => prev + 1);
 
@@ -195,6 +238,9 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
       setLevelScore(earned);
       const newTotal = totalScore + earned;
       setTotalScore(newTotal);
+      setGridHistory([]);
+      // Clear localStorage for this level since it's complete
+      try { if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 
       confetti({
         particleCount: 100,
@@ -207,6 +253,18 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     }
   };
 
+  const handleUndo = useCallback(() => {
+    if (gridHistory.length === 0 || isLevelCompleted) return;
+    const previous = gridHistory[gridHistory.length - 1];
+    setGridHistory((prev) => prev.slice(0, -1));
+    setGrid(previous);
+    setMoves((prev) => Math.max(0, prev - 1));
+    playSound("pop");
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try { navigator.vibrate(15); } catch { /* ignore */ }
+    }
+  }, [gridHistory, isLevelCompleted, playSound]);
+
   const handleNextLevel = () => {
     // İlerleme seviye tamamlanırken zaten kaydedildi; burada yalnızca geçiş yapılır
     setCurrentLevel(currentLevel + 1);
@@ -217,6 +275,8 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
     setTotalScore(0);
     setTotalMoves(0);
     setIsGameFinished(false);
+    setGridHistory([]);
+    try { if (typeof window !== "undefined") localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
     loadLevel(0);
   };
 
@@ -258,17 +318,27 @@ export function PipeConnect({ userId = "guest", onGameEnd }: PipeConnectProps) {
             )}
             <div className="flex gap-1">
               {!isLevelCompleted && !isGameFinished && (
-                <button 
-                  onClick={() => {
-                    setIsLevelCompleted(true);
-                    setIsGameFinished(true);
-                    saveLevelProgress(totalScore, currentLevel);
-                  }}
-                  aria-label="Oyunu bitir"
-                  className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
-                >
-                  🛑 Bitir
-                </button>
+                <>
+                  <button
+                    onClick={handleUndo}
+                    disabled={gridHistory.length === 0}
+                    aria-label="Son hamleni geri al"
+                    className="tap-scale bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed border border-white/20 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+                  >
+                    ↩️ Geri
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsLevelCompleted(true);
+                      setIsGameFinished(true);
+                      saveLevelProgress(totalScore, currentLevel);
+                    }}
+                    aria-label="Oyunu bitir"
+                    className="tap-scale bg-rose-500/80 hover:bg-rose-500 border border-rose-400/50 rounded-xl px-2 py-1 text-xs font-bold text-white transition-colors flex items-center gap-1"
+                  >
+                    🛑 Bitir
+                  </button>
+                </>
               )}
               <GameSoundToggle />
               <button 

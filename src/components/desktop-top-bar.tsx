@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { UserStreakBadge } from "@/components/user-streak-badge";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 
 type DesktopTopBarProps = {
@@ -15,6 +16,7 @@ type DesktopTopBarProps = {
   unreadCount: number;
   viewerRole: ViewerRole;
 };
+
 
 export function DesktopTopBar({
   canCreateSocialPost = false,
@@ -87,6 +89,9 @@ export function DesktopTopBar({
           </span>
         </Link>
 
+        {/* Daily Study Streak 🔥 */}
+        <UserStreakBadge compact={true} />
+
         {/* Global Focus Pomodoro Trigger */}
         <button
           type="button"
@@ -104,6 +109,7 @@ export function DesktopTopBar({
         {viewerRole === "teacher" || isPlatformAdmin ? (
           <Link
             href="/teacher/lessons"
+            prefetch={true}
             aria-label="Ders Talepleri"
             title="Gelen Özel Ders Talepleri"
             className="tap-scale relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200/80 hover:text-night transition"
@@ -120,6 +126,7 @@ export function DesktopTopBar({
         {/* Notifications Bell */}
         <Link
           href="/notifications"
+          prefetch={true}
           aria-label="Bildirimler"
           title="Bildirimler"
           className="tap-scale relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100/80 text-slate-600 hover:bg-slate-200/80 hover:text-night transition"
@@ -136,6 +143,7 @@ export function DesktopTopBar({
         {canCreateSocialPost || isPlatformAdmin ? (
           <Link
             href="/create"
+            prefetch={true}
             className="tap-scale flex items-center gap-1.5 rounded-xl bg-[#0047FF] px-3.5 py-1.5 text-xs font-black text-white shadow-xs hover:bg-[#003be0] transition active:scale-95"
           >
             <Plus className="h-3.5 w-3.5" />

@@ -70,6 +70,7 @@ export function FeedPostHeader({
           initialAreaId={post.areaId}
           initialCaption={post.caption}
           initialLocationName={post.locationName ?? undefined}
+          initialExternalUrl={post.externalUrl ?? undefined}
           initialSaved={post.isSaved}
           isOwner={post.isOwner}
           postId={post.postId}

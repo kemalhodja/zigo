@@ -11,15 +11,22 @@ import {
   HelpCircle,
   Keyboard,
   Monitor,
+  Printer,
   RotateCcw,
   Sparkles,
   UserPlus,
   XCircle,
+  BookOpen,
 } from "lucide-react";
 
 import { KeyboardShortcutsModal } from "@/components/ui/keyboard-shortcuts-modal";
 import { SmartBoardPresenter } from "@/components/classroom/smart-board-presenter";
 import { WhatsAppChallengeCard } from "@/components/share/whatsapp-challenge-card";
+import { HomeworkModal } from "@/components/teacher/homework-modal";
+import {
+  PrintableQuestion,
+  QuizPrintBookletModal,
+} from "@/components/quiz/quiz-print-booklet-modal";
 
 type QuestionItem = {
   text: string;
@@ -74,6 +81,8 @@ export default function SolveQuizPage() {
   // Modal states
   const [isKeyboardHelpOpen, setIsKeyboardHelpOpen] = useState(false);
   const [isSmartBoardOpen, setIsSmartBoardOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
 
   useEffect(() => {
     fetch(`/api/quizzes/user/${quizId}/solve`, { method: "POST" })
@@ -262,22 +271,42 @@ export default function SolveQuizPage() {
             </div>
 
             {/* Aksiyon Butonları */}
-            <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="mt-5 space-y-2">
               <button
                 type="button"
-                onClick={restartQuiz}
-                className="tap-scale flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 py-3 text-xs font-black text-slate-700 hover:bg-slate-50 transition"
+                onClick={() => setIsHomeworkModalOpen(true)}
+                className="tap-scale flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-3 text-xs font-black text-white hover:bg-indigo-700 transition shadow-xs"
               >
-                <RotateCcw className="size-3.5" />
-                <span>Tekrar Çöz</span>
+                <BookOpen className="size-4" />
+                <span>📝 Sınıflara Ödev Olarak Ata</span>
               </button>
+
               <button
                 type="button"
-                onClick={() => router.push("/quizzes")}
-                className="tap-scale flex items-center justify-center rounded-2xl bg-slate-900 py-3 text-xs font-black text-white hover:bg-slate-800 transition"
+                onClick={() => setIsPrintModalOpen(true)}
+                className="tap-scale flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-50 border border-indigo-200 py-3 text-xs font-black text-indigo-700 hover:bg-indigo-100 transition shadow-2xs"
               >
-                Quiz Arena&apos;ya Dön
+                <Printer className="size-4" />
+                <span>🖨️ Sınav Kitapçığı & Çözümleri PDF Olarak Yazdır</span>
               </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={restartQuiz}
+                  className="tap-scale flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 py-3 text-xs font-black text-slate-700 hover:bg-slate-50 transition"
+                >
+                  <RotateCcw className="size-3.5" />
+                  <span>Tekrar Çöz</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/quizzes")}
+                  className="tap-scale flex items-center justify-center rounded-2xl bg-slate-900 py-3 text-xs font-black text-white hover:bg-slate-800 transition"
+                >
+                  Quiz Arena&apos;ya Dön
+                </button>
+              </div>
             </div>
           </div>
 
@@ -430,6 +459,25 @@ export default function SolveQuizPage() {
               </div>
             </div>
           ) : null}
+
+          {/* Printable Exam Booklet with Full Solutions */}
+          {quiz ? (
+            <QuizPrintBookletModal
+              isOpen={isPrintModalOpen}
+              onClose={() => setIsPrintModalOpen(false)}
+              title={quiz.title}
+              description={quiz.description}
+              targetGrade={quiz.difficulty === "hard" ? "Yeni Nesil / LGS" : "Genel"}
+              questions={quiz.questions.map((q, i) => ({
+                text: q.text,
+                options: q.options,
+                type: q.type,
+                correctIndex: phase.results[i]?.correctIndex,
+                explanation: phase.results[i]?.explanation,
+                imageUrl: q.imageUrl,
+              }))}
+            />
+          ) : null}
         </div>
       </div>
     );
@@ -491,6 +539,26 @@ export default function SolveQuizPage() {
                   : "🔵 Orta"}
             </span>
           )}
+
+          <button
+            type="button"
+            onClick={() => setIsHomeworkModalOpen(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-2.5 sm:px-3 py-1.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 shadow-2xs"
+            title="Sınıflara Ödev Olarak Ata"
+          >
+            <BookOpen className="size-3.5 text-indigo-600" />
+            <span className="hidden sm:inline">Ödev Ata</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsPrintModalOpen(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 sm:px-3 py-1.5 text-xs font-black text-slate-700 hover:bg-slate-100 shadow-2xs"
+            title="Sınav Kitapçığını PDF Olarak Yazdır / İndir"
+          >
+            <Printer className="size-3.5 text-indigo-600" />
+            <span className="hidden sm:inline">Kitapçık & PDF</span>
+          </button>
 
           <button
             type="button"
@@ -603,6 +671,36 @@ export default function SolveQuizPage() {
         title={quiz!.title}
         questions={quiz!.questions}
         initialIndex={index}
+      />
+
+      {/* Printable Exam Booklet & Optical Sheet Modal */}
+      {quiz ? (
+        <QuizPrintBookletModal
+          isOpen={isPrintModalOpen}
+          onClose={() => setIsPrintModalOpen(false)}
+          title={quiz.title}
+          description={quiz.description}
+          targetGrade={quiz.difficulty === "hard" ? "Yeni Nesil / LGS" : "Genel"}
+          questions={quiz.questions.map((q, i) => {
+            const donePhase = phase as unknown as Extract<Phase, { kind: "done" }>;
+            return {
+              text: q.text,
+              options: q.options,
+              type: q.type,
+              correctIndex: donePhase.results?.[i]?.correctIndex,
+              explanation: donePhase.results?.[i]?.explanation,
+              imageUrl: q.imageUrl,
+            };
+          })}
+        />
+      ) : null}
+
+      {/* Homework Assignment Modal */}
+      <HomeworkModal
+        isOpen={isHomeworkModalOpen}
+        onClose={() => setIsHomeworkModalOpen(false)}
+        quizId={quiz?.id || (Array.isArray(quizId) ? quizId[0] : quizId)}
+        quizTitle={quiz?.title || "Zigo MEB Testi"}
       />
     </div>
   );

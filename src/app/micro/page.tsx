@@ -11,6 +11,7 @@ import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getFollowingFeed, getReelFeed, getSocialPostById, isFollowing, type SocialFeedPost } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
+import { classifyExternalLink } from "@/lib/domain/social/link-helper";
 import type { Messages } from "@/lib/i18n/types";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/lib/supabase/database.types";
@@ -54,6 +55,7 @@ type ReelItem = {
   likes: string;
   mediaUrl?: string | null;
   mediaType?: string;
+  externalUrl?: string | null;
   scene: "math" | "science" | "coding";
   verified: boolean;
   postId?: string;
@@ -129,6 +131,7 @@ function ReelSection({
 }) {
   const mp = m.microPage;
   const ru = m.reelUi;
+  const parsedLink = classifyExternalLink(reel.externalUrl);
 
   return (
     <section
@@ -137,9 +140,20 @@ function ReelSection({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.2),transparent_18rem)]" />
       {reel.mediaUrl && reel.mediaType === "video" ? (
         <ReelVideoPlayer mediaUrl={reel.mediaUrl} reelId={reel.postId ?? reel.id} />
+      ) : parsedLink?.type === "youtube" && parsedLink.youtubeEmbedUrl ? (
+        <div className="absolute inset-0 z-0 flex items-center justify-center bg-black">
+          <iframe
+            src={parsedLink.youtubeEmbedUrl}
+            title={parsedLink.label}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="h-full w-full border-0 pointer-events-auto"
+          />
+        </div>
+      ) : !reel.mediaUrl ? (
+        <ReelScene scene={reel.scene} />
       ) : null}
-      {!reel.mediaUrl ? <ReelScene scene={reel.scene} /> : null}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/10 to-black/24" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/82 via-black/10 to-black/24" />
       <div className="relative z-10 px-1">
         <div className="h-1 overflow-hidden rounded-lg bg-white/20">
           <span className="block h-full w-2/3 rounded-lg bg-gradient-to-r from-white via-mint to-aqua" />
@@ -187,6 +201,23 @@ function ReelSection({
           <span className="rounded-lg bg-slate-100/80 px-3 py-1 text-xs font-black text-slate-700 backdrop-blur">
             {ru.watchForPoints}
           </span>
+          {parsedLink && (
+            <a
+              href={parsedLink.cleanUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`tap-scale inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-black shadow-md backdrop-blur transition hover:scale-105 active:scale-95 ${
+                parsedLink.type === "youtube"
+                  ? "bg-red-600 text-white"
+                  : parsedLink.type === "instagram"
+                  ? "bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white"
+                  : "bg-white text-slate-900"
+              }`}
+            >
+              <span>{parsedLink.type === "youtube" ? "🔴 YouTube" : parsedLink.type === "instagram" ? "📸 Instagram" : "🌐 Bağlantı"}</span>
+              <span className="text-[10px]">↗</span>
+            </a>
+          )}
         </div>
         <ReelLearningDock messages={m} postId={reel.postId} viewerRole={viewerRole} />
         <div className="text-xs font-black text-slate-900/80">
@@ -446,6 +477,7 @@ function toReelItem(
     isOwnCreator: Boolean(context.viewerId && reel.author?.id === context.viewerId),
     mediaUrl: reel.media_url,
     mediaType: reel.media_type,
+    externalUrl: reel.external_url ?? null,
     areaId: reel.area_id,
     quizId: reel.quiz_id,
     scene: index % 3 === 0 ? "math" : index % 3 === 1 ? "science" : "coding",

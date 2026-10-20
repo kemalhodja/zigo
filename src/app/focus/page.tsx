@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -345,6 +346,26 @@ export default function FocusPage() {
           <StatCard label="Tamamlanan" value={`${analytics?.weekly_completed ?? 0} / ${analytics?.weekly_goal ?? 5}`} icon="✅" color="emerald" />
           <StatCard label="Paylaşılan" value={analytics?.shared_moments ?? 0} icon="📤" color="amber" />
           <StatCard label="Puan" value={analytics?.points_from_focus ?? 0} icon="⭐" color="rose" />
+        </div>
+
+        {/* Brain Break Quick Launcher */}
+        <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-200/90 rounded-3xl p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-center gap-3.5">
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400 text-2xl shadow-xs">
+              ☕
+            </span>
+            <div>
+              <h3 className="text-sm font-black text-amber-950">Mola Vakti Geldi mi?</h3>
+              <p className="text-xs font-semibold text-amber-800/80">3 dakikalık hızlı zeka oyunları ile zihnini yenile ve XP kazan.</p>
+            </div>
+          </div>
+          <Link
+            href="/games"
+            prefetch={true}
+            className="tap-scale shrink-0 w-full sm:w-auto text-center bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl shadow-xs hover:brightness-105 transition"
+          >
+            Oyun Salonu 🎮
+          </Link>
         </div>
 
         {/* Study Plan (Zigo Plus) */}

@@ -1317,8 +1317,13 @@ body.role-theme-teacher {
   letter-spacing: -0.02em;
 }
 
-/* Print optimization for Agenda and Weekly Timetable */
+/* Print optimization for Agenda, Weekly Timetable and Exam Booklets */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm 10mm 12mm;
+  }
+
   body {
     background: #ffffff !important;
     color: #000000 !important;
@@ -1337,6 +1342,16 @@ body.role-theme-teacher {
     display: block !important;
   }
 
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .break-before-page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
   .agenda-print-container {
     width: 100% !important;
     max-width: 100% !important;
@@ -1345,6 +1360,12 @@ body.role-theme-teacher {
     box-shadow: none !important;
     border: none !important;
   }
+}
+
+/* ── 60 FPS Fluid Feed Rendering (Zero Scroll Janks) ── */
+.zigo-feed-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 540px;
 }
 
 

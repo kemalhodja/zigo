@@ -13,13 +13,20 @@ import {
   Image as ImageIcon,
   Layers,
   Plus,
+  Printer,
   RotateCcw,
   Sparkles,
   Trash2,
   X,
+  Bot,
 } from "lucide-react";
 
 import { MathFormulaHelper } from "@/components/teacher/math-formula-helper";
+import { AiQuestionGeneratorModal } from "@/components/teacher/ai-question-generator-modal";
+import {
+  PrintableQuestion,
+  QuizPrintBookletModal,
+} from "@/components/quiz/quiz-print-booklet-modal";
 
 export type QuestionFormat = "lgs_4" | "yks_5" | "true_false" | "primary_3";
 export type Difficulty = "easy" | "medium" | "hard";
@@ -144,6 +151,18 @@ export default function CreateQuizPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [result, setResult] = useState<{ id: string; status: string } | null>(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  function handleAiQuestionsGenerated(newQuestions: DraftQuestion[], mode: "append" | "replace") {
+    if (mode === "replace") {
+      setQuestions(newQuestions);
+      setActiveQuestionIdx(0);
+    } else {
+      setQuestions((prev) => [...prev, ...newQuestions]);
+      setActiveQuestionIdx((prev) => questions.length);
+    }
+  }
 
   // Restore draft from localStorage (Rule 5: State Persistence)
   useEffect(() => {
@@ -517,41 +536,69 @@ export default function CreateQuizPage() {
             </div>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+          {/* Mode Switcher & Tools */}
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => {
-                setActiveTab("edit");
+                setIsAiModalOpen(true);
                 triggerHaptic("click");
               }}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${
-                activeTab === "edit"
-                  ? "bg-white text-indigo-600 shadow-xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+              className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 px-3 py-1.5 text-xs font-black text-indigo-700 hover:from-indigo-100 hover:to-purple-100 shadow-2xs transition"
+              title="Yapay zekâ ile anında MEB kazanımlı sorular üret"
             >
-              <Edit3 className="size-3.5" />
-              <span>Editör</span>
+              <Bot className="size-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">AI ile Soru Üret</span>
             </button>
 
             <button
               type="button"
               onClick={() => {
-                setActiveTab("preview");
-                setPreviewIdx(0);
-                setPreviewSelectedOpt(null);
+                setIsPrintModalOpen(true);
                 triggerHaptic("click");
               }}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${
-                activeTab === "preview"
-                  ? "bg-white text-indigo-600 shadow-xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 shadow-2xs transition"
+              title="Sınav Kitapçığı & Optik Form Olarak Yazdır / PDF İndir"
             >
-              <Eye className="size-3.5" />
-              <span>Canlı Önizleme</span>
+              <Printer className="size-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">Kitapçık & PDF</span>
             </button>
+
+            <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("edit");
+                  triggerHaptic("click");
+                }}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${
+                  activeTab === "edit"
+                    ? "bg-white text-indigo-600 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <Edit3 className="size-3.5" />
+                <span>Editör</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("preview");
+                  setPreviewIdx(0);
+                  setPreviewSelectedOpt(null);
+                  triggerHaptic("click");
+                }}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${
+                  activeTab === "preview"
+                    ? "bg-white text-indigo-600 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <Eye className="size-3.5" />
+                <span>Canlı Önizleme</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -866,6 +913,29 @@ export default function CreateQuizPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* AI Assistant Quick Banner */}
+            <div className="rounded-3xl border border-indigo-200 bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 p-4 text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur border border-white/20">
+                  <Bot className="size-5 text-indigo-200" />
+                </span>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-indigo-200">🤖 AI MEB Soru Üreteci</h3>
+                  <p className="text-xs font-bold text-white">Konuyu yazın; LGS, YKS veya D/Y sorularınız çözümleriyle saniyeler içinde hazır olsun.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAiModalOpen(true);
+                  triggerHaptic("click");
+                }}
+                className="tap-scale shrink-0 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-indigo-900 shadow-sm hover:bg-indigo-50 transition"
+              >
+                Soruları AI ile Üret ✨
+              </button>
             </div>
 
             {/* Math Formula Helper for Active Question */}
@@ -1268,6 +1338,30 @@ export default function CreateQuizPage() {
           </div>
         </div>
       </div>
+
+      {/* Printable Exam Booklet Modal for Draft */}
+      <QuizPrintBookletModal
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        title={title || "Yeni Hazırlanan Sınav Denemesi"}
+        description={description}
+        targetGrade={targetGrade}
+        questions={questions.map((q) => ({
+          text: q.text,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation,
+          imageUrl: q.imageUrl,
+        }))}
+      />
+
+      {/* AI Question Generator Modal */}
+      <AiQuestionGeneratorModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onQuestionsGenerated={handleAiQuestionsGenerated}
+        currentCount={questions.length}
+      />
     </div>
   );
 }

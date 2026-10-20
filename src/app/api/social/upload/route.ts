@@ -116,11 +116,16 @@ export async function POST(request: Request) {
     }
 
     const isVideo = file.type.startsWith("video/");
-    const maxBytes = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+    if (isVideo) {
+      return NextResponse.json(
+        { error: "Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Gönderinize YouTube veya Instagram video linkinizi ekleyebilirsiniz." },
+        { status: 400 },
+      );
+    }
+
+    const maxBytes = MAX_IMAGE_SIZE_BYTES;
     if (file.size > maxBytes) {
-      const limitLabel = isVideo ? "100 MB" : "5 MB";
-      const mediaLabel = isVideo ? "Video" : "Görsel";
-      return NextResponse.json({ error: `${mediaLabel} boyutu en fazla ${limitLabel} olabilir.` }, { status: 400 });
+      return NextResponse.json({ error: "Görsel boyutu en fazla 5 MB olabilir." }, { status: 400 });
     }
 
     if (!(await hasValidFileSignature(file))) {

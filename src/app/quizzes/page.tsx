@@ -45,17 +45,42 @@ export default async function UserQuizzesPage() {
       </header>
 
       <main className="mx-auto max-w-xl lg:max-w-3xl space-y-6 p-4">
-        <div className="rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 p-5 text-white shadow-md">
-          <h2 className="text-lg font-black">Kendi quizini yap, herkesle yarış 🏆</h2>
-          <p className="mt-1 text-sm font-medium text-white/85">
-            En az 3 soru ekle, yayınlayalım. Arkadaşlarını meydan oku!
-          </p>
-          <Link
-            href="/quizzes/create"
-            className="tap-scale mt-4 inline-block rounded-xl bg-white px-6 py-2.5 text-sm font-black text-purple-700 shadow transition hover:brightness-105"
-          >
-            + Quiz Oluştur
-          </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-gradient-to-br from-fuchsia-500 to-purple-600 p-5 text-white shadow-md flex flex-col justify-between">
+            <div>
+              <span className="text-[0.65rem] font-black uppercase tracking-wider text-purple-200">
+                Quiz Stüdyosu
+              </span>
+              <h2 className="text-base font-black mt-1">Kendi Testini Yap, Meydan Oku 🏆</h2>
+              <p className="mt-1 text-xs font-medium text-white/85">
+                LGS (4 şık), YKS (5 şık), D/Y ve ilkokul formatlarında sorular hazırla.
+              </p>
+            </div>
+            <Link
+              href="/quizzes/create"
+              className="tap-scale mt-4 inline-block w-fit rounded-xl bg-white px-5 py-2 text-xs font-black text-purple-700 shadow hover:brightness-105 transition"
+            >
+              + Quiz Oluştur
+            </Link>
+          </div>
+
+          <div className="rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-700 to-rose-600 p-5 text-white shadow-md flex flex-col justify-between">
+            <div>
+              <span className="text-[0.65rem] font-black uppercase tracking-wider text-rose-200">
+                PDF & Optik Form
+              </span>
+              <h2 className="text-base font-black mt-1">📄 PDF Deneme & Optik Arenası</h2>
+              <p className="mt-1 text-xs font-medium text-white/85">
+                Bölünmüş ekranda PDF sınav kitapçığını oku, dijital optik forma kodla ve anında netini hesapla.
+              </p>
+            </div>
+            <Link
+              href="/quizzes/pdf"
+              className="tap-scale mt-4 inline-block w-fit rounded-xl bg-white px-5 py-2 text-xs font-black text-indigo-900 shadow hover:brightness-105 transition"
+            >
+              Optik Arenaya Git ↗
+            </Link>
+          </div>
         </div>
 
         {profile && mine.length > 0 ? (

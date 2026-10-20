@@ -16,22 +16,29 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import type { ComposerArea } from "@/components/create-mode-composer";
+import { ExternalLinkCard } from "@/components/external-link-card";
 import { validateImageLimits } from "@/lib/client/compress-image";
 import { validateVideoLimits } from "@/lib/client/compress-video";
 import { type UploadPhase,useUploadPipeline } from "@/lib/client/use-upload-pipeline";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { INDIVIDUAL_GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
+import { classifyExternalLink } from "@/lib/domain/social/link-helper";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ALLOWED_TYPES = new Set([
+// Doğrudan video yükleme geçici olarak bakım ve güncellemede; kullanıcılar YouTube / Instagram linki ekleyebilir.
+export const ENABLE_DIRECT_VIDEO_UPLOAD = false;
+
+const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
-  "video/mp4",
-  "video/webm",
 ]);
+
+const ALLOWED_TYPES = ENABLE_DIRECT_VIDEO_UPLOAD
+  ? new Set([...ALLOWED_IMAGE_TYPES, "video/mp4", "video/webm"])
+  : ALLOWED_IMAGE_TYPES;
 const OVERLAY_STEPS: { id: UploadPhase; label: string }[] = [
   { id: "validating", label: "Doğrulanıyor" },
   { id: "compressing", label: "Medya Optimize Ediliyor" },
@@ -130,8 +137,15 @@ export function PostWizard({
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      if (!ENABLE_DIRECT_VIDEO_UPLOAD && file.type.startsWith("video/")) {
+        setMediaError(
+          "Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Gönderinize YouTube veya Instagram video linkinizi ekleyerek videonuzu kolayca paylaşabilirsiniz."
+        );
+        return;
+      }
+
       if (!ALLOWED_TYPES.has(file.type)) {
-        setMediaError("Desteklenmeyen dosya türü tespit edildi. Lütfen sadece JPG, PNG, WEBP, GIF, MP4 veya WEBM seçin.");
+        setMediaError("Desteklenmeyen dosya türü tespit edildi. Lütfen sadece JPG, PNG, WEBP veya GIF seçin.");
         return;
       }
 
@@ -209,6 +223,8 @@ export function PostWizard({
             previews={previews}
             isValidating={isValidatingMedia}
             mediaError={mediaError}
+            externalUrl={externalUrl}
+            onExternalUrlChange={setExternalUrl}
             onFilesSelect={handleFilesSelect}
             onClearMedia={clearPreview}
             onNext={() => setStep(2)}
@@ -250,6 +266,8 @@ type MediaPickerStepProps = {
   previews: { url: string; type: "image" | "video" }[];
   isValidating: boolean;
   mediaError: string | null;
+  externalUrl: string;
+  onExternalUrlChange: (v: string) => void;
   onFilesSelect: (files: FileList | null) => void;
   onClearMedia: () => void;
   onNext: () => void;
@@ -260,17 +278,20 @@ function MediaPickerStep({
   previews,
   isValidating,
   mediaError,
+  externalUrl,
+  onExternalUrlChange,
   onFilesSelect,
   onClearMedia,
   onNext,
 }: MediaPickerStepProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const accept = forceReel
-    ? "video/mp4,video/webm"
-    : "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm";
+  const accept = ENABLE_DIRECT_VIDEO_UPLOAD
+    ? (forceReel ? "video/mp4,video/webm" : "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm")
+    : "image/jpeg,image/png,image/webp,image/gif";
 
   const hasMedia = previews.length > 0;
   const isVideo = hasMedia && previews[0].type === "video";
+  const parsedLink = classifyExternalLink(externalUrl);
 
   return (
     <div className="flex flex-col">
@@ -319,7 +340,7 @@ function MediaPickerStep({
                 type="file"
                 className="sr-only"
                 accept={accept}
-                multiple={!forceReel}
+                multiple
                 onChange={(e) => onFilesSelect(e.target.files)}
               />
             </label>
@@ -328,8 +349,8 @@ function MediaPickerStep({
       ) : (
         /* Empty picker */
         <label
-          className="flex min-h-72 cursor-pointer flex-col items-center justify-center gap-5 bg-gradient-to-br from-night via-violet-900 to-crystal text-white transition-opacity hover:opacity-95"
-          aria-label="Medya seç"
+          className="flex min-h-64 cursor-pointer flex-col items-center justify-center gap-4 bg-gradient-to-br from-night via-violet-900 to-crystal p-6 text-white transition-opacity hover:opacity-95"
+          aria-label="Fotoğraf seç"
         >
           {isValidating ? (
             <>
@@ -338,18 +359,20 @@ function MediaPickerStep({
             </>
           ) : (
             <>
-              <span className="flex size-20 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-4xl backdrop-blur">
-                {forceReel ? "🎬" : "📷"}
+              <span className="flex size-16 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-3xl backdrop-blur">
+                📸
               </span>
               <div className="text-center">
                 <p className="text-base font-black">
-                  {forceReel ? "Video Seç" : "Fotoğraf (Çoklu eklenebilir) veya Video Seç"}
+                  Fotoğraf Seç (Çoklu eklenebilir)
                 </p>
-                <p className="mt-1 text-xs font-bold text-white/70">
-                  {forceReel
-                    ? "MP4 · WEBM · Maks 100 MB · Maks 90 sn"
-                    : "JPG · PNG · MP4 · WEBM · Maks 100 MB"}
+                <p className="mt-1 text-xs font-bold text-white/75">
+                  JPG · PNG · WEBP · GIF · Maks 15 MB
                 </p>
+                <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-xs">
+                  <span>💡</span>
+                  <span>Doğrudan video yükleme geçici olarak kapalıdır. Aşağıdan YouTube / Instagram linki ekleyebilirsiniz.</span>
+                </div>
               </div>
             </>
           )}
@@ -358,7 +381,7 @@ function MediaPickerStep({
             type="file"
             className="sr-only"
             accept={accept}
-            multiple={!forceReel}
+            multiple
             onChange={(e) => onFilesSelect(e.target.files)}
           />
         </label>
@@ -371,25 +394,50 @@ function MediaPickerStep({
         </div>
       )}
 
+      {/* ── Quick Link Attachment in Step 1 ── */}
+      <div className="mx-4 mt-4 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-3.5">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <label className="text-xs font-black text-slate-700 flex items-center gap-1.5">
+            <span>🔗</span>
+            <span>Video veya Web Linki Ekle</span>
+          </label>
+          <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+        </div>
+
+        <input
+          type="url"
+          value={externalUrl}
+          onChange={(e) => onExternalUrlChange(e.target.value)}
+          placeholder="https://youtube.com/..., instagram.com/... veya site linkiniz"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-medium text-night placeholder:text-slate-400 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+        />
+
+        {parsedLink && (
+          <div className="mt-2.5">
+            <ExternalLinkCard url={externalUrl} allowInlineEmbed={false} />
+          </div>
+        )}
+      </div>
+
       {/* Next button */}
       <div className="px-4 py-4">
         <button
           type="button"
           id="wizard-step1-next"
           onClick={onNext}
-          disabled={(forceReel && !hasMedia) || isValidating}
+          disabled={isValidating}
           className="w-full rounded-xl bg-night py-4 text-sm font-black text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-40"
         >
           {hasMedia
             ? "Devam Et →"
-            : forceReel
-            ? "Önce video seçin"
+            : externalUrl.trim()
+            ? "Bağlantı ile Devam Et →"
             : "Medya olmadan devam et →"}
         </button>
 
-        {!hasMedia && !forceReel && (
+        {!hasMedia && !externalUrl.trim() && (
           <p className="mt-2 text-center text-xs font-semibold text-slate-400">
-            Medya seçimi zorunlu değil
+            Medya veya bağlantı seçimi zorunlu değildir, sadece yazı ile de paylaşabilirsiniz.
           </p>
         )}
       </div>
@@ -535,21 +583,88 @@ function CaptionStep({
         </div>
       </div>
 
-      {/* ── External URL ── */}
+      {/* ── External URL & Video Link ── */}
       <div className="px-4 pt-5">
-        <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">
-          Dış Bağlantı (İsteğe Bağlı)
-        </label>
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <label className="block text-xs font-black uppercase tracking-wider text-slate-700">
+            🔗 Dış Bağlantı / Video Linki
+          </label>
+          <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+        </div>
+
+        {/* Platform shortcuts */}
+        <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+          <button
+            type="button"
+            onClick={() => onExternalUrlChange("https://youtube.com/watch?v=")}
+            className="flex items-center gap-1 rounded-lg border border-red-200 bg-red-50/70 px-2.5 py-1 text-[11px] font-bold text-red-700 transition hover:bg-red-100 active:scale-95"
+          >
+            <span>🔴</span>
+            <span>YouTube</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onExternalUrlChange("https://instagram.com/reel/")}
+            className="flex items-center gap-1 rounded-lg border border-pink-200 bg-pink-50/70 px-2.5 py-1 text-[11px] font-bold text-pink-700 transition hover:bg-pink-100 active:scale-95"
+          >
+            <span>📸</span>
+            <span>Instagram</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onExternalUrlChange("https://")}
+            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
+          >
+            <span>🌐</span>
+            <span>Web Sitesi</span>
+          </button>
+        </div>
+
         <input
           type="url"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-night placeholder:text-slate-400 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-2 focus:ring-violet-100"
-          placeholder="https://..."
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-night placeholder:text-slate-400 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-2 focus:ring-violet-100"
+          placeholder="https://youtube.com/watch?v=... veya https://instagram.com/reel/..."
           value={externalUrl}
           onChange={(e) => onExternalUrlChange(e.target.value)}
         />
-        <p className="mt-1.5 text-[0.65rem] font-bold text-slate-400">
-          Gönderinizde tıklanabilir bir buton olarak görünür.
-        </p>
+
+        {/* Link Classification & Status Badge */}
+        {externalUrl.trim() && (() => {
+          const parsed = classifyExternalLink(externalUrl);
+          if (!parsed) return null;
+          return (
+            <div className="mt-2 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[11px] font-black ${
+                  parsed.type === "youtube"
+                    ? "bg-red-100 text-red-700 border border-red-200"
+                    : parsed.type === "instagram"
+                    ? "bg-pink-100 text-pink-700 border border-pink-200"
+                    : "bg-indigo-100 text-indigo-700 border border-indigo-200"
+                }`}>
+                  <span>✓</span>
+                  <span>{parsed.label} Algılandı</span>
+                </span>
+                <span className="text-[11px] font-medium text-slate-500">
+                  {parsed.type === "youtube"
+                    ? "Feed'de zengin video oynatıcı olarak görünecektir."
+                    : parsed.type === "instagram"
+                    ? "Feed'de Instagram kartı olarak görüntülenecektir."
+                    : "Feed'de site kartı olarak görüntülenecektir."}
+                </span>
+              </div>
+              <div className="overflow-hidden rounded-xl">
+                <ExternalLinkCard url={externalUrl} allowInlineEmbed={false} />
+              </div>
+            </div>
+          );
+        })()}
+
+        {!externalUrl.trim() && (
+          <p className="mt-1.5 text-[0.68rem] font-medium text-slate-400">
+            Doğrudan video yükleme yerine YouTube, Instagram veya web sitenizin linkini ekleyerek içeriğinizi paylaşabilirsiniz.
+          </p>
+        )}
       </div>
 
       {/* ── Followers Only Toggle ── */}

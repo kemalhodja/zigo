@@ -13,6 +13,7 @@ export interface CreatePostScreenProps {
 export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScreenProps) {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [caption, setCaption] = useState<string>("");
+  const [externalUrl, setExternalUrl] = useState<string>("");
   const [areaId, _setAreaId] = useState<number>(defaultAreaId);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,13 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
       return;
     }
 
+    if (file.type.startsWith("video/")) {
+      setError("Doğrudan video yükleme geçici olarak kapalıdır. Aşağıdan YouTube veya Instagram video bağlantınızı ekleyebilirsiniz.");
+      setMediaFile(null);
+      event.target.value = "";
+      return;
+    }
+
     if (file.type.startsWith("image/")) {
       const imgVal = validateImageLimits(file);
       if (!imgVal.valid) {
@@ -36,14 +44,6 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
         event.target.value = "";
         return;
       }
-    } else if (file.type.startsWith("video/")) {
-      validateVideoLimits(file).then((videoVal) => {
-        if (!videoVal.valid) {
-          setError(videoVal.error ?? "Video doğrulanamadı.");
-          setMediaFile(null);
-          event.target.value = "";
-        }
-      });
     }
 
     setMediaFile(file);
@@ -105,6 +105,7 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
           mediaType,
           areaId,
           isReel: mediaType === "video",
+          externalUrl: externalUrl.trim() || undefined,
         }),
       });
 
@@ -116,6 +117,7 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
 
       setSuccessMessage("Gönderiniz başarıyla yayınlandı! 🎉");
       resetForm();
+      setExternalUrl("");
       if (onSuccess) {
         onSuccess();
       }
@@ -135,21 +137,68 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
         {/* Medya Seçimi */}
         <div>
           <label htmlFor="media-upload-input" className="mb-1 block text-xs font-semibold text-slate-600">
-            Fotoğraf veya Video Seç (Maks. 100 MB)
+            Fotoğraf Seç (Maks. 15 MB)
           </label>
           <input
             id="media-upload-input"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             onChange={handleFileChange}
             disabled={isLoading}
             className="w-full cursor-pointer rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-700 transition file:mr-3 file:rounded-md file:border-0 file:bg-violet-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-violet-700 disabled:opacity-50"
           />
+          <p className="mt-1 text-[11px] text-slate-500 font-medium">
+            💡 Not: Doğrudan video yükleme geçici olarak kapalıdır. YouTube veya Instagram linkinizi aşağıya ekleyebilirsiniz.
+          </p>
           {mediaFile && (
             <p className="mt-1 text-xs text-emerald-600 font-medium">
               Seçilen Dosya: {mediaFile.name} ({(mediaFile.size / (1024 * 1024)).toFixed(1)} MB)
             </p>
           )}
+        </div>
+
+        {/* Video / Harici Link Ekleme */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="external-url-input" className="block text-xs font-semibold text-slate-600">
+              🔗 Video veya Web Linki Ekle (YouTube, Instagram, Web Sitesi)
+            </label>
+            <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 mb-2">
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://youtube.com/watch?v=")}
+              className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 hover:bg-red-100"
+            >
+              🔴 YouTube
+            </button>
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://instagram.com/reel/")}
+              className="rounded-md border border-pink-200 bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-pink-700 hover:bg-pink-100"
+            >
+              📸 Instagram
+            </button>
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://")}
+              className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100"
+            >
+              🌐 Web Sitesi
+            </button>
+          </div>
+
+          <input
+            id="external-url-input"
+            type="url"
+            value={externalUrl}
+            onChange={(e) => setExternalUrl(e.target.value)}
+            disabled={isLoading}
+            placeholder="https://youtube.com/... veya https://instagram.com/..."
+            className="w-full rounded-lg border border-slate-200 p-2.5 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
+          />
         </div>
 
         {/* Açıklama Metni */}

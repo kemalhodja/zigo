@@ -31,12 +31,77 @@ export function ClassicTabooGame() {
   const [currentCard, setCurrentCard] = useState<TabooCard | null>(null);
   const [passesLeft, setPassesLeft] = useState(passLimit);
   
+  // Action History for Undo
+  const [history, setHistory] = useState<
+    { scores: { team1: number; team2: number }; card: TabooCard; passesLeft: number }[]
+  >([]);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playedIdsRef = useRef<string[]>([]);
   
   const { playSound } = useAudio();
   const toast = useToast();
   const categories = ["Tümü", ...getAvailableCategories()];
+
+  const triggerHaptic = useCallback((type: "light" | "medium" | "heavy" | "error" = "light") => {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        if (type === "error") navigator.vibrate([40, 60, 40]);
+        else if (type === "heavy") navigator.vibrate(35);
+        else if (type === "medium") navigator.vibrate(20);
+        else navigator.vibrate(10);
+      } catch {
+        // Ignored
+      }
+    }
+  }, []);
+
+  const STORAGE_KEY = "zigo_classic_taboo_match_v1";
+
+  // Restore game state from localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data && data.scores) {
+          setScores(data.scores);
+          if (data.round) setRound(data.round);
+          if (data.currentTurn) setCurrentTurn(data.currentTurn);
+          if (data.team1Name) setTeam1Name(data.team1Name);
+          if (data.team2Name) setTeam2Name(data.team2Name);
+          if (data.timeSetting) setTimeSetting(data.timeSetting);
+          if (data.passLimit) setPassLimit(data.passLimit);
+          if (data.selectedCategory) setSelectedCategory(data.selectedCategory);
+        }
+      }
+    } catch {
+      // Ignored
+    }
+  }, []);
+
+  // Save game progress
+  useEffect(() => {
+    if (typeof window === "undefined" || gameState === "game_over") return;
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          scores,
+          round,
+          currentTurn,
+          team1Name,
+          team2Name,
+          timeSetting,
+          passLimit,
+          selectedCategory,
+        })
+      );
+    } catch {
+      // Best effort
+    }
+  }, [scores, round, currentTurn, team1Name, team2Name, timeSetting, passLimit, selectedCategory, gameState]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -54,7 +119,9 @@ export function ClassicTabooGame() {
   const startRound = () => {
     setTimeLeft(timeSetting);
     setPassesLeft(passLimit);
+    setHistory([]);
     setGameState("playing");
+    triggerHaptic("medium");
     nextCard();
     
     if (timerRef.current) clearInterval(timerRef.current);
@@ -71,45 +138,78 @@ export function ClassicTabooGame() {
 
   const endRound = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    playSound("error"); // Optional timeout sound
+    playSound("error");
+    triggerHaptic("heavy");
     setGameState("round_end");
   };
 
   const handleCorrect = () => {
+    if (!currentCard) return;
+    setHistory((prev) => [
+      ...prev.slice(-9),
+      { scores: { ...scores }, card: currentCard, passesLeft },
+    ]);
     playSound("success");
-    setScores(prev => ({
+    triggerHaptic("heavy");
+    setScores((prev) => ({
       ...prev,
-      [currentTurn]: prev[currentTurn] + 1
+      [currentTurn]: prev[currentTurn] + 1,
     }));
     nextCard();
   };
 
   const handleTaboo = () => {
+    if (!currentCard) return;
+    setHistory((prev) => [
+      ...prev.slice(-9),
+      { scores: { ...scores }, card: currentCard, passesLeft },
+    ]);
     playSound("error");
-    setScores(prev => ({
+    triggerHaptic("error");
+    setScores((prev) => ({
       ...prev,
-      [currentTurn]: prev[currentTurn] - 1
+      [currentTurn]: prev[currentTurn] - 1,
     }));
     nextCard();
   };
 
   const handlePass = () => {
+    if (!currentCard) return;
     if (passesLeft > 0) {
-      setPassesLeft(prev => prev - 1);
+      setHistory((prev) => [
+        ...prev.slice(-9),
+        { scores: { ...scores }, card: currentCard, passesLeft },
+      ]);
+      triggerHaptic("medium");
+      setPassesLeft((prev) => prev - 1);
       nextCard();
     } else {
+      triggerHaptic("error");
       toast.error("Pas hakkınız kalmadı!");
     }
   };
 
+  const handleUndo = useCallback(() => {
+    if (history.length === 0 || gameState !== "playing") return;
+    const last = history[history.length - 1];
+    setHistory((prev) => prev.slice(0, -1));
+    setScores(last.scores);
+    setCurrentCard(last.card);
+    setPassesLeft(last.passesLeft);
+    playSound("pop");
+    triggerHaptic("light");
+    toast.info("Son işlem geri alındı.");
+  }, [history, gameState, playSound, triggerHaptic, toast]);
+
   const nextTurn = () => {
+    triggerHaptic("medium");
     if (currentTurn === "team1") {
       setCurrentTurn("team2");
     } else {
       // Both teams played this round
       if (round >= 3) {
-        // End game after 3 rounds (example)
         setGameState("game_over");
+        triggerHaptic("heavy");
         confetti({
           particleCount: 150,
           spread: 80,
@@ -117,7 +217,7 @@ export function ClassicTabooGame() {
           colors: ["#8b5cf6", "#ec4899", "#3b82f6", "#f59e0b"],
         });
       } else {
-        setRound(prev => prev + 1);
+        setRound((prev) => prev + 1);
         setCurrentTurn("team1");
       }
     }
@@ -131,8 +231,15 @@ export function ClassicTabooGame() {
     setScores({ team1: 0, team2: 0 });
     setRound(1);
     setCurrentTurn("team1");
+    setHistory([]);
     playedIdsRef.current = [];
     setGameState("setup");
+    triggerHaptic("light");
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+    }
   };
 
   return (
@@ -273,7 +380,16 @@ export function ClassicTabooGame() {
                 <span className={`absolute text-lg font-black ${timeLeft <= timeSetting * 0.25 ? "text-rose-500" : "text-slate-700"}`}>{timeLeft}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-500">Pas Hakkı:</span>
+                {history.length > 0 && (
+                  <button
+                    onClick={handleUndo}
+                    aria-label="Geri Al"
+                    className="tap-scale px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-xs font-black text-amber-700 transition flex items-center gap-1 shadow-sm active:scale-95"
+                  >
+                    ↩️ Geri Al
+                  </button>
+                )}
+                <span className="text-xs font-bold text-slate-500">Pas:</span>
                 {Array.from({ length: passLimit }).map((_, i) => (
                   <div key={i} className={`w-3 h-3 rounded-full ${i < passesLeft ? "bg-amber-400" : "bg-slate-200"}`} />
                 ))}

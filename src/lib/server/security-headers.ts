@@ -12,7 +12,7 @@ export function buildContentSecurityPolicy(isProduction: boolean): string {
     "img-src 'self' data: blob: https:",
     "media-src 'self' blob: https: http:",
     "connect-src 'self' https: wss:",
-    "frame-src 'self' https://www.google.com https://js.stripe.com",
+    "frame-src 'self' https://www.google.com https://js.stripe.com https://www.youtube.com https://www.youtube-nocookie.com",
     "font-src 'self' data:",
     "object-src 'none'",
     "base-uri 'self'",

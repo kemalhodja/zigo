@@ -1,7 +1,9 @@
 "use client";
 
-import { BadgeCheckIcon, CheckCircle2Icon, ExternalLinkIcon, MessageCircleQuestionIcon } from "lucide-react";
+import { BadgeCheckIcon, CheckCircle2Icon, MessageCircleQuestionIcon } from "lucide-react";
 import Image from "next/image";
+
+import { ExternalLinkCard } from "@/components/external-link-card";
 
 /**
  * Props for the FeedCard component.
@@ -106,20 +108,9 @@ export function FeedCard({
 
       {/* External Link */}
       {externalUrl && (
-        <a 
-          href={externalUrl} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="mt-3 flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 transition-colors hover:bg-slate-100 active:scale-[0.98]"
-        >
-          <div className="flex flex-col truncate">
-            <span className="text-sm font-bold text-slate-800">Bağlantıyı Ziyaret Et</span>
-            <span className="truncate text-xs font-semibold text-slate-500">{externalUrl}</span>
-          </div>
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <ExternalLinkIcon className="h-4 w-4 text-slate-600" />
-          </div>
-        </a>
+        <div className="mt-3">
+          <ExternalLinkCard url={externalUrl} />
+        </div>
       )}
 
       {/* Footer / Actions */}

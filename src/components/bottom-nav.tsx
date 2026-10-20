@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { getAdminNavItems, getBottomNavItems, getRoleNavLabels } from "@/lib/domain/role-navigation";
 import type { ViewerRole } from "@/lib/domain/role-theme";
@@ -24,6 +24,7 @@ export function BottomNav({
   isPlatformAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const messages = useMessages();
   const microPath = ZIGO_PATHS.micro;
 
@@ -61,6 +62,14 @@ export function BottomNav({
             aria-label={item.label}
             aria-current={isActive ? "page" : undefined}
             data-micro-link={isMicroLink ? "true" : undefined}
+            prefetch={true}
+            onMouseEnter={() => router.prefetch(item.href)}
+            onTouchStart={() => router.prefetch(item.href)}
+            onClick={() => {
+              if (typeof navigator !== "undefined" && navigator.vibrate) {
+                try { navigator.vibrate(8); } catch {}
+              }
+            }}
             className={`tap-scale relative flex touch-manipulation flex-col items-center justify-center gap-0 rounded-lg py-1 transition ${
               isActive
                 ? variant === "overlay"
