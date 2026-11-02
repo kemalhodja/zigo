@@ -1,4 +1,7 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+
+import { isAndroidCapacitorUserAgent } from "@/lib/domain/billing-platform";
 
 type SubscriptionPageProps = {
   searchParams: Promise<{ planId?: string; role?: string; openPlay?: string }>;
@@ -6,10 +9,16 @@ type SubscriptionPageProps = {
 
 export default async function SubscriptionPage({ searchParams }: SubscriptionPageProps) {
   const params = await searchParams;
+  const reqHeaders = await headers();
+  const isAndroidApp = isAndroidCapacitorUserAgent(reqHeaders.get("user-agent"));
+
   const query = new URLSearchParams();
-  query.set("openPlay", "1");
+  if (isAndroidApp) {
+    query.set("openPlay", "1");
+  }
   if (params.planId) query.set("planId", params.planId);
   if (params.role) query.set("role", params.role);
 
-  redirect(`/pricing?${query.toString()}`);
+  const qs = query.toString();
+  redirect(qs ? `/pricing?${qs}` : "/pricing");
 }

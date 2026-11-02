@@ -17,6 +17,7 @@ export type GooglePlayBridge = {
 };
 
 type WindowWithCapacitor = typeof window & {
+  androidBridge?: unknown;
   Capacitor?: {
     isNativePlatform?: () => boolean;
     getPlatform?: () => string;
@@ -61,10 +62,38 @@ export function isGooglePlayBillingAvailable(): boolean {
   if (typeof window === "undefined") return false;
 
   const win = window as WindowWithCapacitor;
-  if (win.Capacitor?.isNativePlatform?.() && win.Capacitor?.getPlatform?.() === "android") return true;
-  if (win.ZigoPlayBilling?.purchaseSubscription) return true;
-  if (win.Capacitor?.Plugins?.ZigoPlayBilling?.purchaseSubscription) return true;
-  if (win.Capacitor?.Plugins?.NativePurchases?.purchaseProduct) return true;
+
+  // On any standard web browser, Capacitor's getPlatform() is "web" and isNativePlatform() is false.
+  // Never treat Capacitor's own web Proxy (NativeZigoPlayBilling) as a native Android billing bridge.
+  if (typeof win.Capacitor?.getPlatform === "function" && win.Capacitor.getPlatform() === "web") {
+    return false;
+  }
+  if (typeof win.Capacitor?.isNativePlatform === "function" && !win.Capacitor.isNativePlatform()) {
+    return false;
+  }
+
+  if (
+    win.Capacitor?.isNativePlatform?.() &&
+    (!win.Capacitor?.getPlatform || win.Capacitor.getPlatform() === "android")
+  ) {
+    return true;
+  }
+  if (Boolean(win.androidBridge)) {
+    return true;
+  }
+  if (win.ZigoPlayBilling?.purchaseSubscription) {
+    return true;
+  }
+  if (
+    win.Capacitor?.Plugins?.ZigoPlayBilling &&
+    win.Capacitor.Plugins.ZigoPlayBilling !== NativeZigoPlayBilling &&
+    typeof win.Capacitor.Plugins.ZigoPlayBilling.purchaseSubscription === "function"
+  ) {
+    return true;
+  }
+  if (win.Capacitor?.Plugins?.NativePurchases?.purchaseProduct) {
+    return true;
+  }
 
   return false;
 }
@@ -78,29 +107,40 @@ export async function purchaseGooglePlaySubscription({
   planId: string;
   offerToken?: string;
 }): Promise<GooglePlayPurchaseResult> {
-  // 1. Primary: Use registered Capacitor plugin NativeZigoPlayBilling
-  try {
-    if (NativeZigoPlayBilling?.purchaseSubscription) {
-      const result = await NativeZigoPlayBilling.purchaseSubscription({ productId, planId, offerToken });
-      if (result?.purchaseToken) {
-        return {
-          ...result,
-          packageName: result.packageName || "com.zigo.education",
-        };
+  // 1. Primary: Use registered Capacitor plugin NativeZigoPlayBilling when on native Android
+  if (typeof window !== "undefined") {
+    const win = window as WindowWithCapacitor;
+    const isNativeAndroid =
+      Boolean(win.androidBridge) ||
+      (win.Capacitor?.isNativePlatform?.() === true &&
+        (!win.Capacitor?.getPlatform || win.Capacitor.getPlatform() === "android"));
+
+    if (isNativeAndroid && NativeZigoPlayBilling?.purchaseSubscription) {
+      try {
+        const result = await NativeZigoPlayBilling.purchaseSubscription({ productId, planId, offerToken });
+        if (result?.purchaseToken) {
+          return {
+            ...result,
+            packageName: result.packageName || "com.zigo.education",
+          };
+        }
+      } catch (nativeErr) {
+        const msg = nativeErr instanceof Error ? nativeErr.message : String(nativeErr);
+        if (!msg.toLowerCase().includes("not implemented") && !msg.toLowerCase().includes("unavailable on this device")) {
+          throw nativeErr;
+        }
       }
-    }
-  } catch (nativeErr) {
-    const msg = nativeErr instanceof Error ? nativeErr.message : String(nativeErr);
-    // If it's a real native rejection (e.g. from Google Play billing flow or user cancel), throw it directly
-    if (!msg.toLowerCase().includes("not implemented") && !msg.toLowerCase().includes("unavailable on this device")) {
-      throw nativeErr;
     }
   }
 
-  // 2. Fallback: Window attached plugin
+  // 2. Fallback: Window attached plugin (excluding the web proxy)
   if (typeof window !== "undefined") {
     const win = window as WindowWithCapacitor;
-    const directPlugin = win.Capacitor?.Plugins?.ZigoPlayBilling || win.ZigoPlayBilling;
+    const pluginCandidate = win.Capacitor?.Plugins?.ZigoPlayBilling;
+    const directPlugin =
+      (pluginCandidate && pluginCandidate !== NativeZigoPlayBilling ? pluginCandidate : undefined) ||
+      win.ZigoPlayBilling;
+
     if (directPlugin?.purchaseSubscription) {
       const result = await directPlugin.purchaseSubscription({ productId, planId, offerToken });
       return {
@@ -133,18 +173,27 @@ export async function purchaseGooglePlaySubscription({
 }
 
 export async function restoreGooglePlayPurchases(): Promise<GooglePlayPurchaseResult[]> {
-  try {
-    if (NativeZigoPlayBilling?.restorePurchases) {
-      const result = await NativeZigoPlayBilling.restorePurchases();
-      return result?.purchases ?? [];
-    }
-  } catch {
-    // Ignore and fallback
-  }
-
   if (typeof window !== "undefined") {
     const win = window as WindowWithCapacitor;
-    const directPlugin = win.Capacitor?.Plugins?.ZigoPlayBilling || win.ZigoPlayBilling;
+    const isNativeAndroid =
+      Boolean(win.androidBridge) ||
+      (win.Capacitor?.isNativePlatform?.() === true &&
+        (!win.Capacitor?.getPlatform || win.Capacitor.getPlatform() === "android"));
+
+    if (isNativeAndroid && NativeZigoPlayBilling?.restorePurchases) {
+      try {
+        const result = await NativeZigoPlayBilling.restorePurchases();
+        return result?.purchases ?? [];
+      } catch {
+        // Ignore and fallback
+      }
+    }
+
+    const pluginCandidate = win.Capacitor?.Plugins?.ZigoPlayBilling;
+    const directPlugin =
+      (pluginCandidate && pluginCandidate !== NativeZigoPlayBilling ? pluginCandidate : undefined) ||
+      win.ZigoPlayBilling;
+
     if (directPlugin?.restorePurchases) {
       const result = await directPlugin.restorePurchases();
       return result?.purchases ?? [];
@@ -167,4 +216,3 @@ export async function openGooglePlaySubscriptionsPage(): Promise<void> {
     window.open("https://play.google.com/store/account/subscriptions?package=com.zigo.education", "_blank", "noopener,noreferrer");
   }
 }
-

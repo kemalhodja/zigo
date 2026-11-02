@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   isGooglePlayBillingAvailable,
+  NativeZigoPlayBilling,
   purchaseGooglePlaySubscription,
   restoreGooglePlayPurchases,
 } from "./google-play-billing";
@@ -21,7 +22,7 @@ describe("google-play-billing bridge", () => {
     const originalWindow = globalThis.window;
     Object.defineProperty(globalThis, "window", {
       value: {
-        Capacitor: { isNativePlatform: () => true },
+        Capacitor: { isNativePlatform: () => true, getPlatform: () => "android" },
         ZigoPlayBilling: plugin,
       },
       configurable: true,
@@ -30,7 +31,11 @@ describe("google-play-billing bridge", () => {
     try {
       expect(isGooglePlayBillingAvailable()).toBe(true);
       const result = await purchaseGooglePlaySubscription({ productId: "zigo_plus", planId: "student-monthly" });
-      expect(plugin.purchaseSubscription).toHaveBeenCalledWith({ productId: "zigo_plus", planId: "student-monthly" });
+      expect(plugin.purchaseSubscription).toHaveBeenCalledWith({
+        productId: "zigo_plus",
+        planId: "student-monthly",
+        offerToken: undefined,
+      });
       expect(result).toEqual({
         productId: "zigo_plus",
         planId: "student-monthly",
@@ -38,6 +43,32 @@ describe("google-play-billing bridge", () => {
         orderId: "GPA.123",
         packageName: "com.zigo.education",
       });
+    } finally {
+      if (originalWindow === undefined) {
+        delete (globalThis as { window?: unknown }).window;
+      } else {
+        Object.defineProperty(globalThis, "window", { value: originalWindow, configurable: true });
+      }
+    }
+  });
+
+  it("returns false on web even when Capacitor registers the web proxy in Plugins.ZigoPlayBilling", () => {
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, "window", {
+      value: {
+        Capacitor: {
+          isNativePlatform: () => false,
+          getPlatform: () => "web",
+          Plugins: {
+            ZigoPlayBilling: NativeZigoPlayBilling,
+          },
+        },
+      },
+      configurable: true,
+    });
+
+    try {
+      expect(isGooglePlayBillingAvailable()).toBe(false);
     } finally {
       if (originalWindow === undefined) {
         delete (globalThis as { window?: unknown }).window;
