@@ -7,7 +7,7 @@ Use this checklist before building an Android APK.
 1. Deploy the Next.js app to a reachable HTTPS URL.
 2. Set `CAPACITOR_SERVER_URL` to that hosted URL before `cap sync`.
 3. Keep Supabase Auth redirect URLs aligned with the hosted app:
-   - `https://zigo.app/auth/callback`
+   - `https://www.zigo.com.tr/auth/callback`
 4. Apply Supabase migrations `001` through `055` (`npm run migrations:cloud` or `npm run migrations:pending` for 050–055 only).
 5. Test these routes on the hosted URL before opening Android Studio:
    - `/auth`
@@ -23,7 +23,7 @@ Use this checklist before building an Android APK.
 ## Build
 
 ```bash
-set CAPACITOR_SERVER_URL=https://zigo.app
+set CAPACITOR_SERVER_URL=https://www.zigo.com.tr
 npm run android:preflight
 npm run android:sync
 npm run android:open
@@ -44,7 +44,7 @@ If Windows or OneDrive locks `.next`, use `npm run build:safe` before syncing An
 Release bundle:
 
 ```bash
-set CAPACITOR_SERVER_URL=https://zigo.app
+set CAPACITOR_SERVER_URL=https://www.zigo.com.tr
 npm run android:build:release
 npm run android:copy:release
 ```

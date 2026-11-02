@@ -1,3 +1,4 @@
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -8,6 +9,7 @@ import {
   enforceAuthRateLimit,
   registrationPasswordSchema,
 } from "@/lib/server/auth-request";
+import type { Database } from "@/lib/supabase/database.types";
 import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
 
 const resetSchema = z
@@ -33,10 +35,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createAuthActionClient(true);
-    const {
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+
+    let supabase = await createAuthActionClient(true);
+    let {
       data: { user },
     } = await supabase.auth.getUser();
+
+    // Fallback: If cookies were delayed, authenticate using the client's Bearer token
+    if (!user && bearerToken) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (supabaseUrl && supabaseAnonKey) {
+        const tokenClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
+          auth: { persistSession: false },
+          global: { headers: { Authorization: `Bearer ${bearerToken}` } },
+        });
+        const { data: tokenData } = await tokenClient.auth.getUser(bearerToken);
+        if (tokenData?.user) {
+          user = tokenData.user;
+          supabase = tokenClient as unknown as typeof supabase;
+        }
+      }
+    }
 
     if (!user) {
       return NextResponse.json(

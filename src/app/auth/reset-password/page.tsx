@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { ResetPasswordPanel } from "@/components/reset-password-panel";
 import { getServerMessages } from "@/lib/i18n/server";
@@ -15,7 +16,9 @@ export default async function ResetPasswordPage() {
           {a.backToAuth}
         </Link>
       </section>
-      <ResetPasswordPanel />
+      <Suspense fallback={<div className="-mx-4 bg-white px-4 py-8 text-sm font-bold text-slate-500">{a.loadingAuth}</div>}>
+        <ResetPasswordPanel />
+      </Suspense>
     </div>
   );
 }

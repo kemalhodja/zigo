@@ -2,9 +2,9 @@
 
 Use this when filling **Play Console → App content** for Zigo (`com.zigo.education`).
 
-**Privacy policy URL (production):** `https://zigo.app/legal/privacy`  
-**Static fallback (same content, no React):** `https://zigo.app/privacy-policy.html`  
-**Terms URL:** `https://zigo.app/legal/terms`
+**Privacy policy URL (production):** `https://www.zigo.com.tr/legal/privacy`  
+**Static fallback (same content, no React):** `https://www.zigo.com.tr/privacy-policy.html`  
+**Terms URL:** `https://www.zigo.com.tr/legal/terms`
 
 Canonical production origin for Zigo. **Deploy required** — if `zigo.app` does not load, Play Console cannot verify the link until Vercel/hosting is live.
 
@@ -17,7 +17,7 @@ Canonical production origin for Zigo. **Deploy required** — if `zigo.app` does
 | Play Console item | Zigo answer |
 | --- | --- |
 | Privacy policy | Required — URL above |
-| Ads | **Yes** — verified teachers may run labelled sponsored education posts (`sponsored_label`, click-through URL). No third-party ad SDK in the Android shell. |
+| Ads | **No** — No third-party ad SDK (AdMob etc.) in the app. |
 | App access | Login required for core features — provide **test accounts** (teacher, parent, student) in the review notes |
 | Target audience | **Includes children** (education platform, age groups on education areas, parent-managed child profiles) |
 | News app | No |

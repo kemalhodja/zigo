@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unsupported_email_action" }, { status: 400 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://zigo-kohl.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.zigo.com.tr";
   const recoveryUrl = buildRecoveryUrl(tokenHash, siteUrl);
 
   try {
@@ -57,7 +57,7 @@ async function deliverRecoveryEmail(to: string, recoveryUrl: string, siteUrl: st
     throw new Error("resend_not_configured");
   }
 
-  const from = process.env.RESEND_FROM?.trim() || "Zigo <noreply@zigo.app>";
+  const from = process.env.RESEND_FROM?.trim() || "Zigo <noreply@zigo.com.tr>";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {

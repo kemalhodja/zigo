@@ -41,7 +41,7 @@ const interTight = Inter_Tight({
 
 export async function generateMetadata(): Promise<Metadata> {
   const meta = (await getServerMessages()).meta;
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr";
 
   return {
     metadataBase: new URL(baseUrl),
@@ -126,7 +126,7 @@ export default async function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               "name": "Zigo",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr",
               "description": messages.meta.description
             })
           }}
@@ -138,8 +138,8 @@ export default async function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               "name": "Zigo",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app",
-              "logo": (process.env.NEXT_PUBLIC_SITE_URL || "https://zigo-kohl.vercel.app") + "/icon.svg"
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr",
+              "logo": (process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr") + "/icon.svg"
             })
           }}
         />

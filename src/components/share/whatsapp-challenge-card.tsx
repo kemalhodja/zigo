@@ -31,7 +31,7 @@ export function WhatsAppChallengeCard({
   const resolvedUrl = useMemo(() => {
     if (challengeUrl) return challengeUrl;
     if (typeof window !== "undefined") return window.location.href;
-    return "https://zigo.app";
+    return "https://www.zigo.com.tr";
   }, [challengeUrl]);
 
   // Generate dynamic viral WhatsApp challenge message

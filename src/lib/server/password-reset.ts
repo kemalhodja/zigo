@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { getSiteUrl } from "@/lib/domain/deploy-config";
+import { getSiteUrl, isLocalSiteUrl } from "@/lib/domain/deploy-config";
 import { buildRecoveryUrl, sendRecoveryEmail } from "@/lib/server/recovery-email";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -41,13 +41,33 @@ export function hasDirectRecoveryEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY?.trim());
 }
 
+export function resolveRecoverySiteUrl(requestOrigin?: string): string {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured && !isLocalSiteUrl(configured)) {
+    return configured.replace(/\/$/, "");
+  }
+
+  if (requestOrigin) {
+    try {
+      const parsed = new URL(requestOrigin);
+      if (!parsed.protocol.startsWith("capacitor") && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+        return requestOrigin.replace(/\/$/, "");
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return getSiteUrl(requestOrigin || "http://localhost:3000");
+}
+
 export async function requestPasswordReset(params: {
   admin: SupabaseClient<Database>;
   anon: SupabaseClient<Database>;
   email: string;
   requestOrigin?: string;
 }): Promise<PasswordResetResult> {
-  const siteUrl = params.requestOrigin ? params.requestOrigin.replace(/\/$/, "") : getSiteUrl();
+  const siteUrl = resolveRecoverySiteUrl(params.requestOrigin);
   const profile = await findRegisteredUserByEmail(params.admin, params.email);
   if (!profile) {
     return { ok: false, code: "ACCOUNT_NOT_FOUND" };
@@ -94,7 +114,7 @@ export async function requestPasswordReset(params: {
   }
 
   const { error } = await params.anon.auth.resetPasswordForEmail(params.email, {
-    redirectTo: new URL("/auth/callback/recovery", siteUrl).toString(),
+    redirectTo: new URL("/auth/reset-password", siteUrl).toString(),
   });
 
   if (error) {

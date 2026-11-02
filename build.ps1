@@ -1,4 +1,4 @@
-$env:CAPACITOR_SERVER_URL = "https://zigo-kohl.vercel.app"
+$env:CAPACITOR_SERVER_URL = "https://www.zigo.com.tr"
 
 npm run build
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

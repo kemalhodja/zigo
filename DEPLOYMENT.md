@@ -9,9 +9,9 @@ This document describes the deployment architecture, environments, and rollback 
 | Environment | URL | Purpose | Auto-deploy Trigger |
 |-------------|-----|---------|---------------------|
 | **Development** | localhost:3000 | Local development | Manual |
-| **Staging** | staging.zigo.app | Pre-production testing | Push to `develop` branch |
-| **Production** | zigo.app | Live users | Push to `main` with `release:` prefix or manual |
-| **Hetzner (Self-hosted)** | zigo.app (alt) | Alternative hosting | Manual workflow dispatch |
+| **Staging** | staging.www.zigo.com.tr | Pre-production testing | Push to `develop` branch |
+| **Production** | www.zigo.com.tr | Live users | Push to `main` with `release:` prefix or manual |
+| **Hetzner (Self-hosted)** | www.zigo.com.tr (alt) | Alternative hosting | Manual workflow dispatch |
 
 ## CI/CD Pipeline (GitHub Actions)
 
@@ -125,10 +125,10 @@ All environments expose `/health` endpoint:
 curl http://localhost:3000/health
 
 # Staging
-curl https://staging.zigo.app/health
+curl https://staging.www.zigo.com.tr/health
 
 # Production
-curl https://zigo.app/health
+curl https://www.zigo.com.tr/health
 ```
 
 Expected response: `200 OK` with `{ "status": "healthy" }`

@@ -1,6 +1,6 @@
 /* global console, fetch */
 
-const BASE = "https://zigo-kohl.vercel.app";
+const BASE = "https://www.zigo.com.tr";
 
 async function test(email) {
   const response = await fetch(`${BASE}/api/auth/forgot-password`, {

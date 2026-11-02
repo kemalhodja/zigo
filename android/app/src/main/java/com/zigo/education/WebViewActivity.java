@@ -23,7 +23,7 @@ import java.net.URL;
 public class WebViewActivity extends AppCompatActivity {
 
     private static final String TAG = "WEBVIEW_ERROR";
-    private static final String TARGET_URL = "https://zigo-kohl.vercel.app/";
+    private static final String TARGET_URL = "https://www.zigo.com.tr/";
 
     private WebView webView;
     private LinearLayout errorLayout;

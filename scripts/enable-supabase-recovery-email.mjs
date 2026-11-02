@@ -20,7 +20,7 @@ function loadEnvFile(name) {
 
 loadEnvFile(".env.probe");
 
-const siteUrl = "https://zigo-kohl.vercel.app";
+const siteUrl = "https://www.zigo.com.tr";
 const recoveryTemplate = `<h2>Zigo şifre sıfırlama</h2><p><a href="${siteUrl}/auth/recover?token_hash={{ .TokenHash }}&type=recovery">Şifremi sıfırla</a></p>`;
 
 const client = new pg.Client({

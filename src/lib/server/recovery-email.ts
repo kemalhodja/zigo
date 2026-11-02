@@ -44,7 +44,7 @@ async function sendViaResend({
   siteUrl = getSiteUrl(),
   apiKey,
 }: RecoveryEmailInput & { apiKey: string; siteUrl: string }) {
-  const from = process.env.RESEND_FROM?.trim() || "Zigo <noreply@zigo.app>";
+  const from = process.env.RESEND_FROM?.trim() || "Zigo <noreply@zigo.com.tr>";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {

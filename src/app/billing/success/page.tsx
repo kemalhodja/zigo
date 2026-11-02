@@ -182,7 +182,7 @@ export default function BillingSuccessPage() {
             <p className="text-slate-500 text-sm">
               Ödemeniz alındı ancak aktivasyon biraz zaman alabilir.
               Birkaç dakika sonra sayfayı yenileyin veya{" "}
-              <a href="mailto:destek@zigo.app" className="text-violet-600 underline">destek@zigo.app</a>{" "}
+              <a href="mailto:destek@zigo.com.tr" className="text-violet-600 underline">destek@zigo.com.tr</a>{" "}
               ile iletişime geçin.
             </p>
           </div>

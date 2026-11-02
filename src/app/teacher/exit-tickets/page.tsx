@@ -228,7 +228,7 @@ export default function ExitTicketsPage() {
 
   function handleShareWhatsAppReport() {
     triggerHaptic("click");
-    const text = `📢 Sayın Velilerimiz,\n\nBugünkü ${activeSession.subject} dersimizde son 5 dakikada uyguladığımız "Çıkış Bileti (Exit Ticket)" analizi tamamlanmıştır:\n\n📌 Konu: ${activeSession.topic}\n📊 Sınıf Kazanım Anlaşılma Ortalaması: %${averageScore}\n\nÖğrencilerimizin eksik kazanıma göre telafi ödevleri Zigo üzerinden atanmıştır. Takip etmenizi rica ederiz.\n🔗 zigo.app`;
+    const text = `📢 Sayın Velilerimiz,\n\nBugünkü ${activeSession.subject} dersimizde son 5 dakikada uyguladığımız "Çıkış Bileti (Exit Ticket)" analizi tamamlanmıştır:\n\n📌 Konu: ${activeSession.topic}\n📊 Sınıf Kazanım Anlaşılma Ortalaması: %${averageScore}\n\nÖğrencilerimizin eksik kazanıma göre telafi ödevleri Zigo üzerinden atanmıştır. Takip etmenizi rica ederiz.\n🔗 www.zigo.com.tr`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   }
 
@@ -307,7 +307,7 @@ export default function ExitTicketsPage() {
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-white">{activeSession.title}</h2>
               <p className="text-xs text-white/70 max-w-lg">
-                Öğrenciler telefonlarından veya tabletlerinden <strong className="text-amber-300">zigo.app/quizzes</strong> adresine girip PIN kodunu tuşlar:
+                Öğrenciler telefonlarından veya tabletlerinden <strong className="text-amber-300">www.zigo.com.tr/quizzes</strong> adresine girip PIN kodunu tuşlar:
               </p>
             </div>
 

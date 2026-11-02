@@ -296,7 +296,7 @@ export function QuizPrintBookletModal({
 
           {/* Footer Page Branding */}
           <div className="mt-8 border-t border-slate-300 pt-3 flex items-center justify-between text-[0.65rem] text-slate-400 font-sans">
-            <span>Zigo Dijital Eğitim ve Sınav Ekosistemi · zigo.app</span>
+            <span>Zigo Dijital Eğitim ve Sınav Ekosistemi · zigo.com.tr</span>
             <span>Sayfa 1 / 1</span>
           </div>
         </div>

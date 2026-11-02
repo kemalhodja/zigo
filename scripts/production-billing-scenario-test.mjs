@@ -1,11 +1,11 @@
 /* global console, process, fetch, FormData */
 
 /**
- * Production billing & role scenario probe for zigo-kohl.vercel.app
+ * Production billing & role scenario probe for www.zigo.com.tr
  * Usage: node scripts/production-billing-scenario-test.mjs
  */
 
-const BASE = process.env.ZIGO_PROD_URL?.trim() || "https://zigo-kohl.vercel.app";
+const BASE = process.env.ZIGO_PROD_URL?.trim() || "https://www.zigo.com.tr";
 const PASSWORD = process.env.ZIGO_E2E_PASSWORD?.trim() || "ZigoTest2026!Secure";
 const ADMIN_EMAIL = process.env.ZIGO_E2E_ADMIN_EMAIL?.trim() || "platform.admin@zigo.app";
 const ADMIN_PASSWORD = process.env.ZIGO_ADMIN_E2E_PASSWORD?.trim() || process.env.ZIGO_E2E_ADMIN_PASSWORD?.trim();

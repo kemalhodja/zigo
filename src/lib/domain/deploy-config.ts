@@ -42,6 +42,9 @@ export function getSupabaseRedirectUrls(siteUrl = getSiteUrl()) {
   return {
     callback,
     onboarding: new URL("/auth/callback?next=/onboarding", siteUrl).toString(),
+    resetPassword: new URL("/auth/reset-password", siteUrl).toString(),
+    callbackRecovery: new URL("/auth/callback/recovery", siteUrl).toString(),
+    recover: new URL("/auth/recover", siteUrl).toString(),
     siteUrl,
   };
 }

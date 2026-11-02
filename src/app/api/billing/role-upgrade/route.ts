@@ -116,7 +116,7 @@ export async function POST(request: Request) {
         );
       }
 
-      const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://zigo.app";
+      const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "https://www.zigo.com.tr";
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         mode: "payment",

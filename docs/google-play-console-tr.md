@@ -1,6 +1,6 @@
 # Google Play Console — kopyala-yapıştır (TR)
 
-Production domain: **https://zigo.app**  
+Production domain: **https://www.zigo.com.tr**  
 Paket adı: **com.zigo.education**
 
 Detaylı Data safety eşlemesi: `docs/google-play-data-safety.md`
@@ -10,13 +10,13 @@ Detaylı Data safety eşlemesi: `docs/google-play-data-safety.md`
 ## Gizlilik politikası URL
 
 ```
-https://zigo.app/legal/privacy
+https://www.zigo.com.tr/legal/privacy
 ```
 
 Koşullar (isteğe bağlı alan):
 
 ```
-https://zigo.app/legal/terms
+https://www.zigo.com.tr/legal/terms
 ```
 
 ---
@@ -41,12 +41,12 @@ Zigo, doğrulanmış öğretmenlerin eğitim alanlarında paylaştığı içerik
 • Güvenlik: moderasyon, küfür/+18/zorbalık filtreleri, bildirim sistemi
 • Zigo Plus: isteğe bağlı abonelik (Stripe)
 
-Gizlilik: https://zigo.app/legal/privacy
-KVKK: https://zigo.app/legal/kvkk
+Gizlilik: https://www.zigo.com.tr/legal/privacy
+KVKK: https://www.zigo.com.tr/legal/kvkk
 ```
 
 **Kategori:** Eğitim  
-**E-posta:** privacy@zigo.app (veya destek adresiniz)
+**E-posta:** privacy@zigo.com.tr (veya destek adresiniz)
 
 ---
 
@@ -54,8 +54,8 @@ KVKK: https://zigo.app/legal/kvkk
 
 | Soru | Cevap |
 | --- | --- |
-| Gizlilik politikası | Evet → `https://zigo.app/legal/privacy` |
-| Reklam | **Evet** — etiketli sponsorlu eğitim gönderileri; üçüncü taraf reklam SDK yok |
+| Gizlilik politikası | Evet → `https://www.zigo.com.tr/legal/privacy` |
+| Reklam | **Hayır** — üçüncü taraf reklam SDK (AdMob vb.) kesinlikle yok |
 | Uygulama erişimi | Giriş gerekli — aşağıdaki test hesaplarını inceleme notuna ekleyin |
 | Hedef kitle | **Çocuklar dahil** — Families Policy anketi doldurulmalı |
 | Veri güvenliği | Aşağıdaki § Data safety |
@@ -173,8 +173,8 @@ E-posta: [TEST_STUDENT_EMAIL]
 Şifre: [TEST_PASSWORD]
 Not: Öğrenci belgesi onaylı hesap kullanın.
 
-Gizlilik: https://zigo.app/legal/privacy
-Mobil uygulama Capacitor WebView ile https://zigo.app adresini yükler.
+Gizlilik: https://www.zigo.com.tr/legal/privacy
+Mobil uygulama Capacitor WebView ile https://www.zigo.com.tr adresini yükler.
 ```
 
 Seed kullanıcıları (yerel): `docs/seed-users.md` veya migration seed e-postaları.
@@ -186,14 +186,14 @@ Seed kullanıcıları (yerel): `docs/seed-users.md` veya migration seed e-postal
 Supabase Dashboard → Authentication → URL configuration:
 
 ```
-https://zigo.app/auth/callback
-https://zigo.app/auth/callback?next=/onboarding
+https://www.zigo.com.tr/auth/callback
+https://www.zigo.com.tr/auth/callback?next=/onboarding
 ```
 
 Site URL:
 
 ```
-https://zigo.app
+https://www.zigo.com.tr
 ```
 
 ---
@@ -201,7 +201,7 @@ https://zigo.app
 ## AAB build (production URL ile)
 
 ```powershell
-$env:CAPACITOR_SERVER_URL="https://zigo.app"
+$env:CAPACITOR_SERVER_URL="https://www.zigo.com.tr"
 npm.cmd run android:build:release
 ```
 

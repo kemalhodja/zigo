@@ -1651,7 +1651,7 @@ export const catalogEn = {
     privacyTitle: "Privacy Policy",
     privacyP1: "Zigo is a verified education social platform. We collect account email, profile name, role, learning events, education area interests and uploaded media strictly to operate Selected areas, safety and gamification features.",
     privacyP2: "Student text passes moderation before display. We do not sell personal data. Parents supervise child profiles and reward approvals. Data is processed under KVKK and stored in your configured Supabase region.",
-    privacyP3Prefix: "Contact: privacy@zigo.app · You can also",
+    privacyP3Prefix: "Contact: privacy@zigo.com.tr · You can also",
     privacyP3Link: "download your data or request account deletion",
     privacyP3Suffix: "from the in-app KVKK page.",
     privacyChildrenTitle: "Children and families",
@@ -1664,7 +1664,7 @@ export const catalogEn = {
       "Your data is shared with service providers only to run the platform: Supabase (authentication, database and media storage), Stripe (Zigo Plus subscription payments — card data is stored by Stripe) and Google reCAPTCHA at sign-up to prevent abuse. We do not sell data to these parties.",
     privacySecurityTitle: "Security and retention",
     privacySecurityP1:
-      "Traffic is encrypted with TLS. Session cookies are used for authentication; cookie consent preference is stored locally on your device. After an account deletion request, data is deleted or anonymized within a reasonable period. Report suspected breaches to kvkk@zigo.app.",
+      "Traffic is encrypted with TLS. Session cookies are used for authentication; cookie consent preference is stored locally on your device. After an account deletion request, data is deleted or anonymized within a reasonable period. Report suspected breaches to kvkk@zigo.com.tr.",
     termsTitle: "Terms of Use",
     termsP1: "Zigo is an education platform for teachers, parents and students. Verified teachers publish content in assigned education areas. Students and parents consume matched content and may not publish independent posts.",
     termsP2: "Accounts must provide accurate information. Harassment, off-platform contact attempts by students, and unverified publishing are prohibited. Zigo Plus subscriptions renew monthly until cancelled in Stripe.",

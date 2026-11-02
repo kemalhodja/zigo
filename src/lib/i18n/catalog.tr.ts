@@ -1,4 +1,4 @@
-﻿export const catalogTr = {
+export const catalogTr = {
   locale: {
     language: "Dil",
     turkish: "Türkçe",
@@ -1650,7 +1650,7 @@
     privacyTitle: "Gizlilik Politikası",
     privacyP1: "Zigo, doğrulanmış eğitim sosyal ağıdır. Hesap e-postası, profil adı, rol, öğrenme etkinlikleri, eğitim alanı tercihleri ve yüklenen medyayı yalnızca Seçili alanlar, güvenlik ve oyunlaştırma özelliklerini çalıştırmak için işleriz.",
     privacyP2: "Öğrenci metinleri gösterilmeden önce moderasyondan geçer. Kişisel verileri satmayız. Veliler bağlı öğrenci profillerini ve ödül onaylarını denetler. Veriler KVKK kapsamında, yapılandırdığınız Supabase bölgesinde saklanır.",
-    privacyP3Prefix: "İletişim: privacy@zigo.app · Ayrıca",
+    privacyP3Prefix: "İletişim: privacy@zigo.com.tr · Ayrıca",
     privacyP3Link: "verilerini indirebilir veya hesap silme talep edebilirsin",
     privacyP3Suffix: "— uygulama içi KVKK sayfasından.",
     privacyChildrenTitle: "Öğrenciler ve aileler",
@@ -1663,7 +1663,7 @@
       "Verileriniz hizmet sağlayıcılarla yalnızca platformu çalıştırmak için paylaşılır: Supabase (kimlik doğrulama, veritabanı ve medya depolama), Stripe (Zigo Plus abonelik ödemeleri — kart bilgileri Stripe tarafında saklanır) ve kayıt sırasında kötüye kullanımı önlemek için Google reCAPTCHA. Bu taraflara veri satışı yapılmaz.",
     privacySecurityTitle: "Güvenlik ve saklama",
     privacySecurityP1:
-      "İletişim TLS ile şifrelenir. Oturum çerezleri kimlik doğrulama için kullanılır; çerez tercihi cihazınızda yerel olarak saklanır. Hesap silme talebi alındığında veriler makul süre içinde silinir veya anonimleştirilir. Güvenlik ihlali şüphesinde kvkk@zigo.app adresine yazın.",
+      "İletişim TLS ile şifrelenir. Oturum çerezleri kimlik doğrulama için kullanılır; çerez tercihi cihazınızda yerel olarak saklanır. Hesap silme talebi alındığında veriler makul süre içinde silinir veya anonimleştirilir. Güvenlik ihlali şüphesinde kvkk@zigo.com.tr adresine yazın.",
     termsTitle: "Kullanım Şartları",
     termsP1: "Zigo; öğretmen, veli ve öğrenciler için bir eğitim platformudur. Doğrulanmış öğretmenler atanan eğitim alanlarında içerik yayınlar. Öğrenci ve veliler eşleşen içeriği tüketir; bağımsız gönderi paylaşamaz.",
     termsP2: "Hesap bilgileri doğru olmalıdır. Taciz, öğrencilerin platform dışı iletişim girişimleri ve doğrulanmamış yayın yasaktır. Zigo Plus abonelikleri Stripe üzerinden iptal edilene kadar aylık yenilenir.",

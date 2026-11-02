@@ -34,7 +34,7 @@ export default function KvkkPage() {
       </p>
 
       <p>
-        Haklarınız: KVKK md. 11 kapsamında erişim, düzeltme, silme, itiraz. Başvuru: kvkk@zigo.app veya{" "}
+        Haklarınız: KVKK md. 11 kapsamında erişim, düzeltme, silme, itiraz. Başvuru: kvkk@zigo.com.tr veya{" "}
         <Link className="font-black text-crystal" href="/legal/delete-account">
           hesap ve veri sayfası
         </Link>

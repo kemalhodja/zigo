@@ -210,14 +210,14 @@ jobs:
 
       - name: Run load test (smoke)
         run: |
-          TARGET_URL="${{ vars.PERF_TEST_URL || 'https://zigo.app' }}"
+          TARGET_URL="${{ vars.PERF_TEST_URL || 'https://www.zigo.com.tr' }}"
           k6 run e2e/load-test.js --vus 5 --duration 30s --env BASE_URL="$TARGET_URL"
         continue-on-error: true
 
       - name: Run load test (stress)
         if: github.event_name == 'workflow_dispatch'
         run: |
-          TARGET_URL="${{ vars.PERF_TEST_URL || 'https://zigo.app' }}"
+          TARGET_URL="${{ vars.PERF_TEST_URL || 'https://www.zigo.com.tr' }}"
           k6 run e2e/load-test.js --duration 2m --vus 50 --env BASE_URL="$TARGET_URL"
         continue-on-error: true
 
@@ -255,7 +255,7 @@ jobs:
       - name: Run OWASP ZAP Baseline Scan
         run: |
           docker run --rm -v $(pwd):/zap/wrk/:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t ${{ vars.SECURITY_SCAN_URL || 'https://zigo.app' }} \
+            -t ${{ vars.SECURITY_SCAN_URL || 'https://www.zigo.com.tr' }} \
             -r zap-report.html \
             -J report_json.json \
             -w report_md.md || true
@@ -344,7 +344,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     environment:
       name: production
-      url: https://zigo.app
+      url: https://www.zigo.com.tr
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -386,12 +386,12 @@ jobs:
       - name: Run production smoke tests
         run: npm run test:smoke
         env:
-          BASE_URL: https://zigo.app
+          BASE_URL: https://www.zigo.com.tr
 
       - name: Run production visual regression
         run: npm run test:visual
         env:
-          BASE_URL: https://zigo.app
+          BASE_URL: https://www.zigo.com.tr
 
       - name: Create GitHub Release
         if: startsWith(github.event.head_commit.message, 'release:')
@@ -404,7 +404,7 @@ jobs:
             ${{ github.event.head_commit.message }}
             
             ## Deployment
-            - Vercel: https://zigo.app
+            - Vercel: https://www.zigo.com.tr
             - Android: Internal testing track
           draft: false
           prerelease: false

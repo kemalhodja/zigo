@@ -110,14 +110,14 @@ export default function TeacherHomeworkPage() {
 
   function handleShareWhatsApp(hw: HomeworkItem) {
     triggerHaptic("click");
-    const link = typeof window !== "undefined" ? `${window.location.origin}/quizzes` : "https://zigo.app/quizzes";
+    const link = typeof window !== "undefined" ? `${window.location.origin}/quizzes` : "https://www.zigo.com.tr/quizzes";
     const text = `📢 Sayın Veliler ve Sevgili Öğrenciler (${hw.classes.join(", ")}),\n\n"${hw.quizTitle}" başlıklı ödeviniz atanmıştır.\n\n🗓️ Son Teslim: ${new Date(hw.dueDate).toLocaleDateString("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}\n${hw.note ? `📝 Öğretmen Notu: ${hw.note}\n` : ""}\n🔗 Ödeve Zigo üzerinden erişebilirsiniz: ${link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   }
 
   function handleCopyLink(hw: HomeworkItem) {
     triggerHaptic("success");
-    const link = typeof window !== "undefined" ? `${window.location.origin}/quizzes` : "https://zigo.app/quizzes";
+    const link = typeof window !== "undefined" ? `${window.location.origin}/quizzes` : "https://www.zigo.com.tr/quizzes";
     void navigator.clipboard?.writeText(link);
     setCopiedId(hw.id);
     setTimeout(() => setCopiedId(null), 2000);

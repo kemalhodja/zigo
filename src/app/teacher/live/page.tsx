@@ -215,7 +215,7 @@ export default function TeacherLiveArenaPage() {
                 Oyuna Katılmak İçin
               </h2>
               <p className="text-sm sm:text-base font-semibold text-white/70">
-                Öğrenciler telefonlarından veya tabletlerinden <strong className="text-indigo-300">zigo.app/quizzes</strong> adresine girip PIN kodunu yazar:
+                Öğrenciler telefonlarından veya tabletlerinden <strong className="text-indigo-300">www.zigo.com.tr/quizzes</strong> adresine girip PIN kodunu yazar:
               </p>
             </div>
 

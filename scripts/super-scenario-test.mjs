@@ -7,7 +7,7 @@
  * Çalıştırma: node scripts/super-scenario-test.mjs
  */
 
-const BASE = process.env.ZIGO_PROD_URL?.trim() || "https://zigo-kohl.vercel.app";
+const BASE = process.env.ZIGO_PROD_URL?.trim() || "https://www.zigo.com.tr";
 const PASSWORD = process.env.ZIGO_E2E_PASSWORD?.trim() || "ZigoSuperTest2026!";
 
 const results = [];

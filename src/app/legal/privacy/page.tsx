@@ -14,7 +14,7 @@ export default function PrivacyPage() {
       <p>Zigo, doğrulanmış eğitim sosyal ağıdır. Hesap e-postası, profil adı, rol, öğrenme etkinlikleri, eğitim alanı tercihleri ve yüklenen medyayı yalnızca Seçili alanlar, güvenlik ve oyunlaştırma özelliklerini çalıştırmak için işleriz.</p>
       <p>Öğrenci metinleri gösterilmeden önce moderasyondan geçer. Kişisel verileri satmayız. Veliler bağlı öğrenci profillerini ve ödül onaylarını denetler. Veriler KVKK kapsamında, yapılandırdığınız Supabase bölgesinde saklanır.</p>
       <p>
-        İletişim: privacy@zigo.app · Ayrıca{" "}
+        İletişim: privacy@zigo.com.tr · Ayrıca{" "}
         <Link className="font-black text-crystal" href="/legal/delete-account">
           verilerini indirebilir veya hesap silme talep edebilirsin
         </Link>{" "}
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
       <p>Verileriniz hizmet sağlayıcılarla yalnızca platformu çalıştırmak için paylaşılır: Supabase (kimlik doğrulama, veritabanı ve medya depolama), Stripe (Zigo Plus abonelik ödemeleri — kart bilgileri Stripe tarafında saklanır) ve kayıt sırasında kötüye kullanımı önlemek için Google reCAPTCHA. Bu taraflara veri satışı yapılmaz.</p>
 
       <h2 className="pt-2 text-base font-black text-night">Güvenlik ve saklama</h2>
-      <p>İletişim TLS ile şifrelenir. Oturum çerezleri kimlik doğrulama için kullanılır; çerez tercihi cihazınızda yerel olarak saklanır. Hesap silme talebi alındığında veriler makul süre içinde silinir veya anonimleştirilir. Güvenlik ihlali şüphesinde kvkk@zigo.app adresine yazın.</p>
+      <p>İletişim TLS ile şifrelenir. Oturum çerezleri kimlik doğrulama için kullanılır; çerez tercihi cihazınızda yerel olarak saklanır. Hesap silme talebi alındığında veriler makul süre içinde silinir veya anonimleştirilir. Güvenlik ihlali şüphesinde kvkk@zigo.com.tr adresine yazın.</p>
     </LegalLayout>
   );
 }

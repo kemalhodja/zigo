@@ -58,7 +58,7 @@ export function PublicPreviewFeed() {
         <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-black/10 blur-2xl" />
         <p className="mb-2 text-xs font-black uppercase tracking-[0.3em] text-white/70">
-          zigo.app
+          zigo.com.tr
         </p>
         <h1 className="mx-auto max-w-md text-3xl font-black leading-tight sm:text-4xl">
           Ders çalışanların sosyal ağı

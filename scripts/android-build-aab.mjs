@@ -89,7 +89,7 @@ function runGradle() {
   return result.status === 0;
 }
 
-const productionServerUrl = (process.env.CAPACITOR_SERVER_URL || "https://zigo-kohl.vercel.app").replace(/\/$/, "");
+const productionServerUrl = (process.env.CAPACITOR_SERVER_URL || "https://www.zigo.com.tr").replace(/\/$/, "");
 
 function runCapSync() {
   console.log(`Capacitor server URL: ${productionServerUrl}`);
@@ -132,7 +132,7 @@ if (!existsSync(aabSource)) {
 
 copyFileSync(aabSource, aabTarget);
 const standardReleaseTarget = join(root, "Zigo-release.aab");
-const build35Target = join(root, "Zigo-release-35.aab");
+const build35Target = join(root, "Zigo-release-36.aab");
 copyFileSync(aabSource, standardReleaseTarget);
 copyFileSync(aabSource, build35Target);
 console.log(`\nPASS AAB ready: ${aabTarget}`);
