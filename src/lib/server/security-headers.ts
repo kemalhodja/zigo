@@ -28,7 +28,7 @@ export function buildContentSecurityPolicy(isProduction: boolean): string {
 }
 
 export function buildSecurityHeaders(isProduction = process.env.NODE_ENV === "production"): SecurityHeader[] {
-  return [
+  const headers: SecurityHeader[] = [
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: "DENY" },
     { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -38,4 +38,13 @@ export function buildSecurityHeaders(isProduction = process.env.NODE_ENV === "pr
       value: buildContentSecurityPolicy(isProduction),
     },
   ];
+
+  if (isProduction) {
+    headers.push({
+      key: "Strict-Transport-Security",
+      value: "max-age=63072000; includeSubDomains; preload",
+    });
+  }
+
+  return headers;
 }

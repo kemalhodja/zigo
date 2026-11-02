@@ -14,6 +14,7 @@ import { getBillingPlatformMessage, isWebCheckoutAllowedForRequest } from "@/lib
 import { shouldBlockSelfServeOrgCheckout } from "@/lib/domain/organization-sales";
 import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
 import { getServerLocale, getServerMessages } from "@/lib/i18n/server";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -63,6 +64,17 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`bank-transfer:${profile.id}`, 10, 60 * 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla ödeme bildirimi denemesi yaptınız. Lütfen biraz bekleyin." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        },
+      );
     }
 
     const body = createBankTransferSchema.parse(await request.json());

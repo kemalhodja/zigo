@@ -20,5 +20,12 @@ describe("security headers", () => {
     const headers = buildSecurityHeaders(true);
     expect(headers.some((header) => header.key === "X-Frame-Options" && header.value === "DENY")).toBe(true);
     expect(headers.some((header) => header.key === "Content-Security-Policy")).toBe(true);
+    expect(
+      headers.some(
+        (header) =>
+          header.key === "Strict-Transport-Security" &&
+          header.value === "max-age=63072000; includeSubDomains; preload",
+      ),
+    ).toBe(true);
   });
 });

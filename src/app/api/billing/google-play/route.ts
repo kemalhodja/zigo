@@ -9,6 +9,7 @@ import {
   resolveTargetPackageName,
   verifyGooglePlaySubscription,
 } from "@/lib/server/google-play";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,6 +27,17 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
     if (!profile) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`google-play-verify:${profile.id}`, 15, 10 * 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla abonelik doğrulama isteği gönderildi. Lütfen biraz bekleyin." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        },
+      );
     }
 
     const body = googlePlaySchema.parse(await request.json().catch(() => ({})));
