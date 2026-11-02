@@ -15,6 +15,8 @@ type ToastContextType = {
   showToast: (message: string, type?: ToastType, title?: string) => void;
   success: (message: string, title?: string) => void;
   error: (message: string, title?: string) => void;
+  info: (message: string, title?: string) => void;
+  warning: (message: string, title?: string) => void;
 };
 
 const ToastContext = createContext<ToastContextType | null>(null);
@@ -39,12 +41,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     showToast(message, "error", title);
   }
 
+  function info(message: string, title?: string) {
+    showToast(message, "info", title);
+  }
+
+  function warning(message: string, title?: string) {
+    showToast(message, "warning", title);
+  }
+
   function removeToast(id: string) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }
 
   return (
-    <ToastContext.Provider value={{ showToast, success, error }}>
+    <ToastContext.Provider value={{ showToast, success, error, info, warning }}>
       {children}
       {/* Toast Notification Container */}
       <div className="zigo-toast-stack">
@@ -80,13 +90,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useToast() {
+export function useToast(): ToastContextType {
   const context = useContext(ToastContext);
   if (!context) {
     return {
       showToast: () => {},
       success: () => {},
       error: () => {},
+      info: () => {},
+      warning: () => {},
     };
   }
   return context;

@@ -124,7 +124,7 @@ export default function TeacherStudentsPage() {
         const quizIds = quizzes.map((q) => q.id as string);
         const { data: rawAttempts } = await supabase
           .from("quiz_attempts")
-          .select("user_id, quiz_id, score, max_score, correct_answers, total_questions, completed_at")
+          .select("user_id, quiz_id, points_awarded, score_percent, correct_answers, total_questions, completed_at")
           .in("quiz_id", quizIds)
           .order("completed_at", { ascending: false })
           .limit(200);
@@ -133,56 +133,61 @@ export default function TeacherStudentsPage() {
           setStudents(demoStudents()); setAttempts(demoAttempts()); setIsDemo(true); setIsLoading(false); return;
         }
 
-        const userIds = [...new Set(rawAttempts.map((a) => a.user_id as string))];
+        const userIds = [...new Set(rawAttempts.map((a) => a.user_id).filter((id): id is string => Boolean(id)))];
         const { data: profiles } = await supabase
           .from("users")
-          .select("id, full_name, avatar_url, xp_points")
+          .select("id, full_name, avatar_url, total_points")
           .in("id", userIds);
 
         const profileMap = new Map((profiles ?? []).map((p) => [p.id as string, p]));
         const studentMap = new Map<string, StudentSummary>();
 
         for (const attempt of rawAttempts) {
-          const uid = attempt.user_id as string;
+          if (!attempt.user_id) continue;
+          const uid = attempt.user_id;
           const profile = profileMap.get(uid);
           const existing = studentMap.get(uid);
           const correct = Number(attempt.correct_answers ?? 0);
           const total = Number(attempt.total_questions ?? 1);
-          const score = Number(attempt.score ?? 0);
-          const maxScore = Number(attempt.max_score ?? total);
-          const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+          const score = Number(attempt.points_awarded ?? correct * 10);
+          const maxScore = Math.max(total * 10, 1);
+          const pct = Number(attempt.score_percent ?? (total > 0 ? Math.round((correct / total) * 100) : 0));
 
           if (!existing) {
             studentMap.set(uid, {
               userId: uid,
               fullName: (profile?.full_name as string) || "Öğrenci",
               avatarUrl: (profile?.avatar_url as string | null) ?? null,
-              totalPoints: Number(profile?.xp_points ?? 0),
+              totalPoints: Number(profile?.total_points ?? 0),
               quizzesCompleted: 1,
-              averageScore: Math.round((score / Math.max(maxScore, 1)) * 100),
+              averageScore: pct,
               correctRate: pct,
-              lastActivity: attempt.completed_at as string | null,
+              lastActivity: attempt.completed_at,
             });
           } else {
             const n = existing.quizzesCompleted + 1;
             existing.quizzesCompleted = n;
             existing.correctRate = Math.round((existing.correctRate * (n - 1) + pct) / n);
-            existing.averageScore = Math.round((existing.averageScore * (n - 1) + Math.round((score / Math.max(maxScore, 1)) * 100)) / n);
-            if (attempt.completed_at && (!existing.lastActivity || new Date(attempt.completed_at as string) > new Date(existing.lastActivity))) {
-              existing.lastActivity = attempt.completed_at as string;
+            existing.averageScore = Math.round((existing.averageScore * (n - 1) + pct) / n);
+            if (attempt.completed_at && (!existing.lastActivity || new Date(attempt.completed_at) > new Date(existing.lastActivity))) {
+              existing.lastActivity = attempt.completed_at;
             }
           }
         }
 
         const quizTitleMap = new Map(quizzes.map((q) => [q.id as string, q.title as string]));
-        const attemptList: QuizAttempt[] = rawAttempts.slice(0, 10).map((a) => ({
-          quizTitle: quizTitleMap.get(a.quiz_id as string) ?? "Quiz",
-          score: Number(a.score ?? 0),
-          maxScore: Number(a.max_score ?? 1),
-          correct: Number(a.correct_answers ?? 0),
-          total: Number(a.total_questions ?? 1),
-          completedAt: (a.completed_at as string) ?? "",
-        }));
+        const attemptList: QuizAttempt[] = rawAttempts.slice(0, 10).map((a) => {
+          const correct = Number(a.correct_answers ?? 0);
+          const total = Number(a.total_questions ?? 1);
+          return {
+            quizTitle: quizTitleMap.get(a.quiz_id) ?? "Quiz",
+            score: Number(a.points_awarded ?? correct * 10),
+            maxScore: Math.max(total * 10, 1),
+            correct,
+            total,
+            completedAt: a.completed_at ?? "",
+          };
+        });
 
         const studentList = Array.from(studentMap.values());
         setStudents(studentList.length > 0 ? studentList : demoStudents());

@@ -69,7 +69,7 @@ function ensureReleaseKeystore() {
 
 function runGradle() {
   const result = spawnSync(
-    process.platform === "win32" ? "gradlew.bat" : "./gradlew",
+    process.platform === "win32" ? ".\\gradlew.bat" : "./gradlew",
     ["clean", "bundleRelease", "--no-daemon", "--max-workers=1", "--no-build-cache"],
     {
       cwd: androidDir,

@@ -39,7 +39,7 @@ config.uri_allow_list = [
   `${siteUrl}/auth/callback`,
   `${siteUrl}/auth/callback?next=/onboarding`,
   `${siteUrl}/auth/callback?next=/auth/reset-password`,
-  `${siteUrl}/auth/recover`,
+  `${siteUrl}/auth/recover`, "https://zigo.com.tr/auth/callback", "https://zigo.com.tr/auth/recover", "https://zigo-kohl.vercel.app/auth/callback", "https://zigo-kohl.vercel.app/auth/recover",
 ].join(",");
 config.hook_send_email_enabled = false;
 config.hook_send_email_uri = null;
