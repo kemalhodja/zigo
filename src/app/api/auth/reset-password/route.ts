@@ -9,6 +9,7 @@ import {
   enforceAuthRateLimit,
   registrationPasswordSchema,
 } from "@/lib/server/auth-request";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 import { createAuthActionClient, persistRememberMePreference } from "@/lib/supabase/server";
 
@@ -16,6 +17,7 @@ const resetSchema = z
   .object({
     password: registrationPasswordSchema,
     confirmPassword: authPasswordSchema,
+    refreshToken: z.string().trim().optional(),
   })
   .refine((value) => value.password === value.confirmPassword, {
     message: "Şifreler eşleşmiyor.",
@@ -38,24 +40,35 @@ export async function POST(request: Request) {
     const authHeader = request.headers.get("authorization");
     const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
 
-    let supabase = await createAuthActionClient(true);
+    const supabase = await createAuthActionClient(true);
+
+    // If the client passed both access_token (Bearer) and refreshToken from the recovery URL,
+    // hydrate the server-side cookie session directly.
+    if (bearerToken && body.refreshToken) {
+      await supabase.auth
+        .setSession({
+          access_token: bearerToken,
+          refresh_token: body.refreshToken,
+        })
+        .catch(() => null);
+    }
+
     let {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Fallback: If cookies were delayed, authenticate using the client's Bearer token
+    // Fallback: If cookies were not yet set, verify the user directly via the Bearer JWT
     if (!user && bearerToken) {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       if (supabaseUrl && supabaseAnonKey) {
         const tokenClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
-          auth: { persistSession: false },
+          auth: { persistSession: false, autoRefreshToken: false },
           global: { headers: { Authorization: `Bearer ${bearerToken}` } },
         });
         const { data: tokenData } = await tokenClient.auth.getUser(bearerToken);
         if (tokenData?.user) {
           user = tokenData.user;
-          supabase = tokenClient as unknown as typeof supabase;
         }
       }
     }
@@ -67,18 +80,32 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error } = await supabase.auth.updateUser({ password: body.password });
-    if (error) {
-      return NextResponse.json(
-        { error: getResetErrorMessage(error.message) },
-        { status: 400 },
-      );
+    const admin = createAdminClient();
+    if (admin) {
+      const { error: adminError } = await admin.auth.admin.updateUserById(user.id, {
+        password: body.password,
+      });
+      if (adminError) {
+        return NextResponse.json(
+          { error: getResetErrorMessage(adminError.message) },
+          { status: 400 },
+        );
+      }
+    } else {
+      const { error } = await supabase.auth.updateUser({ password: body.password });
+      if (error) {
+        return NextResponse.json(
+          { error: getResetErrorMessage(error.message) },
+          { status: 400 },
+        );
+      }
     }
 
     await persistRememberMePreference(true);
 
+    const dbForGate = admin ?? supabase;
     const { data: isPlatformAdmin } = await supabase.rpc("current_user_is_platform_admin");
-    const gate = await resolveAuthGate(supabase, user);
+    const gate = await resolveAuthGate(dbForGate, user);
 
     return NextResponse.json({
       message: "Şifren güncellendi. Yönlendiriliyorsun…",
