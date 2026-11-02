@@ -4,6 +4,7 @@ import { z } from "zod";
 import { attachBankTransferReceipt, getBankTransferRequestById } from "@/lib/domain/bank-transfer";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getServerMessages } from "@/lib/i18n/server";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
@@ -28,6 +29,17 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`bank-receipt:${profile.id}`, 10, 60 * 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla dekont yükleme denemesi yaptınız. Lütfen biraz bekleyin." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        },
+      );
     }
 
     const formData = await request.formData();

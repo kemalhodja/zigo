@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
+import { createClient } from "@/lib/supabase/server";
+
 interface LinkPreviewData {
   url: string;
   domain: string;
@@ -14,20 +18,29 @@ interface LinkPreviewData {
 const previewCache = new Map<string, { data: LinkPreviewData; expiresAt: number }>();
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-function isPrivateIpOrLocalhost(hostname: string): boolean {
+export function isPrivateIpOrLocalhost(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase().replace(/^\[|\]$/g, "");
   if (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "0.0.0.0" ||
-    hostname.endsWith(".local") ||
-    hostname.endsWith(".internal")
+    normalized === "localhost" ||
+    normalized === "127.0.0.1" ||
+    normalized === "0.0.0.0" ||
+    normalized === "::1" ||
+    normalized === "::" ||
+    normalized.startsWith("127.") ||
+    normalized.startsWith("169.254.") ||
+    normalized.startsWith("fe80:") ||
+    normalized.startsWith("fc00:") ||
+    normalized.startsWith("fd00:") ||
+    normalized.endsWith(".local") ||
+    normalized.endsWith(".internal")
   ) {
     return true;
   }
-  // Check private IPv4 ranges (10.x.x.x, 192.168.x.x, 172.16-31.x.x)
-  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
+  // Check private IPv4 ranges (10.x.x.x, 192.168.x.x, 172.16-31.x.x, 100.64-127.x.x)
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(normalized)) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(normalized)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(normalized)) return true;
+  if (/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}$/.test(normalized)) return true;
   return false;
 }
 
@@ -72,6 +85,23 @@ function extractImage(html: string, baseUrl: string): string | null {
 
 export async function GET(request: Request) {
   try {
+    const supabase = await createClient();
+    const profile = await getCurrentProfile(supabase);
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`link-preview:${profile.id}`, 30, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla bağlantı önizleme isteği gönderildi." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const targetUrl = searchParams.get("url")?.trim();
 
@@ -99,7 +129,7 @@ export async function GET(request: Request) {
     if (cached && cached.expiresAt > Date.now()) {
       return NextResponse.json(cached.data, {
         headers: {
-          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+          "Cache-Control": "private, max-age=3600",
         },
       });
     }
@@ -109,8 +139,9 @@ export async function GET(request: Request) {
 
     const res = await fetch(parsedUrl.toString(), {
       signal: controller.signal,
+      redirect: "error",
       headers: {
-        "User-Agent": "ZigoBot/1.0 (+https://zigo.education/bot; link-preview)",
+        "User-Agent": "ZigoBot/1.0 (+https://www.zigo.com.tr; link-preview)",
         Accept: "text/html,application/xhtml+xml",
       },
     }).catch(() => null);
@@ -168,7 +199,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(data, {
       headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        "Cache-Control": "private, max-age=3600",
       },
     });
   } catch (error) {
