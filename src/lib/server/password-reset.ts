@@ -55,23 +55,30 @@ export function hasDirectRecoveryEmailConfigured() {
 }
 
 export function resolveRecoverySiteUrl(requestOrigin?: string): string {
+  let url = "https://www.zigo.com.tr";
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (configured && !isLocalSiteUrl(configured)) {
-    return configured.replace(/\/$/, "");
-  }
 
-  if (requestOrigin) {
+  if (configured && !isLocalSiteUrl(configured)) {
+    url = configured.replace(/\/$/, "");
+  } else if (requestOrigin) {
     try {
       const parsed = new URL(requestOrigin);
       if (!parsed.protocol.startsWith("capacitor") && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
-        return requestOrigin.replace(/\/$/, "");
+        url = requestOrigin.replace(/\/$/, "");
       }
     } catch {
       // ignore
     }
+  } else {
+    url = getSiteUrl("https://www.zigo.com.tr");
   }
 
-  return getSiteUrl(requestOrigin || "http://localhost:3000");
+  // Canonicalize apex domain to www to avoid 308 redirect dropping hash fragments
+  if (url === "https://zigo.com.tr" || url === "http://zigo.com.tr") {
+    url = "https://www.zigo.com.tr";
+  }
+
+  return url;
 }
 
 function createImplicitResetClient(fallbackClient: SupabaseClient<Database>): SupabaseClient<Database> {

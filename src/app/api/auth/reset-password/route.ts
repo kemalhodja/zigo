@@ -59,16 +59,26 @@ export async function POST(request: Request) {
 
     // Fallback: If cookies were not yet set, verify the user directly via the Bearer JWT
     if (!user && bearerToken) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (supabaseUrl && supabaseAnonKey) {
-        const tokenClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
-          auth: { persistSession: false, autoRefreshToken: false },
-          global: { headers: { Authorization: `Bearer ${bearerToken}` } },
-        });
-        const { data: tokenData } = await tokenClient.auth.getUser(bearerToken);
-        if (tokenData?.user) {
-          user = tokenData.user;
+      const admin = createAdminClient();
+      if (admin) {
+        const { data: adminTokenData } = await admin.auth.getUser(bearerToken);
+        if (adminTokenData?.user) {
+          user = adminTokenData.user;
+        }
+      }
+
+      if (!user) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (supabaseUrl && supabaseAnonKey) {
+          const tokenClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+            global: { headers: { Authorization: `Bearer ${bearerToken}` } },
+          });
+          const { data: tokenData } = await tokenClient.auth.getUser(bearerToken);
+          if (tokenData?.user) {
+            user = tokenData.user;
+          }
         }
       }
     }

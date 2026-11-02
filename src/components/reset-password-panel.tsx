@@ -24,35 +24,70 @@ export function ResetPasswordPanel() {
   useEffect(() => {
     let active = true;
 
-    // 0. Capture URL hash parameters synchronously BEFORE createClient() initializes
+    // 0. Synchronously capture recovery parameters from ALL available layers:
+    // a) window.location.hash
+    // b) window.__ZIGO_RECOVERY_HASH__ (captured by head inline script)
+    // c) sessionStorage "zigo_recovery_hash" (persisted across reloads/redirects)
+    let rawHash = "";
+    if (typeof window !== "undefined") {
+      const win = window as unknown as { __ZIGO_RECOVERY_HASH__?: string };
+      rawHash =
+        window.location.hash ||
+        win.__ZIGO_RECOVERY_HASH__ ||
+        (() => {
+          try {
+            return sessionStorage.getItem("zigo_recovery_hash") || "";
+          } catch {
+            return "";
+          }
+        })();
+    }
+
     let hashAccessToken: string | null = null;
     let hashRefreshToken: string | null = null;
     let hashError: string | null = null;
+    let hashErrorCode: string | null = null;
 
-    if (typeof window !== "undefined" && window.location.hash) {
-      const hash = window.location.hash.replace(/^#/, "");
-      const hashParams = new URLSearchParams(hash);
+    if (rawHash) {
+      const cleanHash = rawHash.replace(/^#/, "");
+      const hashParams = new URLSearchParams(cleanHash);
       hashAccessToken = hashParams.get("access_token")?.trim() || null;
       hashRefreshToken = hashParams.get("refresh_token")?.trim() || null;
       hashError = hashParams.get("error_description") || hashParams.get("error");
+      hashErrorCode = hashParams.get("error_code");
     }
 
-    // Check for error in query params or hash (e.g. expired recovery link)
+    // Check for error in query params or hash
     const errorParam = searchParams.get("error");
     const errorDesc = searchParams.get("error_description") || hashError;
-    if (errorParam || errorDesc) {
+    const errorCode = searchParams.get("error_code") || hashErrorCode;
+
+    if (errorParam || errorDesc || errorCode) {
+      try {
+        sessionStorage.removeItem("zigo_recovery_hash");
+      } catch {
+        // ignore
+      }
       setStatus("error");
       const decoded = errorDesc ? decodeURIComponent(errorDesc.replace(/\+/g, " ")) : "";
-      if (decoded.toLowerCase().includes("expired") || decoded.toLowerCase().includes("invalid")) {
-        setMessage("Şifre sıfırlama bağlantısının süresi dolmuş veya daha önce kullanılmış. Lütfen yeni bir bağlantı isteyin.");
+      if (
+        errorCode === "otp_expired" ||
+        decoded.toLowerCase().includes("expired") ||
+        decoded.toLowerCase().includes("invalid")
+      ) {
+        setMessage(
+          "Şifre sıfırlama bağlantısının süresi dolmuş veya daha önce kullanılmış. Güvenliğin için yeni bir bağlantı iste."
+        );
       } else {
         setMessage(decoded || a.resetPasswordSessionMissing);
       }
       return;
     }
 
-    // If implicit flow provided access_token in the URL hash, unlock the form immediately
+    // If implicit flow provided access_token, unlock form immediately!
+    let tokenAcquired = false;
     if (hashAccessToken) {
+      tokenAcquired = true;
       setSessionToken(hashAccessToken);
       if (hashRefreshToken) {
         setRefreshToken(hashRefreshToken);
@@ -63,7 +98,7 @@ export function ResetPasswordPanel() {
 
     const supabase = createClient();
 
-    // 1. Listen for auth state change (PASSWORD_RECOVERY or SIGNED_IN)
+    // 1. Listen for auth state change
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -88,7 +123,6 @@ export function ResetPasswordPanel() {
               refresh_token: hashRefreshToken,
             })
             .catch(() => null);
-          return;
         }
 
         // 2. Check if token_hash is in URL query parameters (OTP verify link)
@@ -101,6 +135,7 @@ export function ResetPasswordPanel() {
           });
           if (!active) return;
           if (!error && data.session) {
+            tokenAcquired = true;
             setSessionToken(data.session.access_token);
             if (data.session.refresh_token) {
               setRefreshToken(data.session.refresh_token);
@@ -117,6 +152,7 @@ export function ResetPasswordPanel() {
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
           if (!active) return;
           if (!error && data.session) {
+            tokenAcquired = true;
             setSessionToken(data.session.access_token);
             if (data.session.refresh_token) {
               setRefreshToken(data.session.refresh_token);
@@ -131,6 +167,7 @@ export function ResetPasswordPanel() {
         const { data: sessionData } = await supabase.auth.getSession();
         if (!active) return;
         if (sessionData.session) {
+          tokenAcquired = true;
           setSessionToken(sessionData.session.access_token);
           if (sessionData.session.refresh_token) {
             setRefreshToken(sessionData.session.refresh_token);
@@ -140,7 +177,12 @@ export function ResetPasswordPanel() {
           return;
         }
 
-        // 5. Give Supabase client 1.2 seconds to resolve session in background
+        // 5. If we already acquired the token from the hash, don't time out or show error
+        if (tokenAcquired || hashAccessToken) {
+          return;
+        }
+
+        // 6. Give Supabase client 1.2s to resolve any in-flight auth exchange
         await new Promise((resolve) => setTimeout(resolve, 1200));
         if (!active) return;
 
@@ -156,13 +198,28 @@ export function ResetPasswordPanel() {
           return;
         }
 
-        if (!hashAccessToken) {
-          setStatus("error");
-          setMessage(a.resetPasswordSessionMissing);
+        // Check hash one more time in case it was hydrated asynchronously
+        const win = window as unknown as { __ZIGO_RECOVERY_HASH__?: string };
+        const lateHash = window.location.hash || win.__ZIGO_RECOVERY_HASH__ || "";
+        if (lateHash.includes("access_token")) {
+          const cleanLate = lateHash.replace(/^#/, "");
+          const lateParams = new URLSearchParams(cleanLate);
+          const lateToken = lateParams.get("access_token");
+          if (lateToken) {
+            setSessionToken(lateToken);
+            const lateRefresh = lateParams.get("refresh_token");
+            if (lateRefresh) setRefreshToken(lateRefresh);
+            setStatus("idle");
+            setMessage(a.resetPasswordDesc);
+            return;
+          }
         }
+
+        setStatus("error");
+        setMessage(a.resetPasswordSessionMissing);
       } catch {
         if (!active) return;
-        if (!hashAccessToken) {
+        if (!hashAccessToken && !tokenAcquired) {
           setStatus("error");
           setMessage(a.connectionFailed);
         }
@@ -235,6 +292,13 @@ export function ResetPasswordPanel() {
         }
       }
 
+      // Cleanup stored recovery hash upon successful password reset
+      try {
+        sessionStorage.removeItem("zigo_recovery_hash");
+      } catch {
+        // ignore
+      }
+
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(60);
       }
@@ -275,7 +339,7 @@ export function ResetPasswordPanel() {
     );
   }
 
-  if (status === "error" && (message === a.resetPasswordSessionMissing || message.includes("süresi dolmuş"))) {
+  if (status === "error" && (message === a.resetPasswordSessionMissing || message.includes("süresi dolmuş") || message.includes("geçersiz"))) {
     return (
       <div className="-mx-4 space-y-4 bg-white px-4 pb-4">
         <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold leading-6 text-red-600">

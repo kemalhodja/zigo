@@ -23,7 +23,18 @@ export function AuthSessionKeepAlive() {
   const pathname = usePathname();
   const router = useRouter();
 
+  // NEVER run keepalive or initialize Supabase on password reset or recovery pages.
+  // This prevents GoTrueClient._initialize() from clearing window.location.hash
+  // or throwing PKCE mismatch errors before ResetPasswordPanel can consume the token.
+  const isRecoveryPage =
+    pathname === "/auth/reset-password" ||
+    pathname.startsWith("/auth/reset-password") ||
+    pathname === "/auth/recover" ||
+    pathname.startsWith("/auth/recover");
+
   useEffect(() => {
+    if (isRecoveryPage) return;
+
     let active = true;
     const supabase = createClient();
 
@@ -69,10 +80,10 @@ export function AuthSessionKeepAlive() {
       window.removeEventListener("focus", handleResume);
       window.removeEventListener("pageshow", handleResume);
     };
-  }, [pathname, router]);
+  }, [isRecoveryPage, pathname, router]);
 
   useEffect(() => {
-    if (!isCapacitorClient()) return;
+    if (isRecoveryPage || !isCapacitorClient()) return;
 
     void createClient().auth.getSession();
 
@@ -84,7 +95,7 @@ export function AuthSessionKeepAlive() {
 
     document.addEventListener("visibilitychange", handleResume);
     return () => document.removeEventListener("visibilitychange", handleResume);
-  }, []);
+  }, [isRecoveryPage]);
 
   return null;
 }

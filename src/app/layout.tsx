@@ -117,6 +117,11 @@ export default async function RootLayout({
       <head>
         <meta name="color-scheme" content="light only" />
         <meta name="darkreader-lock" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var h=window.location.hash||"";if(h&&(h.indexOf("access_token")!==-1||h.indexOf("type=recovery")!==-1||h.indexOf("error")!==-1)){window.__ZIGO_RECOVERY_HASH__=h;try{sessionStorage.setItem("zigo_recovery_hash",h)}catch(e){}}}catch(e){}})();`,
+          }}
+        />
       </head>
       <body className={`${jakarta.variable} ${interTight.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
         <script
