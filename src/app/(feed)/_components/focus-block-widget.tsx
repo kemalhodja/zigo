@@ -46,10 +46,10 @@ export function FocusBlockWidget() {
       </div>
 
       <Link
-        href="/rooms"
-        className="mt-4 block w-full rounded-xl bg-white/15 py-2.5 text-center text-xs font-bold text-white transition-all hover:bg-white/25 active:scale-95"
+        href="/rooms?room=sessiz-odak"
+        className="mt-4 block w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-center text-xs font-black text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
       >
-        Odak Odasına Katıl
+        Odak Odasına Katıl 🚀
       </Link>
     </div>
   );

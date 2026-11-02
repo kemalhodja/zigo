@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { LiveFocusPulse } from "@/components/live-focus-pulse";
 import { useToast } from "@/components/ui/toast-system";
 import { useAudio } from "@/hooks/use-audio";
+import { triggerHaptic } from "@/lib/client/haptics";
 import { createClient } from "@/lib/supabase/client";
 
 type FocusAnalytics = {
@@ -44,6 +45,16 @@ type StudyPlan = {
   updated_at: string;
 };
 
+const LOCAL_SESSION_STORAGE_KEY = "zigo:personal_focus_session_v1";
+
+const TOPIC_PRESETS = [
+  "Matematik Soru Çözümü",
+  "Paragraf & Türkçe",
+  "Fen Bilimleri Tekrarı",
+  "YKS / LGS Deneme Analizi",
+  "Serbest Odaklanma",
+];
+
 export default function FocusPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -53,49 +64,110 @@ export default function FocusPage() {
   const [analytics, setAnalytics] = useState<FocusAnalytics | null>(null);
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(null);
+  const [selectedDurationMinutes, setSelectedDurationMinutes] = useState(25);
   const [timeLeft, setTimeLeft] = useState(1500);
   const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedTopic, setSelectedTopic] = useState("Focused study");
-  const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState("Matematik Soru Çözümü");
   const [weeklyGoal, setWeeklyGoal] = useState(5);
-  const [planTopic, setPlanTopic] = useState("Weekly focus plan");
+  const [planTopic, setPlanTopic] = useState("Haftalık Odaklanma Planı");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
     const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      fetchData();
+      void fetchData();
     });
     return () => {
       authListener?.subscription.unsubscribe();
       if (timerRef.current) clearInterval(timerRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const activateSessionState = (session: FocusSession) => {
+    const elapsed = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000);
+    const remaining = Math.max(0, session.target_seconds - elapsed);
+    if (remaining <= 0) {
+      try {
+        localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+      } catch {
+        // Ignore
+      }
+      setActiveSession(null);
+      setTimeLeft(selectedDurationMinutes * 60);
+      setIsRunning(false);
+      return;
+    }
+
+    setActiveSession(session);
+    setTimeLeft(remaining);
+    setIsRunning(true);
+    try {
+      localStorage.setItem(LOCAL_SESSION_STORAGE_KEY, JSON.stringify(session));
+    } catch {
+      // Ignore
+    }
+    startTimer();
+  };
 
   const fetchData = async () => {
     try {
-      const [{ data: analyticsData }, { data: activeData }, { data: planData }] = await Promise.all([
-        fetch("/api/learning/focus/analytics").then((r) => r.json()),
-        fetch("/api/learning/focus/active").then((r) => r.json()),
-        fetch("/api/learning/study-plan").then((r) => r.json()),
+      const [rawAnalytics, rawActive, rawPlan] = await Promise.all([
+        fetch("/api/learning/focus/analytics")
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
+        fetch("/api/learning/focus/active")
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
+        fetch("/api/learning/study-plan")
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
       ]);
 
-      setAnalytics(analyticsData);
-      setActiveSession(activeData);
-      setStudyPlan(planData);
+      const analyticsData = (rawAnalytics?.data ?? rawAnalytics) as FocusAnalytics | null;
+      const activeCandidate = (rawActive?.data ?? rawActive) as FocusSession | null;
+      const activeData = activeCandidate && activeCandidate.id ? activeCandidate : null;
+      const planCandidate = (rawPlan?.data ?? rawPlan) as StudyPlan | null;
+      const planData = planCandidate && planCandidate.id ? planCandidate : null;
+
+      if (analyticsData && typeof analyticsData.completed_sessions === "number") {
+        setAnalytics(analyticsData);
+      }
+      if (planData) {
+        setStudyPlan(planData);
+      }
 
       if (activeData) {
-        const elapsed = Math.floor((Date.now() - new Date(activeData.started_at).getTime()) / 1000);
-        const remaining = Math.max(0, activeData.target_seconds - elapsed);
-        setTimeLeft(remaining);
-        setIsRunning(remaining > 0);
-        if (remaining > 0) startTimer();
+        activateSessionState(activeData);
       } else {
-        setTimeLeft(1500);
+        // Check localStorage fallback for persisted session
+        let restoredLocal = false;
+        try {
+          const saved = localStorage.getItem(LOCAL_SESSION_STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved) as FocusSession;
+            if (parsed?.id && parsed?.started_at && parsed?.target_seconds) {
+              const elapsed = Math.floor((Date.now() - new Date(parsed.started_at).getTime()) / 1000);
+              if (elapsed < parsed.target_seconds) {
+                activateSessionState(parsed);
+                restoredLocal = true;
+              } else {
+                localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+              }
+            }
+          }
+        } catch {
+          // Ignore
+        }
+
+        if (!restoredLocal) {
+          setActiveSession(null);
+          setTimeLeft(selectedDurationMinutes * 60);
+        }
       }
     } catch (error) {
-      console.error("Focus data fetch error:", error);
+      console.warn("Focus data fetch warning:", error);
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +178,7 @@ export default function FocusPage() {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          handleComplete();
+          void handleComplete();
           return 0;
         }
         return prev - 1;
@@ -116,77 +188,129 @@ export default function FocusPage() {
 
   const handleStart = async () => {
     if (isRunning) return;
+    triggerHaptic("medium");
 
-    const response = await fetch("/api/learning/focus/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        areaId: selectedAreaId,
-        topicLabel: selectedTopic,
-      }),
-    });
+    const targetSeconds = selectedDurationMinutes * 60;
+    const safeTopic = selectedTopic.trim() || "Odaklanma Seansı";
 
-    if (!response.ok) {
-      toast.error("Odaklanma oturumu başlatılamadı");
-      return;
+    try {
+      const response = await fetch("/api/learning/focus/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          areaId: null,
+          topicLabel: safeTopic,
+          targetSeconds,
+        }),
+      });
+
+      if (response.ok) {
+        const session = (await response.json()) as FocusSession;
+        if (session && session.id) {
+          activateSessionState(session);
+          playSound("success");
+          toast.success("Odaklanma başladı! 🍅");
+          return;
+        }
+      }
+    } catch {
+      // Fallback to local session below
     }
 
-    const session = await response.json();
-    if (session) {
-      setActiveSession(session);
-      setTimeLeft(session.target_seconds);
-      setIsRunning(true);
-      startTimer();
-      playSound("success");
-      toast.success("Odaklanma başladı! 🍅");
-    }
+    // Resilient local session fallback (works even if offline or guest)
+    const fallbackSession: FocusSession = {
+      id: `local-${Date.now()}`,
+      user_id: "local",
+      area_id: null,
+      topic_label: safeTopic,
+      target_seconds: targetSeconds,
+      started_at: new Date().toISOString(),
+      completed_at: null,
+      status: "in_progress",
+      points_awarded: 0,
+    };
+    activateSessionState(fallbackSession);
+    playSound("success");
+    toast.success("Odaklanma başladı! 🍅");
   };
 
   const handleComplete = async () => {
     if (!activeSession) return;
+    triggerHaptic("success");
 
     setIsRunning(false);
     if (timerRef.current) clearInterval(timerRef.current);
 
-    const response = await fetch("/api/learning/focus/complete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId: activeSession.id }),
-    });
-
-    if (!response.ok) {
-      toast.error("Oturum tamamlanamadı");
-      setIsRunning(true);
-      startTimer();
-      return;
+    try {
+      localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+    } catch {
+      // Ignore
     }
 
-    const result = await response.json();
-    if (result && !result.already_awarded) {
+    if (!activeSession.id.startsWith("local-")) {
+      try {
+        const response = await fetch("/api/learning/focus/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: activeSession.id }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result && !result.already_awarded) {
+            playSound("success");
+            toast.success("Odaklanma tamamlandı! +15 puan 🎉");
+          } else if (result?.already_awarded) {
+            toast.showToast("Bu oturum için zaten puan almışsınız", "info");
+          } else {
+            playSound("success");
+            toast.success("Odaklanma tamamlandı! 🎉");
+          }
+        } else {
+          playSound("success");
+          toast.success("Odaklanma seansı tamamlandı! 🎉");
+        }
+      } catch {
+        playSound("success");
+        toast.success("Odaklanma seansı tamamlandı! 🎉");
+      }
+    } else {
       playSound("success");
-      toast.success("Odaklanma tamamlandı! +15 puan 🎉");
-    } else if (result?.already_awarded) {
-      toast.showToast("Bu oturum için zaten puan almışsınız", "info");
+      toast.success("Odaklanma seansı tamamlandı! 🎉");
     }
 
     setActiveSession(null);
-    setTimeLeft(1500);
-    fetchData();
+    setTimeLeft(selectedDurationMinutes * 60);
+    void fetchData();
+  };
+
+  const handleCancel = () => {
+    triggerHaptic("light");
+    setIsRunning(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+    try {
+      localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
+    setActiveSession(null);
+    setTimeLeft(selectedDurationMinutes * 60);
   };
 
   const handleSavePlan = async () => {
+    triggerHaptic("light");
     const response = await fetch("/api/learning/study-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        areaId: selectedAreaId,
+        areaId: null,
         weeklyPomodoroGoal: weeklyGoal,
-        primaryTopic: planTopic,
+        primaryTopic: planTopic.trim() || "Haftalık Odaklanma Planı",
       }),
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = await response.json().catch(() => ({}));
       if (err.upgradeRequired) {
         router.push("/pricing");
         return;
@@ -212,7 +336,7 @@ export default function FocusPage() {
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const progress = activeSession ? 1 - timeLeft / activeSession.target_seconds : 0;
+  const progress = activeSession ? Math.min(1, Math.max(0, 1 - timeLeft / activeSession.target_seconds)) : 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -221,19 +345,38 @@ export default function FocusPage() {
           <h1 className="text-3xl font-black text-slate-800 flex items-center gap-2">
             🍅 Odaklanma & Pomodoro
           </h1>
-          <p className="text-slate-500 mt-1">Zigo Plus ile haftalık çalışma planı ve analitikler</p>
+          <p className="text-slate-500 mt-1">Kişisel çalışma sayacı, canlı odak odaları ve haftalık plan</p>
           <div className="mt-3">
             <LiveFocusPulse />
           </div>
         </header>
 
+        {/* Canlı Odak Odaları Hızlı Geçiş Kartı */}
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 p-5 text-white shadow-md">
+          <div>
+            <span className="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider">
+              Canlı Senkron Odalar
+            </span>
+            <h2 className="mt-1 text-lg font-black">Diğer Öğrencilerle Birlikte Odaklan! 🚀</h2>
+            <p className="mt-0.5 text-xs font-medium text-indigo-100">
+              Herkesin sayacı aynı anda işler, tamamlanan her blok +30 puan ve liderlik kazandırır.
+            </p>
+          </div>
+          <Link
+            href="/rooms?room=sessiz-odak"
+            className="tap-scale shrink-0 w-full sm:w-auto rounded-2xl bg-white px-5 py-3 text-center text-xs font-black text-indigo-700 shadow-sm transition hover:bg-indigo-50"
+          >
+            Odak Odasına Katıl ➔
+          </Link>
+        </div>
+
         {/* Active Session / Timer */}
         <div className="bg-white rounded-3xl border-2 border-violet-100 shadow-xl p-6 mb-6">
           {activeSession ? (
             <>
-              <div className="mb-4">
-                <p className="text-xs font-black text-violet-400 uppercase tracking-wider mb-1">
-                  Aktif Oturum: {activeSession.topic_label}
+              <div className="mb-4 text-center">
+                <p className="text-xs font-black text-violet-500 uppercase tracking-wider mb-2">
+                  🎯 Aktif Oturum: {activeSession.topic_label}
                 </p>
                 <div className="relative w-48 h-48 mx-auto">
                   <svg className="w-full h-full transform -rotate-90">
@@ -268,6 +411,7 @@ export default function FocusPage() {
 
               <div className="flex gap-3 justify-center">
                 <button
+                  type="button"
                   onClick={handleComplete}
                   disabled={!isRunning}
                   className="tap-scale flex-1 max-w-xs py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black text-lg shadow-lg disabled:opacity-50"
@@ -275,12 +419,8 @@ export default function FocusPage() {
                   Tamamla ✅
                 </button>
                 <button
-                  onClick={() => {
-                    setIsRunning(false);
-                    if (timerRef.current) clearInterval(timerRef.current);
-                    setActiveSession(null);
-                    setTimeLeft(1500);
-                  }}
+                  type="button"
+                  onClick={handleCancel}
                   className="tap-scale flex-1 max-w-xs py-3 bg-slate-200 text-slate-700 rounded-2xl font-black text-lg shadow hover:bg-slate-300"
                 >
                   İptal
@@ -291,7 +431,7 @@ export default function FocusPage() {
             <>
               <div className="space-y-4 mb-6">
                 <div>
-                  <label className="block text-xs font-black text-violet-700 mb-1">Konu / Etiket</label>
+                  <label className="block text-xs font-black text-violet-700 mb-1.5">Çalışma Konusu / Hedef</label>
                   <input
                     type="text"
                     value={selectedTopic}
@@ -300,37 +440,53 @@ export default function FocusPage() {
                     className="w-full bg-white border border-violet-200 rounded-xl p-3 text-sm font-bold text-slate-700 focus:outline-none focus:border-violet-500"
                     maxLength={120}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black text-violet-700 mb-1">Eğitim Alanı (Opsiyonel)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Alan ID (İlgi alanlarınızdan biri)"
-                    value={selectedAreaId ?? ""}
-                    onChange={(e) => setSelectedAreaId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full bg-white border border-violet-200 rounded-xl p-3 text-sm font-bold text-slate-700 focus:outline-none focus:border-violet-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black text-violet-700 mb-1">Süre (Dakika)</label>
-                  <select
-                    value={timeLeft / 60}
-                    onChange={(e) => setTimeLeft(Number(e.target.value) * 60)}
-                    className="w-full bg-white border border-violet-200 rounded-xl p-3 text-sm font-bold text-slate-700 focus:outline-none focus:border-violet-500"
-                  >
-                    {[15, 25, 30, 45, 50, 60].map((m) => (
-                      <option key={m} value={m}>
-                        {m} dakika
-                      </option>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {TOPIC_PRESETS.map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setSelectedTopic(preset)}
+                        className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                          selectedTopic === preset
+                            ? "bg-violet-600 text-white"
+                            : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+                        }`}
+                      >
+                        {preset}
+                      </button>
                     ))}
-                  </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-violet-700 mb-1.5">Odaklanma Süresi (Dakika)</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {[15, 25, 30, 45, 50, 60].map((m) => {
+                      const isSelected = selectedDurationMinutes === m;
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => {
+                            setSelectedDurationMinutes(m);
+                            setTimeLeft(m * 60);
+                          }}
+                          className={`tap-scale rounded-xl py-2.5 text-xs font-black transition ${
+                            isSelected
+                              ? "bg-violet-600 text-white shadow-sm"
+                              : "border border-violet-200 bg-white text-slate-700 hover:bg-violet-50"
+                          }`}
+                        >
+                          {m} dk
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={handleStart}
                 className="tap-scale w-full py-4 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white rounded-2xl font-black text-lg shadow-lg shadow-violet-500/30 hover:shadow-xl transition-all"
               >
@@ -411,18 +567,8 @@ export default function FocusPage() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-xs font-black text-violet-700 mb-1">Eğitim Alanı (Opsiyonel)</label>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Alan ID"
-                  value={selectedAreaId ?? ""}
-                  onChange={(e) => setSelectedAreaId(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full bg-white border border-violet-200 rounded-xl p-3 text-sm font-bold text-slate-700 focus:outline-none focus:border-violet-500"
-                />
-              </div>
               <button
+                type="button"
                 onClick={handleSavePlan}
                 className="tap-scale w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl transition-all"
               >
@@ -434,7 +580,7 @@ export default function FocusPage() {
       </div>
 
       {/* Picture-in-Picture & Desktop Floating Focus Widget Trigger */}
-      <div className="hidden lg:flex justify-end mt-4">
+      <div className="hidden lg:flex justify-end max-w-2xl mx-auto px-4 pb-8">
         <button
           type="button"
           onClick={() => {

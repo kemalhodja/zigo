@@ -45,10 +45,10 @@ export function DesktopFocusRail() {
           />
         </div>
         <Link
-          href="/rooms"
-          className="tap-scale mt-5 block rounded-xl bg-white/10 py-2.5 text-center text-sm font-black text-white transition hover:bg-white/20"
+          href="/rooms?room=sessiz-odak"
+          className="tap-scale mt-5 block rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-center text-sm font-black text-white shadow-sm transition hover:brightness-110"
         >
-          Odak Odasına Katıl
+          Odak Odasına Katıl 🚀
         </Link>
       </div>
 

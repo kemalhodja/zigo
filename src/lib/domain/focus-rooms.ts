@@ -36,7 +36,7 @@ export const FOCUS_ROOMS: FocusRoomDef[] = [
   },
   {
     slug: "serbest",
-    name: "Serbet Çalışma",
+    name: "Serbest Çalışma",
     kind: "silent",
     description: "Her konudan, her sınıftan — sadece birlikte olalım.",
   },
