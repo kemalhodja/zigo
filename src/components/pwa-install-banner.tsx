@@ -67,6 +67,21 @@ export function PwaInstallBanner() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Catch implicit-flow Supabase password recovery hash fragments (#access_token=...&type=recovery)
+    // if Supabase redirected to site_url ("/") instead of "/auth/reset-password"
+    const hash = window.location.hash || "";
+    const pathname = window.location.pathname || "";
+    if (
+      hash &&
+      (hash.includes("type=recovery") || hash.includes("error_code=otp_expired")) &&
+      !pathname.startsWith("/auth/reset-password") &&
+      !pathname.startsWith("/auth/recover")
+    ) {
+      window.location.replace(`/auth/reset-password${hash}`);
+      return;
+    }
+
     if (isDismissedRecently()) return;
 
     const p = detectPlatform();

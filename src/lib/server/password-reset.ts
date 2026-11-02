@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { getSiteUrl, isLocalSiteUrl } from "@/lib/domain/deploy-config";
 import { buildRecoveryUrl, sendRecoveryEmail } from "@/lib/server/recovery-email";
@@ -31,10 +31,23 @@ function isRateLimitMessage(message: string, status?: number) {
 export async function findRegisteredUserByEmail(
   admin: SupabaseClient<Database>,
   email: string,
-) {
-  const { data, error } = await admin.from("users").select("id").eq("email", email).maybeSingle();
+): Promise<{ id: string; email?: string } | null> {
+  const cleanEmail = email.trim().toLowerCase();
+  const { data, error } = await admin.from("users").select("id, email").eq("email", cleanEmail).maybeSingle();
   if (error) throw error;
-  return data;
+  if (data) return data;
+
+  // Fallback for masked multi-role emails (+student, +teacher, +parent)
+  const parts = cleanEmail.split("@");
+  if (parts.length === 2 && !parts[0].includes("+")) {
+    for (const suffix of ["student", "teacher", "parent"]) {
+      const masked = `${parts[0]}+${suffix}@${parts[1]}`;
+      const { data: maskedRow } = await admin.from("users").select("id, email").eq("email", masked).maybeSingle();
+      if (maskedRow) return maskedRow;
+    }
+  }
+
+  return null;
 }
 
 export function hasDirectRecoveryEmailConfigured() {
@@ -61,6 +74,25 @@ export function resolveRecoverySiteUrl(requestOrigin?: string): string {
   return getSiteUrl(requestOrigin || "http://localhost:3000");
 }
 
+function createImplicitResetClient(fallbackClient: SupabaseClient<Database>): SupabaseClient<Database> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return fallbackClient;
+  }
+
+  // Use implicit flow when requesting a password reset from a server route handler
+  // so the email link works across any mail app, device, or browser without requiring
+  // a server-generated PKCE code_verifier cookie.
+  return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      flowType: "implicit",
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
 export async function requestPasswordReset(params: {
   admin: SupabaseClient<Database>;
   anon: SupabaseClient<Database>;
@@ -73,10 +105,12 @@ export async function requestPasswordReset(params: {
     return { ok: false, code: "ACCOUNT_NOT_FOUND" };
   }
 
+  const targetEmail = profile.email || params.email;
+
   if (hasDirectRecoveryEmailConfigured()) {
     const { data, error } = await params.admin.auth.admin.generateLink({
       type: "recovery",
-      email: params.email,
+      email: targetEmail,
       options: {
         redirectTo: new URL("/auth/reset-password", siteUrl).toString(),
       },
@@ -113,7 +147,8 @@ export async function requestPasswordReset(params: {
     }
   }
 
-  const { error } = await params.anon.auth.resetPasswordForEmail(params.email, {
+  const resetClient = createImplicitResetClient(params.anon);
+  const { error } = await resetClient.auth.resetPasswordForEmail(targetEmail, {
     redirectTo: new URL("/auth/reset-password", siteUrl).toString(),
   });
 

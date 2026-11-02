@@ -97,6 +97,35 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // Catch Supabase recovery/auth links that land on "/" or "/auth" when redirect_to falls back to site_url
+  if (pathname === "/" || pathname === "/auth") {
+    const typeParam = request.nextUrl.searchParams.get("type");
+    const tokenHashParam = request.nextUrl.searchParams.get("token_hash");
+    const codeParam = request.nextUrl.searchParams.get("code");
+    const errorCodeParam = request.nextUrl.searchParams.get("error_code");
+
+    if (typeParam === "recovery" || (tokenHashParam && (!typeParam || typeParam === "recovery"))) {
+      const targetUrl = new URL("/auth/reset-password", request.url);
+      request.nextUrl.searchParams.forEach((v, k) => targetUrl.searchParams.set(k, v));
+      return NextResponse.redirect(targetUrl);
+    }
+
+    if (codeParam) {
+      const targetUrl = new URL("/auth/callback", request.url);
+      request.nextUrl.searchParams.forEach((v, k) => targetUrl.searchParams.set(k, v));
+      if (!targetUrl.searchParams.has("next")) {
+        targetUrl.searchParams.set("next", "/auth/reset-password");
+      }
+      return NextResponse.redirect(targetUrl);
+    }
+
+    if (errorCodeParam === "otp_expired") {
+      const targetUrl = new URL("/auth/reset-password", request.url);
+      request.nextUrl.searchParams.forEach((v, k) => targetUrl.searchParams.set(k, v));
+      return NextResponse.redirect(targetUrl);
+    }
+  }
+
   if (shouldSkipRoute(pathname)) {
     return response;
   }
