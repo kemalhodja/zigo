@@ -56,7 +56,7 @@ export function ZigoPlusPlansSection({
   }
 
   useEffect(() => {
-    const android = isCapacitorAndroidClient();
+    const android = isGooglePlayBillingAvailable() || isCapacitorAndroidClient();
     setPlayStoreOnly(android);
     if (!android) return;
 
@@ -288,35 +288,13 @@ function PlanPriceRow({
   const [isNativePlay, setIsNativePlay] = useState(false);
 
   useEffect(() => {
-    setIsNativePlay(isGooglePlayBillingAvailable());
+    setIsNativePlay(isGooglePlayBillingAvailable() || isCapacitorAndroidClient());
   }, []);
 
   const currentInterval = intervalLabel.toLowerCase().includes("yıllık") || planId.toLowerCase().includes("yearly") ? "yearly" : "monthly";
   const isWithinTrialWindow = userCreatedAt
     ? Math.ceil(Math.abs(new Date().getTime() - new Date(userCreatedAt).getTime()) / (1000 * 60 * 60 * 24)) <= 7
     : true;
-
-  async function handleFallbackCheckout() {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
-      });
-      const data = await res.json();
-      const checkoutUrl = data?.data?.url ?? data?.checkoutUrl;
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-      } else {
-        setMessage(data?.error || "Ödeme oturumu açılamadı.");
-      }
-    } catch {
-      setMessage("Ödeme servisine bağlanırken bir hata oluştu.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function subscribeGooglePlay(isPromoApplied: boolean = false) {
     setLoading(true);
@@ -417,61 +395,49 @@ function PlanPriceRow({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            className={`tap-scale flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-xs font-black text-white shadow-md transition disabled:opacity-60 ${
-              isNativePlay
-                ? "bg-emerald-500 hover:bg-emerald-600"
-                : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black"
-            }`}
-            disabled={loading}
-            onClick={() => {
-              setModalErrorMessage(null);
-              setSubscriptionModalOpen(true);
-            }}
-            type="button"
-          >
-            {isNativePlay ? (
+          {isNativePlay || playStoreOnly ? (
+            <button
+              className="tap-scale flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-60"
+              disabled={loading}
+              onClick={() => {
+                setModalErrorMessage(null);
+                setSubscriptionModalOpen(true);
+              }}
+              type="button"
+            >
               <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
                 <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
               </svg>
-            ) : (
-              <span className="text-xs">✦</span>
-            )}
-            <span>
-              {loading
-                ? b.loading
-                : isNativePlay
-                  ? "Google Play ile Abone Ol"
-                  : "Zigo Plus'a Katıl"}
-            </span>
-          </button>
-          {!playStoreOnly && (
+              <span>{loading ? b.loading : "Google Play ile Abone Ol"}</span>
+            </button>
+          ) : (
             <Link
-              className="tap-scale rounded-lg bg-white/15 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-white/20 transition"
+              className="tap-scale flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-xs font-black text-slate-950 shadow-md transition hover:from-amber-600 hover:to-orange-600"
               href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
             >
-              🏦 Havale / FAST ↗
+              <span>🏦 EFT / Havale / FAST ile Abone Ol ↗</span>
             </Link>
           )}
         </div>
       </div>
       {message ? <p className="mt-2 text-xs font-bold text-amber-300">{message}</p> : null}
-      <GooglePlaySubscriptionModal
-        basePriceTry={priceTry}
-        errorMessage={modalErrorMessage}
-        isOpen={isSubscriptionModalOpen}
-        isWithinTrialWindow={isWithinTrialWindow}
-        loading={loading}
-        onClose={() => {
-          if (!loading) setSubscriptionModalOpen(false);
-        }}
-        onConfirm={async (isPromoApplied) => {
-          await subscribeGooglePlay(isPromoApplied);
-        }}
-        onFallbackCheckout={handleFallbackCheckout}
-        planId={planId}
-        selectedInterval={currentInterval}
-      />
+      {(isNativePlay || playStoreOnly) && (
+        <GooglePlaySubscriptionModal
+          basePriceTry={priceTry}
+          errorMessage={modalErrorMessage}
+          isOpen={isSubscriptionModalOpen}
+          isWithinTrialWindow={isWithinTrialWindow}
+          loading={loading}
+          onClose={() => {
+            if (!loading) setSubscriptionModalOpen(false);
+          }}
+          onConfirm={async (isPromoApplied) => {
+            await subscribeGooglePlay(isPromoApplied);
+          }}
+          planId={planId}
+          selectedInterval={currentInterval}
+        />
+      )}
     </div>
   );
 }

@@ -29,3 +29,4 @@ Zigo 1.3.6 is live with our official domain (www.zigo.com.tr), teacher studio su
 • 📄 PDF & Optical Form Engine: Interactive optical form and printable exam booklets supporting 4-option, 5-option, and True/False formats.
 • ⚡ Performance & Security: Feed speedup database indexes and privacy updates.
 ```
+

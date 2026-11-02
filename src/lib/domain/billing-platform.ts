@@ -5,8 +5,8 @@ export function isAndroidCapacitorUserAgent(userAgent: string | null | undefined
   return /Android/i.test(userAgent) && ANDROID_NATIVE_UA.test(userAgent);
 }
 
-export function isWebCheckoutAllowedForRequest(_request: Request) {
-  return true;
+export function isWebCheckoutAllowedForRequest(request: Request) {
+  return !isAndroidCapacitorUserAgent(request.headers.get("user-agent"));
 }
 
 export function getBillingPlatformMessage(locale: "tr" | "en" = "tr") {

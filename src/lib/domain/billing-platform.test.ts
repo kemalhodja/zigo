@@ -12,11 +12,16 @@ describe("billing-platform", () => {
     expect(isAndroidCapacitorUserAgent("Mozilla/5.0 (Linux; Android 14) Chrome/120")).toBe(false);
   });
 
-  it("allows web checkout on all platforms including Android", () => {
-    const request = new Request("https://zigo.app/api/billing/checkout", {
+  it("blocks web checkout on Android native app and allows it on web browsers", () => {
+    const androidRequest = new Request("https://www.zigo.com.tr/api/billing/checkout", {
       headers: { "user-agent": "Mozilla/5.0 (Linux; Android 14) Capacitor" },
     });
-    expect(isWebCheckoutAllowedForRequest(request)).toBe(true);
+    expect(isWebCheckoutAllowedForRequest(androidRequest)).toBe(false);
+
+    const webRequest = new Request("https://www.zigo.com.tr/api/billing/checkout", {
+      headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120" },
+    });
+    expect(isWebCheckoutAllowedForRequest(webRequest)).toBe(true);
   });
 
   it("returns Turkish Play billing guidance", () => {

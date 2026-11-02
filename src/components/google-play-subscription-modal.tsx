@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, ExternalLink, Loader2, X } from "lucide-reac
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
 import { isGooglePlayBillingAvailable } from "@/lib/client/google-play-billing";
 import { formatTryPrice } from "@/lib/domain/subscription-plans";
 
@@ -31,7 +32,6 @@ export function GooglePlaySubscriptionModal({
   planId = "zigo-plus-student-monthly",
   loading: externalLoading = false,
   errorMessage: externalError = null,
-  onFallbackCheckout,
   onFallbackHavale,
 }: GooglePlaySubscriptionModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -43,7 +43,7 @@ export function GooglePlaySubscriptionModal({
   const [isNativePlay, setIsNativePlay] = useState(false);
 
   useEffect(() => {
-    setIsNativePlay(isGooglePlayBillingAvailable());
+    setIsNativePlay(isGooglePlayBillingAvailable() || isCapacitorAndroidClient());
   }, []);
 
   const isLoading = externalLoading || internalLoading;
@@ -206,7 +206,7 @@ export function GooglePlaySubscriptionModal({
                   Zigo Plus ({selectedInterval === "monthly" ? "Aylık" : "Yıllık"})
                 </h3>
                 <p className="text-xs font-semibold text-slate-500">
-                  {isNativePlay ? "Google Play Resmi Aboneliği" : "Web & Güvenli Ödeme Altyapısı"}
+                  {isNativePlay ? "Google Play Resmi Aboneliği" : "EFT / Havale / FAST ile Abonelik"}
                 </p>
               </div>
               <div className="text-right">
@@ -242,7 +242,7 @@ export function GooglePlaySubscriptionModal({
             </div>
           )}
 
-          {/* Error Message & Friendly Fallbacks */}
+          {/* Error Message & Play Store Link */}
           {activeError && (
             <div className="mb-5 rounded-xl border border-amber-300 bg-amber-50/90 p-4 text-left">
               <div className="flex items-start gap-2.5">
@@ -253,126 +253,74 @@ export function GooglePlaySubscriptionModal({
                 </div>
               </div>
 
-              <div className="mt-3.5 pt-3 border-t border-amber-200/80 flex flex-col gap-2">
-                <p className="text-[11px] font-bold text-slate-600">
-                  Aşağıdaki alternatif yöntemlerle de aboneliğinizi anında başlatabilirsiniz:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1">
+              {isNativePlay && (
+                <div className="mt-3.5 pt-3 border-t border-amber-200/80 flex flex-col gap-2">
                   <a
                     href="https://play.google.com/store/apps/details?id=com.zigo.education"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-slate-900 px-2 py-2 text-xs font-black text-white hover:bg-slate-800 transition text-center"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-black text-white hover:bg-slate-800 transition text-center"
                   >
-                    <span>Play Store</span>
-                    <ExternalLink className="size-3" />
+                    <span>Google Play Store Üzerinden Aç</span>
+                    <ExternalLink className="size-3.5" />
                   </a>
-                  <Link
-                    href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
-                    onClick={() => onClose()}
-                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 hover:bg-amber-600 transition text-center col-span-2 sm:col-span-1"
-                  >
-                    <span>Havale / FAST</span>
-                    <ExternalLink className="size-3" />
-                  </Link>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
           <p className="mb-5 text-center text-xs font-medium text-slate-500 leading-relaxed">
-            Aboneliğiniz seçtiğiniz dönemin sonunda otomatik yenilenir. İstediğiniz zaman Google Play veya Profil menüsünden tek tıkla iptal edebilirsiniz.
+            {isNativePlay
+              ? "Aboneliğiniz Google Play hesabınız üzerinden başlatılır. İstediğiniz zaman Google Play Abonelikler menüsünden iptal edebilirsiniz."
+              : "Web üzerinden aboneliğinizi EFT / Havale / FAST ile komisyonsuz başlatabilirsiniz."}
           </p>
 
-          {/* Primary Action Button */}
+          {/* Primary Action Button: Android -> ONLY Google Play | Web -> ONLY EFT / Havale */}
           {isNativePlay ? (
-            <button
-              className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3.5 px-4 text-base font-black text-white shadow-md transition hover:from-emerald-700 hover:to-teal-700 flex items-center justify-center gap-2 disabled:opacity-60"
-              disabled={isLoading}
-              onClick={handleConfirm}
-              type="button"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="size-5 animate-spin" />
-                  <span>Google Play Başlatılıyor…</span>
-                </>
-              ) : (
-                <>
-                  <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-                  </svg>
-                  <span>Google Play ile {formatTryPrice(basePriceTry)} / Abone Ol</span>
-                </>
-              )}
-            </button>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {onFallbackCheckout && (
-                <button
-                  className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 px-4 text-base font-black text-white shadow-md transition hover:from-violet-700 hover:to-indigo-700 flex items-center justify-center gap-2 disabled:opacity-60"
-                  disabled={isLoading}
-                  onClick={() => {
-                    onClose();
-                    onFallbackCheckout();
-                  }}
-                  type="button"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="size-5 animate-spin" />
-                      <span>Güvenli Ödeme Açılıyor…</span>
-                    </>
-                  ) : (
-                    <span>💳 Kredi / Banka Kartı ile {formatTryPrice(basePriceTry)} / Abone Ol</span>
-                  )}
-                </button>
-              )}
-              <Link
-                href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
-                onClick={() => {
-                  if (onFallbackHavale) onFallbackHavale();
-                  onClose();
-                }}
-                className="rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-center text-xs font-bold text-slate-800 transition hover:bg-slate-100 flex items-center justify-center gap-1.5"
-              >
-                <span>🏦 Havale / FAST ile Öde</span>
-              </Link>
-            </div>
-          )}
-
-          {/* Secondary Web / Havale Alternative Bar */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs font-bold text-slate-500">
-            {onFallbackCheckout && (
+            <>
               <button
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3.5 px-4 text-base font-black text-white shadow-md transition hover:from-emerald-700 hover:to-teal-700 flex items-center justify-center gap-2 disabled:opacity-60"
+                disabled={isLoading}
+                onClick={handleConfirm}
                 type="button"
-                onClick={() => {
-                  onClose();
-                  onFallbackCheckout();
-                }}
-                className="hover:text-violet-600 underline underline-offset-2"
               >
-                Kredi Kartı ile Öde
+                {isLoading ? (
+                  <>
+                    <Loader2 className="size-5 animate-spin" />
+                    <span>Google Play Başlatılıyor…</span>
+                  </>
+                ) : (
+                  <>
+                    <svg aria-hidden="true" className="size-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
+                    </svg>
+                    <span>Google Play ile {formatTryPrice(basePriceTry)} / Abone Ol</span>
+                  </>
+                )}
               </button>
-            )}
+
+              <div className="mt-4 flex items-center justify-center text-xs font-bold text-slate-500">
+                <button
+                  type="button"
+                  onClick={handleRestore}
+                  className="text-amber-600 hover:text-amber-700 underline underline-offset-2"
+                >
+                  Mevcut Google Play Aboneliğimi Geri Yükle
+                </button>
+              </div>
+            </>
+          ) : (
             <Link
               href={`/billing/havale?planId=${encodeURIComponent(planId)}`}
               onClick={() => {
                 if (onFallbackHavale) onFallbackHavale();
                 onClose();
               }}
-              className="hover:text-emerald-700 underline underline-offset-2"
+              className="w-full rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 py-3.5 px-4 text-center text-base font-black text-slate-950 shadow-md transition hover:brightness-105 flex items-center justify-center gap-2"
             >
-              Havale / FAST ile Öde
+              <span>🏦 EFT / Havale / FAST ile {formatTryPrice(basePriceTry)} / Abone Ol</span>
             </Link>
-            <button
-              type="button"
-              onClick={handleRestore}
-              className="text-amber-600 hover:text-amber-700 underline underline-offset-2"
-            >
-              Aboneliği Geri Yükle
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

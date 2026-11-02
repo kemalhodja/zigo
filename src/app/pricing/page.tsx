@@ -240,6 +240,7 @@ function PlanCard({
       {/* Satın Alma & Aksiyon Alanı */}
       <div className="pt-4 border-t border-slate-100 space-y-3">
         {isNativePlay ? (
+          /* Android Uygulaması: Yalnızca Google Play Aboneliği gösterilir */
           <>
             <button
               type="button"
@@ -257,24 +258,20 @@ function PlanCard({
             </button>
 
             <div className="flex items-center justify-between px-1">
-              <Link
-                href={`/billing/havale?planId=${getPlanId(role, interval)}`}
-                className="text-xs font-bold text-slate-600 hover:text-amber-600 flex items-center gap-1 transition"
-              >
-                <span>🏦 Alternatif: Havale / FAST ile Öde</span>
-                <span>↗</span>
-              </Link>
-              <span className="text-[11px] font-semibold text-slate-400">Anında Aktivasyon</span>
+              <span className="text-xs font-bold text-slate-500">Google Play Güvencesiyle</span>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Anında Aktivasyon
+              </span>
             </div>
           </>
         ) : (
-          /* Web Ortamı: Google Play gösterilmez, doğrudan Havale / FAST ile ödeme butonu ana aksiyon olarak yer alır */
+          /* Web Ortamı: Yalnızca EFT / Havale / FAST ile ödeme gösterilir */
           <>
             <Link
               href={`/billing/havale?planId=${getPlanId(role, interval)}`}
               className="tap-scale w-full py-3.5 px-5 rounded-2xl text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 hover:brightness-105 transition flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600"
             >
-              <span>🏦 Havale / FAST ile Hemen Başlat</span>
+              <span>🏦 EFT / Havale / FAST ile Abone Ol</span>
               <span>↗</span>
             </Link>
 
@@ -703,29 +700,6 @@ export default function PricingPage() {
     }
   }
 
-  async function handleFallbackCheckout() {
-    if (!modalState) return;
-    try {
-      setModalLoading(true);
-      const response = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: modalState.planId }),
-      });
-      const result = await response.json();
-      const checkoutUrl = result?.data?.url ?? result?.checkoutUrl;
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-      } else {
-        setModalError(result?.error || "Ödeme oturumu açılamadı.");
-      }
-    } catch {
-      setModalError("Ödeme servisine bağlanırken bir hata oluştu.");
-    } finally {
-      setModalLoading(false);
-    }
-  }
-
   async function handleRestorePurchases() {
     setRestoreLoading(true);
     setRestoreMessage(null);
@@ -923,7 +897,7 @@ export default function PricingPage() {
         </div>
       </main>
 
-      {modalState && (
+      {isNativeClient && modalState && (
         <GooglePlaySubscriptionModal
           basePriceTry={modalState.priceTry}
           errorMessage={modalError}
@@ -934,7 +908,6 @@ export default function PricingPage() {
             if (!modalLoading) setModalState(null);
           }}
           onConfirm={handleConfirmGooglePlay}
-          onFallbackCheckout={handleFallbackCheckout}
           planId={modalState.planId}
           selectedInterval={modalState.interval}
         />

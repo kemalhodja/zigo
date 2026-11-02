@@ -36,7 +36,6 @@ export function isCapacitorAndroidClient(): boolean {
     return true;
   }
 
-  // Capacitor custom user agent inside Android WebView container
-  return /Capacitor/i.test(navigator.userAgent) && /Android/i.test(navigator.userAgent);
+  // Android WebView (wv), Capacitor, TWA or custom ZigoApp user agent
+  return /Android/i.test(navigator.userAgent) && /Capacitor|TWA|wv|ZigoApp/i.test(navigator.userAgent);
 }
-

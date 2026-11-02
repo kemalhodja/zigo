@@ -23,13 +23,13 @@ describe("google-play billing platform", () => {
     expect(enMessage).toContain("Google Play Billing is active");
   });
 
-  it("allows web checkout for all devices including android", () => {
-    const androidReq = new Request("https://zigo.app/api/billing/checkout", {
+  it("enforces Google Play only on Android app and allows web checkout on desktop/web", () => {
+    const androidReq = new Request("https://www.zigo.com.tr/api/billing/checkout", {
       headers: { "user-agent": "Mozilla/5.0 (Linux; Android 14) Capacitor" },
     });
-    expect(isWebCheckoutAllowedForRequest(androidReq)).toBe(true);
+    expect(isWebCheckoutAllowedForRequest(androidReq)).toBe(false);
 
-    const desktopReq = new Request("https://zigo.app/api/billing/checkout", {
+    const desktopReq = new Request("https://www.zigo.com.tr/api/billing/checkout", {
       headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120" },
     });
     expect(isWebCheckoutAllowedForRequest(desktopReq)).toBe(true);
