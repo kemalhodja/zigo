@@ -14,6 +14,7 @@ import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherReviewsSection } from "@/components/teacher-reviews-section";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
+import { TeacherTrustModal } from "@/components/teacher-trust-modal";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile, getUserInterestAreaNames } from "@/lib/domain/profiles";
 import {
@@ -229,13 +230,32 @@ export default async function PublicProfilePage({ params, searchParams }: Public
               instagramUrl={(profile as unknown as { instagram_url?: string | null }).instagram_url}
             />
             {profile.role === "teacher" ? (
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 <TeacherTrustBadges
                   branches={branches}
                   moreLabel={tb.moreAreas}
                   verified={profile.is_verified}
                   verifiedLabel={tb.verifiedTeacher}
                   showVerified={false}
+                />
+                <TeacherTrustModal
+                  teacher={{
+                    id: profile.id,
+                    fullName: profile.full_name,
+                    avatarUrl: profile.avatar_url,
+                    branch: branches[0] || "Branş Öğretmeni",
+                    experienceYears: 5,
+                    recommendationRate: reviewSummary.recommendation_rate,
+                  }}
+                  triggerButton={
+                    <button
+                      type="button"
+                      className="tap-scale inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 text-[0.68rem] font-black text-emerald-800 hover:bg-emerald-100 transition shadow-xs"
+                    >
+                      <span>🛡️</span>
+                      <span>Güven Belgesi</span>
+                    </button>
+                  }
                 />
               </div>
             ) : null}

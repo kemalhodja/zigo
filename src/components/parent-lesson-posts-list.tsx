@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
+import { TeacherTrustModal } from "@/components/teacher-trust-modal";
 import type {
   PrivateLessonBidWithTeacher,
   PrivateLessonPostWithDetails,
@@ -312,7 +313,26 @@ export function ParentLessonPostsList({
                             "{bid.message}"
                           </p>
 
-                          <div className="mt-3 flex items-center justify-end gap-2">
+                          <div className="mt-3 flex items-center justify-end gap-2 flex-wrap">
+                            <TeacherTrustModal
+                              teacher={{
+                                id: bid.teacher?.id,
+                                fullName: bid.teacher?.full_name || "Öğretmen",
+                                avatarUrl: bid.teacher?.avatar_url,
+                                branch: post.area?.area_name,
+                                experienceYears: 5,
+                                recommendationRate: 98,
+                              }}
+                              triggerButton={
+                                <button
+                                  type="button"
+                                  className="tap-scale flex items-center gap-1 rounded-xl bg-emerald-50 border border-emerald-200/80 px-2.5 py-1.5 text-[0.68rem] font-black text-emerald-800 hover:bg-emerald-100 transition shadow-xs"
+                                >
+                                  <span>🛡️</span>
+                                  <span>Güven Belgesi</span>
+                                </button>
+                              }
+                            />
                             <Link
                               href={`/profile/${bid.teacher?.id}`}
                               className="rounded-xl bg-slate-200/80 px-3 py-1.5 text-[0.68rem] font-bold text-slate-700 hover:bg-slate-300 transition"

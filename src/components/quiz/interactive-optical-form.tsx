@@ -230,6 +230,57 @@ export function InteractiveOpticalForm({
           );
         })}
       </div>
+
+      {/* Akıllı Adaptif Telafi Köprüsü (Sosyal Medya Dikkat Dağınıklığını Eğitime Çevirme) */}
+      {isSubmitted && (stats.wrong > 0 || stats.empty > 0) && (
+        <div className="mt-5 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex size-7 items-center justify-center rounded-xl bg-indigo-600 text-xs text-white">
+                🎯
+              </span>
+              <div>
+                <h4 className="text-xs font-black text-indigo-950">
+                  Adaptif Telafi Önerisi ({stats.wrong} Yanlış · {stats.empty} Boş)
+                </h4>
+                <p className="text-[0.65rem] text-indigo-700 font-medium">
+                  Rastgele içeriklerde vakit kaybetmeyin, zayıf olduğunuz soruların telafi haplarını izleyin.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <a
+              href="/micro"
+              className="tap-scale flex items-center justify-between rounded-xl bg-white p-2.5 border border-indigo-100 shadow-2xs hover:border-indigo-300 transition"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">⚡</span>
+                <div>
+                  <p className="text-xs font-black text-night">60 Sn. Konu Hapları</p>
+                  <p className="text-[0.62rem] text-slate-500">Yanlış yaptığın konunun kilit püf noktası</p>
+                </div>
+              </div>
+              <span className="text-xs font-black text-indigo-600">İzle →</span>
+            </a>
+
+            <a
+              href="/questions"
+              className="tap-scale flex items-center justify-between rounded-xl bg-white p-2.5 border border-purple-100 shadow-2xs hover:border-purple-300 transition"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-base">🙋</span>
+                <div>
+                  <p className="text-xs font-black text-night">Öğretmene Sor</p>
+                  <p className="text-[0.62rem] text-slate-500">Çözemediğin sorunun fotoğrafını yükle</p>
+                </div>
+              </div>
+              <span className="text-xs font-black text-purple-600">Sor →</span>
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

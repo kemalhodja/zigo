@@ -74,6 +74,13 @@ export function getVideoPlaybackUrl(storagePath: string) {
     return `${cdnBase}/${normalized}`;
   }
 
+  // 2.5) Cloudflare Stream adaptive HLS manifest
+  if (normalized.startsWith("cf:") || normalized.startsWith("stream:")) {
+    const videoId = normalized.replace(/^(cf:|stream:)/, "");
+    const streamDomain = (process.env.NEXT_PUBLIC_CLOUDFLARE_STREAM_DOMAIN || "cloudflarestream.com").trim().replace(/\/$/, "");
+    return `https://${streamDomain}/${videoId}/manifest/video.m3u8`;
+  }
+
   // 3) Mux playback (HLS adaptive) - path is Mux playbackId
   const muxBase = process.env.NEXT_PUBLIC_MUX_PLAYBACK_BASE?.trim().replace(/\/$/, "");
   if (muxBase && normalized.startsWith("mux:")) {
@@ -105,6 +112,9 @@ function generateBunnyToken(_path: string): string {
 }
 
 export function getHlsUrl(storagePath: string): string | null {
+  if (storagePath.startsWith("cf:") || storagePath.startsWith("stream:")) {
+    return getVideoPlaybackUrl(storagePath);
+  }
   if (!isAdaptiveStreamingEnabled() && !isMuxEnabled()) return null;
   const muxBase = process.env.NEXT_PUBLIC_MUX_PLAYBACK_BASE?.trim().replace(/\/$/, "");
   if (muxBase && storagePath.startsWith("mux:")) {

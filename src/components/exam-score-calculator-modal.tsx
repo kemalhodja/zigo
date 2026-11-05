@@ -312,6 +312,26 @@ export function ExamScoreCalculatorModal({
                         <span className="truncate">{lgsResult.tavsiyeOkullar}</span>
                       </div>
                     </div>
+
+                    {lgsResult.puan < 490 && (
+                      <div className="mt-2.5 rounded-xl bg-amber-400/20 border border-amber-300/30 p-2.5 text-xs text-white flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-black text-[11px] flex items-center gap-1">
+                            <span>⚡</span>
+                            <span>Netini Yükseltecek 60 Sn. Hap Dersler</span>
+                          </p>
+                          <p className="text-[10px] text-violet-100 truncate">
+                            Eksik olduğun konularda dikkat dağılmadan doğrudan telafi videolarına odaklan.
+                          </p>
+                        </div>
+                        <a
+                          href="/micro"
+                          className="shrink-0 rounded-lg bg-white px-2.5 py-1 text-[10px] font-black text-violet-900 shadow-xs hover:bg-violet-50 transition"
+                        >
+                          Hemen İzle →
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   {/* LGS Ders Girişleri */}
@@ -584,6 +604,24 @@ export function ExamScoreCalculatorModal({
                                 <span>{currentScore.ornekBolumler}</span>
                               </div>
                             )}
+
+                            <div className="mt-2.5 rounded-xl bg-amber-400/20 border border-amber-300/30 p-2.5 text-xs text-white flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-black text-[11px] flex items-center gap-1">
+                                  <span>⚡</span>
+                                  <span>YKS Net Artırıcı Hap Dersler</span>
+                                </p>
+                                <p className="text-[10px] text-indigo-100 truncate">
+                                  AYT ve TYT kilit soru tiplerini 60 saniyede öğrenin.
+                                </p>
+                              </div>
+                              <a
+                                href="/micro"
+                                className="shrink-0 rounded-lg bg-white px-2.5 py-1 text-[10px] font-black text-indigo-900 shadow-xs hover:bg-indigo-50 transition"
+                              >
+                                İzle →
+                              </a>
+                            </div>
 
                             <div className="mt-3 pt-2.5 border-t border-white/15 flex flex-wrap items-center justify-between gap-2">
                               <span className="text-[11px] font-semibold text-indigo-200">
