@@ -17,7 +17,7 @@ Zigo 1.2.5 ile öğrenme deneyimini ve platform güvenliğini bir üst seviyeye 
 Yenilikler & İyileştirmeler:
 • 🎮 Oyun Salonu Denetimi: Öğrencilerimizin zihinsel gelişimi için günlük 2 saatlik oyun süresi ve 22:00-08:00 gece dinlenme kuralı tam uyumlu hale getirildi.
 • 🔔 Akıllı Bildirimler: İlgi alanlarınıza ve derslerinize özel anlık hatırlatmalar ve bildirim sistemi.
-• 🛡️ Güvenli Topluluk & AI Moderasyon: Yapay zeka destekli içerik tarama ile çocuklarımız ve öğrencilerimiz için %100 güvenli, reklamsız eğitim ortamı.
+• 🛡️ Güvenli Topluluk & AI Moderasyon: Yapay zeka destekli içerik tarama ile çocuklarımız ve öğrencilerimiz için %100 güvenli, kesintisiz eğitim ortamı.
 • 💳 Abonelik & Havale İyileştirmeleri: Zigo Plus abonelik onayları ve havale/EFT süreçlerinde hızlandırma ve anında aktivasyon.
 • ⚡ Performans & Kararlılık: Reels ve mikro ders yükleme süreleri optimize edildi, sayfa geçişleri hızlandırıldı.
 ```

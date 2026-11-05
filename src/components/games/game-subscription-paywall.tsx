@@ -33,7 +33,7 @@ export function GameSubscriptionPaywall({
     : [
         { icon: "⚡", label: "Sınırsız Oyun" },
         { icon: "🏆", label: "XP Puanları" },
-        { icon: "🚫", label: "Reklamsız" },
+        { icon: "🎯", label: "Tam Erişim" },
       ];
 
   return (

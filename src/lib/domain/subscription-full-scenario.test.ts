@@ -245,8 +245,8 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
     });
   });
 
-  // ─── 6. SENARYO: REKLAMSIZLIK İLKESİ (NO ADS POLICY) ───────────────────────
-  describe("Senaryo 6: Reklamsızlık İlkesi (No Commercial Ads)", () => {
+  // ─── 6. SENARYO: SIFIR TİCARİ REKLAM İLKESİ (NO ADS POLICY) ───────────────────────
+  describe("Senaryo 6: Sıfır Ticari Reklam İlkesi (No Commercial Ads)", () => {
     it("Uygulamada ticari reklam ağı KESİNLİKLE bulunmaz", () => {
       const commercialAdsEnabled = false;
       expect(commercialAdsEnabled).toBe(false);

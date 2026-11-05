@@ -2,7 +2,7 @@
 
 ## Genel Bakış
 
-Zigo reklam sistemi, kullanıcılara seçimli reklamsız deneyim sunmak için tasarlanmıştır. Kullanıcılar kısa reklamlar izleyerek geçici reklamsız erişim kazanabilir veya Premium abonelik ile kalıcı reklamsız deneyim yaşayabilirler.
+Zigo sistemi, kullanıcılara odaklı deneyim sunmak için tasarlanmıştır. Kullanıcılar Premium abonelik ile tam erişim kazanırlar.
 
 ## Mimari
 
@@ -11,7 +11,7 @@ Zigo reklam sistemi, kullanıcılara seçimli reklamsız deneyim sunmak için ta
 #### Users Tablosuna Eklenen Alanlar
 
 ```sql
-ad_free_until timestamptz  -- Kullanıcının reklamsız erişiminin bitiş zamanı
+ad_free_until timestamptz  -- Kullanıcının kesintisiz erişiminin bitiş zamanı
 is_premium boolean         -- Premium abone durumu
 ```
 
@@ -21,9 +21,9 @@ is_premium boolean         -- Premium abone durumu
 id uuid PRIMARY KEY
 user_id uuid REFERENCES users(id)
 ad_type varchar(50)        -- 'rewarded', 'optional', 'gate'
-hours_granted int          -- Verilen reklamsız saat sayısı
+hours_granted int          -- Verilen bonus saat sayısı
 watched_at timestamptz     -- İzleme zamanı
-expires_at timestamptz     -- Reklamsız erişimin bitiş zamanı
+expires_at timestamptz     -- Erişim bitiş zamanı
 ```
 
 ### AdState Manager
@@ -34,8 +34,8 @@ Tüm ad state işlemlerini yöneten server-side utility fonksiyonları:
 
 #### Ana Fonksiyonlar
 
-1. **`isUserAdFree(userId)`** - Kullanıcının reklamsız erişim durumunu kontrol eder
-2. **`grantAdFreeTime(userId, hoursToAdd)`** - Kullanıcıya reklamsız zaman ekler
+1. **`isUserAdFree(userId)`** - Kullanıcının erişim durumunu kontrol eder
+2. **`grantAdFreeTime(userId, hoursToAdd)`** - Kullanıcıya bonus zaman ekler
 3. **`upgradeToPremium(userId)`** - Kullanıcıyı Premium'a yükseltir
 4. **`downgradeFromPremium(userId)`** - Kullanıcıyı Premium'dan düşürür
 5. **`checkAdGate(userId)`** - Kullanıcının belirli bir işlemi yapıp yapamayacağını kontrol eder
@@ -82,7 +82,7 @@ Kullanıcının belirli bir işlemi yapıp yapamayacağını kontrol eder.
 ```
 
 #### 3. POST /api/ads/watch
-Kullanıcının izlediği ödüllü reklamı işler ve reklamsız zaman ekler.
+Kullanıcının izlediği ödüllü oturumu işler ve bonus zaman ekler.
 
 **Request Body:**
 ```json
@@ -146,7 +146,7 @@ const { gateResult, loading } = useAdGate(userId);
 const { watchAd, watching, result, resetResult } = useWatchAd(userId);
 
 // Reklam izle
-await watchAd(2); // 2 saat reklamsız zaman ekle
+await watchAd(2); // 2 saat bonus zaman ekle
 ```
 
 #### useUpgradePremium
@@ -264,16 +264,16 @@ function CustomButton({ userId }: Props) {
 
 ## Ad-Free Logic
 
-### Reklamsız Erişim Kuralları
+### Kesintisiz Erişim Kuralları
 
-1. **Premium Kullanıcılar:** `isPremium = true` ise tamamen reklamsız
-2. **Zaman Bazlı:** `ad_free_until > now()` ise reklamsız
-3. **Hiçbiri Değil:** Reklam izleme veya Premium'a geçme seçenekleri sunulur
+1. **Premium Kullanıcılar:** `isPremium = true` ise tamamen kesintisiz
+2. **Zaman Bazlı:** `ad_free_until > now()` ise aktif
+3. **Hiçbiri Değil:** Bonus kazanma veya Premium'a geçme seçenekleri sunulur
 
-### Ad-Free Süreleri
+### Süreler
 
-- **Ödüllü Reklam:** 2 saat reklamsız erişim
-- **Premium Abonelik:** Sınırsız reklamsız erişim
+- **Ödüllü Oturum:** 2 saat erişim
+- **Premium Abonelik:** Sınırsız tam erişim
 - **Deneme Süresi:** 7 günlük Premium deneme (hesap oluşturulduğunda)
 
 ## Premium Trigger

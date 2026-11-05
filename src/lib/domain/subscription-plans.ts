@@ -28,7 +28,7 @@ export type SubscriptionPlanGroup = {
 const LEARNER_BENEFITS = [
   "Limitsiz soru çözümü ve video izleme",
   "Tüm branşlarda detaylı performans analizi",
-  "Reklamsız kesintisiz deneyim",
+  "Kesintisiz ve odaklı öğrenme",
   "Gelişmiş aile ve veli raporları",
 ] as const;
 
