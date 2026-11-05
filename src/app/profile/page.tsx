@@ -587,7 +587,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 🗓️ Ders Programı
               </Link>
             ) : null}
-            {(profile.role === "parent" || profile.role === "student" || profile.role === "teacher") && !profile.isSignedOut ? (
+            {!profile.isSignedOut ? (
               <a
                 className="zigo-action-chip tap-scale rounded-lg border border-red-200 bg-red-50/80 text-red-700 font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition hover:bg-red-100 hover:border-red-300"
                 href="https://e-okul.meb.gov.tr/"
@@ -603,7 +603,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </svg>
               </a>
             ) : null}
-            {(profile.role === "parent" || profile.role === "student" || profile.role === "teacher") && !profile.isSignedOut ? (
+            {!profile.isSignedOut ? (
               <a
                 className="zigo-action-chip tap-scale rounded-lg border border-sky-200 bg-sky-50/80 text-sky-800 font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition hover:bg-sky-100 hover:border-sky-300"
                 href="https://yokatlas.yok.gov.tr/"
@@ -619,7 +619,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </svg>
               </a>
             ) : null}
-            {(profile.role === "parent" || profile.role === "student" || profile.role === "teacher") && !profile.isSignedOut ? (
+            {!profile.isSignedOut ? (
               <a
                 className="zigo-action-chip tap-scale rounded-lg border border-emerald-200 bg-emerald-50/80 text-emerald-800 font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition hover:bg-emerald-100 hover:border-emerald-300"
                 href="https://ogmmateryal.eba.gov.tr/"
@@ -635,7 +635,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </svg>
               </a>
             ) : null}
-            {(profile.role === "parent" || profile.role === "student" || profile.role === "teacher") && !profile.isSignedOut ? (
+            {!profile.isSignedOut ? (
               <ExamScoreCalculatorModal userRole={profile.role} />
             ) : null}
             {profile.role === "parent" && !profile.isSignedOut ? (

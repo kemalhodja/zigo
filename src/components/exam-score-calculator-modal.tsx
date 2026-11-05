@@ -18,8 +18,10 @@ const YKS_STORAGE_KEY = "zigo_exam_calc_yks_v1";
 
 export function ExamScoreCalculatorModal({
   userRole,
+  trigger,
 }: {
   userRole?: string;
+  trigger?: React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"lgs" | "yks">("lgs");
@@ -168,19 +170,31 @@ export function ExamScoreCalculatorModal({
 
   return (
     <>
-      {/* Profil Aksiyon Butonu */}
-      <button
-        onClick={() => {
-          triggerHaptic(20);
-          setIsOpen(true);
-        }}
-        className="zigo-action-chip tap-scale rounded-lg border border-violet-200 bg-gradient-to-r from-violet-50 via-purple-50 to-pink-50 text-purple-900 font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition hover:border-violet-300 hover:from-violet-100 hover:to-pink-100"
-        type="button"
-        title="LGS & YKS Puan Hesaplama Robotu"
-      >
-        <span>🧮</span>
-        <span>LGS & YKS Hesapla</span>
-      </button>
+      {/* Aksiyon Butonu / Trigger */}
+      {trigger ? (
+        <div
+          onClick={() => {
+            triggerHaptic(20);
+            setIsOpen(true);
+          }}
+          className="inline-block cursor-pointer"
+        >
+          {trigger}
+        </div>
+      ) : (
+        <button
+          onClick={() => {
+            triggerHaptic(20);
+            setIsOpen(true);
+          }}
+          className="zigo-action-chip tap-scale rounded-lg border border-violet-200 bg-gradient-to-r from-violet-50 via-purple-50 to-pink-50 text-purple-900 font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition hover:border-violet-300 hover:from-violet-100 hover:to-pink-100"
+          type="button"
+          title="LGS & YKS Puan Hesaplama Robotu"
+        >
+          <span>🧮</span>
+          <span>LGS & YKS Hesapla</span>
+        </button>
+      )}
 
       {/* Hesaplama Modalı */}
       {isOpen && (

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ExamScoreCalculatorModal } from "@/components/exam-score-calculator-modal";
 import { getNextExams, seasonPhase } from "@/lib/domain/exam-season";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
@@ -77,6 +78,73 @@ export default async function ExamSeasonPage() {
             </div>
           );
         })}
+
+        {/* LGS & YKS Puan Hesaplama Robotu & Resmi Portallar */}
+        <div className="overflow-hidden rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-5 text-white shadow-lg shadow-indigo-600/20">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-purple-100 backdrop-blur-xs border border-white/25">
+                ⚡ 2026/2025 MEB & ÖSYM
+              </span>
+              <h2 className="mt-2 text-lg font-black text-white">LGS & YKS Puan Hesaplama</h2>
+              <p className="mt-1 text-xs text-purple-100/90 font-medium leading-relaxed">
+                Netlerini gir, MEB ve ÖSYM resmi katsayılarıyla ham puanını, yüzdelik dilimini ve yerleştirme puanını anında gör.
+              </p>
+            </div>
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-xs border border-white/30 shadow-inner">
+              🧮
+            </span>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <ExamScoreCalculatorModal
+              userRole={profile?.role}
+              trigger={
+                <button
+                  type="button"
+                  className="tap-scale inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-purple-900 shadow-md transition hover:bg-purple-50 active:scale-95"
+                >
+                  <span>Puanımı Hesapla</span>
+                  <span>→</span>
+                </button>
+              }
+            />
+          </div>
+        </div>
+
+        {/* Resmi Eğitim Portalları */}
+        <div className="grid grid-cols-3 gap-2">
+          <a
+            href="https://e-okul.meb.gov.tr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap-scale flex flex-col items-center justify-center rounded-2xl border border-red-100 bg-white p-3 text-center shadow-xs transition hover:bg-red-50/50"
+          >
+            <span className="text-xl">🏫</span>
+            <span className="mt-1 text-[0.7rem] font-black text-red-700">e-Okul</span>
+            <span className="text-[9px] font-semibold text-slate-400">MEB Portalı</span>
+          </a>
+          <a
+            href="https://yokatlas.yok.gov.tr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap-scale flex flex-col items-center justify-center rounded-2xl border border-sky-100 bg-white p-3 text-center shadow-xs transition hover:bg-sky-50/50"
+          >
+            <span className="text-xl">🗺️</span>
+            <span className="mt-1 text-[0.7rem] font-black text-sky-800">YÖK Atlas</span>
+            <span className="text-[9px] font-semibold text-slate-400">Üniversite Tercih</span>
+          </a>
+          <a
+            href="https://ogmmateryal.eba.gov.tr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap-scale flex flex-col items-center justify-center rounded-2xl border border-emerald-100 bg-white p-3 text-center shadow-xs transition hover:bg-emerald-50/50"
+          >
+            <span className="text-xl">📚</span>
+            <span className="mt-1 text-[0.7rem] font-black text-emerald-800">OGM Materyal</span>
+            <span className="text-[9px] font-semibold text-slate-400">MEB Soru Havuzu</span>
+          </a>
+        </div>
 
         {/* Quick actions */}
         <div className="grid grid-cols-3 gap-2">
