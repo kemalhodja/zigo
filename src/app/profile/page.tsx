@@ -4,6 +4,7 @@ import { FollowButton } from "@/components/follow-button";
 import { OrgDashboardPanel } from "@/components/org-dashboard-panel";
 import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
 import { AgendaManager } from "@/components/agenda/agenda-manager";
+import { ExamScoreCalculatorModal } from "@/components/exam-score-calculator-modal";
 import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
 import { ProfileCover } from "@/components/profile-cover";
 import { ProfileHighlights } from "@/components/profile-highlights";
@@ -423,6 +424,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                   <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </a>
+            ) : null}
+            {(profile.role === "parent" || profile.role === "student" || profile.role === "teacher") && !profile.isSignedOut ? (
+              <ExamScoreCalculatorModal userRole={profile.role} />
             ) : null}
             {profile.role === "parent" && !profile.isSignedOut ? (
               <CreatePrivateLessonModal
