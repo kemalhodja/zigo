@@ -12,6 +12,9 @@
   - Abone olan öğrenci: Günde **maksimum 2 saat (120 dk)** ve yalnızca **08:00 ile 22:00 saatleri arasında** oynayabilir (22:00-08:00 gece yasağı).
 - **Öğretmen Özel Ders Talepleri Hook Modeli**:
   - Abonesiz öğretmenler gelen özel ders taleplerini listede görebilir; ancak detayları, veli mesajını ve iletişimi açmak için Zigo Plus abonesi olması gerekir.
+- **Paylaşılan Dış Bağlantı Kuralı (Shared Link Gate)**:
+  - Gönderilerde, videolarda veya profillerde paylaşılan harici bağlantılara (YouTube videoları, Instagram içerikleri, eğitim web siteleri vb.) yalnızca Zigo Plus abonesi olan kullanıcılar tıklayabilir.
+  - Abonesiz kullanıcılar tıkladığında kilit modalı (SharedLinkPaywallModal) açılır ve Zigo Plus aboneliğine yönlendirilir.
 
 ## 2. Roles & Authorization (RBAC)
 Sistemde 6 temel rol bulunur. Her ekran ve rota (Route Guards) kullanıcının rolüne göre doğrulanmalıdır:

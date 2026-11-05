@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { FollowButton } from "@/components/follow-button";
 import { ReelActionRail } from "@/components/reel-action-rail";
+import { ReelExternalLinkButton } from "@/components/reel-external-link-button";
 import { ReelLearningPoints } from "@/components/reel-learning-points";
 import { ReelVideoPlayer } from "@/components/reel-video-player";
 import { SocialMediaScene } from "@/components/social-media-scenes";
@@ -201,23 +202,7 @@ function ReelSection({
           <span className="rounded-lg bg-slate-100/80 px-3 py-1 text-xs font-black text-slate-700 backdrop-blur">
             {ru.watchForPoints}
           </span>
-          {parsedLink && (
-            <a
-              href={parsedLink.cleanUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`tap-scale inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-black shadow-md backdrop-blur transition hover:scale-105 active:scale-95 ${
-                parsedLink.type === "youtube"
-                  ? "bg-red-600 text-white"
-                  : parsedLink.type === "instagram"
-                  ? "bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white"
-                  : "bg-white text-slate-900"
-              }`}
-            >
-              <span>{parsedLink.type === "youtube" ? "🔴 YouTube" : parsedLink.type === "instagram" ? "📸 Instagram" : "🌐 Bağlantı"}</span>
-              <span className="text-[10px]">↗</span>
-            </a>
-          )}
+          {parsedLink && <ReelExternalLinkButton parsedLink={parsedLink} />}
         </div>
         <ReelLearningDock messages={m} postId={reel.postId} viewerRole={viewerRole} />
         <div className="text-xs font-black text-slate-900/80">

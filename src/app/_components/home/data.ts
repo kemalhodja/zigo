@@ -60,6 +60,7 @@ export type DisplayPost = {
   city?: string | null;
   district?: string | null;
   externalUrl?: string | null;
+  canOpenExternalLink?: boolean;
   isFollowersOnly?: boolean;
   isFollowersOnlyLocked?: boolean;
   teaserText?: string | null;
@@ -165,6 +166,7 @@ import {
   type SocialFeedPost,
 } from "@/lib/domain/social";
 import { getTeacherFeedInsights } from "@/lib/domain/teacher-inbox";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { buildDemoPosts, buildDemoSuggestedCreators } from "@/lib/i18n/demo-feed";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -235,12 +237,16 @@ export async function getHomePosts(): Promise<DisplayPost[]> {
       }
     }
 
+    const subscription = profile ? await getUserSubscription(feedClient, profile.id).catch(() => null) : null;
+    const isSubscriber = Boolean(subscription?.isPremium);
+
     return slicedPosts.map((post, index) =>
       toDisplayPost(post, index, {
         canFollowCreator: Boolean(profile && post.author?.id && post.author.id !== profile.id),
         isFollowingCreator: Boolean(post.author?.id && followedSet.has(post.author.id)),
         viewerRole: profile?.role ?? null,
         viewerId: profile?.id ?? null,
+        isSubscriber,
       }),
     );
   } catch {
@@ -375,6 +381,7 @@ export function toDisplayPost(
     isFollowingCreator?: boolean;
     viewerRole?: UserRole | null;
     viewerId?: string | null;
+    isSubscriber?: boolean;
   } = {},
 ): DisplayPost {
   const authorName = post.author?.full_name ?? "Zigo Creator";
@@ -425,6 +432,7 @@ export function toDisplayPost(
     city: (post as unknown as { city?: string | null }).city ?? null,
     district: (post as unknown as { district?: string | null }).district ?? null,
     externalUrl: (post as unknown as { external_url?: string | null }).external_url ?? null,
+    canOpenExternalLink: Boolean(followState.isSubscriber),
     teaserText: (post as unknown as { teaser_text?: string | null }).teaser_text ?? null,
     followersOnlyComments: (post as unknown as { followers_only_comments?: boolean }).followers_only_comments ?? false,
     isFollowersOnly: post.isFollowersOnly,

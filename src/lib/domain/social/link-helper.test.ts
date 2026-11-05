@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canUserOpenSharedLink,
   classifyExternalLink,
   extractYouTubeVideoId,
   isInstagramUrl,
@@ -84,6 +85,18 @@ describe("link-helper", () => {
       expect(classifyExternalLink(null)).toBeNull();
       expect(classifyExternalLink("")).toBeNull();
       expect(classifyExternalLink("   ")).toBeNull();
+    });
+  });
+
+  describe("canUserOpenSharedLink", () => {
+    it("allows clicking shared links only if user is subscribed (isPremium: true)", () => {
+      expect(canUserOpenSharedLink({ isPremium: true })).toBe(true);
+    });
+
+    it("blocks clicking shared links if user is not subscribed or guest", () => {
+      expect(canUserOpenSharedLink({ isPremium: false })).toBe(false);
+      expect(canUserOpenSharedLink(null)).toBe(false);
+      expect(canUserOpenSharedLink(undefined)).toBe(false);
     });
   });
 });

@@ -1,5 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
+import { SharedLinkPaywallModal } from "@/components/shared-link-paywall-modal";
+import { useSubscriptionStatus } from "@/lib/hooks/use-subscription-status";
+
 type ProfileSocialLinksProps = {
   bio?: string | null;
   websiteUrl?: string | null;
@@ -8,6 +13,10 @@ type ProfileSocialLinksProps = {
 };
 
 export function ProfileSocialLinks({ bio, websiteUrl, youtubeUrl, instagramUrl }: ProfileSocialLinksProps) {
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const { isSubscriber } = useSubscriptionStatus();
+
   if (!bio && !websiteUrl && !youtubeUrl && !instagramUrl) return null;
 
   const urlMatches = bio ? bio.match(/https?:\/\/[^\s]+/g) : null;
@@ -60,29 +69,55 @@ export function ProfileSocialLinks({ bio, websiteUrl, youtubeUrl, instagramUrl }
     return { url: cleanUrl, label, icon, badgeClass };
   });
 
+  const handleLinkClick = (e: React.MouseEvent, label: string) => {
+    if (!isSubscriber) {
+      e.preventDefault();
+      e.stopPropagation();
+      setSelectedDomain(label);
+      setShowPaywall(true);
+    }
+  };
+
   return (
-    <div className="mt-3.5 space-y-1.5">
-      <p className="text-[0.65rem] font-black uppercase tracking-[0.16em] text-slate-400">Özel Sayfalar & Bağlantılar</p>
-      <div className="flex flex-wrap gap-2">
-        {links.map((link) => (
-          <a
-            className={`tap-scale inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${link.badgeClass}`}
-            href={link.url}
-            key={link.url}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <SocialLinkIcon icon={link.icon} />
-            <span>{link.label}</span>
-            <svg aria-hidden="true" className="size-3 opacity-60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" x2="21" y1="14" y2="3" />
-            </svg>
-          </a>
-        ))}
+    <>
+      <div className="mt-3.5 space-y-1.5">
+        <p className="text-[0.65rem] font-black uppercase tracking-[0.16em] text-slate-400">Özel Sayfalar & Bağlantılar</p>
+        <div className="flex flex-wrap gap-2">
+          {links.map((link) => (
+            <a
+              className={`tap-scale inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${
+                !isSubscriber
+                  ? "bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100"
+                  : link.badgeClass
+              }`}
+              href={isSubscriber ? link.url : "#"}
+              onClick={(e) => handleLinkClick(e, link.label)}
+              key={link.url}
+              rel={isSubscriber ? "noopener noreferrer" : undefined}
+              target={isSubscriber ? "_blank" : undefined}
+            >
+              <SocialLinkIcon icon={link.icon} />
+              <span>{link.label}</span>
+              {isSubscriber ? (
+                <svg aria-hidden="true" className="size-3 opacity-60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" x2="21" y1="14" y2="3" />
+                </svg>
+              ) : (
+                <span className="text-[10px] opacity-80">🔒</span>
+              )}
+            </a>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <SharedLinkPaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        targetDomain={selectedDomain}
+      />
+    </>
   );
 }
 

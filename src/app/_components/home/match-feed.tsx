@@ -79,6 +79,7 @@ export function FeedPostCard({
               url={post.externalUrl}
               sponsoredLabel={post.sponsoredLabel}
               isSponsored={Boolean(post.isSponsoredActive || post.showSponsored)}
+              canOpenLink={post.canOpenExternalLink}
             />
           </div>
         )}

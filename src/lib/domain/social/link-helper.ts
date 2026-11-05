@@ -118,3 +118,13 @@ export function classifyExternalLink(url?: string | null): ParsedExternalLink | 
     label: domain ? `${domain}` : "Web Sitesi Bağlantısı",
   };
 }
+
+/**
+ * Zigo İş Kuralı:
+ * Paylaşılan dış bağlantılara (YouTube videoları, Instagram içerikleri, web kaynakları)
+ * yalnızca Zigo Plus abonesi olan kullanıcılar tıklayabilir.
+ */
+export function canUserOpenSharedLink(subscription?: { isPremium?: boolean } | null): boolean {
+  return Boolean(subscription?.isPremium);
+}
+
