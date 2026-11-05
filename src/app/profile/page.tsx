@@ -233,8 +233,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                   </div>
                 </div>
 
-                {/* e-Okul & YÖK Atlas Resmi Portalları */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                {/* e-Okul, YÖK Atlas & OGM Materyal Resmi Portalları */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
                   <a
                     className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 p-3 text-white shadow-md shadow-red-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
                     href="https://e-okul.meb.gov.tr/"
@@ -247,7 +247,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Resmi Portal</span>
+                          <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Portal</span>
                           <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </div>
                         <p className="truncate text-xs sm:text-sm font-black text-white">e-Okul Girişi</p>
@@ -276,11 +276,40 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-black tracking-wider uppercase text-sky-100">YÖK Resmi Portal</span>
+                          <span className="text-[10px] font-black tracking-wider uppercase text-sky-100">YÖK Portal</span>
                           <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </div>
                         <p className="truncate text-xs sm:text-sm font-black text-white">YÖK Atlas</p>
                         <p className="truncate text-[10px] sm:text-[11px] font-medium text-sky-100/90 leading-tight">Üniversite & taban puanları</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
+                      <span>Aç</span>
+                      <svg className="size-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </a>
+
+                  <a
+                    className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 p-3 text-white shadow-md shadow-emerald-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
+                    href="https://ogmmateryal.eba.gov.tr/"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-lg backdrop-blur-xs border border-white/20 shadow-inner">
+                        📚
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-black tracking-wider uppercase text-emerald-100">MEB OGM</span>
+                          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        </div>
+                        <p className="truncate text-xs sm:text-sm font-black text-white">OGM Materyal</p>
+                        <p className="truncate text-[10px] sm:text-[11px] font-medium text-emerald-100/90 leading-tight">Kitap, soru bankası & YKS</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
@@ -313,8 +342,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                   </span>
                 </div>
 
-                {/* e-Okul & YÖK Atlas Resmi Portalları */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                {/* e-Okul, YÖK Atlas & OGM Materyal Resmi Portalları */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
                   <a
                     className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 p-3 text-white shadow-md shadow-red-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
                     href="https://e-okul.meb.gov.tr/"
@@ -327,7 +356,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Resmi Portal</span>
+                          <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Portal</span>
                           <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </div>
                         <p className="truncate text-xs sm:text-sm font-black text-white">e-Okul Veli</p>
@@ -356,7 +385,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-black tracking-wider uppercase text-sky-100">YÖK Resmi Portal</span>
+                          <span className="text-[10px] font-black tracking-wider uppercase text-sky-100">YÖK Portal</span>
                           <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </div>
                         <p className="truncate text-xs sm:text-sm font-black text-white">YÖK Atlas</p>
@@ -372,13 +401,42 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                       </svg>
                     </div>
                   </a>
+
+                  <a
+                    className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 p-3 text-white shadow-md shadow-emerald-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
+                    href="https://ogmmateryal.eba.gov.tr/"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-lg backdrop-blur-xs border border-white/20 shadow-inner">
+                        📚
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-black tracking-wider uppercase text-emerald-100">MEB OGM</span>
+                          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        </div>
+                        <p className="truncate text-xs sm:text-sm font-black text-white">OGM Materyal</p>
+                        <p className="truncate text-[10px] sm:text-[11px] font-medium text-emerald-100/90 leading-tight">Kitap, soru bankası & YKS</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
+                      <span>Aç</span>
+                      <svg className="size-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </a>
                 </div>
               </div>
             )}
 
-            {/* Öğretmen MEB e-Okul & YÖK Atlas Portalları */}
+            {/* Öğretmen MEB e-Okul, YÖK Atlas & OGM Materyal Portalları */}
             {profile.role === "teacher" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4">
                 <a
                   className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 p-3 text-white shadow-md shadow-red-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
                   href="https://e-okul.meb.gov.tr/"
@@ -391,7 +449,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Resmi Portal</span>
+                        <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Portal</span>
                         <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       </div>
                       <p className="truncate text-xs sm:text-sm font-black text-white">e-Okul & MEBBİS</p>
@@ -420,11 +478,40 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-black tracking-wider uppercase text-sky-100">YÖK Resmi Portal</span>
+                        <span className="text-[10px] font-black tracking-wider uppercase text-sky-100">YÖK Portal</span>
                         <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       </div>
                       <p className="truncate text-xs sm:text-sm font-black text-white">YÖK Atlas</p>
                       <p className="truncate text-[10px] sm:text-[11px] font-medium text-sky-100/90 leading-tight">Üniversite & taban puanları</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
+                    <span>Aç</span>
+                    <svg className="size-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </a>
+
+                <a
+                  className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 p-3 text-white shadow-md shadow-emerald-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
+                  href="https://ogmmateryal.eba.gov.tr/"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-lg backdrop-blur-xs border border-white/20 shadow-inner">
+                      📚
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-black tracking-wider uppercase text-emerald-100">MEB OGM</span>
+                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      </div>
+                      <p className="truncate text-xs sm:text-sm font-black text-white">OGM Materyal</p>
+                      <p className="truncate text-[10px] sm:text-[11px] font-medium text-emerald-100/90 leading-tight">Kitap, soru bankası & YKS</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2 py-1 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
@@ -526,6 +613,22 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               >
                 <span>🗺️ YÖK Atlas</span>
                 <svg className="size-3 text-sky-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+            ) : null}
+            {(profile.role === "parent" || profile.role === "student" || profile.role === "teacher") && !profile.isSignedOut ? (
+              <a
+                className="zigo-action-chip tap-scale rounded-lg border border-emerald-200 bg-emerald-50/80 text-emerald-800 font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition hover:bg-emerald-100 hover:border-emerald-300"
+                href="https://ogmmateryal.eba.gov.tr/"
+                rel="noopener noreferrer"
+                target="_blank"
+                title="MEB OGM Materyal: Ders Kitapları, Soru Bankaları ve Denemeler"
+              >
+                <span>📚 OGM Materyal</span>
+                <svg className="size-3 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
