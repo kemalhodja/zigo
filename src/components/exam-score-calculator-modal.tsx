@@ -92,7 +92,7 @@ export function ExamScoreCalculatorModal({
   const yksResult = useMemo(() => calculateYksScore(yksState), [yksState]);
 
   // YKS field active stream
-  const [yksStream, setYksStream] = useState<"say" | "ea" | "soz" | "dil">("say");
+  const [yksStream, setYksStream] = useState<"tyt" | "say" | "ea" | "soz" | "dil">("tyt");
 
   // Reset Handlers
   const handleResetLgs = () => {
@@ -457,14 +457,15 @@ export function ExamScoreCalculatorModal({
                     </div>
                   )}
 
-                  {/* YKS Alan Seçici (Sayısal, EA, Sözel, Dil) */}
-                  <div className="grid grid-cols-4 gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-black">
+                  {/* YKS Alan Seçici (TYT, SAY, EA, SÖZ, DİL) */}
+                  <div className="grid grid-cols-5 gap-1 bg-slate-100 p-1 rounded-xl text-xs font-black">
                     {(
                       [
-                        { id: "say" as const, label: "Sayısal (SAY)" },
-                        { id: "ea" as const, label: "Eşit Ağ. (EA)" },
-                        { id: "soz" as const, label: "Sözel (SÖZ)" },
-                        { id: "dil" as const, label: "Yabancı Dil" },
+                        { id: "tyt" as const, label: "TYT" },
+                        { id: "say" as const, label: "SAY" },
+                        { id: "ea" as const, label: "EA" },
+                        { id: "soz" as const, label: "SÖZ" },
+                        { id: "dil" as const, label: "DİL" },
                       ] as const
                     ).map((t) => (
                       <button
@@ -474,7 +475,7 @@ export function ExamScoreCalculatorModal({
                           triggerHaptic(15);
                           setYksStream(t.id);
                         }}
-                        className={`py-2 rounded-lg transition text-[11px] font-bold ${
+                        className={`py-2 rounded-lg transition text-center text-[11px] font-bold ${
                           yksStream === t.id
                             ? "bg-white text-indigo-700 shadow-sm"
                             : "text-slate-600 hover:text-night"
@@ -488,22 +489,26 @@ export function ExamScoreCalculatorModal({
                   {/* Seçili YKS Skor Kartı */}
                   {(() => {
                     const currentScore =
-                      yksStream === "say"
-                        ? yksResult.say
-                        : yksStream === "ea"
-                          ? yksResult.ea
-                          : yksStream === "soz"
-                            ? yksResult.soz
-                            : yksResult.dil;
+                      yksStream === "tyt"
+                        ? yksResult.tyt
+                        : yksStream === "say"
+                          ? yksResult.say
+                          : yksStream === "ea"
+                            ? yksResult.ea
+                            : yksStream === "soz"
+                              ? yksResult.soz
+                              : yksResult.dil;
 
                     const streamLabel =
-                      yksStream === "say"
-                        ? "SAYISAL (SAY)"
-                        : yksStream === "ea"
-                          ? "EŞİT AĞIRLIK (EA)"
-                          : yksStream === "soz"
-                            ? "SÖZEL (SÖZ)"
-                            : "YABANCI DİL (DİL)";
+                      yksStream === "tyt"
+                        ? "TYT (ÖNLİSANS & POLİSLİK)"
+                        : yksStream === "say"
+                          ? "SAYISAL (SAY)"
+                          : yksStream === "ea"
+                            ? "EŞİT AĞIRLIK (EA)"
+                            : yksStream === "soz"
+                              ? "SÖZEL (SÖZ)"
+                              : "YABANCI DİL (DİL)";
 
                     return (
                       <div className="rounded-2xl bg-gradient-to-br from-indigo-700 via-blue-700 to-sky-700 p-4 sm:p-5 text-white shadow-lg shadow-indigo-700/20">

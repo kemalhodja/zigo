@@ -292,17 +292,12 @@ export type YksCalculationResult = {
   obpKatki: number;
   ekPuanKatki: number;
   meslekLisesiKatki: number;
-  tyt: {
-    isCalculable: boolean;
-    uncalculatedReason?: string;
+  tyt: ScoreTier & {
     turkceNet: number;
     sosyalNet: number;
     matematikNet: number;
     fenNet: number;
     toplamNet: number;
-    hamPuan: number;
-    yerlestirmePuani: number;
-    tahminiSiralama: string;
   };
   say: ScoreTier;
   ea: ScoreTier;
@@ -421,7 +416,9 @@ export function calculateYksScore(state: YksFormState): YksCalculationResult {
       toplamNet: tytToplamNet,
       hamPuan: tytHamPuan,
       yerlestirmePuani: tytYerlestirme,
+      ekPuanliYerlestirme: state.meslekLisesiEkPuan ? Math.round((tytYerlestirme + ekPuanKatki) * 100) / 100 : undefined,
       tahminiSiralama: resolveTytSiralama(tytYerlestirme),
+      ornekBolumler: resolveTytBolumler(tytYerlestirme),
     },
     say: {
       isCalculable: sayCalculable,
@@ -485,6 +482,14 @@ function resolveTytSiralama(p: number): string {
   if (p >= 340) return "120.000 - 300.000";
   if (p >= 270) return "300.000 - 750.000";
   return "750.000+";
+}
+
+function resolveTytBolumler(p: number): string {
+  if (p >= 450) return "Tüm Popüler Sağlık & Bilişim Önlisans Programları, PMYO Tepe, Deniz Ulaştırma";
+  if (p >= 380) return "İlk ve Acil Yardım (Paramedik), Anestezi, Bilgisayar Programcılığı, Ağız ve Diş Sağlığı";
+  if (p >= 320) return "Tıbbi Görüntüleme, Adalet, Bilişim Güvenliği, Dış Ticaret, Grafik Tasarımı";
+  if (p >= 260) return "Bankacılık, Muhasebe, Lojistik, Turizm, Elektrik, Makine, İnşaat Önlisans";
+  return "2 Yıllık Önlisans Programları ve Özel Yetenek ile Alan Lisans Bölümleri";
 }
 
 function resolveSaySiralama(p: number): string {

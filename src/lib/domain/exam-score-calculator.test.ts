@@ -172,6 +172,8 @@ describe("Exam Score Calculator", () => {
       // TYT
       expect(res.tyt.hamPuan).toBe(500);
       expect(res.tyt.yerlestirmePuani).toBe(560); // 500 + 500*0.12
+      expect(res.tyt.ekPuanliYerlestirme).toBe(590); // 560 + 500*0.06
+      expect(res.tyt.ornekBolumler).toContain("Önlisans");
       // SAY
       expect(res.say.hamPuan).toBe(500);
       expect(res.say.yerlestirmePuani).toBe(560);
