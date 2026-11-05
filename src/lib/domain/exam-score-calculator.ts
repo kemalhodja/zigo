@@ -371,34 +371,37 @@ export function calculateYksScore(state: YksFormState): YksCalculationResult {
     tytYerlestirme = Math.round((tytHamPuan + obpKatki) * 100) / 100;
   }
 
-  // 2. SAYISAL (SAY): TYT (%40) + AYT Mat + AYT Fen
+  // TYT Katkısı (%40 Ağırlık -> Tam net 160 puan getirir)
+  const tytKatkisi = tytTurkce * 1.32 + tytMat * 1.32 + tytSosyal * 1.36 + tytFen * 1.36;
+
+  // 2. SAYISAL (SAY): TYT (%40) + AYT Mat (30%) + AYT Fen (30%)
   const sayHas05 = aytMat >= 0.5 || aytFenToplam >= 0.5;
   const sayCalculable = tytCalculable && sayHas05;
-  const sayRaw = 100 + tytToplamNet * 1.32 + aytMat * 3.0 + aytFenToplam * 2.85;
+  const sayRaw = 100 + tytKatkisi + aytMat * 3.0 + aytFenToplam * 3.0;
   const sayHam = Math.min(500, Math.max(100, Math.round(sayRaw * 100) / 100));
   const sayYerlestirme = Math.round((sayHam + obpKatki) * 100) / 100;
   const sayEkPuan = Math.round((sayYerlestirme + ekPuanKatki) * 100) / 100;
 
-  // 3. EŞİT AĞIRLIK (EA): TYT (%40) + AYT Mat + AYT Edebiyat-Sos-1
+  // 3. EŞİT AĞIRLIK (EA): TYT (%40) + AYT Mat (30%) + AYT Edebiyat-Sos-1 (30%)
   const eaHas05 = aytMat >= 0.5 || aytSos1Toplam >= 0.5;
   const eaCalculable = tytCalculable && eaHas05;
-  const eaRaw = 100 + tytToplamNet * 1.32 + aytMat * 3.0 + aytSos1Toplam * 2.95;
+  const eaRaw = 100 + tytKatkisi + aytMat * 3.0 + aytSos1Toplam * 3.0;
   const eaHam = Math.min(500, Math.max(100, Math.round(eaRaw * 100) / 100));
   const eaYerlestirme = Math.round((eaHam + obpKatki) * 100) / 100;
   const eaEkPuan = Math.round((eaYerlestirme + ekPuanKatki) * 100) / 100;
 
-  // 4. SÖZEL (SÖZ): TYT (%40) + AYT Sos-1 + AYT Sos-2
+  // 4. SÖZEL (SÖZ): TYT (%40) + AYT Sos-1 (30%) + AYT Sos-2 (30%)
   const sozHas05 = aytSos1Toplam >= 0.5 || aytSos2Toplam >= 0.5;
   const sozCalculable = tytCalculable && sozHas05;
-  const sozRaw = 100 + tytToplamNet * 1.32 + aytSos1Toplam * 2.95 + aytSos2Toplam * 2.95;
+  const sozRaw = 100 + tytKatkisi + aytSos1Toplam * 3.0 + aytSos2Toplam * 3.0;
   const sozHam = Math.min(500, Math.max(100, Math.round(sozRaw * 100) / 100));
   const sozYerlestirme = Math.round((sozHam + obpKatki) * 100) / 100;
   const sozEkPuan = Math.round((sozYerlestirme + ekPuanKatki) * 100) / 100;
 
-  // 5. DİL (YDT): TYT (%40) + YDT (80)
+  // 5. DİL (YDT): TYT (%40) + YDT (60%)
   const dilHas05 = ydtNet >= 0.5;
   const dilCalculable = tytCalculable && dilHas05;
-  const dilRaw = 100 + tytToplamNet * 1.32 + ydtNet * 3.0;
+  const dilRaw = 100 + tytKatkisi + ydtNet * 3.0;
   const dilHam = Math.min(500, Math.max(100, Math.round(dilRaw * 100) / 100));
   const dilYerlestirme = Math.round((dilHam + obpKatki) * 100) / 100;
   const dilEkPuan = Math.round((dilYerlestirme + ekPuanKatki) * 100) / 100;

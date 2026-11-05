@@ -141,5 +141,94 @@ describe("Exam Score Calculator", () => {
       expect(res.say.hamPuan).toBeGreaterThan(420);
       expect(res.say.yerlestirmePuani).toBeGreaterThan(470);
     });
+
+    it("produces exact 500 ham and 560 placement on perfect full score (TYT 120, AYT 80, Diploma 100)", () => {
+      const perfectState = {
+        diplomaNotu: 100,
+        kirikObp: false,
+        meslekLisesiEkPuan: true,
+        tyt: {
+          turkce: { correct: 40, wrong: 0 },
+          sosyal: { correct: 20, wrong: 0 },
+          matematik: { correct: 40, wrong: 0 },
+          fen: { correct: 20, wrong: 0 },
+        },
+        ayt: {
+          matematik: { correct: 40, wrong: 0 },
+          fizik: { correct: 14, wrong: 0 },
+          kimya: { correct: 13, wrong: 0 },
+          biyoloji: { correct: 13, wrong: 0 },
+          edebiyat: { correct: 24, wrong: 0 },
+          tarih1: { correct: 10, wrong: 0 },
+          cografya1: { correct: 6, wrong: 0 },
+          tarih2: { correct: 11, wrong: 0 },
+          cografya2: { correct: 11, wrong: 0 },
+          felsefe: { correct: 12, wrong: 0 },
+          din: { correct: 6, wrong: 0 },
+          ydt: { correct: 80, wrong: 0 },
+        },
+      };
+      const res = calculateYksScore(perfectState);
+      // TYT
+      expect(res.tyt.hamPuan).toBe(500);
+      expect(res.tyt.yerlestirmePuani).toBe(560); // 500 + 500*0.12
+      // SAY
+      expect(res.say.hamPuan).toBe(500);
+      expect(res.say.yerlestirmePuani).toBe(560);
+      expect(res.say.ekPuanliYerlestirme).toBe(590); // 560 + 500*0.06
+      // EA
+      expect(res.ea.hamPuan).toBe(500);
+      expect(res.ea.yerlestirmePuani).toBe(560);
+      // SÖZ
+      expect(res.soz.hamPuan).toBe(500);
+      expect(res.soz.yerlestirmePuani).toBe(560);
+      // DİL
+      expect(res.dil.hamPuan).toBe(500);
+      expect(res.dil.yerlestirmePuani).toBe(560);
+    });
+
+    it("clamps diploma grades outside 50-100 range correctly", () => {
+      const lowDiploma = calculateYksScore({ ...DEFAULT_YKS_STATE, diplomaNotu: 30 });
+      expect(lowDiploma.obpPuan).toBe(250); // 50 * 5
+      expect(lowDiploma.obpKatki).toBe(30); // 250 * 0.12
+
+      const highDiploma = calculateYksScore({ ...DEFAULT_YKS_STATE, diplomaNotu: 115 });
+      expect(highDiploma.obpPuan).toBe(500); // 100 * 5
+      expect(highDiploma.obpKatki).toBe(60); // 500 * 0.12
+    });
+
+    it("correctly identifies 0.5 net threshold requirements for EA, SÖZ and DİL", () => {
+      const baseValidTyt = {
+        ...DEFAULT_YKS_STATE,
+        tyt: {
+          ...DEFAULT_YKS_STATE.tyt,
+          turkce: { correct: 20, wrong: 0 },
+        },
+      };
+
+      // EA test with 1 net in Edebiyat
+      const eaRes = calculateYksScore({
+        ...baseValidTyt,
+        ayt: {
+          ...baseValidTyt.ayt,
+          edebiyat: { correct: 1, wrong: 0 },
+        },
+      });
+      expect(eaRes.ea.isCalculable).toBe(true);
+      expect(eaRes.soz.isCalculable).toBe(true); // edebiyat is part of Sos-1 which satisfies soz too
+      expect(eaRes.say.isCalculable).toBe(false); // no mat or fen
+      expect(eaRes.dil.isCalculable).toBe(false); // no ydt
+
+      // DİL test with 1 net in YDT
+      const dilRes = calculateYksScore({
+        ...baseValidTyt,
+        ayt: {
+          ...baseValidTyt.ayt,
+          ydt: { correct: 1, wrong: 0 },
+        },
+      });
+      expect(dilRes.dil.isCalculable).toBe(true);
+      expect(dilRes.say.isCalculable).toBe(false);
+    });
   });
 });
