@@ -17,6 +17,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
+      url: `${base}/lgs-puan-hesaplama`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.98,
+    },
+    {
+      url: `${base}/yks-puan-hesaplama`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.98,
+    },
+    {
       url: `${base}/exams`,
       lastModified: now,
       changeFrequency: "daily",

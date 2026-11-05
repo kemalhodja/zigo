@@ -151,6 +151,18 @@ export default async function ExamSeasonPage() {
                 </button>
               }
             />
+            <Link
+              href="/lgs-puan-hesaplama"
+              className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2.5 text-xs font-black text-white backdrop-blur-xs border border-white/25 hover:bg-white/30 transition"
+            >
+              <span>🎒 LGS Sayfası</span>
+            </Link>
+            <Link
+              href="/yks-puan-hesaplama"
+              className="tap-scale inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2.5 text-xs font-black text-white backdrop-blur-xs border border-white/25 hover:bg-white/30 transition"
+            >
+              <span>🎓 YKS Sayfası</span>
+            </Link>
           </div>
         </div>
 

@@ -8,6 +8,8 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: [
           "/",
+          "/lgs-puan-hesaplama",
+          "/yks-puan-hesaplama",
           "/exams",
           "/explore",
           "/learn",
@@ -35,6 +37,8 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "Googlebot",
         allow: [
           "/",
+          "/lgs-puan-hesaplama",
+          "/yks-puan-hesaplama",
           "/exams",
           "/explore",
           "/learn",
