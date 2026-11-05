@@ -223,21 +223,127 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             </div>
 
             {profile.role === "student" && (
-              <div className="mt-4 rounded-xl bg-gradient-to-r from-fuchsia-50 to-pink-50 p-4 border border-fuchsia-100">
-                <h3 className="font-black text-fuchsia-900 text-sm mb-2">Öğrenci Gelişimi</h3>
-                <div className="flex gap-2">
-                  <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">🏆 Gümüş Lig</span>
-                  <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">⭐ {profile.stats.followers * 10} Puan</span>
+              <div className="mt-4 space-y-3">
+                <div className="rounded-xl bg-gradient-to-r from-fuchsia-50 to-pink-50 p-4 border border-fuchsia-100">
+                  <h3 className="font-black text-fuchsia-900 text-sm mb-2">Öğrenci Gelişimi</h3>
+                  <div className="flex gap-2">
+                    <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">🏆 Gümüş Lig</span>
+                    <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-fuchsia-700 shadow-sm flex items-center gap-1">⭐ {profile.stats.followers * 10} Puan</span>
+                  </div>
                 </div>
+
+                {/* e-Okul Öğrenci Bilgilendirme Sistemi Banner & Giriş Linki */}
+                <a
+                  className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 p-3.5 text-white shadow-md shadow-red-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
+                  href="https://e-okul.meb.gov.tr/"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xl backdrop-blur-xs border border-white/20 shadow-inner">
+                      🏫
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Resmi Portal</span>
+                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      </div>
+                      <p className="truncate text-sm font-black text-white">e-Okul Girişi</p>
+                      <p className="text-[11px] font-medium text-red-100/90 leading-tight">Yazılı notları, devamsızlık ve sınav takvimi</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2.5 py-1.5 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
+                    <span>Giriş Yap</span>
+                    <svg className="size-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </a>
               </div>
             )}
 
             {profile.role === "parent" && (
-              <div className="mt-4 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 p-4 border border-cyan-100">
-                <h3 className="font-black text-cyan-900 text-sm mb-2">Veli Özeti</h3>
-                <div className="flex gap-2">
-                  <span className="bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">👨‍👩‍👧 {profile.childrenCount ?? 0} Bağlı Profil</span>
+              <div className="mt-4 rounded-2xl bg-gradient-to-br from-cyan-50/90 via-sky-50/70 to-blue-50/90 p-4 border border-cyan-100/80 shadow-xs">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-7 items-center justify-center rounded-lg bg-cyan-600 text-white text-xs font-black shadow-xs">
+                      👨‍👩‍👧
+                    </span>
+                    <div>
+                      <h3 className="font-black text-cyan-950 text-sm leading-tight">Veli Yönetim Alanı</h3>
+                      <p className="text-[11px] font-semibold text-cyan-800/70">Öğrenci takibi ve resmi okul işlemleri</p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-cyan-800 border border-cyan-200/60 shadow-xs">
+                    {profile.childrenCount ?? 0} Bağlı Profil
+                  </span>
                 </div>
+
+                {/* e-Okul Veli Bilgilendirme Sistemi Banner & Giriş Linki */}
+                <a
+                  className="tap-scale group mt-2 flex items-center justify-between rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 p-3.5 text-white shadow-md shadow-red-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
+                  href="https://e-okul.meb.gov.tr/"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xl backdrop-blur-xs border border-white/20 shadow-inner">
+                      🏫
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Resmi Portal</span>
+                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      </div>
+                      <p className="truncate text-sm font-black text-white">e-Okul Veli Bilgilendirme</p>
+                      <p className="text-[11px] font-medium text-red-100/90 leading-tight">Notlar, devamsızlık ve sınav takvimi</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2.5 py-1.5 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
+                    <span>Giriş Yap</span>
+                    <svg className="size-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </a>
+              </div>
+            )}
+
+            {/* Öğretmen MEB e-Okul / MEBBİS Giriş Banner Linki */}
+            {profile.role === "teacher" && (
+              <div className="mt-4">
+                <a
+                  className="tap-scale group flex items-center justify-between rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 p-3.5 text-white shadow-md shadow-red-600/20 transition-all hover:brightness-105 active:scale-[0.99]"
+                  href="https://e-okul.meb.gov.tr/"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15 text-xl backdrop-blur-xs border border-white/20 shadow-inner">
+                      🏫
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-black tracking-wider uppercase text-red-100">MEB Resmi Portal</span>
+                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      </div>
+                      <p className="truncate text-sm font-black text-white">e-Okul & MEBBİS Girişi</p>
+                      <p className="text-[11px] font-medium text-red-100/90 leading-tight">Öğretmen not girişi ve yönetim bilgi sistemi</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-lg bg-white/20 px-2.5 py-1.5 text-xs font-black text-white backdrop-blur-xs border border-white/25 shrink-0 group-hover:bg-white/30 transition">
+                    <span>Giriş Yap</span>
+                    <svg className="size-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </a>
               </div>
             )}
 
@@ -301,6 +407,22 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <Link className="zigo-action-chip tap-scale rounded-lg border border-indigo-200 bg-indigo-50/50 text-indigo-900 font-black" href="/profile?tab=agenda">
                 🗓️ Ders Programı
               </Link>
+            ) : null}
+            {(profile.role === "parent" || profile.role === "student" || profile.role === "teacher") && !profile.isSignedOut ? (
+              <a
+                className="zigo-action-chip tap-scale rounded-lg border border-red-200 bg-red-50/80 text-red-700 font-black inline-flex items-center justify-center gap-1.5 shadow-xs transition hover:bg-red-100 hover:border-red-300"
+                href="https://e-okul.meb.gov.tr/"
+                rel="noopener noreferrer"
+                target="_blank"
+                title="MEB e-Okul Girişi"
+              >
+                <span>🏫 e-Okul</span>
+                <svg className="size-3 text-red-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M15 3h6v6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
             ) : null}
             {profile.role === "parent" && !profile.isSignedOut ? (
               <CreatePrivateLessonModal
