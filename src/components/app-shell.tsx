@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { FirstLaunchWelcome } from "@/components/first-launch-welcome";
 import { LegalFooter } from "@/components/legal-footer";
+import { SeoFooter } from "@/components/seo-footer";
 import { PullToRefresh } from "@/components/pull-to-refresh";
 import { RegistrationCampaignAnnouncement } from "@/components/registration-campaign-announcement";
 import { RoleNextActionBar } from "@/components/role-next-action-bar";
@@ -266,7 +267,11 @@ export function AppShell({
           )}
         </main>
 
-        {pathname.startsWith("/auth") ? <LegalFooter /> : null}
+        {pathname.startsWith("/auth") ? (
+          <LegalFooter />
+        ) : !isImmersive && !isStories ? (
+          <SeoFooter />
+        ) : null}
 
         {isImmersive || pathname.startsWith("/auth") ? null : <CookieConsentBanner />}
 

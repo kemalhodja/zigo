@@ -158,3 +158,134 @@ export function ExamFaqJsonLd() {
     />
   );
 }
+
+/**
+ * LGS Puan Hesaplama Sayfası Özel FAQ Schema'sı
+ */
+export function LgsFaqJsonLd() {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "LGS'de 3 yanlış 1 doğruyu götürür mü?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Evet. MEB Merkezi Sınav kurallarına göre her alt testte 3 yanlış cevap 1 doğru cevabı eksiltir. Net sayısı = Doğru Sayısı - (Yanlış Sayısı / 3) formülü ile hesaplanır. Boş bırakılan sorular puanı etkilemez.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "LGS en yüksek puan kaçtır?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "LGS'de alınabilecek en yüksek puan 500 tam puandır. 90 sorunun tamamını doğru yapan adaylar Türkiye birincisi olarak 500 tam puan alır. Taban puan ise 100'dür.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "LGS'de hangi dersler kaç katsayıdır?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Türkçe (20 soru): 4 katsayı, Matematik (20 soru): 4 katsayı, Fen Bilimleri (20 soru): 4 katsayı, T.C. İnkılap Tarihi ve Atatürkçülük (10 soru): 1 katsayı, Din Kültürü ve Ahlak Bilgisi (10 soru): 1 katsayı, Yabancı Dil (10 soru): 1 katsayı.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "LGS yüzdelik dilim nasıl hesaplanır?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yüzdelik dilim, adayın Türkiye genelinde sınava giren yaklaşık 1 milyon öğrenci arasındaki başarı sırasının yüzdesel karşılığıdır. Örneğin %1'lik dilim, sınava girenler arasında en başarılı ilk 10.000 öğrenci içinde olunduğunu gösterir.",
+        },
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+    />
+  );
+}
+
+/**
+ * YKS Puan Hesaplama Sayfası Özel FAQ Schema'sı
+ */
+export function YksFaqJsonLd() {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "YKS 0.5 net kuralı nedir?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "ÖSYM kuralına göre TYT puanının hesaplanabilmesi için adayın Temel Matematik veya Türkçe testlerinin en az birinden 0.5 veya daha fazla ham net çıkarması zorunludur. AYT puan türleri için de ilgili testlerde 0.5 net şartı aranır.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "YKS'de 4 yanlış 1 doğruyu götürür mü?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Evet. ÖSYM YKS sınavında (TYT, AYT ve YDT) her 4 yanlış cevap 1 doğru cevabı siler. Net = Doğru - (Yanlış / 4) olarak hesaplanır.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "OBP üniversite yerleştirmesine ne kadar etki eder?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Lise diploma notu 5 ile çarpılarak 250-500 arası OBP bulunur. Bu puan 0.12 ile çarpılarak adayın ham puanına 30 ila 60 puan arasında yerleştirme puanı eklenir.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Kırık OBP katsayısı nedir ve kimlere uygulanır?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Bir önceki yıl merkezi yerleştirme ile bir lisans veya önlisans programına yerleşen (açıköğretim kontenjanlı bölümler dahil) adayların OBP katsayısı 0.12 yerine 0.06 olarak yarı yarıya düşürülür. Bu duruma halk arasında Kırık OBP denir.",
+        },
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+    />
+  );
+}
+
+/**
+ * Google BreadcrumbList (Arama Sonuçlarında Ekmek Kırıntısı Gösterimi)
+ */
+export type BreadcrumbItem = {
+  name: string;
+  url: string;
+};
+
+export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url.startsWith("http") ? item.url : `${SITE_URL}${item.url}`,
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+    />
+  );
+}
+

@@ -3,7 +3,7 @@ import Link from "next/link";
 import React from "react";
 
 import { YksPageCalculator } from "@/components/calculator/yks-page-calculator";
-import { ExamFaqJsonLd } from "@/components/seo/json-ld";
+import { BreadcrumbJsonLd, YksFaqJsonLd } from "@/components/seo/json-ld";
 
 export const metadata: Metadata = {
   title: "YKS Puan Hesaplama 2026 | TYT - AYT (SAY, EA, SÖZ, DİL) & OBP Hesaplama",
@@ -42,9 +42,16 @@ export const metadata: Metadata = {
 };
 
 export default function YksCalculatorPage() {
+  const breadcrumbItems = [
+    { name: "Ana Sayfa", url: "/" },
+    { name: "Sınav Sezonu", url: "/exams" },
+    { name: "YKS Puan Hesaplama", url: "/yks-puan-hesaplama" },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      <ExamFaqJsonLd />
+      <YksFaqJsonLd />
+      <BreadcrumbJsonLd items={breadcrumbItems} />
 
       {/* Header */}
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 py-3.5 backdrop-blur-md">
@@ -65,6 +72,15 @@ export default function YksCalculatorPage() {
       </header>
 
       <main className="mx-auto max-w-2xl space-y-8 p-4 sm:p-6">
+        {/* Ekmek Kırıntısı (Breadcrumbs) - Google & Kullanıcı Dostu */}
+        <nav aria-label="Ekmek Kırıntısı" className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+          <Link href="/" className="hover:text-night transition-colors">Ana Sayfa</Link>
+          <span>/</span>
+          <Link href="/exams" className="hover:text-night transition-colors">Sınav Sezonu</Link>
+          <span>/</span>
+          <span className="font-bold text-night" aria-current="page">YKS Puan Hesaplama</span>
+        </nav>
+
         {/* Giriş Banner */}
         <div className="space-y-2 text-center sm:text-left">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-indigo-700">
@@ -121,3 +137,4 @@ export default function YksCalculatorPage() {
     </div>
   );
 }
+

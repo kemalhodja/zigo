@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ExamScoreCalculatorModal } from "@/components/exam-score-calculator-modal";
-import { ExamFaqJsonLd } from "@/components/seo/json-ld";
+import { BreadcrumbJsonLd, ExamFaqJsonLd } from "@/components/seo/json-ld";
 import { getNextExams, seasonPhase } from "@/lib/domain/exam-season";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
@@ -74,6 +74,12 @@ export default async function ExamSeasonPage() {
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <ExamFaqJsonLd />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Ana Sayfa", url: "/" },
+          { name: "Sınav Sezonu", url: "/exams" },
+        ]}
+      />
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 py-3 backdrop-blur-md">
         <Link
           href="/"

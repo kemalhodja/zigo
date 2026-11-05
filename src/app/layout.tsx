@@ -160,6 +160,8 @@ export default async function RootLayout({
       <head>
         <meta name="color-scheme" content="light only" />
         <meta name="darkreader-lock" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var h=window.location.hash||"";if(h&&(h.indexOf("access_token")!==-1||h.indexOf("type=recovery")!==-1||h.indexOf("error")!==-1)){window.__ZIGO_RECOVERY_HASH__=h;try{sessionStorage.setItem("zigo_recovery_hash",h)}catch(e){}}}catch(e){}})();`,
@@ -167,18 +169,6 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${jakarta.variable} ${interTight.variable} font-sans antialiased ${getRoleThemeClass(shellState.viewerRole)}`}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": "Zigo",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr",
-              "description": messages.meta.description
-            })
-          }}
-        />
         <JsonLd />
         <LocaleProvider initialLocale={locale}>
           <ToastProvider>
