@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { DomainForbiddenError } from "@/lib/domain/domain-errors";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
+import { assertModeratedTextAsync } from "@/lib/domain/moderation";
 import { getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import type { Database } from "@/lib/supabase/database.types";
@@ -67,7 +68,10 @@ export async function createPrivateLessonPost(
     }
   }
 
-  // 4. Veritabanına kayıt
+  // 4. Otomatik Güvenlik & Moderasyon Denetimi
+  const moderatedDescription = await assertModeratedTextAsync(input.description);
+
+  // 5. Veritabanına kayıt (Doğrulanmış ve moderasyonu geçmiş ilan anında 'open' olarak yayına girer)
   const { data: inserted, error: insertError } = await looseFrom<PrivateLessonPostWithDetails>(
     supabase,
     "private_lesson_posts",
@@ -80,9 +84,9 @@ export async function createPrivateLessonPost(
       mode: input.mode,
       city: input.city || null,
       district: input.district || null,
-      description: input.description,
+      description: moderatedDescription,
       budget_try: input.budgetTry || null,
-      status: "pending_review",
+      status: "open",
     })
     .select(
       `
@@ -96,6 +100,68 @@ export async function createPrivateLessonPost(
 
   if (insertError) throw insertError;
   return inserted as PrivateLessonPostWithDetails;
+}
+
+/**
+ * Velinin oluşturduğu özel ders ilanını kapatmasını sağlar.
+ */
+export async function closePrivateLessonPost(
+  supabase: SupabaseClient<Database>,
+  parentId: string,
+  postId: string,
+): Promise<void> {
+  const { data: post, error: findError } = await looseFrom<LessonPostStatusRow>(
+    supabase,
+    "private_lesson_posts",
+  )
+    .select("id, parent_id, status")
+    .eq("id", postId)
+    .single();
+
+  if (findError || !post) {
+    throw new DomainForbiddenError("İlan bulunamadı.", "NOT_FOUND");
+  }
+
+  if (post.parent_id !== parentId) {
+    throw new DomainForbiddenError("Bu ilanı yalnızca ilan sahibi kapatabilir.");
+  }
+
+  const { error: updateError } = await looseFrom(supabase, "private_lesson_posts")
+    .update({ status: "closed" })
+    .eq("id", postId);
+
+  if (updateError) throw updateError;
+}
+
+/**
+ * Velinin oluşturduğu özel ders ilanını sistemden silmesini sağlar.
+ */
+export async function deletePrivateLessonPost(
+  supabase: SupabaseClient<Database>,
+  parentId: string,
+  postId: string,
+): Promise<void> {
+  const { data: post, error: findError } = await looseFrom<LessonPostStatusRow>(
+    supabase,
+    "private_lesson_posts",
+  )
+    .select("id, parent_id")
+    .eq("id", postId)
+    .single();
+
+  if (findError || !post) {
+    throw new DomainForbiddenError("İlan bulunamadı.", "NOT_FOUND");
+  }
+
+  if (post.parent_id !== parentId) {
+    throw new DomainForbiddenError("Bu ilanı yalnızca ilan sahibi silebilir.");
+  }
+
+  const { error: deleteError } = await looseFrom(supabase, "private_lesson_posts")
+    .delete()
+    .eq("id", postId);
+
+  if (deleteError) throw deleteError;
 }
 
 /**

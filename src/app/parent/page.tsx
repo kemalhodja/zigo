@@ -7,6 +7,8 @@ import { ClassGroupManager } from "@/components/class-group-manager";
 import { LimitSettingsCard } from "@/components/limit-settings-card";
 import { MiniGamesArcadeSection } from "@/components/mini-games-arcade-section";
 import { ParentApprovalQueue } from "@/components/parent-approval-queue";
+import { ParentLessonPostsList } from "@/components/parent-lesson-posts-list";
+import { CreatePrivateLessonModal } from "@/components/private-lesson-post-modal";
 import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 import { StateCard } from "@/components/state-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
@@ -15,7 +17,11 @@ import { canUseDevBillingBypass } from "@/lib/domain/billing";
 import { getChildProfiles } from "@/lib/domain/children";
 import { buildParentActivityStats } from "@/lib/domain/parent-activity-stats";
 import { getChildActivity } from "@/lib/domain/parent-dashboard";
-import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles";
+import {
+  getParentPrivateLessonPosts,
+  type PrivateLessonPostWithDetails,
+} from "@/lib/domain/private-lessons";
+import { getCurrentProfile, getEducationAreas, parseOrganizationType } from "@/lib/domain/profiles";
 import { getPendingParentRedemptions } from "@/lib/domain/store";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { resolveProfilePlanGroups } from "@/lib/domain/subscription-plans";
@@ -43,6 +49,8 @@ export default async function ParentPage() {
     schoolName,
     gradeLevel,
     classroom,
+    educationAreas,
+    lessonPosts,
   } = await getParentData();
   const d = messages.dashboard;
 
@@ -160,6 +168,36 @@ export default async function ParentPage() {
         <MiniGamesArcadeSection isPremium={isPremium} />
       </div>
 
+      {/* Veli Özel Ders İlanları ve Öğretmen Teklifleri */}
+      {mode === "parent" ? (
+        <section className="-mx-4 sm:mx-0 bg-white p-4 border-b border-slate-100 sm:rounded-2xl sm:border sm:shadow-xs space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600 text-lg font-bold">
+                🎯
+              </span>
+              <div>
+                <h2 className="text-sm font-black text-night">Özel Ders Talepleri & Teklifler</h2>
+                <p className="text-[0.68rem] text-slate-500 font-semibold">
+                  Branş öğretmenlerinden ders ve fiyat teklifi toplayın
+                </p>
+              </div>
+            </div>
+            <div className="sm:w-56 shrink-0">
+              <CreatePrivateLessonModal
+                areas={educationAreas}
+                children={children.map((c) => ({ id: c.id, name: c.name }))}
+                initialCity={city}
+                initialDistrict={district}
+                initialGradeLevel={gradeLevel}
+              />
+            </div>
+          </div>
+
+          <ParentLessonPostsList posts={lessonPosts} />
+        </section>
+      ) : null}
+
       {mode === "parent" ? (
         <div className="-mx-4 sm:mx-0 bg-white p-4 border-b border-slate-100 sm:rounded-2xl sm:border sm:shadow-xs">
           <ClassGroupManager
@@ -201,6 +239,8 @@ async function getParentData(): Promise<{
   planGroups: ReturnType<typeof resolveProfilePlanGroups>;
   profileId: string | null;
   userCreatedAt?: string;
+  educationAreas: Array<{ id: number; area_name: string; age_group: string | null }>;
+  lessonPosts: PrivateLessonPostWithDetails[];
 }> {
   const m = await getServerMessages();
 
@@ -220,6 +260,8 @@ async function getParentData(): Promise<{
       planGroups: resolveProfilePlanGroups("parent", true),
       profileId: "demo-parent-1",
       userCreatedAt: new Date().toISOString(),
+      educationAreas: [],
+      lessonPosts: [],
     };
   }
 
@@ -238,6 +280,8 @@ async function getParentData(): Promise<{
     planGroups: resolveProfilePlanGroups("parent", previewChildren.length > 0),
     profileId: null,
     userCreatedAt: undefined as string | undefined,
+    educationAreas: [],
+    lessonPosts: [],
   };
 
   return withSupabaseFallback(async () => {
@@ -259,6 +303,8 @@ async function getParentData(): Promise<{
       planGroups: [],
       profileId: null,
       userCreatedAt: undefined,
+      educationAreas: [],
+      lessonPosts: [],
     };
   }
   if (profile.role !== "parent") {
@@ -276,13 +322,17 @@ async function getParentData(): Promise<{
       classroom: null,
       planGroups: [],
       profileId: profile.id,
+      educationAreas: [],
+      lessonPosts: [],
     };
   }
 
-  const [children, pendingApprovals, subscription] = await Promise.all([
+  const [children, pendingApprovals, subscription, educationAreas, lessonPosts] = await Promise.all([
     getChildProfiles(supabase),
     getPendingParentRedemptions(supabase),
     getUserSubscription(supabase, profile.id),
+    getEducationAreas(supabase).catch(() => []),
+    getParentPrivateLessonPosts(supabase, profile.id).catch(() => []),
   ]);
 
   const activityEntries = await Promise.all(
@@ -310,6 +360,8 @@ async function getParentData(): Promise<{
     planGroups: resolveProfilePlanGroups("parent", children.length > 0, parseOrganizationType(profile.organization_type), profile.created_at),
     profileId: profile.id,
     userCreatedAt: profile.created_at ?? undefined,
+    educationAreas,
+    lessonPosts,
   };
   }, previewFallback);
 }

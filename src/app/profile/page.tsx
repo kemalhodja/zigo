@@ -642,6 +642,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <CreatePrivateLessonModal
                 areas={educationAreas}
                 children={parentChildProfiles}
+                initialCity={profile.city}
+                initialDistrict={profile.district}
+                initialGradeLevel={profile.grade_level}
               />
             ) : null}
           </div>
@@ -1104,6 +1107,9 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market" 
   youtube_url?: string | null;
   instagram_url?: string | null;
   childrenCount: number;
+  city?: string | null;
+  district?: string | null;
+  grade_level?: string | null;
 }> {
   const signedOutMessages = await getServerMessages();
   const pf = signedOutMessages.profile;
@@ -1149,6 +1155,9 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market" 
     youtube_url: null as string | null,
     instagram_url: null as string | null,
     childrenCount: 2,
+    city: null as string | null,
+    district: null as string | null,
+    grade_level: null as string | null,
   };
 
   if (!hasSupabaseEnv()) {
@@ -1175,6 +1184,9 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market" 
       youtube_url: null as string | null,
       instagram_url: null as string | null,
       childrenCount: 0,
+      city: null as string | null,
+      district: null as string | null,
+      grade_level: null as string | null,
     };
   }
 
@@ -1201,6 +1213,9 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market" 
         youtube_url: null as string | null,
         instagram_url: null as string | null,
         childrenCount: 0,
+        city: null as string | null,
+        district: null as string | null,
+        grade_level: null as string | null,
       };
 
   return withSupabaseFallback(async () => {
@@ -1229,6 +1244,9 @@ async function getProfileData(activeTab: "posts" | "reels" | "saved" | "market" 
       youtube_url: null as string | null,
       instagram_url: null as string | null,
       childrenCount: 0,
+      city: null as string | null,
+      district: null as string | null,
+      grade_level: null as string | null,
     };
   }
 
@@ -1327,5 +1345,8 @@ function toProfileData(
     website_url: (profile as unknown as { website_url?: string | null }).website_url ?? null,
     youtube_url: (profile as unknown as { youtube_url?: string | null }).youtube_url ?? null,
     instagram_url: (profile as unknown as { instagram_url?: string | null }).instagram_url ?? null,
+    city: (profile as unknown as { city?: string | null }).city ?? null,
+    district: (profile as unknown as { district?: string | null }).district ?? null,
+    grade_level: (profile as unknown as { grade_level?: string | null }).grade_level ?? null,
   };
 }
