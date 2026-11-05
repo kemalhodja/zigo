@@ -9,6 +9,7 @@ import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
 import { PwaInstallBanner } from "@/components/pwa-install-banner";
 import { OfflineIndicator } from "@/components/offline-indicator";
+import { JsonLd } from "@/components/seo/json-ld";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { OneSignalProvider } from "@/components/providers/onesignal-provider";
 import { ScrollReset } from "@/components/scroll-reset";
@@ -40,17 +41,57 @@ const interTight = Inter_Tight({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const meta = (await getServerMessages()).meta;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr";
+  const titleDefault = "Zigo | Türkiye'nin Eğitim Sosyal Ağı - LGS & YKS Puan Hesaplama";
+  const titleTemplate = "%s | Zigo";
+  const description =
+    "Zigo; öğrenciler, veliler ve öğretmenler için yeni nesil eğitim sosyal ağıdır. MEB ve ÖSYM güncel standart katsayılarıyla 2026 LGS ve YKS (TYT-AYT) puan hesaplama, online soru çözümü, zeka oyunları ve rehberlik.";
+
+  const keywords = [
+    "zigo",
+    "zigo eğitim",
+    "lgs puan hesaplama",
+    "yks puan hesaplama",
+    "lgs puan hesaplama 2026",
+    "yks puan hesaplama 2026",
+    "tyt ayt puan hesaplama",
+    "obp hesaplama",
+    "kırık obp hesaplama",
+    "e-okul",
+    "yök atlas",
+    "ogm materyal",
+    "öğrenci koçluğu",
+    "özel ders talebi",
+    "eğitim sosyal ağı",
+    "soru çözümü",
+    "online deneme sınavı",
+    "zeka oyunları",
+    "odak odası",
+  ];
 
   return {
     metadataBase: new URL(baseUrl),
     title: {
-      default: "Zigo | Eğitim Sosyal Ağı",
-      template: "%s | Zigo",
+      default: titleDefault,
+      template: titleTemplate,
     },
-    description: meta.description,
+    description,
+    keywords,
     applicationName: "Zigo",
+    category: "education",
+    creator: "Zigo Education Team",
+    publisher: "Zigo",
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
@@ -68,23 +109,25 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     manifest: "/manifest.json",
     openGraph: {
-      title: "Zigo | Eğitim Sosyal Ağı",
-      description: meta.description,
+      title: titleDefault,
+      description,
       siteName: "Zigo",
       type: "website",
+      locale: "tr_TR",
+      url: baseUrl,
       images: [
         {
           url: "/og-image.jpg",
           width: 1200,
           height: 630,
-          alt: "Zigo Eğitim Platformu",
+          alt: "Zigo Eğitim Platformu - LGS ve YKS Puan Hesaplama",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Zigo | Eğitim Sosyal Ağı",
-      description: meta.description,
+      title: titleDefault,
+      description,
       images: ["/og-image.jpg"],
     },
   };
@@ -136,18 +179,7 @@ export default async function RootLayout({
             })
           }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "Zigo",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr",
-              "logo": (process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr") + "/icon.svg"
-            })
-          }}
-        />
+        <JsonLd />
         <LocaleProvider initialLocale={locale}>
           <ToastProvider>
             <OfflineIndicator />

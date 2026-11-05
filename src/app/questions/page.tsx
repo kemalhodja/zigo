@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AnswerForm } from "@/components/answer-form";
@@ -9,6 +10,24 @@ import { getCurrentProfile, getEducationAreas, getUserInterestAreaIds } from "@/
 import { getMatchedQuestions } from "@/lib/domain/questions";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Soru & Cevap Platformu | Doğrulanmış Öğretmenlerle Çözümler",
+  description:
+    "Zigo Soru-Cevap: LGS, YKS, Matematik, Fen ve tüm branşlarda yapamadığın soruları sor, doğrulanmış uzman öğretmenlerden adım adım çözümler al.",
+  keywords: [
+    "soru sor",
+    "soru çözümü",
+    "matematik soru çözümü",
+    "lgs soru çözümü",
+    "yks soru çözümü",
+    "öğretmene soru sor",
+    "online ödev yardımı",
+  ],
+  alternates: {
+    canonical: "/questions",
+  },
+};
 
 const demoQuestions = [
   {

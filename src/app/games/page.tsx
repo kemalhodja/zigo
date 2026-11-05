@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -8,6 +9,23 @@ import { ROLE_BACK } from "@/lib/domain/role-navigation";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import type { UserRole } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Zeka Oyunları Salonu | Eğitici Zeka ve Kelime Oyunları",
+  description:
+    "Zigo Oyun Salonu: Sudoku, 2048, Kelime Bulmaca (Wordle) ve Boru Bağlama gibi zihinsel gelişimi destekleyen eğitici zeka oyunları.",
+  keywords: [
+    "zeka oyunları",
+    "eğitici oyunlar",
+    "kelime oyunu",
+    "sudoku çöz",
+    "2048 oyunu",
+    "öğrenci oyunları",
+  ],
+  alternates: {
+    canonical: "/games",
+  },
+};
 
 export default async function ArcadePage() {
   const supabase = await createClient();

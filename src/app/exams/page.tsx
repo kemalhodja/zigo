@@ -1,11 +1,52 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ExamScoreCalculatorModal } from "@/components/exam-score-calculator-modal";
+import { ExamFaqJsonLd } from "@/components/seo/json-ld";
 import { getNextExams, seasonPhase } from "@/lib/domain/exam-season";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Sınav Sezonu | Zigo" };
+export const metadata: Metadata = {
+  title: "LGS ve YKS Puan Hesaplama 2026 | Sınav Sayacı & Sıralama",
+  description:
+    "2026 LGS ve YKS (TYT, AYT, YDT) puanınızı MEB ve ÖSYM resmi standart sapma katsayıları ile anında hesaplayın. Geri sayım sayacı, OBP diploma katkısı ve tahmini yüzdelik dilim.",
+  keywords: [
+    "lgs puan hesaplama",
+    "yks puan hesaplama",
+    "lgs puan hesaplama 2026",
+    "yks puan hesaplama 2026",
+    "tyt puan hesaplama",
+    "ayt puan hesaplama",
+    "ydt puan hesaplama",
+    "obp hesaplama",
+    "kırık obp",
+    "lgs sayaç",
+    "yks sayaç",
+    "lgs kaç gün kaldı",
+    "yks kaç gün kaldı",
+    "e-okul meb",
+    "yök atlas tercih",
+    "meb ogm materyal",
+  ],
+  alternates: {
+    canonical: "/exams",
+  },
+  openGraph: {
+    title: "LGS ve YKS Puan Hesaplama 2026 | Sınav Sayacı & Sıralama - Zigo",
+    description:
+      "MEB ve ÖSYM güncel standart katsayılarıyla LGS ve YKS (TYT-AYT) puanınızı, yüzdelik diliminizi ve yerleştirme puanınızı hesaplayın.",
+    url: "https://www.zigo.com.tr/exams",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LGS ve YKS Puan Hesaplama 2026 - Zigo",
+    description:
+      "2026 LGS ve YKS puanınızı resmi formüllerle anında hesaplayın. Geri sayım sayacı ve rehberlik.",
+  },
+};
+
 export const dynamic = "force-dynamic";
 
 type LeagueRow = {
@@ -32,6 +73,7 @@ export default async function ExamSeasonPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      <ExamFaqJsonLd />
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-100 bg-white/80 px-4 py-3 backdrop-blur-md">
         <Link
           href="/"
@@ -209,6 +251,44 @@ export default async function ExamSeasonPage() {
               })}
             </div>
           )}
+        </section>
+
+        {/* Sık Sorulan Sorular (SEO FAQ Accordion) */}
+        <section className="space-y-3 pt-4">
+          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500">
+            ❓ Sınav Puanı Hesaplama Rehberi & SSS
+          </h3>
+          <div className="space-y-2">
+            <details className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs open:ring-2 open:ring-indigo-100">
+              <summary className="flex cursor-pointer items-center justify-between font-bold text-sm text-night">
+                <span>LGS puanı 2026 yılında nasıl hesaplanır?</span>
+                <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
+                2026 MEB LGS puanı; Türkçe, Matematik ve Fen Bilimleri testleri 4 katsayı, İnkılap Tarihi, Din Kültürü ve Yabancı Dil testleri 1 katsayı ile ağırlıklandırılarak standart sapma formülleriyle hesaplanır. LGS&apos;de 3 yanlış 1 doğruyu götürür ve taban puan 100, tavan puan 500&apos;dür.
+              </p>
+            </details>
+
+            <details className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs open:ring-2 open:ring-indigo-100">
+              <summary className="flex cursor-pointer items-center justify-between font-bold text-sm text-night">
+                <span>YKS (TYT ve AYT) puan hesabı nasıl yapılır?</span>
+                <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
+                YKS puanı hesaplanırken TYT puanının %40&apos;ı, AYT veya YDT puanının ise %60&apos;ı alınır. YKS&apos;de 4 yanlış 1 doğru cevabı götürür. Ham puanın üzerine adayın diploma notundan hesaplanan OBP (Okul Başarı Puanı) eklenerek yerleştirme puanı oluşturulur.
+              </p>
+            </details>
+
+            <details className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs open:ring-2 open:ring-indigo-100">
+              <summary className="flex cursor-pointer items-center justify-between font-bold text-sm text-night">
+                <span>OBP katkısı nedir ve Kırık OBP nasıl hesaplanır?</span>
+                <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
+                Diploma notu 5 ile çarpılarak adayın OBP&apos;si bulunur (100 diploma notu = 500 OBP). Standart yerleştirmede OBP 0.12 ile çarpılır (maksimum +60 puan). Bir önceki yıl üniversiteye yerleşen adayların katsayısı yarıya düşer (0.06 ile çarpılır, Kırık OBP).
+              </p>
+            </details>
+          </div>
         </section>
       </main>
     </div>

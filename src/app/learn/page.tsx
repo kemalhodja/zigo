@@ -1,5 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Öğrenme Merkezi | Dersler, Soru Çözümleri ve Quizler",
+  description:
+    "Zigo Öğrenme Merkezi: İlkokul, ortaokul, LGS ve YKS müfredatına uygun interaktif mikro dersler, günlük quizler, odak seansları ve soru çözümleri.",
+  keywords: [
+    "öğrenme merkezi",
+    "mikro dersler",
+    "online soru çözümü",
+    "lgs hazırlık dersleri",
+    "yks ders videoları",
+    "günlük quizler",
+    "zigo öğren",
+  ],
+  alternates: {
+    canonical: "/learn",
+  },
+};
 
 import { DailyMissionsCard } from "@/components/daily-missions-card";
 import { LearnQuizCard } from "@/components/learn-quiz-card";
