@@ -42,7 +42,15 @@ export function ExamScoreCalculatorModal({
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem(YKS_STORAGE_KEY);
-        if (saved) return JSON.parse(saved);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            ...DEFAULT_YKS_STATE,
+            ...parsed,
+            tyt: { ...DEFAULT_YKS_STATE.tyt, ...(parsed.tyt || {}) },
+            ayt: { ...DEFAULT_YKS_STATE.ayt, ...(parsed.ayt || {}) },
+          };
+        }
       } catch {
         // ignore
       }
@@ -257,26 +265,38 @@ export function ExamScoreCalculatorModal({
                       <span className="text-sm font-semibold text-violet-200">/ 500.000</span>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-2 gap-2 pt-3 border-t border-white/15">
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2 pt-3 border-t border-white/15">
                       <div className="rounded-xl bg-white/10 p-2 backdrop-blur-xs">
                         <span className="text-[10px] uppercase font-bold text-violet-200">
-                          Yüzdelik Dilim
+                          Genel Yüzdelik
                         </span>
-                        <p className="text-sm font-black text-white">{lgsResult.yuzdelikDilim}</p>
+                        <p className="text-xs sm:text-sm font-black text-white">{lgsResult.yuzdelikDilim}</p>
                       </div>
                       <div className="rounded-xl bg-white/10 p-2 backdrop-blur-xs">
                         <span className="text-[10px] uppercase font-bold text-violet-200">
+                          Tahmini İl Yüzdeliği
+                        </span>
+                        <p className="text-xs sm:text-sm font-black text-white">{lgsResult.ilYuzdelikDilim}</p>
+                      </div>
+                      <div className="rounded-xl bg-white/10 p-2 backdrop-blur-xs col-span-2 sm:col-span-1">
+                        <span className="text-[10px] uppercase font-bold text-violet-200">
                           Toplam Net
                         </span>
-                        <p className="text-sm font-black text-white">
+                        <p className="text-xs sm:text-sm font-black text-white">
                           {lgsResult.netler.toplamNet} / 90
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-2.5 rounded-xl bg-white/15 px-3 py-2 text-xs font-semibold text-violet-100 flex items-center gap-1.5">
-                      <span>🏫</span>
-                      <span className="truncate">{lgsResult.tavsiyeOkullar}</span>
+                    <div className="mt-2.5 rounded-xl bg-white/15 p-2.5 text-xs text-violet-100 space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <span>🎯 Hedef:</span>
+                        <span>{lgsResult.hedefYorumu}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] text-violet-200">
+                        <span>🏫</span>
+                        <span className="truncate">{lgsResult.tavsiyeOkullar}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -412,12 +432,32 @@ export function ExamScoreCalculatorModal({
                           }}
                           className="size-3.5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                        <span>Kırık OBP (Önceki yıl bir bölüme yerleştim)</span>
+                        <span>Kırık OBP (Önceki yıl yerleştim)</span>
+                      </label>
+
+                      <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-bold text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(yksState.meslekLisesiEkPuan)}
+                          onChange={(e) => {
+                            triggerHaptic(15);
+                            setYksState((prev) => ({ ...prev, meslekLisesiEkPuan: e.target.checked }));
+                          }}
+                          className="size-3.5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span>Meslek Lisesi Ek Puanı (+0.06 OBP)</span>
                       </label>
                     </div>
                   </div>
 
-                  {/* YKS Alan Seçici (Sayısal, EA, Sözel, Dil, TYT) */}
+                  {/* TYT 0.5 Net Kuralı Uyarı Bandı */}
+                  {!yksResult.tyt.isCalculable && (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-900 font-medium">
+                      ⚠️ <b>ÖSYM Kuralı:</b> TYT puanının hesaplanabilmesi için Türkçe veya Temel Matematik testinden en az 0.5 ham net yapılmalıdır.
+                    </div>
+                  )}
+
+                  {/* YKS Alan Seçici (Sayısal, EA, Sözel, Dil) */}
                   <div className="grid grid-cols-4 gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-black">
                     {(
                       [
@@ -458,12 +498,12 @@ export function ExamScoreCalculatorModal({
 
                     const streamLabel =
                       yksStream === "say"
-                        ? "SAYISAL"
+                        ? "SAYISAL (SAY)"
                         : yksStream === "ea"
-                          ? "EŞİT AĞIRLIK"
+                          ? "EŞİT AĞIRLIK (EA)"
                           : yksStream === "soz"
-                            ? "SÖZEL"
-                            : "YABANCI DİL";
+                            ? "SÖZEL (SÖZ)"
+                            : "YABANCI DİL (DİL)";
 
                     return (
                       <div className="rounded-2xl bg-gradient-to-br from-indigo-700 via-blue-700 to-sky-700 p-4 sm:p-5 text-white shadow-lg shadow-indigo-700/20">
@@ -474,33 +514,59 @@ export function ExamScoreCalculatorModal({
                           </span>
                         </div>
 
-                        <div className="flex flex-wrap items-baseline gap-3">
-                          <div>
-                            <span className="text-xs uppercase font-bold text-indigo-200 block">
-                              Yerleştirme Puanı (+OBP)
-                            </span>
-                            <span className="text-3xl font-black">
-                              {currentScore.yerlestirmePuani.toFixed(2)}
-                            </span>
+                        {!currentScore.isCalculable ? (
+                          <div className="rounded-xl bg-amber-500/20 border border-amber-300/30 p-3 my-2 text-xs text-amber-100">
+                            <p className="font-bold">⚠️ Puan Hesaplanamadı (0.5 Net Kuralı)</p>
+                            <p className="text-[11px] opacity-90 mt-0.5">{currentScore.uncalculatedReason}</p>
                           </div>
-                          <div className="border-l border-white/20 pl-3">
-                            <span className="text-[10px] uppercase font-bold text-indigo-200 block">
-                              Ham Puan
-                            </span>
-                            <span className="text-lg font-black text-indigo-100">
-                              {currentScore.hamPuan.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
+                        ) : (
+                          <>
+                            <div className="flex flex-wrap items-baseline gap-3">
+                              <div>
+                                <span className="text-xs uppercase font-bold text-indigo-200 block">
+                                  Yerleştirme Puanı (+OBP)
+                                </span>
+                                <span className="text-3xl font-black">
+                                  {currentScore.yerlestirmePuani.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="border-l border-white/20 pl-3">
+                                <span className="text-[10px] uppercase font-bold text-indigo-200 block">
+                                  Ham Puan
+                                </span>
+                                <span className="text-lg font-black text-indigo-100">
+                                  {currentScore.hamPuan.toFixed(2)}
+                                </span>
+                              </div>
+                              {currentScore.ekPuanliYerlestirme && (
+                                <div className="border-l border-white/20 pl-3">
+                                  <span className="text-[10px] uppercase font-bold text-amber-200 block">
+                                    Ek Puanlı (+0.06)
+                                  </span>
+                                  <span className="text-lg font-black text-amber-300">
+                                    {currentScore.ekPuanliYerlestirme.toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
 
-                        <div className="mt-3 pt-3 border-t border-white/15 flex items-center justify-between">
-                          <span className="text-xs font-bold text-indigo-200">
-                            Tahmini Başarı Sırası:
-                          </span>
-                          <span className="rounded-lg bg-white/20 px-2.5 py-1 text-xs font-black text-white backdrop-blur-xs">
-                            🎯 {currentScore.tahminiSiralama}
-                          </span>
-                        </div>
+                            <div className="mt-3 pt-3 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                              <span className="text-xs font-bold text-indigo-200">
+                                Tahmini Başarı Sırası:
+                              </span>
+                              <span className="rounded-lg bg-white/20 px-2.5 py-1 text-xs font-black text-white backdrop-blur-xs self-start sm:self-auto">
+                                🎯 {currentScore.tahminiSiralama}
+                              </span>
+                            </div>
+
+                            {currentScore.ornekBolumler && (
+                              <div className="mt-2 pt-2 border-t border-white/10 text-[11px] text-indigo-100 flex items-start gap-1.5">
+                                <span className="shrink-0 font-bold">🎓 Hedef Bölümler:</span>
+                                <span>{currentScore.ornekBolumler}</span>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     );
                   })()}
@@ -719,3 +785,4 @@ export function ExamScoreCalculatorBanner({
     </div>
   );
 }
+

@@ -28,6 +28,9 @@ describe("Exam Score Calculator", () => {
       const res = calculateLgsScore(DEFAULT_LGS_STATE);
       expect(res.puan).toBe(100);
       expect(res.netler.toplamNet).toBe(0);
+      expect(res.yuzdelikDilim).toBe("%40+");
+      expect(res.hedefYorumu).toBeDefined();
+      expect(res.tavsiyeOkullar).toBeDefined();
     });
 
     it("returns 500 on full net (90 net)", () => {
@@ -43,6 +46,7 @@ describe("Exam Score Calculator", () => {
       expect(res.puan).toBe(500);
       expect(res.netler.toplamNet).toBe(90);
       expect(res.yuzdelikDilim).toContain("%0.01");
+      expect(res.tavsiyeOkullar).toContain("Galatasaray");
     });
   });
 
@@ -66,6 +70,53 @@ describe("Exam Score Calculator", () => {
     it("calculates broken OBP if kirikObp is true", () => {
       const res = calculateYksScore({ ...DEFAULT_YKS_STATE, kirikObp: true });
       expect(res.obpKatki).toBe(25.5); // 425 * 0.06
+    });
+
+    it("calculates vocational school extra points (+0.06)", () => {
+      const stateWithVocational = {
+        ...DEFAULT_YKS_STATE,
+        meslekLisesiEkPuan: true,
+        tyt: {
+          ...DEFAULT_YKS_STATE.tyt,
+          turkce: { correct: 20, wrong: 0 },
+        },
+        ayt: {
+          ...DEFAULT_YKS_STATE.ayt,
+          matematik: { correct: 10, wrong: 0 },
+          fizik: { correct: 5, wrong: 0 },
+        },
+      };
+      const res = calculateYksScore(stateWithVocational);
+      expect(res.meslekLisesiKatki).toBe(25.5); // 425 * 0.06
+      expect(res.say.ekPuanliYerlestirme).toBeDefined();
+      expect(res.say.ekPuanliYerlestirme).toBe(res.say.yerlestirmePuani + 25.5);
+    });
+
+    it("enforces 0.5 net rule for TYT and AYT streams", () => {
+      // 0 net in TYT Türkçe and Matematik -> TYT cannot be calculated
+      const emptyTyt = {
+        ...DEFAULT_YKS_STATE,
+        tyt: {
+          ...DEFAULT_YKS_STATE.tyt,
+          sosyal: { correct: 10, wrong: 0 },
+        },
+      };
+      const res = calculateYksScore(emptyTyt);
+      expect(res.tyt.isCalculable).toBe(false);
+      expect(res.say.isCalculable).toBe(false);
+
+      // TYT satisfies 0.5 net, but AYT has 0 net -> AYT cannot be calculated
+      const validTytOnly = {
+        ...DEFAULT_YKS_STATE,
+        tyt: {
+          ...DEFAULT_YKS_STATE.tyt,
+          turkce: { correct: 1, wrong: 0 },
+        },
+      };
+      const res2 = calculateYksScore(validTytOnly);
+      expect(res2.tyt.isCalculable).toBe(true);
+      expect(res2.say.isCalculable).toBe(false);
+      expect(res2.say.uncalculatedReason).toContain("0.5 net");
     });
 
     it("calculates high scores on good nets", () => {

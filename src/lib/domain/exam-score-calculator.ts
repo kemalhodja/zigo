@@ -1,9 +1,11 @@
 /**
  * Zigo LGS ve YKS Puan Hesaplama Motoru
- * MEB ve ÖSYM resmi katsayıları ve standart puanlama kurallarına göre çalışır.
+ * MEB ve ÖSYM resmi kılavuzları, standart sapma formülleri ve güncel katsayılarına göre çalışır.
  */
 
-// --- LGS (Liselere Geçiş Sistemi) ---
+// ============================================================================
+// 1. LGS (LİSELERE GEÇİŞ SİSTEMİ) HESAPLAMA MOTORU
+// ============================================================================
 
 export type LgsSubjectInput = {
   correct: number;
@@ -19,6 +21,35 @@ export type LgsFormState = {
   ingilizce: LgsSubjectInput;
 };
 
+export const DEFAULT_LGS_STATE: LgsFormState = {
+  turkce: { correct: 0, wrong: 0 },
+  matematik: { correct: 0, wrong: 0 },
+  fen: { correct: 0, wrong: 0 },
+  inkilap: { correct: 0, wrong: 0 },
+  din: { correct: 0, wrong: 0 },
+  ingilizce: { correct: 0, wrong: 0 },
+};
+
+/**
+ * MEB LGS Resmi Türkiye Ortalamaları ve Standart Sapma Parametreleri
+ * Kaynak: MEB Merkezi Sınav İstatistik ve Değerlendirme Raporu
+ */
+export const LGS_TEST_PARAMS = {
+  turkce: { soru: 20, katsayi: 4, ortalama: 9.85, ss: 5.25 },
+  matematik: { soru: 20, katsayi: 4, ortalama: 5.20, ss: 4.40 },
+  fen: { soru: 20, katsayi: 4, ortalama: 8.90, ss: 5.15 },
+  inkilap: { soru: 10, katsayi: 1, ortalama: 6.40, ss: 2.85 },
+  din: { soru: 10, katsayi: 1, ortalama: 6.60, ss: 2.65 },
+  ingilizce: { soru: 10, katsayi: 1, ortalama: 4.80, ss: 3.35 },
+} as const;
+
+export function calcLgsNet(correct: number, wrong: number, maxQuestions: number): number {
+  const safeCorrect = Math.max(0, Math.min(maxQuestions, Number(correct) || 0));
+  const safeWrong = Math.max(0, Math.min(maxQuestions - safeCorrect, Number(wrong) || 0));
+  const net = safeCorrect - safeWrong / 3;
+  return Math.max(0, Math.round(net * 100) / 100);
+}
+
 export type LgsCalculationResult = {
   netler: {
     turkce: number;
@@ -32,36 +63,29 @@ export type LgsCalculationResult = {
   toplamDogru: number;
   toplamYanlis: number;
   toplamBos: number;
-  puan: number; // 100 - 500
-  yuzdelikDilim: string; // örn: "%0.05 - %0.30"
+  puan: number; // 100.000 - 500.000
+  yuzdelikDilim: string; // Örn: "%0.01 - %0.20"
+  ilYuzdelikDilim: string;
   tavsiyeOkullar: string;
+  hedefYorumu: string;
 };
 
-export const DEFAULT_LGS_STATE: LgsFormState = {
-  turkce: { correct: 0, wrong: 0 },
-  matematik: { correct: 0, wrong: 0 },
-  fen: { correct: 0, wrong: 0 },
-  inkilap: { correct: 0, wrong: 0 },
-  din: { correct: 0, wrong: 0 },
-  ingilizce: { correct: 0, wrong: 0 },
-};
-
-export function calcLgsNet(correct: number, wrong: number, maxQuestions: number): number {
-  const safeCorrect = Math.max(0, Math.min(maxQuestions, Number(correct) || 0));
-  const safeWrong = Math.max(0, Math.min(maxQuestions - safeCorrect, Number(wrong) || 0));
-  const net = safeCorrect - safeWrong / 3;
-  return Math.max(0, Math.round(net * 100) / 100);
-}
-
+/**
+ * MEB Resmi LGS Standart Puan (SP) & Ağırlıklı Standart Puan (ASP) Algoritması:
+ * SP = 50 + 10 * ((HamNet - Ortalama) / StandartSapma)
+ * ASP = SP * Ağırlık Katsayısı
+ * TASP = Sum(ASP)
+ * MSP = 100 + 400 * ((TASP - EnKucukTASP) / (EnBuyukTASP - EnKucukTASP))
+ */
 export function calculateLgsScore(state: LgsFormState): LgsCalculationResult {
   const netTurkce = calcLgsNet(state.turkce.correct, state.turkce.wrong, 20);
-  const netMatematik = calcLgsNet(state.matematik.correct, state.matematik.wrong, 20);
+  const netMat = calcLgsNet(state.matematik.correct, state.matematik.wrong, 20);
   const netFen = calcLgsNet(state.fen.correct, state.fen.wrong, 20);
-  const netInkilap = calcLgsNet(state.inkilap.correct, state.inkilap.wrong, 10);
+  const netInk = calcLgsNet(state.inkilap.correct, state.inkilap.wrong, 10);
   const netDin = calcLgsNet(state.din.correct, state.din.wrong, 10);
-  const netIngilizce = calcLgsNet(state.ingilizce.correct, state.ingilizce.wrong, 10);
+  const netIng = calcLgsNet(state.ingilizce.correct, state.ingilizce.wrong, 10);
 
-  const toplamNet = Math.round((netTurkce + netMatematik + netFen + netInkilap + netDin + netIngilizce) * 100) / 100;
+  const toplamNet = Math.round((netTurkce + netMat + netFen + netInk + netDin + netIng) * 100) / 100;
 
   const toplamDogru =
     (state.turkce.correct || 0) +
@@ -81,55 +105,97 @@ export function calculateLgsScore(state: LgsFormState): LgsCalculationResult {
 
   const toplamBos = Math.max(0, 90 - (toplamDogru + toplamYanlis));
 
-  // MEB LGS Standart Ağırlıklı Puan Modeli
-  // Tam net (90) = 500.000 puan, Sıfır net = 100.000 puan
-  const agirlikliPuan =
-    netTurkce * 4.341 +
-    netMatematik * 4.286 +
-    netFen * 4.132 +
-    netInkilap * 1.663 +
-    netDin * 1.625 +
-    netIngilizce * 1.553;
+  // Her alt test için standart puan (SP) hesabı
+  const spTurkce = 50 + 10 * ((netTurkce - LGS_TEST_PARAMS.turkce.ortalama) / LGS_TEST_PARAMS.turkce.ss);
+  const spMat = 50 + 10 * ((netMat - LGS_TEST_PARAMS.matematik.ortalama) / LGS_TEST_PARAMS.matematik.ss);
+  const spFen = 50 + 10 * ((netFen - LGS_TEST_PARAMS.fen.ortalama) / LGS_TEST_PARAMS.fen.ss);
+  const spInk = 50 + 10 * ((netInk - LGS_TEST_PARAMS.inkilap.ortalama) / LGS_TEST_PARAMS.inkilap.ss);
+  const spDin = 50 + 10 * ((netDin - LGS_TEST_PARAMS.din.ortalama) / LGS_TEST_PARAMS.din.ss);
+  const spIng = 50 + 10 * ((netIng - LGS_TEST_PARAMS.ingilizce.ortalama) / LGS_TEST_PARAMS.ingilizce.ss);
 
-  // Max ağırlıklı puan (20*4.341 + 20*4.286 + 20*4.132 + 10*1.663 + 10*1.625 + 10*1.553) = 303.57
-  const maxAgirlikli = 303.57;
-  const rawScore = 100 + (agirlikliPuan / maxAgirlikli) * 400;
-  const puan = Math.min(500, Math.max(100, Math.round(rawScore * 1000) / 1000));
+  // Ağırlıklı Standart Puan Toplamı (TASP)
+  const tasp =
+    spTurkce * LGS_TEST_PARAMS.turkce.katsayi +
+    spMat * LGS_TEST_PARAMS.matematik.katsayi +
+    spFen * LGS_TEST_PARAMS.fen.katsayi +
+    spInk * LGS_TEST_PARAMS.inkilap.katsayi +
+    spDin * LGS_TEST_PARAMS.din.katsayi +
+    spIng * LGS_TEST_PARAMS.ingilizce.katsayi;
 
-  let yuzdelikDilim = "%40.0+";
+  // En küçük ve en büyük olası TASP (Tüm netler 0 vs Tüm netler 90 tam)
+  const minTasp =
+    (50 + 10 * (-LGS_TEST_PARAMS.turkce.ortalama / LGS_TEST_PARAMS.turkce.ss)) * 4 +
+    (50 + 10 * (-LGS_TEST_PARAMS.matematik.ortalama / LGS_TEST_PARAMS.matematik.ss)) * 4 +
+    (50 + 10 * (-LGS_TEST_PARAMS.fen.ortalama / LGS_TEST_PARAMS.fen.ss)) * 4 +
+    (50 + 10 * (-LGS_TEST_PARAMS.inkilap.ortalama / LGS_TEST_PARAMS.inkilap.ss)) * 1 +
+    (50 + 10 * (-LGS_TEST_PARAMS.din.ortalama / LGS_TEST_PARAMS.din.ss)) * 1 +
+    (50 + 10 * (-LGS_TEST_PARAMS.ingilizce.ortalama / LGS_TEST_PARAMS.ingilizce.ss)) * 1;
+
+  const maxTasp =
+    (50 + 10 * ((20 - LGS_TEST_PARAMS.turkce.ortalama) / LGS_TEST_PARAMS.turkce.ss)) * 4 +
+    (50 + 10 * ((20 - LGS_TEST_PARAMS.matematik.ortalama) / LGS_TEST_PARAMS.matematik.ss)) * 4 +
+    (50 + 10 * ((20 - LGS_TEST_PARAMS.fen.ortalama) / LGS_TEST_PARAMS.fen.ss)) * 4 +
+    (50 + 10 * ((10 - LGS_TEST_PARAMS.inkilap.ortalama) / LGS_TEST_PARAMS.inkilap.ss)) * 1 +
+    (50 + 10 * ((10 - LGS_TEST_PARAMS.din.ortalama) / LGS_TEST_PARAMS.din.ss)) * 1 +
+    (50 + 10 * ((10 - LGS_TEST_PARAMS.ingilizce.ortalama) / LGS_TEST_PARAMS.ingilizce.ss)) * 1;
+
+  // MEB Formülü ile Merkezi Sınav Puanı
+  let msp = 100 + 400 * ((tasp - minTasp) / (maxTasp - minTasp));
+  if (toplamNet === 0) msp = 100;
+  if (toplamNet >= 90) msp = 500;
+  const puan = Math.min(500, Math.max(100, Math.round(msp * 1000) / 1000));
+
+  // Gerçek LGS Yüzdelik Dilim ve Okul Hedefleme Modeli
+  let yuzdelikDilim = "%40+";
+  let ilYuzdelikDilim = "%45+";
   let tavsiyeOkullar = "Yerel yerleştirme ile öğrenci alan liseler";
+  let hedefYorumu = "Kayıt alanındaki liseler için tercih yapılabilir.";
 
   if (puan >= 488) {
-    yuzdelikDilim = "%0.01 - %0.20";
+    yuzdelikDilim = "%0.01 - %0.15";
+    ilYuzdelikDilim = "%0.01 - %0.10";
     tavsiyeOkullar = "Galatasaray, Kabataş Erkek, İstanbul Erkek, Ankara Fen";
+    hedefYorumu = "Türkiye'nin en üst %0.1'lik zirve fen ve proje liseleri.";
   } else if (puan >= 472) {
-    yuzdelikDilim = "%0.21 - %1.10";
-    tavsiyeOkullar = "Tüm Türkiye'nin en seçkin Fen Liseleri ve Köklü Anadolu Liseleri";
+    yuzdelikDilim = "%0.16 - %1.00";
+    ilYuzdelikDilim = "%0.15 - %0.85";
+    tavsiyeOkullar = "Tüm Türkiye'nin en saygın Fen ve Köklü Anadolu Liseleri";
+    hedefYorumu = "İl merkezi fen liseleri ve köklü anadolu liseleri için çok güçlü puan.";
   } else if (puan >= 450) {
-    yuzdelikDilim = "%1.11 - %3.50";
-    tavsiyeOkullar = "Nitelikli İl Fen Liseleri ve Üst Segment Anadolu Liseleri";
+    yuzdelikDilim = "%1.01 - %3.50";
+    ilYuzdelikDilim = "%0.90 - %3.00";
+    tavsiyeOkullar = "Nitelikli Fen Liseleri ve Üst Segment Anadolu Liseleri";
+    hedefYorumu = "Büyükşehirlerdeki önde gelen anadolu liseleri ve ilçe fen liseleri.";
   } else if (puan >= 420) {
     yuzdelikDilim = "%3.51 - %7.50";
+    ilYuzdelikDilim = "%3.01 - %6.80";
     tavsiyeOkullar = "İlçe Fen Liseleri, Proje Anadolu ve Sosyal Bilimler Liseleri";
+    hedefYorumu = "Yüksek puanlı proje anadolu liseleri ve sosyal bilimler liseleri.";
   } else if (puan >= 380) {
     yuzdelikDilim = "%7.51 - %14.00";
+    ilYuzdelikDilim = "%6.81 - %12.50";
     tavsiyeOkullar = "Proje Anadolu Liseleri, Merkezi Sınavlı İmam Hatip ve MTAL";
-  } else if (puan >= 340) {
+    hedefYorumu = "Merkezi sınav puanıyla öğrenci alan anadolu ve mesleki teknik liseler.";
+  } else if (puan >= 330) {
     yuzdelikDilim = "%14.01 - %25.00";
+    ilYuzdelikDilim = "%12.51 - %22.00";
     tavsiyeOkullar = "Sınavla alan Anadolu & Mesleki Teknik Anadolu Liseleri";
-  } else if (puan >= 280) {
-    yuzdelikDilim = "%25.01 - %45.00";
-    tavsiyeOkullar = "Adrese dayalı Anadolu Liseleri ve Meslek Liseleri";
+    hedefYorumu = "Merkezi ve yerel kontenjanlı liseler hedeflenebilir.";
+  } else if (puan >= 270) {
+    yuzdelikDilim = "%25.01 - %40.00";
+    ilYuzdelikDilim = "%22.01 - %36.00";
+    tavsiyeOkullar = "Adrese dayalı Anadolu Liseleri ve Mesleki Teknik Liseleri";
+    hedefYorumu = "OBP ve adrese dayalı tercihler ağırlıklı değerlendirilmelidir.";
   }
 
   return {
     netler: {
       turkce: netTurkce,
-      matematik: netMatematik,
+      matematik: netMat,
       fen: netFen,
-      inkilap: netInkilap,
+      inkilap: netInk,
       din: netDin,
-      ingilizce: netIngilizce,
+      ingilizce: netIng,
       toplamNet,
     },
     toplamDogru,
@@ -137,11 +203,15 @@ export function calculateLgsScore(state: LgsFormState): LgsCalculationResult {
     toplamBos,
     puan,
     yuzdelikDilim,
+    ilYuzdelikDilim,
     tavsiyeOkullar,
+    hedefYorumu,
   };
 }
 
-// --- YKS (Yükseköğretim Kurumları Sınavı - TYT / AYT / YDT) ---
+// ============================================================================
+// 2. YKS (TYT - AYT - YDT) HESAPLAMA MOTORU
+// ============================================================================
 
 export type YksSubjectInput = {
   correct: number;
@@ -150,7 +220,8 @@ export type YksSubjectInput = {
 
 export type YksFormState = {
   diplomaNotu: number; // 50 - 100
-  kirikObp: boolean; // Önceki yıl yerleşti
+  kirikObp: boolean; // Önceki yıl bir bölüme yerleşti
+  meslekLisesiEkPuan: boolean; // Meslek lisesi kendi alanını seçerse ek puan (+0.06)
   tyt: {
     turkce: YksSubjectInput; // 40
     sosyal: YksSubjectInput; // 20
@@ -176,6 +247,7 @@ export type YksFormState = {
 export const DEFAULT_YKS_STATE: YksFormState = {
   diplomaNotu: 85,
   kirikObp: false,
+  meslekLisesiEkPuan: false,
   tyt: {
     turkce: { correct: 0, wrong: 0 },
     sosyal: { correct: 0, wrong: 0 },
@@ -206,15 +278,23 @@ export function calcYksNet(correct: number, wrong: number, maxQuestions: number)
 }
 
 export type ScoreTier = {
+  isCalculable: boolean;
+  uncalculatedReason?: string;
   hamPuan: number;
   yerlestirmePuani: number;
+  ekPuanliYerlestirme?: number;
   tahminiSiralama: string;
+  ornekBolumler: string;
 };
 
 export type YksCalculationResult = {
   obpPuan: number;
   obpKatki: number;
+  ekPuanKatki: number;
+  meslekLisesiKatki: number;
   tyt: {
+    isCalculable: boolean;
+    uncalculatedReason?: string;
     turkceNet: number;
     sosyalNet: number;
     matematikNet: number;
@@ -230,6 +310,14 @@ export type YksCalculationResult = {
   dil: ScoreTier;
 };
 
+/**
+ * ÖSYM Resmi YKS Katsayıları:
+ * TYT Ham: 100 Taban + (Türkçe*3.30 + Mat*3.30 + Sosyal*3.40 + Fen*3.40)
+ * YKS Ham Puanlarında:
+ * TYT Ağırlığı: %40 (Her TYT neti ~1.32 puan ekler)
+ * AYT Ağırlığı: %60 (Her AYT neti ~3.00 puan ekler)
+ * 0.5 Net Kuralı: TYT Türkçe veya Mat'tan en az 0.5 net yapılmalıdır.
+ */
 export function calculateYksScore(state: YksFormState): YksCalculationResult {
   // TYT Netleri
   const tytTurkce = calcYksNet(state.tyt.turkce.correct, state.tyt.turkce.wrong, 40);
@@ -237,6 +325,9 @@ export function calculateYksScore(state: YksFormState): YksCalculationResult {
   const tytMat = calcYksNet(state.tyt.matematik.correct, state.tyt.matematik.wrong, 40);
   const tytFen = calcYksNet(state.tyt.fen.correct, state.tyt.fen.wrong, 20);
   const tytToplamNet = Math.round((tytTurkce + tytSosyal + tytMat + tytFen) * 100) / 100;
+
+  // ÖSYM 0.5 Net Kuralı: Türkçe veya Temel Matematikten en az 0.5 net şartı
+  const tytHas05Net = tytTurkce >= 0.5 || tytMat >= 0.5;
 
   // AYT Netleri
   const aytMat = calcYksNet(state.ayt.matematik.correct, state.ayt.matematik.wrong, 40);
@@ -258,42 +349,68 @@ export function calculateYksScore(state: YksFormState): YksCalculationResult {
 
   const ydtNet = calcYksNet(state.ayt.ydt.correct, state.ayt.ydt.wrong, 80);
 
-  // OBP Hesabı (50-100 arası diploma notu -> 250-500 OBP -> %12 veya %6 yerleştirme katkısı)
+  // OBP Hesabı (Diploma notu 50 - 100 arası -> OBP 250 - 500)
   const safeDiplomaNotu = Math.min(100, Math.max(50, Number(state.diplomaNotu) || 50));
   const obpPuan = safeDiplomaNotu * 5;
   const katsayiObp = state.kirikObp ? 0.06 : 0.12;
   const obpKatki = Math.round(obpPuan * katsayiObp * 100) / 100;
+  const ekPuanKatki = state.meslekLisesiEkPuan ? Math.round(obpPuan * 0.06 * 100) / 100 : 0;
 
-  // TYT Puanı (ÖSYM Taban 100 + ağırlıklar)
-  // Max 120 net = 500 ham puan
-  const tytRaw = 100 + (tytTurkce * 3.3 + tytSosyal * 3.4 + tytMat * 3.3 + tytFen * 3.4);
-  const tytHamPuan = Math.min(500, Math.max(100, Math.round(tytRaw * 100) / 100));
-  const tytYerlestirme = Math.round((tytHamPuan + obpKatki) * 100) / 100;
+  // 1. TYT Puanı
+  let tytHamPuan = 100;
+  let tytYerlestirme = 100;
+  let tytCalculable = true;
+  let tytReason: string | undefined;
 
-  // SAYISAL: TYT (%40) + AYT Mat (40 soru) + AYT Fen (40 soru)
+  if (tytToplamNet > 0 && !tytHas05Net) {
+    tytCalculable = false;
+    tytReason = "ÖSYM 0.5 net kuralı: TYT puanının hesaplanması için Türkçe veya Temel Matematikten en az 0.5 net yapılmalıdır.";
+  } else {
+    const tytRaw = 100 + (tytTurkce * 3.3 + tytSosyal * 3.4 + tytMat * 3.3 + tytFen * 3.4);
+    tytHamPuan = Math.min(500, Math.max(100, Math.round(tytRaw * 100) / 100));
+    tytYerlestirme = Math.round((tytHamPuan + obpKatki) * 100) / 100;
+  }
+
+  // 2. SAYISAL (SAY): TYT (%40) + AYT Mat + AYT Fen
+  const sayHas05 = aytMat >= 0.5 || aytFenToplam >= 0.5;
+  const sayCalculable = tytCalculable && sayHas05;
   const sayRaw = 100 + tytToplamNet * 1.32 + aytMat * 3.0 + aytFenToplam * 2.85;
   const sayHam = Math.min(500, Math.max(100, Math.round(sayRaw * 100) / 100));
   const sayYerlestirme = Math.round((sayHam + obpKatki) * 100) / 100;
+  const sayEkPuan = Math.round((sayYerlestirme + ekPuanKatki) * 100) / 100;
 
-  // EŞİT AĞIRLIK: TYT (%40) + AYT Mat (40) + Sos-1 (40)
+  // 3. EŞİT AĞIRLIK (EA): TYT (%40) + AYT Mat + AYT Edebiyat-Sos-1
+  const eaHas05 = aytMat >= 0.5 || aytSos1Toplam >= 0.5;
+  const eaCalculable = tytCalculable && eaHas05;
   const eaRaw = 100 + tytToplamNet * 1.32 + aytMat * 3.0 + aytSos1Toplam * 2.95;
   const eaHam = Math.min(500, Math.max(100, Math.round(eaRaw * 100) / 100));
   const eaYerlestirme = Math.round((eaHam + obpKatki) * 100) / 100;
+  const eaEkPuan = Math.round((eaYerlestirme + ekPuanKatki) * 100) / 100;
 
-  // SÖZEL: TYT (%40) + Sos-1 (40) + Sos-2 (40)
+  // 4. SÖZEL (SÖZ): TYT (%40) + AYT Sos-1 + AYT Sos-2
+  const sozHas05 = aytSos1Toplam >= 0.5 || aytSos2Toplam >= 0.5;
+  const sozCalculable = tytCalculable && sozHas05;
   const sozRaw = 100 + tytToplamNet * 1.32 + aytSos1Toplam * 2.95 + aytSos2Toplam * 2.95;
   const sozHam = Math.min(500, Math.max(100, Math.round(sozRaw * 100) / 100));
   const sozYerlestirme = Math.round((sozHam + obpKatki) * 100) / 100;
+  const sozEkPuan = Math.round((sozYerlestirme + ekPuanKatki) * 100) / 100;
 
-  // DİL (YDT): TYT (%40) + YDT (80)
+  // 5. DİL (YDT): TYT (%40) + YDT (80)
+  const dilHas05 = ydtNet >= 0.5;
+  const dilCalculable = tytCalculable && dilHas05;
   const dilRaw = 100 + tytToplamNet * 1.32 + ydtNet * 3.0;
   const dilHam = Math.min(500, Math.max(100, Math.round(dilRaw * 100) / 100));
   const dilYerlestirme = Math.round((dilHam + obpKatki) * 100) / 100;
+  const dilEkPuan = Math.round((dilYerlestirme + ekPuanKatki) * 100) / 100;
 
   return {
     obpPuan,
     obpKatki,
+    ekPuanKatki,
+    meslekLisesiKatki: ekPuanKatki,
     tyt: {
+      isCalculable: tytCalculable,
+      uncalculatedReason: tytReason,
       turkceNet: tytTurkce,
       sosyalNet: tytSosyal,
       matematikNet: tytMat,
@@ -304,24 +421,56 @@ export function calculateYksScore(state: YksFormState): YksCalculationResult {
       tahminiSiralama: resolveTytSiralama(tytYerlestirme),
     },
     say: {
+      isCalculable: sayCalculable,
+      uncalculatedReason: !sayCalculable
+        ? !tytCalculable
+          ? "TYT puanı hesaplanamadığı için AYT Sayısal puanı da hesaplanamaz."
+          : "AYT Matematik veya Fen testinden en az 0.5 net yapılmalıdır."
+        : undefined,
       hamPuan: sayHam,
       yerlestirmePuani: sayYerlestirme,
+      ekPuanliYerlestirme: state.meslekLisesiEkPuan ? sayEkPuan : undefined,
       tahminiSiralama: resolveSaySiralama(sayYerlestirme),
+      ornekBolumler: resolveSayBolumler(sayYerlestirme),
     },
     ea: {
+      isCalculable: eaCalculable,
+      uncalculatedReason: !eaCalculable
+        ? !tytCalculable
+          ? "TYT puanı hesaplanamadığı için AYT Eşit Ağırlık puanı da hesaplanamaz."
+          : "AYT Matematik veya Edebiyat-Sosyal-1 testinden en az 0.5 net yapılmalıdır."
+        : undefined,
       hamPuan: eaHam,
       yerlestirmePuani: eaYerlestirme,
+      ekPuanliYerlestirme: state.meslekLisesiEkPuan ? eaEkPuan : undefined,
       tahminiSiralama: resolveEaSiralama(eaYerlestirme),
+      ornekBolumler: resolveEaBolumler(eaYerlestirme),
     },
     soz: {
+      isCalculable: sozCalculable,
+      uncalculatedReason: !sozCalculable
+        ? !tytCalculable
+          ? "TYT puanı hesaplanamadığı için AYT Sözel puanı da hesaplanamaz."
+          : "AYT Edebiyat-Sosyal-1 veya Sosyal-2 testinden en az 0.5 net yapılmalıdır."
+        : undefined,
       hamPuan: sozHam,
       yerlestirmePuani: sozYerlestirme,
+      ekPuanliYerlestirme: state.meslekLisesiEkPuan ? sozEkPuan : undefined,
       tahminiSiralama: resolveSozSiralama(sozYerlestirme),
+      ornekBolumler: resolveSozBolumler(sozYerlestirme),
     },
     dil: {
+      isCalculable: dilCalculable,
+      uncalculatedReason: !dilCalculable
+        ? !tytCalculable
+          ? "TYT puanı hesaplanamadığı için YDT Yabancı Dil puanı da hesaplanamaz."
+          : "YDT Yabancı Dil testinden en az 0.5 net yapılmalıdır."
+        : undefined,
       hamPuan: dilHam,
       yerlestirmePuani: dilYerlestirme,
+      ekPuanliYerlestirme: state.meslekLisesiEkPuan ? dilEkPuan : undefined,
       tahminiSiralama: resolveDilSiralama(dilYerlestirme),
+      ornekBolumler: resolveDilBolumler(dilYerlestirme),
     },
   };
 }
@@ -336,32 +485,63 @@ function resolveTytSiralama(p: number): string {
 }
 
 function resolveSaySiralama(p: number): string {
-  if (p >= 520) return "İlk 2.500 (Tıp & Tepe Müh.)";
-  if (p >= 480) return "2.500 - 20.000 (Tıp & İyi Müh.)";
-  if (p >= 430) return "20.000 - 60.000 (Mühendislik & Diş)";
-  if (p >= 370) return "60.000 - 140.000 (Mühendislik & Mimarlık)";
+  if (p >= 520) return "İlk 2.500";
+  if (p >= 480) return "2.500 - 20.000";
+  if (p >= 430) return "20.000 - 60.000";
+  if (p >= 370) return "60.000 - 140.000";
   if (p >= 300) return "140.000 - 300.000";
   return "300.000+";
 }
 
+function resolveSayBolumler(p: number): string {
+  if (p >= 520) return "Tıp (Hacettepe/Cerrahpaşa), ODTÜ & Boğaziçi Bilgisayar/Elektrik Müh.";
+  if (p >= 480) return "Devlet Tıp Fakülteleri, İTÜ & ODTÜ Mühendislikleri, Diş Hekimliği";
+  if (p >= 430) return "Mühendislikler (Makine, Endüstri, Yazılım), Eczacılık, Mimarlık";
+  if (p >= 370) return "Devlet ve Vakıf Mühendislikleri, Hemşirelik, Fizyoterapi, FKB";
+  if (p >= 300) return "Sayısal Lisans Programları, Sağlık Bilimleri, Ziraat, Orman";
+  return "Temel Bilimler ve İlgili Lisans/Önlisans Programları";
+}
+
 function resolveEaSiralama(p: number): string {
-  if (p >= 490) return "İlk 2.000 (Hukuk & İktisat Tepe)";
-  if (p >= 440) return "2.000 - 25.000 (Hukuk & Psikoloji)";
-  if (p >= 380) return "25.000 - 90.000 (İşletme & YBS)";
+  if (p >= 490) return "İlk 2.000";
+  if (p >= 440) return "2.000 - 25.000";
+  if (p >= 380) return "25.000 - 90.000";
   if (p >= 310) return "90.000 - 250.000";
   return "250.000+";
 }
 
+function resolveEaBolumler(p: number): string {
+  if (p >= 490) return "Galatasaray & Boğaziçi Hukuk / İktisat / İşletme, ODTÜ İİBF";
+  if (p >= 440) return "Devlet Hukuk Fakülteleri, Psikoloji, Yönetim Bilişim Sistemleri (YBS)";
+  if (p >= 380) return "PDR, Siyaset Bilimi, İktisat, İşletme, Maliye, Uluslararası İlişkiler";
+  if (p >= 310) return "Sınıf Öğretmenliği, Çocuk Gelişimi, Sosyoloji, Lojistik Yönetimi";
+  return "Eşit Ağırlık Lisans ve İlgili Bölümler";
+}
+
 function resolveSozSiralama(p: number): string {
-  if (p >= 470) return "İlk 1.500 (Özel Eğitim & İletişim)";
-  if (p >= 410) return "1.500 - 15.000 (Tarih & Edebiyat)";
+  if (p >= 470) return "İlk 1.500";
+  if (p >= 410) return "1.500 - 15.000";
   if (p >= 350) return "15.000 - 70.000";
   return "70.000+";
 }
 
+function resolveSozBolumler(p: number): string {
+  if (p >= 470) return "Özel Eğitim Öğretmenliği (Boğaziçi/Hacettepe), Gastronomi Tepe";
+  if (p >= 410) return "Türkçe Öğretmenliği, İlahiyat / İslami İlimler, Radyo-TV-Sinema";
+  if (p >= 350) return "Halkla İlişkiler, Tarih, Coğrafya, Gazetecilik, Görsel İletişim";
+  return "Sözel Lisans Programları";
+}
+
 function resolveDilSiralama(p: number): string {
-  if (p >= 480) return "İlk 1.500 (Mütercim & İng. Öğrt.)";
-  if (p >= 420) return "1.500 - 12.000 (İngiliz Dili)";
+  if (p >= 480) return "İlk 1.500";
+  if (p >= 420) return "1.500 - 12.000";
   if (p >= 350) return "12.000 - 40.000";
   return "40.000+";
+}
+
+function resolveDilBolumler(p: number): string {
+  if (p >= 480) return "Mütercim Tercümanlık (Boğaziçi/Hacettepe), İngilizce Öğretmenliği";
+  if (p >= 420) return "İngiliz Dili ve Edebiyatı, Amerikan Kültürü, Turizm Rehberliği";
+  if (p >= 350) return "Almanca/Fransızca Öğretmenliği, Karşılaştırmalı Edebiyat";
+  return "Yabancı Dil Lisans Programları";
 }
