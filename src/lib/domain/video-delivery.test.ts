@@ -5,6 +5,7 @@ import {
   getHlsUrl,
   getMediaPlaybackUrl,
   getVideoPlaybackUrl,
+  getVideoSources,
 } from "./video-delivery";
 
 describe("Video Delivery & Adaptive Streaming Suite", () => {
@@ -39,5 +40,23 @@ describe("Video Delivery & Adaptive Streaming Suite", () => {
   it("supports getMediaPlaybackUrl fallback gracefully", () => {
     const url = getMediaPlaybackUrl("avatars/user-123.jpg");
     expect(url).toContain("/storage/v1/object/public/avatars/user-123.jpg");
+  });
+
+  it("provides prioritized adaptive HLS and MP4 fallback sources for Cloudflare Stream", () => {
+    const sources = getVideoSources("cf:vid999");
+    expect(sources).toHaveLength(2);
+    expect(sources[0].src).toBe("https://cloudflarestream.com/vid999/manifest/video.m3u8");
+    expect(sources[0].type).toBe("application/x-mpegURL");
+    expect(sources[1].src).toBe("https://cloudflarestream.com/vid999/downloads/default.mp4");
+    expect(sources[1].type).toBe("video/mp4");
+  });
+
+  it("provides prioritized adaptive HLS and MP4 fallback sources for Mux", () => {
+    const sources = getVideoSources("mux:playback123");
+    expect(sources).toHaveLength(2);
+    expect(sources[0].src).toBe("https://stream.mux.com/playback123.m3u8");
+    expect(sources[0].type).toBe("application/x-mpegURL");
+    expect(sources[1].src).toBe("https://stream.mux.com/playback123/high.mp4");
+    expect(sources[1].type).toBe("video/mp4");
   });
 });

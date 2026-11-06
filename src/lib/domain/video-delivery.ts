@@ -130,6 +130,42 @@ export function isAdaptiveStreamingEnabled() {
   return Boolean(process.env.NEXT_PUBLIC_VIDEO_HLS_ENABLED === "true" || isMuxEnabled());
 }
 
+export type VideoSourceDescriptor = {
+  src: string;
+  type?: string;
+};
+
+/**
+ * Returns prioritized HTML5 video sources (HLS adaptive manifest first, MP4 fallback second)
+ * to maximize streaming efficiency while ensuring cross-browser compatibility.
+ */
+export function getVideoSources(storagePath: string): VideoSourceDescriptor[] {
+  if (!storagePath) return [];
+
+  // Cloudflare Stream (HLS adaptive + MP4 fallback)
+  if (storagePath.startsWith("cf:") || storagePath.startsWith("stream:")) {
+    const videoId = storagePath.replace(/^(cf:|stream:)/, "");
+    const streamDomain = (process.env.NEXT_PUBLIC_CLOUDFLARE_STREAM_DOMAIN || "cloudflarestream.com").trim().replace(/\/$/, "");
+    return [
+      { src: `https://${streamDomain}/${videoId}/manifest/video.m3u8`, type: "application/x-mpegURL" },
+      { src: `https://${streamDomain}/${videoId}/downloads/default.mp4`, type: "video/mp4" },
+    ];
+  }
+
+  // Mux (HLS playlist + MP4 fallback)
+  if (storagePath.startsWith("mux:")) {
+    const playbackId = storagePath.replace(/^mux:/, "");
+    const muxBase = (process.env.NEXT_PUBLIC_MUX_PLAYBACK_BASE || "https://stream.mux.com").trim().replace(/\/$/, "");
+    return [
+      { src: `${muxBase}/${playbackId}.m3u8`, type: "application/x-mpegURL" },
+      { src: `${muxBase}/${playbackId}/high.mp4`, type: "video/mp4" },
+    ];
+  }
+
+  const primaryUrl = getMediaPlaybackUrl(storagePath);
+  return [{ src: primaryUrl, type: primaryUrl.endsWith(".mp4") ? "video/mp4" : undefined }];
+}
+
 export type ImageTransformOptions = {
   width?: number;
   quality?: number;

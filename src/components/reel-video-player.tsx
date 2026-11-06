@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
+import { getMediaPlaybackUrl, getVideoSources } from "@/lib/domain/video-delivery";
 
 type ReelVideoPlayerProps = {
   mediaUrl: string;
@@ -128,6 +128,7 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
   }
 
   const [isMuted, setIsMuted] = useState(true);
+  const videoSources = getVideoSources(mediaUrl);
 
   function toggleMute(e: React.MouseEvent) {
     e.stopPropagation();
@@ -164,7 +165,11 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
         playsInline
         preload="metadata"
         src={playbackUrl}
-      />
+      >
+        {videoSources.map((source, idx) => (
+          <source key={idx} src={source.src} type={source.type} />
+        ))}
+      </video>
 
       {/* Top right mute/unmute button */}
       <button
