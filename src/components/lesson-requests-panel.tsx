@@ -47,6 +47,25 @@ function statusLabel(status: RequestItem["status"], labels: ReturnType<typeof us
   return labels.closedStatus;
 }
 
+function maskSenderName(fullName: string | null | undefined, fallback: string): string {
+  if (!fullName) return fallback;
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0] + " (Veli)";
+  const firstName = parts[0];
+  const lastInitial = parts[parts.length - 1][0] ?? "";
+  return `${firstName} ${lastInitial}. (Veli)`;
+}
+
+function triggerHaptic(pattern: number | number[] = 15) {
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      // Haptic support silent fallback
+    }
+  }
+}
+
 export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, childrenOptions = [] }: LessonRequestsPanelProps) {
   const lr = useMessages().lessonRequests;
   const b = useMessages().billingUi;
@@ -68,6 +87,52 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
     () => requests.filter((item) => item.status === "pending" && item.receiver_id === viewerId).length,
     [requests, viewerId],
   );
+
+  // Veli ilan taslağını localStorage ile koru (State Persistence)
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const savedBody = localStorage.getItem("zigo_draft_lesson_req_body");
+        if (savedBody) setRequestBody(savedBody);
+        const savedTeacher = localStorage.getItem("zigo_draft_lesson_req_teacher");
+        if (savedTeacher) setSelectedTeacherId(savedTeacher);
+        const savedChild = localStorage.getItem("zigo_draft_lesson_req_child");
+        if (savedChild) setSelectedChildId(savedChild);
+      }
+    } catch {
+      // LocalStorage access safe fallback
+    }
+  }, []);
+
+  const handleRequestBodyChange = (val: string) => {
+    setRequestBody(val);
+    try {
+      if (val) localStorage.setItem("zigo_draft_lesson_req_body", val);
+      else localStorage.removeItem("zigo_draft_lesson_req_body");
+    } catch {
+      // safe fallback
+    }
+  };
+
+  const handleTeacherChange = (val: string) => {
+    setSelectedTeacherId(val);
+    try {
+      if (val) localStorage.setItem("zigo_draft_lesson_req_teacher", val);
+      else localStorage.removeItem("zigo_draft_lesson_req_teacher");
+    } catch {
+      // safe fallback
+    }
+  };
+
+  const handleChildChange = (val: string) => {
+    setSelectedChildId(val);
+    try {
+      if (val) localStorage.setItem("zigo_draft_lesson_req_child", val);
+      else localStorage.removeItem("zigo_draft_lesson_req_child");
+    } catch {
+      // safe fallback
+    }
+  };
 
   async function loadRequests() {
     const response = await fetch("/api/lesson-requests");
@@ -125,6 +190,16 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
       setRequestBody("");
       setSelectedTeacherId("");
       setSelectedChildId("");
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("zigo_draft_lesson_req_body");
+          localStorage.removeItem("zigo_draft_lesson_req_teacher");
+          localStorage.removeItem("zigo_draft_lesson_req_child");
+        }
+      } catch {
+        // safe fallback
+      }
+      triggerHaptic([20, 40, 20]);
       await loadRequests();
       router.refresh();
     } catch (error) {
@@ -252,7 +327,7 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
             <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{lr.chooseTeacher}</span>
             <select
               className="zigo-input mt-1 w-full rounded-xl px-3 py-2 text-sm font-semibold"
-              onChange={(event) => setSelectedTeacherId(event.target.value)}
+              onChange={(event) => handleTeacherChange(event.target.value)}
               value={selectedTeacherId}
             >
               <option value="">{lr.chooseTeacher}</option>
@@ -274,7 +349,7 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
               <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{lr.chooseChild}</span>
               <select
                 className="zigo-input mt-1 w-full rounded-xl px-3 py-2 text-sm font-semibold"
-                onChange={(event) => setSelectedChildId(event.target.value)}
+                onChange={(event) => handleChildChange(event.target.value)}
                 value={selectedChildId}
               >
                 <option value="">{lr.chooseChild}</option>
@@ -291,7 +366,7 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
             <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{lr.messageLabel}</span>
             <textarea
               className="zigo-input mt-1 min-h-24 w-full rounded-xl px-3 py-2 text-sm font-semibold"
-              onChange={(event) => setRequestBody(event.target.value)}
+              onChange={(event) => handleRequestBodyChange(event.target.value)}
               placeholder={lr.messagePlaceholder}
               value={requestBody}
             />
@@ -320,10 +395,13 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
       ) : (
         <div className="mt-4 space-y-3">
           {requests.map((item) => {
+            const rawSender = item.sender?.full_name ?? lr.fromParent;
             const counterpart =
               role === "parent"
                 ? item.receiver?.full_name ?? lr.toTeacher
-                : item.sender?.full_name ?? lr.fromParent;
+                : !isSubscriber
+                  ? maskSenderName(rawSender, lr.fromParent)
+                  : rawSender;
             const isTeacherPending = role === "teacher" && item.status === "pending" && item.receiver_id === viewerId;
 
             const peerUserId = item.sender_id === viewerId ? item.receiver_id : item.sender_id;
@@ -332,7 +410,14 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
               <article className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4" key={item.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-black text-night">{counterpart}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-black text-night">{counterpart}</p>
+                      {role === "teacher" && !isSubscriber ? (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.62rem] font-black text-amber-800">
+                          Özel Ders
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-1 text-xs font-bold uppercase tracking-[0.08em] text-slate-500">
                       {statusLabel(item.status, lr)}
                     </p>
@@ -343,20 +428,55 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                 </div>
                 {/* Öğretmen abone değilse: Talebi görür, ancak ayrıntıları ve veli mesajını okumak/yanıtlamak için Zigo Plus gerekir */}
                 {role === "teacher" && !isSubscriber ? (
-                  <div className="mt-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3.5">
-                    <p className="text-xs font-bold text-slate-500 blur-[3px] select-none">
-                      {item.message_body || "Merhaba hocam, çocuğum için haftalık 2 saat LGS hazırlık özel dersi almak istiyoruz..."}
-                    </p>
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <p className="text-xs font-black text-amber-900">
-                        🔒 Velinin mesajı ve iletişim detayları kilitli
+                  <div className="mt-3 overflow-hidden rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50/80 via-white to-orange-50/70 p-4 shadow-xs">
+                    <div className="relative">
+                      {/* Blurred teaser message */}
+                      <p className="select-none text-xs leading-5 font-medium text-slate-400 blur-[4px]">
+                        {item.message_body || "Merhaba hocam, çocuğum için haftalık 2 saat LGS hazırlık özel dersi almak istiyoruz. Hafta içi akşam veya hafta sonu saatleriniz uygun mudur? Dönüş yaparsanız çok seviniriz, teşekkürler."}
                       </p>
-                      <a
-                        href="/pricing"
-                        className="tap-scale rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-sm hover:brightness-105 transition shrink-0"
-                      >
-                        Zigo Plus ile Aç ✨
-                      </a>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-night/85 px-3 py-1 text-[0.7rem] font-black text-amber-300 shadow-sm backdrop-blur-xs">
+                          <span>🔒</span>
+                          <span>Veli Mesajı ve Detaylar Gizli</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3.5 space-y-2.5 border-t border-amber-100/80 pt-3">
+                      <div className="flex items-center justify-between text-xs font-black text-amber-950">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-amber-500">✨</span>
+                          <span>Zigo Plus Öğretmen Ayrıcalığı</span>
+                        </span>
+                        <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[0.65rem] font-black text-amber-800">
+                          %50 İndirim Fırsatı
+                        </span>
+                      </div>
+
+                      <ul className="space-y-1.5 text-[0.72rem] font-semibold text-slate-600">
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-600 font-bold">✓</span>
+                          <span>Velinin mesajını, telefon numarasını ve ders beklentisini anında aç</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-600 font-bold">✓</span>
+                          <span>Canlı DM ve sohbet başlat, teklifini ilet</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-600 font-bold">✓</span>
+                          <span>%0 Komisyon — Kazancınızın %100&apos;ü sizde kalır</span>
+                        </li>
+                      </ul>
+
+                      <div className="pt-1">
+                        <a
+                          href="/pricing"
+                          onClick={() => triggerHaptic([20, 40])}
+                          className="tap-scale flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 px-4 py-2.5 text-xs font-black text-slate-950 shadow-sm hover:brightness-105 transition"
+                        >
+                          <span>👑 Talebi Aç &amp; Zigo Plus&apos;a Geç (%50 İndirimli)</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -368,7 +488,10 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                         <button
                           className="tap-scale rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white"
                           disabled={pendingAction === item.id}
-                          onClick={() => void updateStatus(item.id, "accepted")}
+                          onClick={() => {
+                            triggerHaptic(20);
+                            void updateStatus(item.id, "accepted");
+                          }}
                           type="button"
                         >
                           {lr.accept}
@@ -376,7 +499,10 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                         <button
                           className="tap-scale rounded-xl bg-rose-500 px-3 py-2 text-xs font-black text-white"
                           disabled={pendingAction === item.id}
-                          onClick={() => void updateStatus(item.id, "rejected")}
+                          onClick={() => {
+                            triggerHaptic(20);
+                            void updateStatus(item.id, "rejected");
+                          }}
                           type="button"
                         >
                           {lr.reject}
@@ -402,7 +528,7 @@ export function LessonRequestsPanel({ role, viewerId, isSubscriber = true, child
                   </>
                 )}
 
-                {item.status === "accepted" ? (
+                {isSubscriber && item.status === "accepted" ? (
                   <div className="mt-3 space-y-3">
                     <button
                       className="tap-scale text-sm font-black text-crystal"

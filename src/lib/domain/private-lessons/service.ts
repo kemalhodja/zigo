@@ -249,11 +249,9 @@ export async function getMatchedLessonPostsForTeacher(
     return [];
   }
 
-  // 3. Abonelik kontrolü — abone değilse yine boş döndür; UI katmanı göstermez
+  // 3. Abonelik kontrolü (Hook Modeli: Abonesiz öğretmen ilanları listede görebilir; ancak detaylar ve veli mesajı maskelenir)
   const subscription = await getUserSubscription(supabase, teacherId);
-  if (!subscription.isPremium) {
-    return [];
-  }
+  const isPremium = Boolean(subscription.isPremium);
 
   // 4. Öğretmenin branşlarının jenerik isimlerini (Örn: "Matematik") bul,
   // ve veritabanındaki aynı jenerik isme sahip TÜM area_id'leri topla.
@@ -310,10 +308,22 @@ export async function getMatchedLessonPostsForTeacher(
 
   const myBidsMap = new Map(myBids.map((b) => [b.post_id, b]));
 
-  return ((posts || []).map((p) => ({
-    ...p,
-    my_bid: myBidsMap.get(p.id) || null,
-  }))) as PrivateLessonPostWithDetails[];
+  return ((posts || []).map((p) => {
+    if (!isPremium) {
+      return {
+        ...p,
+        description:
+          p.description.slice(0, 50) +
+          "... [Velinin tam mesajı ve iletişim detayları Zigo Plus ile açılır]",
+        parent: p.parent ? { ...p.parent, full_name: "Veli (Zigo Plus ile açılır)" } : null,
+        my_bid: null,
+      };
+    }
+    return {
+      ...p,
+      my_bid: myBidsMap.get(p.id) || null,
+    };
+  })) as PrivateLessonPostWithDetails[];
 }
 
 /**
