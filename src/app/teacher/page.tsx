@@ -14,6 +14,7 @@ import { TeacherLeaderboardCard, type TeacherLeaderboardEntry } from "@/componen
 import { TeacherQuizForm } from "@/components/teacher-quiz-form";
 import { TeacherSponsoredAdsPanel } from "@/components/teacher-sponsored-ads-panel";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
+import { TeacherTrustModal } from "@/components/teacher-trust-modal";
 import { WhatsAppSupportCard } from "@/components/whatsapp-support-card";
 import { ZigoPlusPlansSection } from "@/components/zigo-plus-plans-section";
 import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
@@ -172,6 +173,25 @@ export default async function TeacherPage({
             moreLabel={tb.moreAreas}
             verified={profile.is_verified}
             verifiedLabel={tb.verifiedTeacher}
+          />
+          <TeacherTrustModal
+            teacher={{
+              id: profile.id,
+              fullName: profile.full_name,
+              avatarUrl: profile.avatar_url,
+              branch: branchNames[0] || "Branş Öğretmeni",
+              experienceYears: 5,
+              recommendationRate: 100,
+            }}
+            triggerButton={
+              <button
+                type="button"
+                className="tap-scale inline-flex items-center gap-1 rounded-full bg-white/20 border border-white/30 px-3 py-1 text-xs font-black text-white hover:bg-white/30 transition shadow-xs backdrop-blur-xs"
+              >
+                <span>🛡️</span>
+                <span>Güven Belgemi Gör</span>
+              </button>
+            }
           />
         </div>
 
