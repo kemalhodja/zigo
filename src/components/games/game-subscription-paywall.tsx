@@ -26,7 +26,7 @@ export function GameSubscriptionPaywall({
 
   const features = isStudent
     ? [
-        { icon: "⏱️", label: "Günde 1 Saat" },
+        { icon: "⏱️", label: "Günde 2 Saat" },
         { icon: "🌙", label: "08:00–22:00" },
         { icon: "🏆", label: "XP Puanları" },
       ]

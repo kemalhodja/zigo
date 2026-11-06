@@ -15,6 +15,15 @@ export function MiniGamesArcadeSection({
       ? "Günde maksimum 2 saat · 08:00–22:00 · Zigo Puanı (XP) kazan!"
       : "Zihnini dinlendir, odaklan ve Zigo Puanı (XP) kazan!";
 
+  const getPlayLink = (targetHref: string) => (isPremium ? targetHref : "/pricing");
+  const playButtonLabel = isPremium ? "Oyna" : "🔒 Abone Ol";
+  const playButtonClass = (textColor: string) =>
+    `tap-scale shrink-0 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs transition-colors ${
+      isPremium
+        ? `bg-white ${textColor} hover:bg-slate-50`
+        : "bg-amber-100 text-amber-950 border border-amber-300 hover:bg-amber-200"
+    }`;
+
   return (
     <section className={`space-y-2.5 ${className}`}>
       <div className="flex items-center justify-between">
@@ -48,10 +57,10 @@ export function MiniGamesArcadeSection({
                 </div>
             </div>
             <Link
-              href="/games/memory"
-              className="tap-scale shrink-0 bg-white text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-indigo-50 transition-colors"
+              href={getPlayLink("/games/memory")}
+              className={playButtonClass("text-indigo-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
@@ -73,9 +82,10 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/games/blocks"              className="tap-scale shrink-0 bg-white text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-emerald-50 transition-colors"
+              href={getPlayLink("/games/blocks")}
+              className={playButtonClass("text-emerald-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform -rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
@@ -97,10 +107,10 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/games/pipe"
-              className="tap-scale shrink-0 bg-white text-cyan-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-cyan-50 transition-colors"
+              href={getPlayLink("/games/pipe")}
+              className={playButtonClass("text-cyan-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-6 transition-transform group-hover:scale-110 pointer-events-none">
@@ -122,10 +132,10 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/games/math"
-              className="tap-scale shrink-0 bg-white text-rose-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-rose-50 transition-colors"
+              href={getPlayLink("/games/math")}
+              className={playButtonClass("text-rose-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform -rotate-6 transition-transform group-hover:scale-110 pointer-events-none">
@@ -147,10 +157,10 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/games/word"
-              className="tap-scale shrink-0 bg-white text-teal-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-teal-50 transition-colors"
+              href={getPlayLink("/games/word")}
+              className={playButtonClass("text-teal-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
@@ -173,10 +183,10 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/games/taboo"
-              className="tap-scale shrink-0 bg-white text-fuchsia-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-fuchsia-50 transition-colors"
+              href={getPlayLink("/games/taboo")}
+              className={playButtonClass("text-fuchsia-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
@@ -198,10 +208,10 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/games/2048"
-              className="tap-scale shrink-0 bg-white text-orange-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-orange-50 transition-colors"
+              href={getPlayLink("/games/2048")}
+              className={playButtonClass("text-orange-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform rotate-12 transition-transform group-hover:scale-110 pointer-events-none">
@@ -223,10 +233,10 @@ export function MiniGamesArcadeSection({
               </div>
             </div>
             <Link
-              href="/games/sudoku"
-              className="tap-scale shrink-0 bg-white text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-black shadow-xs hover:bg-indigo-50 transition-colors"
+              href={getPlayLink("/games/sudoku")}
+              className={playButtonClass("text-indigo-700")}
             >
-              Oyna
+              {playButtonLabel}
             </Link>
           </div>
           <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10 text-6xl transform -rotate-12 transition-transform group-hover:scale-110 pointer-events-none">

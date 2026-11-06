@@ -13,7 +13,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ExploreSearchBar } from "@/components/explore-search-bar";
 import { SocialMediaFrame } from "@/components/social-media-frame";
-import { SocialAvatar } from "@/components/social-primitives";
+import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCachedUserProfile } from "@/lib/domain/profiles.server";
 import {
@@ -153,10 +153,12 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 label={creator.full_name}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-white">{creator.full_name}</p>
-                <p className="text-xs font-bold text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-sm font-black text-night">{creator.full_name}</p>
+                  {creator.is_verified ? <VerifiedBadge className="size-3.5 text-crystal" /> : null}
+                </div>
+                <p className="text-xs font-bold text-slate-500">
                   {creator.role === "teacher" ? e.teachers : creator.role === "student" ? "Öğrenci" : creator.role === "parent" ? "Veli" : creator.role}
-                  {creator.is_verified ? e.teacherVerifiedBadge : ""}
                 </p>
               </div>
               <svg aria-hidden="true" className="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -189,7 +191,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
                 <path d="M20 20l-4-4" />
               </svg>
             </span>
-            <h2 className="mt-5 text-xl font-black text-white">{e.noPosts}</h2>
+            <h2 className="mt-5 text-xl font-black text-night">{e.noPosts}</h2>
             <p className="mx-auto mt-2 max-w-72 text-sm font-semibold leading-6 text-slate-400">{e.trendDesc}</p>
           </div>
         ) : activeFormat !== "teachers" ? (
