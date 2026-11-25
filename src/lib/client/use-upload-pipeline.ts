@@ -16,9 +16,10 @@
 
 import { useRef, useState } from "react";
 
-import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
+import { compressImage, isSupportedImageFile, validateImageLimits } from "@/lib/client/compress-image";
 import {
   compressVideo,
+  isSupportedVideoFile,
   validateVideoLimits,
   VIDEO_COMPRESS_THRESHOLD_BYTES,
   VIDEO_MAX_SIZE_BYTES,
@@ -44,6 +45,7 @@ export interface PublishInput {
   targetGrade: string;
   isReel: boolean;
   files: File[];
+  videoPosterFile?: File | null;
   teacherCreatorPlus?: boolean;
   premiumPrepLabel?: string;
   premiumPrepUrl?: string;
@@ -121,7 +123,7 @@ export function useUploadPipeline() {
         let fileToUpload = input.files[i];
         
         // ── Validate & Compress Images ─────────────────────────────────────
-        if (fileToUpload.type.startsWith("image/")) {
+        if (fileToUpload.type.startsWith("image/") || isSupportedImageFile(fileToUpload)) {
           const imgValidation = validateImageLimits(fileToUpload);
           if (!imgValidation.valid) {
             console.error(`[POST_PIPELINE] Image validation failed for file ${i + 1}:`, imgValidation.error);
@@ -139,7 +141,7 @@ export function useUploadPipeline() {
         let videoDurationSeconds: number | undefined;
 
         // ── Validate & Compress Videos ─────────────────────────────────────
-        if (fileToUpload.type.startsWith("video/")) {
+        if (fileToUpload.type.startsWith("video/") || isSupportedVideoFile(fileToUpload)) {
           const videoValidation = await validateVideoLimits(fileToUpload, { isReel: input.isReel });
           if (!videoValidation.valid) {
             console.error(`[POST_PIPELINE] Video validation failed for file ${i + 1}:`, videoValidation.error);
@@ -228,6 +230,23 @@ export function useUploadPipeline() {
         mediaUrl = JSON.stringify(uploadedUrls);
       } else {
         mediaUrl = uploadedUrls[0];
+      }
+
+      // ── Optional custom cover photo (thumbnail) for short promo video ────
+      if (mediaType === "video" && input.videoPosterFile && mediaUrl) {
+        try {
+          setPhase("uploading");
+          setProgress(70);
+          setMessage("Video kapağı yükleniyor…");
+          const optimizedPoster = await compressImage(input.videoPosterFile, 1280, 0.82);
+          const posterUpload = await uploadSocialMedia(optimizedPoster);
+          uploadedObjectPaths.push(posterUpload.objectPath);
+          const sep = mediaUrl.includes("?") ? "&" : "?";
+          mediaUrl = `${mediaUrl}${sep}poster=${encodeURIComponent(posterUpload.objectPath)}`;
+        } catch (posterErr) {
+          // Non-fatal: continue publishing the video even if custom cover fails
+          console.warn("[POST_PIPELINE] Video poster upload skipped:", posterErr);
+        }
       }
       
       setProgress(75);

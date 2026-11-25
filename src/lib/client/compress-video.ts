@@ -20,12 +20,50 @@ export const REEL_MAX_DURATION_SECONDS = SHORT_VIDEO_MAX_DURATION_SECONDS;
 export const LESSON_VIDEO_MAX_DURATION_SECONDS = SHORT_VIDEO_MAX_DURATION_SECONDS;
 export const VIDEO_MAX_DURATION_SECONDS = SHORT_VIDEO_MAX_DURATION_SECONDS;
 
+export const SUPPORTED_VIDEO_MIME_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-m4v",
+  "video/m4v",
+]);
+
+const VIDEO_EXT_REGEX = /\.(mp4|webm|mov|m4v)$/i;
+
+/**
+ * Checks if a file is a supported short-video format (MP4, WEBM, iPhone MOV, M4V).
+ */
+export function isSupportedVideoFile(file: File): boolean {
+  const mime = file.type.toLowerCase();
+  if (SUPPORTED_VIDEO_MIME_TYPES.has(mime)) return true;
+  if (!mime || mime === "application/octet-stream") {
+    return VIDEO_EXT_REGEX.test(file.name);
+  }
+  return false;
+}
+
+/**
+ * Returns the canonical upload MIME type for supported video files.
+ */
+export function resolveVideoMimeType(file: File): "video/mp4" | "video/webm" | "video/quicktime" | "video/x-m4v" {
+  const mime = file.type.toLowerCase();
+  if (mime === "video/webm" || /\.webm$/i.test(file.name)) return "video/webm";
+  if (mime === "video/quicktime" || /\.mov$/i.test(file.name)) return "video/quicktime";
+  if (mime === "video/x-m4v" || mime === "video/m4v" || /\.m4v$/i.test(file.name)) return "video/x-m4v";
+  return "video/mp4";
+}
+
 /** Validate client-side short promo video file size (25 MB max) and duration (30s max). */
 export async function validateVideoLimits(
   file: File,
   options?: { isReel?: boolean; maxDurationSeconds?: number }
 ): Promise<{ valid: boolean; error?: string; duration?: number }> {
-  if (!file.type.startsWith("video/")) return { valid: true };
+  if (!isSupportedVideoFile(file)) {
+    return {
+      valid: false,
+      error: "Desteklenmeyen video formatı. MP4, WEBM, MOV (iPhone) veya M4V yükleyebilirsiniz.",
+    };
+  }
 
   if (file.size > VIDEO_MAX_SIZE_BYTES) {
     return {

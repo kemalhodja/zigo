@@ -1090,7 +1090,7 @@ export const catalogTr = {
     mediaReady: "Medya hazır",
     change: "Değiştir",
     chooseMedia: "Medya seç",
-    chooseMediaHint: "Fotoğraf veya kısa tanıtım videosu (maks. 30 sn, 25 MB). Uzun videolar için YouTube, Vimeo vb. link ekleyebilirsiniz.",
+    chooseMediaHint: "Fotoğraf (JPG/PNG/WEBP/HEIC/AVIF) veya kısa tanıtım videosu (MP4/MOV/WEBM · maks. 30 sn, 25 MB). Uzun videolar için YouTube/Vimeo linki ekleyin.",
     captionPlaceholder: "Bir açıklama yaz…",
     image: "Görsel",
     video: "Video",

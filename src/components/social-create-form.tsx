@@ -6,14 +6,14 @@ import { useEffect, useRef, useState } from "react";
 import type { ComposerArea } from "@/components/create-mode-composer";
 import { type MediaFilterPreset,SocialMediaFrame } from "@/components/social-media-frame";
 import { TeacherCreatorPlusLock } from "@/components/teacher-creator-plus-lock";
-import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
+import { compressImage, isSupportedImageFile, prepareImageForUpload } from "@/lib/client/compress-image";
 import {
   compressVideo,
+  isSupportedVideoFile,
   validateVideoLimits,
   VIDEO_COMPRESS_THRESHOLD_BYTES,
   VIDEO_MAX_SIZE_BYTES,
 } from "@/lib/client/compress-video";
-import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { uploadSocialMedia } from "@/lib/client/upload-media";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
@@ -23,7 +23,6 @@ import type { Messages } from "@/lib/i18n/server";
 
 type Status = "idle" | "saving" | "saved" | "error";
 type PublishStep = "idle" | "compressing" | "uploading" | "publishing" | "done";
-const allowedMediaTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"]);
 const draftKey = "zigo:composer-draft";
 
 type SocialCreateFormProps = {
@@ -127,7 +126,10 @@ export function SocialCreateForm({
       return;
     }
 
-    if (!allowedMediaTypes.has(file.type)) {
+    const isVideo = file.type.startsWith("video/") || isSupportedVideoFile(file);
+    const isImage = !isVideo && (file.type.startsWith("image/") || isSupportedImageFile(file));
+
+    if (!isVideo && !isImage) {
       setStatus("error");
       setMessage(sc.mediaTypeError);
       setPreview(null);
@@ -135,7 +137,7 @@ export function SocialCreateForm({
       return;
     }
 
-    if (file.type.startsWith("video/")) {
+    if (isVideo) {
       setIsValidating(true);
       const videoVal = await validateVideoLimits(file, { isReel: true });
       setIsValidating(false);
@@ -158,21 +160,23 @@ export function SocialCreateForm({
       return;
     }
 
-    const imgVal = validateImageLimits(file);
-    if (!imgVal.valid) {
+    setIsValidating(true);
+    const prepared = await prepareImageForUpload(file);
+    setIsValidating(false);
+    if (!prepared.valid) {
       setStatus("error");
-      setMessage(imgVal.error ?? sc.mediaSizeError);
+      setMessage(prepared.error);
       setPreview(null);
       setSelectedFile(null);
       return;
     }
 
-    setSelectedFile(file);
+    setSelectedFile(prepared.file);
     setMediaTypeValue("image");
     setStatus("idle");
     setMessage("");
     setPreview({
-      url: URL.createObjectURL(file),
+      url: URL.createObjectURL(prepared.file),
       type: "image",
     });
   }
@@ -404,7 +408,7 @@ export function SocialCreateForm({
             <span className="mt-1 block text-xs font-bold text-white/70">{sc.chooseMediaHint}</span>
           </span>
           <input
-            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-m4v,.avif,.heic,.heif,.mov,.m4v"
             className="sr-only"
             name="file"
             onChange={(event) => {
@@ -426,7 +430,7 @@ export function SocialCreateForm({
               <label className="shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-night shadow-sm hover:bg-slate-100">
                 {sc.change}
                 <input
-                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-m4v,.avif,.heic,.heif,.mov,.m4v"
                   className="sr-only"
                   name="file"
                   onChange={(event) => {

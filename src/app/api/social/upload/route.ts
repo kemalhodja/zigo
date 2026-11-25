@@ -13,10 +13,14 @@ const ALLOWED_IMAGE_TYPES = new Set([
   "image/png",
   "image/webp",
   "image/gif",
+  "image/avif",
 ]);
 const ALLOWED_VIDEO_TYPES = new Set([
   "video/mp4",
   "video/webm",
+  "video/quicktime",
+  "video/x-m4v",
+  "video/m4v",
 ]);
 const ALLOWED_TYPES = new Set([...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES]);
 
@@ -29,9 +33,21 @@ const EXTENSION_BY_TYPE = new Map([
   ["image/png", "png"],
   ["image/webp", "webp"],
   ["image/gif", "gif"],
+  ["image/avif", "avif"],
   ["video/mp4", "mp4"],
   ["video/webm", "webm"],
+  // Normalize iPhone MOV / M4V (ISO-BMFF ftyp) to MP4 for universal bucket + browser playback
+  ["video/quicktime", "mp4"],
+  ["video/x-m4v", "mp4"],
+  ["video/m4v", "mp4"],
 ]);
+
+function resolveStorageContentType(contentType: string): string {
+  if (contentType === "video/quicktime" || contentType === "video/x-m4v" || contentType === "video/m4v") {
+    return "video/mp4";
+  }
+  return contentType;
+}
 
 const signedUploadRequestSchema = z.object({
   mode: z.literal("signed-url"),
@@ -58,8 +74,14 @@ async function hasValidFileSignature(file: File) {
       return ascii(0, 6) === "GIF87a" || ascii(0, 6) === "GIF89a";
     case "image/webp":
       return ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP";
-    case "video/mp4":
+    case "image/avif":
       return ascii(4, 4) === "ftyp";
+    case "video/mp4":
+    case "video/quicktime":
+    case "video/x-m4v":
+    case "video/m4v":
+      // ISO-BMFF containers (MP4, MOV, M4V) use ftyp, moov, mdat, wide, or free atoms at byte 4
+      return ["ftyp", "moov", "mdat", "wide", "free"].includes(ascii(4, 4));
     case "video/webm":
       return startsWith(0x1a, 0x45, 0xdf, 0xa3);
     default:
@@ -128,9 +150,10 @@ export async function POST(request: Request) {
       }
 
       const { contentType, fileSize, durationSeconds } = parsed.data;
-      if (!ALLOWED_VIDEO_TYPES.has(contentType)) {
+      const normalizedType = contentType.toLowerCase();
+      if (!ALLOWED_VIDEO_TYPES.has(normalizedType)) {
         return NextResponse.json(
-          { error: "Kısa tanıtım videoları için yalnızca MP4 veya WEBM formatı desteklenir." },
+          { error: "Kısa tanıtım videoları için MP4, WEBM, MOV (iPhone) veya M4V formatı desteklenir." },
           { status: 400 },
         );
       }
@@ -153,7 +176,8 @@ export async function POST(request: Request) {
         );
       }
 
-      const extension = EXTENSION_BY_TYPE.get(contentType) ?? "mp4";
+      const extension = EXTENSION_BY_TYPE.get(normalizedType) ?? "mp4";
+      const storageContentType = resolveStorageContentType(normalizedType);
       const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
 
       const { data: signedData, error: signedError } = await supabase.storage
@@ -190,6 +214,7 @@ export async function POST(request: Request) {
         data: {
           signedUrl: signedData.signedUrl,
           token: signedData.token,
+          storageContentType,
           mediaUrl: `/api/social/media?path=${encodeURIComponent(objectPath)}`,
           mediaType: "video" as const,
           objectPath,
@@ -205,16 +230,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Lütfen bir medya dosyası seçin." }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.has(file.type)) {
+    const normalizedType = file.type.toLowerCase();
+    if (!ALLOWED_TYPES.has(normalizedType)) {
       return NextResponse.json(
         {
-          error: "Desteklenmeyen dosya türü. Fotoğraf (JPG, PNG, WEBP, GIF) veya kısa tanıtım videosu (MP4, WEBM · maks. 30 sn) yükleyebilirsiniz.",
+          error: "Desteklenmeyen dosya türü. Fotoğraf (JPG, PNG, WEBP, GIF, AVIF, HEIC) veya kısa tanıtım videosu (MP4, WEBM, MOV, M4V · maks. 30 sn) yükleyebilirsiniz.",
         },
         { status: 400 },
       );
     }
 
-    const isVideo = ALLOWED_VIDEO_TYPES.has(file.type);
+    const isVideo = ALLOWED_VIDEO_TYPES.has(normalizedType);
     if (isVideo) {
       const durationRaw = formData.get("durationSeconds");
       const durationSeconds = typeof durationRaw === "string" ? Number(durationRaw) : NaN;
@@ -243,14 +269,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Dosya içeriği bildirilen medya türüyle eşleşmiyor." }, { status: 400 });
     }
 
-    const extension = EXTENSION_BY_TYPE.get(file.type) ?? "bin";
+    const extension = EXTENSION_BY_TYPE.get(normalizedType) ?? "bin";
+    const storageContentType = resolveStorageContentType(normalizedType);
     const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
     const mediaType = isVideo ? "video" : "image";
 
     let mediaUrl = "";
 
     const { error: primaryError } = await supabase.storage.from("social-media").upload(objectPath, file, {
-      contentType: file.type,
+      contentType: storageContentType,
       upsert: false,
     });
 

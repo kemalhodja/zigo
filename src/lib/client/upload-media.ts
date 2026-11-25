@@ -1,5 +1,6 @@
 "use client";
 
+import { isSupportedVideoFile, resolveVideoMimeType } from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 
@@ -24,7 +25,8 @@ export async function uploadSocialMedia(
   file: File,
   options?: { durationSeconds?: number },
 ): Promise<UploadedSocialMedia> {
-  const isVideo = file.type.startsWith("video/");
+  const isVideo = file.type.startsWith("video/") || isSupportedVideoFile(file);
+  const resolvedContentType = isVideo ? resolveVideoMimeType(file) : file.type;
 
   if (isVideo && file.size > DIRECT_SIGNED_UPLOAD_THRESHOLD_BYTES) {
     const ticketRes = await fetchWithRetry("/api/social/upload", {
@@ -32,7 +34,7 @@ export async function uploadSocialMedia(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mode: "signed-url",
-        contentType: file.type,
+        contentType: resolvedContentType,
         fileSize: file.size,
         durationSeconds: options?.durationSeconds,
       }),
@@ -46,6 +48,7 @@ export async function uploadSocialMedia(
     const ticket = (await ticketRes.json()) as {
       data: {
         signedUrl: string;
+        storageContentType?: string;
         objectPath: string;
         mediaUrl: string;
         mediaType: "video";
@@ -55,7 +58,7 @@ export async function uploadSocialMedia(
     const putRes = await fetch(ticket.data.signedUrl, {
       method: "PUT",
       headers: {
-        "Content-Type": file.type,
+        "Content-Type": ticket.data.storageContentType || "video/mp4",
         "x-upsert": "false",
       },
       body: file,
@@ -73,8 +76,14 @@ export async function uploadSocialMedia(
     };
   }
 
+  // Ensure mobile files with empty MIME type carry their resolved MIME type
+  const uploadFile =
+    isVideo && file.type !== resolvedContentType
+      ? new File([file], file.name, { type: resolvedContentType, lastModified: file.lastModified })
+      : file;
+
   const uploadData = new FormData();
-  uploadData.set("file", file);
+  uploadData.set("file", uploadFile);
   if (isVideo && typeof options?.durationSeconds === "number" && Number.isFinite(options.durationSeconds)) {
     uploadData.set("durationSeconds", String(Math.round(options.durationSeconds)));
   }

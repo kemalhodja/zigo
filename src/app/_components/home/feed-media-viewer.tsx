@@ -57,7 +57,8 @@ export function FeedMediaViewer({
       singleMediaUrl &&
         (singleMediaUrl.includes(".mp4") ||
           singleMediaUrl.includes(".webm") ||
-          singleMediaUrl.includes(".mov")),
+          singleMediaUrl.includes(".mov") ||
+          singleMediaUrl.includes(".m4v")),
     );
 
   return (

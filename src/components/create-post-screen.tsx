@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 
-import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
-import { validateVideoLimits } from "@/lib/client/compress-video";
+import { compressImage, isSupportedImageFile, prepareImageForUpload } from "@/lib/client/compress-image";
+import { isSupportedVideoFile, validateVideoLimits } from "@/lib/client/compress-video";
 import { uploadSocialMedia } from "@/lib/client/upload-media";
 
 export interface CreatePostScreenProps {
@@ -32,7 +32,18 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
       return;
     }
 
-    if (file.type.startsWith("video/")) {
+    const isVideo = file.type.startsWith("video/") || isSupportedVideoFile(file);
+    const isImage = !isVideo && (file.type.startsWith("image/") || isSupportedImageFile(file));
+
+    if (!isVideo && !isImage) {
+      setError("Desteklenmeyen dosya türü. Fotoğraf (JPG, PNG, WEBP, GIF, AVIF, HEIC) veya kısa video (MP4, WEBM, MOV · maks. 30 sn) seçebilirsiniz.");
+      setMediaFile(null);
+      setVideoDurationSeconds(undefined);
+      event.target.value = "";
+      return;
+    }
+
+    if (isVideo) {
       const videoVal = await validateVideoLimits(file, { isReel: true });
       if (!videoVal.valid) {
         setError(videoVal.error ?? "Kısa tanıtım videosu en fazla 30 saniye ve 25 MB olabilir.");
@@ -42,18 +53,20 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
         return;
       }
       setVideoDurationSeconds(videoVal.duration);
-    } else if (file.type.startsWith("image/")) {
-      setVideoDurationSeconds(undefined);
-      const imgVal = validateImageLimits(file);
-      if (!imgVal.valid) {
-        setError(imgVal.error ?? "Görsel boyutu 15 MB sınırını aşıyor.");
-        setMediaFile(null);
-        event.target.value = "";
-        return;
-      }
+      setMediaFile(file);
+      return;
     }
 
-    setMediaFile(file);
+    setVideoDurationSeconds(undefined);
+    const prepared = await prepareImageForUpload(file);
+    if (!prepared.valid) {
+      setError(prepared.error);
+      setMediaFile(null);
+      event.target.value = "";
+      return;
+    }
+
+    setMediaFile(prepared.file);
   }
 
   function resetForm() {
@@ -138,7 +151,7 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
           <input
             id="media-upload-input"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-m4v,.avif,.heic,.heif,.mov,.m4v"
             onChange={handleFileChange}
             disabled={isLoading}
             className="w-full cursor-pointer rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-700 transition file:mr-3 file:rounded-md file:border-0 file:bg-violet-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-violet-700 disabled:opacity-50"

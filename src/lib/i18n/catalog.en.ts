@@ -1091,7 +1091,7 @@ export const catalogEn = {
     mediaReady: "Media ready",
     change: "Change",
     chooseMedia: "Choose media",
-    chooseMediaHint: "Photo or short promo video (max 30s, 25 MB). For long videos, link to YouTube, Vimeo, or similar platforms.",
+    chooseMediaHint: "Photo (JPG/PNG/WEBP/HEIC/AVIF) or short promo video (MP4/MOV/WEBM · max 30s, 25 MB). For long videos, link to YouTube or Vimeo.",
     captionPlaceholder: "Write a caption...",
     image: "Image",
     video: "Video",

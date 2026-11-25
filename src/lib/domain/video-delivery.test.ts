@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   estimateMonthlyEgressCost,
+  extractVideoPosterUrl,
   getHlsUrl,
   getMediaPlaybackUrl,
   getVideoPlaybackUrl,
@@ -58,5 +59,20 @@ describe("Video Delivery & Adaptive Streaming Suite", () => {
     expect(sources[0].type).toBe("application/x-mpegURL");
     expect(sources[1].src).toBe("https://stream.mux.com/playback123/high.mp4");
     expect(sources[1].type).toBe("video/mp4");
+  });
+
+  it("extracts optional video poster thumbnail URL safely and blocks path traversal", () => {
+    const videoWithPoster =
+      "/api/social/media?path=teacher-1%2Fclip.mp4&poster=teacher-1%2Fcover.webp";
+    const poster = extractVideoPosterUrl(videoWithPoster);
+    expect(poster).toContain("/storage/v1/object/public/social-media/teacher-1/cover.webp");
+    expect(getVideoPlaybackUrl(videoWithPoster)).toContain(
+      "/storage/v1/object/public/social-media/teacher-1/clip.mp4",
+    );
+
+    expect(extractVideoPosterUrl("/api/social/media?path=a/b.mp4")).toBeUndefined();
+    expect(
+      extractVideoPosterUrl("/api/social/media?path=a/b.mp4&poster=..%2Fsecret.png"),
+    ).toBeUndefined();
   });
 });

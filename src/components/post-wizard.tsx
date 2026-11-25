@@ -17,8 +17,14 @@ import { useEffect, useRef, useState } from "react";
 
 import type { ComposerArea } from "@/components/create-mode-composer";
 import { ExternalLinkCard } from "@/components/external-link-card";
-import { validateImageLimits } from "@/lib/client/compress-image";
-import { validateVideoLimits } from "@/lib/client/compress-video";
+import {
+  isSupportedImageFile,
+  prepareImageForUpload,
+} from "@/lib/client/compress-image";
+import {
+  isSupportedVideoFile,
+  validateVideoLimits,
+} from "@/lib/client/compress-video";
 import { type UploadPhase,useUploadPipeline } from "@/lib/client/use-upload-pipeline";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { INDIVIDUAL_GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
@@ -31,16 +37,22 @@ import { classifyExternalLink } from "@/lib/domain/social/link-helper";
 export const ENABLE_DIRECT_VIDEO_UPLOAD = true;
 const POST_WIZARD_DRAFT_KEY = "zigo:post-wizard-draft";
 
-const ALLOWED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
+const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.avif,.heic,.heif";
+const VIDEO_ACCEPT = "video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.webm,.mov,.m4v";
+const MEDIA_ACCEPT = `${IMAGE_ACCEPT},${VIDEO_ACCEPT}`;
 
-const ALLOWED_TYPES = ENABLE_DIRECT_VIDEO_UPLOAD
-  ? new Set([...ALLOWED_IMAGE_TYPES, "video/mp4", "video/webm"])
-  : ALLOWED_IMAGE_TYPES;
+type MediaPreviewItem = {
+  id: string;
+  file: File;
+  url: string;
+  type: "image" | "video";
+  durationSeconds?: number;
+};
+
+type VideoPosterItem = {
+  file: File;
+  url: string;
+};
 const OVERLAY_STEPS: { id: UploadPhase; label: string }[] = [
   { id: "validating", label: "Doğrulanıyor" },
   { id: "compressing", label: "Medya Optimize Ediliyor" },
@@ -68,8 +80,9 @@ export function PostWizard({
   const [step, setStep] = useState<1 | 2>(1);
 
   // ── Media state ──────────────────────────────────────────────────────
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<{ url: string; type: "image" | "video"; durationSeconds?: number }[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaPreviewItem[]>([]);
+  const [videoPoster, setVideoPoster] = useState<VideoPosterItem | null>(null);
+  const [undoRemoved, setUndoRemoved] = useState<{ item: MediaPreviewItem; index: number } | null>(null);
   const [isValidatingMedia, setIsValidatingMedia] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
 
@@ -138,84 +151,193 @@ export function PostWizard({
 
   // ── Media helpers ────────────────────────────────────────────────────
 
+  function clearVideoPoster() {
+    if (videoPoster?.url.startsWith("blob:")) {
+      URL.revokeObjectURL(videoPoster.url);
+    }
+    setVideoPoster(null);
+  }
+
   function clearPreview() {
-    previews.forEach(p => {
+    mediaItems.forEach((p) => {
       if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
     });
-    setPreviews([]);
-    setSelectedFiles([]);
+    clearVideoPoster();
+    setMediaItems([]);
+    setUndoRemoved(null);
     setMediaError(null);
   }
 
-  async function handleFilesSelect(files: FileList | null) {
+  function vibrate(pattern: number | number[]) {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        // non-critical haptic feedback
+      }
+    }
+  }
+
+  async function handleFilesSelect(files: FileList | null, options?: { append?: boolean }) {
     if (!files || files.length === 0) return;
-    
-    // Limits
-    if (files.length > 10) {
-      setMediaError("En fazla 10 medya seçebilirsiniz.");
-      return;
-    }
-    
-    // Only allow videos for single item reels for now (or multiple photos)
-    const hasVideo = Array.from(files).some(f => f.type.startsWith("video/"));
-    if (files.length > 1 && hasVideo) {
-      setMediaError("Çoklu seçim (carousel) sadece fotoğraflar için desteklenmektedir. Lütfen sadece fotoğraf seçin veya tek bir video yükleyin.");
+
+    const append = Boolean(options?.append) && mediaItems.length > 0 && mediaItems[0]?.type === "image";
+    const incomingArray = Array.from(files);
+
+    const hasVideo = incomingArray.some((f) => f.type.startsWith("video/") || isSupportedVideoFile(f));
+    if (append && hasVideo) {
+      setMediaError("Çoklu fotoğraf (carousel) içine video eklenemez. Video için önce mevcut fotoğrafları kaldırın.");
+      vibrate([25, 35, 25]);
       return;
     }
 
-    clearPreview();
+    if (incomingArray.length > 1 && hasVideo) {
+      setMediaError("Çoklu seçim (carousel) sadece fotoğraflar için desteklenmektedir. Lütfen sadece fotoğraf seçin veya tek bir kısa video yükleyin.");
+      vibrate([25, 35, 25]);
+      return;
+    }
+
+    const totalCount = append ? mediaItems.length + incomingArray.length : incomingArray.length;
+    if (totalCount > 10) {
+      setMediaError(`En fazla 10 fotoğraf seçebilirsiniz (şu an ${mediaItems.length} seçili).`);
+      vibrate([25, 35, 25]);
+      return;
+    }
+
     setMediaError(null);
+    setUndoRemoved(null);
 
-    const validFiles: File[] = [];
-    const newPreviews: { url: string; type: "image" | "video"; durationSeconds?: number }[] = [];
+    const nextItems: MediaPreviewItem[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!ENABLE_DIRECT_VIDEO_UPLOAD && file.type.startsWith("video/")) {
+    for (let i = 0; i < incomingArray.length; i++) {
+      const rawFile = incomingArray[i];
+      const isVideo = rawFile.type.startsWith("video/") || isSupportedVideoFile(rawFile);
+      const isImage = !isVideo && (rawFile.type.startsWith("image/") || isSupportedImageFile(rawFile));
+
+      if (!ENABLE_DIRECT_VIDEO_UPLOAD && isVideo) {
         setMediaError(
           "Doğrudan video yükleme kapalıdır. Uzun ders videolarınız için aşağıdan YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz."
         );
         return;
       }
 
-      if (!ALLOWED_TYPES.has(file.type)) {
+      if (!isVideo && !isImage) {
         setMediaError(
-          "Desteklenmeyen dosya türü tespit edildi. Lütfen fotoğraf (JPG, PNG, WEBP, GIF) veya kısa tanıtım videosu (MP4, WEBM) seçin."
+          "Desteklenmeyen dosya türü. Fotoğraf (JPG, PNG, WEBP, GIF, AVIF, HEIC) veya kısa tanıtım videosu (MP4, WEBM, MOV, M4V) seçin."
         );
+        vibrate([25, 35, 25]);
         return;
       }
 
+      let processedFile = rawFile;
       let durationSeconds: number | undefined;
-      if (file.type.startsWith("video/")) {
+
+      if (isVideo) {
         setIsValidatingMedia(true);
-        const result = await validateVideoLimits(file, { isReel: true });
+        const result = await validateVideoLimits(rawFile, { isReel: true });
         setIsValidatingMedia(false);
         if (!result.valid) {
-          if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-            navigator.vibrate([30, 40, 30]);
-          }
+          vibrate([30, 40, 30]);
           setMediaError(result.error ?? "Kısa tanıtım videosu en fazla 30 saniye ve 25 MB olabilir.");
           return;
         }
         durationSeconds = result.duration;
       } else {
-        const result = validateImageLimits(file);
-        if (!result.valid) {
-          setMediaError(result.error ?? "Görsel geçersiz.");
+        setIsValidatingMedia(true);
+        const prepared = await prepareImageForUpload(rawFile);
+        setIsValidatingMedia(false);
+        if (!prepared.valid) {
+          vibrate([30, 40, 30]);
+          setMediaError(prepared.error);
           return;
         }
+        processedFile = prepared.file;
       }
 
-      validFiles.push(file);
-      newPreviews.push({
-        url: URL.createObjectURL(file),
-        type: file.type.startsWith("video/") ? "video" : "image",
+      nextItems.push({
+        id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 7)}`,
+        file: processedFile,
+        url: URL.createObjectURL(processedFile),
+        type: isVideo ? "video" : "image",
         durationSeconds,
       });
     }
 
-    setSelectedFiles(validFiles);
-    setPreviews(newPreviews);
+    vibrate(15);
+    if (append) {
+      setMediaItems((prev) => [...prev, ...nextItems]);
+    } else {
+      mediaItems.forEach((p) => {
+        if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
+      });
+      clearVideoPoster();
+      setMediaItems(nextItems);
+    }
+  }
+
+  function handleRemoveMediaAt(index: number) {
+    const target = mediaItems[index];
+    if (!target) return;
+    vibrate(15);
+    // Revoke any previous un-restored undo item before replacing
+    if (undoRemoved?.item.url.startsWith("blob:")) {
+      URL.revokeObjectURL(undoRemoved.item.url);
+    }
+    setUndoRemoved({ item: target, index });
+    setMediaItems((prev) => prev.filter((_, idx) => idx !== index));
+    setMediaError(null);
+  }
+
+  function handleUndoRemove() {
+    if (!undoRemoved) return;
+    vibrate(10);
+    setMediaItems((prev) => {
+      const next = [...prev];
+      const safeIndex = Math.min(undoRemoved.index, next.length);
+      next.splice(safeIndex, 0, undoRemoved.item);
+      return next;
+    });
+    setUndoRemoved(null);
+  }
+
+  function handleMoveMedia(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= mediaItems.length) return;
+    vibrate(10);
+    setMediaItems((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(index, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+  }
+
+  async function handleSelectVideoPoster(file: File | null) {
+    if (!file) return;
+    setMediaError(null);
+    setIsValidatingMedia(true);
+    const prepared = await prepareImageForUpload(file);
+    setIsValidatingMedia(false);
+    if (!prepared.valid) {
+      vibrate([30, 40, 30]);
+      setMediaError(prepared.error);
+      return;
+    }
+    clearVideoPoster();
+    vibrate(15);
+    setVideoPoster({
+      file: prepared.file,
+      url: URL.createObjectURL(prepared.file),
+    });
+  }
+
+  function handleCaptureVideoPosterFromFile(posterFile: File) {
+    clearVideoPoster();
+    vibrate(15);
+    setVideoPoster({
+      file: posterFile,
+      url: URL.createObjectURL(posterFile),
+    });
   }
 
   // ── Publish ──────────────────────────────────────────────────────────
@@ -227,8 +349,9 @@ export function PostWizard({
       externalUrl: externalUrl.trim() || undefined,
       areaId: selectedAreaId,
       targetGrade,
-      isReel: forceReel || (previews.length === 1 && previews[0].type === "video"),
-      files: selectedFiles,
+      isReel: forceReel || (mediaItems.length === 1 && mediaItems[0].type === "video"),
+      files: mediaItems.map((item) => item.file),
+      videoPosterFile: videoPoster?.file ?? null,
       teacherCreatorPlus,
       followersOnly,
       followersOnlyComments,
@@ -265,12 +388,20 @@ export function PostWizard({
         {step === 1 ? (
           <MediaPickerStep
             forceReel={forceReel}
-            previews={previews}
+            mediaItems={mediaItems}
+            videoPoster={videoPoster}
+            undoRemovedAvailable={Boolean(undoRemoved)}
             isValidating={isValidatingMedia}
             mediaError={mediaError}
             externalUrl={externalUrl}
             onExternalUrlChange={setExternalUrl}
             onFilesSelect={handleFilesSelect}
+            onRemoveMediaAt={handleRemoveMediaAt}
+            onUndoRemove={handleUndoRemove}
+            onMoveMedia={handleMoveMedia}
+            onSelectVideoPoster={handleSelectVideoPoster}
+            onCaptureVideoPoster={handleCaptureVideoPosterFromFile}
+            onClearVideoPoster={clearVideoPoster}
             onClearMedia={clearPreview}
             onNext={() => setStep(2)}
           />
@@ -308,139 +439,447 @@ export function PostWizard({
 
 type MediaPickerStepProps = {
   forceReel: boolean;
-  previews: { url: string; type: "image" | "video"; durationSeconds?: number }[];
+  mediaItems: MediaPreviewItem[];
+  videoPoster: VideoPosterItem | null;
+  undoRemovedAvailable: boolean;
   isValidating: boolean;
   mediaError: string | null;
   externalUrl: string;
   onExternalUrlChange: (v: string) => void;
-  onFilesSelect: (files: FileList | null) => void;
+  onFilesSelect: (files: FileList | null, options?: { append?: boolean }) => void;
+  onRemoveMediaAt: (index: number) => void;
+  onUndoRemove: () => void;
+  onMoveMedia: (index: number, direction: -1 | 1) => void;
+  onSelectVideoPoster: (file: File | null) => void;
+  onCaptureVideoPoster: (file: File) => void;
+  onClearVideoPoster: () => void;
   onClearMedia: () => void;
   onNext: () => void;
 };
 
 function MediaPickerStep({
   forceReel,
-  previews,
+  mediaItems,
+  videoPoster,
+  undoRemovedAvailable,
   isValidating,
   mediaError,
   externalUrl,
   onExternalUrlChange,
   onFilesSelect,
+  onRemoveMediaAt,
+  onUndoRemove,
+  onMoveMedia,
+  onSelectVideoPoster,
+  onCaptureVideoPoster,
+  onClearVideoPoster,
   onClearMedia,
   onNext,
 }: MediaPickerStepProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const accept = ENABLE_DIRECT_VIDEO_UPLOAD
-    ? (forceReel ? "video/mp4,video/webm" : "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm")
-    : "image/jpeg,image/png,image/webp,image/gif";
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [captureError, setCaptureError] = useState<string | null>(null);
 
-  const hasMedia = previews.length > 0;
-  const isVideo = hasMedia && previews[0].type === "video";
+  const accept = ENABLE_DIRECT_VIDEO_UPLOAD
+    ? (forceReel ? VIDEO_ACCEPT : MEDIA_ACCEPT)
+    : IMAGE_ACCEPT;
+
+  const hasMedia = mediaItems.length > 0;
+  const isVideo = hasMedia && mediaItems[0].type === "video";
+  const safeSlideIndex = Math.min(activeSlideIndex, Math.max(0, mediaItems.length - 1));
   const parsedLink = classifyExternalLink(externalUrl);
+
+  function captureCurrentVideoFrame() {
+    setCaptureError(null);
+    const video = videoPreviewRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      setCaptureError("Video karesi henüz yüklenmedi. Videoyu oynatıp istediğiniz anda tekrar dokunun.");
+      return;
+    }
+    try {
+      const maxSide = 1280;
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      if (width > maxSide || height > maxSide) {
+        if (width > height) {
+          height = Math.round((height * maxSide) / width);
+          width = maxSide;
+        } else {
+          width = Math.round((width * maxSide) / height);
+          height = maxSide;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            setCaptureError("Video karesi kapak olarak kaydedilemedi. Galeriden kapak görseli seçebilirsiniz.");
+            return;
+          }
+          const posterFile = new File([blob], `video-kapak-${Date.now()}.webp`, {
+            type: "image/webp",
+            lastModified: Date.now(),
+          });
+          onCaptureVideoPoster(posterFile);
+        },
+        "image/webp",
+        0.85,
+      );
+    } catch {
+      setCaptureError("Video karesi alınamadı. Galeriden özel kapak fotoğrafı seçebilirsiniz.");
+    }
+  }
 
   return (
     <div className="flex flex-col">
       {/* Media area */}
       {hasMedia ? (
-        <div className="relative bg-black">
-          {isVideo ? (
-            <div className="relative">
-              <video
-                className="max-h-[22rem] w-full object-contain"
-                src={previews[0].url}
-                controls
-                playsInline
-              />
-              {typeof previews[0].durationSeconds === "number" && (
-                <div className="absolute top-3 left-3 rounded-lg bg-black/70 px-2.5 py-1 text-xs font-black text-white backdrop-blur-sm">
-                  🎬 Kısa Tanıtım · {Math.round(previews[0].durationSeconds)} sn / 30 sn
-                </div>
-              )}
+        <div className="bg-slate-950">
+          <div className="relative bg-black">
+            {isVideo ? (
+              <div className="relative">
+                <video
+                  ref={videoPreviewRef}
+                  className="max-h-[22rem] w-full object-contain"
+                  src={mediaItems[0].url}
+                  poster={videoPoster?.url}
+                  controls
+                  playsInline
+                />
+                {typeof mediaItems[0].durationSeconds === "number" && (
+                  <div className="absolute top-3 left-3 rounded-lg bg-black/70 px-2.5 py-1 text-xs font-black text-white backdrop-blur-sm">
+                    🎬 Kısa Tanıtım · {Math.round(mediaItems[0].durationSeconds)} sn / 30 sn
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="max-h-[22rem] w-full object-contain"
+                  src={mediaItems[safeSlideIndex]?.url}
+                  alt={`Medya önizlemesi ${safeSlideIndex + 1}`}
+                />
+                {mediaItems.length > 1 && (
+                  <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2.5 py-1 rounded-lg font-black backdrop-blur-sm">
+                    {safeSlideIndex + 1} / {mediaItems.length}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Overlay buttons */}
+            <div className="absolute right-3 top-3 flex gap-2">
+              <button
+                type="button"
+                onClick={onClearMedia}
+                className="flex items-center gap-1 rounded-xl bg-black/65 px-3 py-1.5 text-xs font-black text-white backdrop-blur-sm transition hover:bg-black/85"
+              >
+                ✕ Tümünü Kaldır
+              </button>
+              <label className="flex cursor-pointer items-center gap-1 rounded-xl bg-black/65 px-3 py-1.5 text-xs font-black text-white backdrop-blur-sm transition hover:bg-black/85">
+                🔄 Değiştir
+                <input
+                  type="file"
+                  className="sr-only"
+                  accept={accept}
+                  multiple={!forceReel}
+                  onChange={(e) => {
+                    onFilesSelect(e.target.files, { append: false });
+                    e.target.value = "";
+                  }}
+                />
+              </label>
             </div>
-          ) : (
-            <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar">
-              {previews.map((p, idx) => (
-                <div key={p.url} className="w-full shrink-0 snap-center relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    className="max-h-[22rem] w-full object-contain"
-                    src={p.url}
-                    alt={`Medya önizlemesi ${idx + 1}`}
-                  />
-                  {previews.length > 1 && (
-                    <div className="absolute top-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-md font-bold backdrop-blur-sm">
-                      {idx + 1} / {previews.length}
+          </div>
+
+          {/* ── Carousel Management Filmstrip (Append, Single Delete, Reorder) ── */}
+          {!isVideo && (
+            <div className="border-t border-slate-800 bg-slate-900 px-3 py-3 text-white">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-[11px] font-black text-white/80">
+                  📸 Slaytlar ({mediaItems.length}/10) · Sırala veya düzenle
+                </span>
+                {mediaItems.length < 10 && (
+                  <div className="flex items-center gap-1.5">
+                    <label className="tap-scale inline-flex cursor-pointer items-center gap-1 rounded-lg bg-violet-600 px-2.5 py-1 text-[11px] font-black text-white hover:bg-violet-500">
+                      ➕ Fotoğraf Ekle
+                      <input
+                        type="file"
+                        className="sr-only"
+                        accept={IMAGE_ACCEPT}
+                        multiple
+                        onChange={(e) => {
+                          onFilesSelect(e.target.files, { append: true });
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    <label className="tap-scale inline-flex cursor-pointer items-center gap-1 rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-black text-white hover:bg-white/25">
+                      📷 Çek
+                      <input
+                        type="file"
+                        className="sr-only"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => {
+                          onFilesSelect(e.target.files, { append: true });
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+                {mediaItems.map((item, idx) => {
+                  const isActive = idx === safeSlideIndex;
+                  return (
+                    <div
+                      key={item.id}
+                      className={`relative shrink-0 rounded-xl border-2 p-1 transition ${
+                        isActive ? "border-violet-400 bg-violet-500/20" : "border-white/15 bg-white/5"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setActiveSlideIndex(idx)}
+                        className="relative block size-16 overflow-hidden rounded-lg bg-black"
+                        aria-label={`Slayt ${idx + 1} önizle`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={item.url}
+                          alt={`Slayt ${idx + 1}`}
+                          className="size-full object-cover"
+                        />
+                        <span className="absolute bottom-0.5 left-0.5 rounded bg-black/70 px-1 text-[10px] font-black text-white">
+                          {idx + 1}
+                        </span>
+                      </button>
+
+                      {/* Delete single slide */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onRemoveMediaAt(idx);
+                          setActiveSlideIndex((prev) => Math.max(0, prev >= mediaItems.length - 1 ? prev - 1 : prev));
+                        }}
+                        aria-label={`Slayt ${idx + 1} sil`}
+                        className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow hover:bg-rose-500"
+                      >
+                        ✕
+                      </button>
+
+                      {/* Reorder controls */}
+                      {mediaItems.length > 1 && (
+                        <div className="mt-1 flex items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => {
+                              onMoveMedia(idx, -1);
+                              setActiveSlideIndex(idx - 1);
+                            }}
+                            aria-label="Sola taşı"
+                            className="rounded bg-white/15 px-1.5 py-0.5 text-[10px] font-black text-white disabled:opacity-30 hover:bg-white/25"
+                          >
+                            ←
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === mediaItems.length - 1}
+                            onClick={() => {
+                              onMoveMedia(idx, 1);
+                              setActiveSlideIndex(idx + 1);
+                            }}
+                            aria-label="Sağa taşı"
+                            className="rounded bg-white/15 px-1.5 py-0.5 text-[10px] font-black text-white disabled:opacity-30 hover:bg-white/25"
+                          >
+                            →
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {/* Overlay buttons */}
-          <div className="absolute right-3 top-3 flex gap-2">
-            <button
-              type="button"
-              onClick={onClearMedia}
-              className="flex items-center gap-1 rounded-xl bg-black/60 px-3 py-1.5 text-xs font-black text-white backdrop-blur-sm transition hover:bg-black/80"
-            >
-              ✕ Kaldır
-            </button>
-            <label className="flex cursor-pointer items-center gap-1 rounded-xl bg-black/60 px-3 py-1.5 text-xs font-black text-white backdrop-blur-sm transition hover:bg-black/80">
-              🔄 Değiştir
-              <input
-                type="file"
-                className="sr-only"
-                accept={accept}
-                multiple
-                onChange={(e) => onFilesSelect(e.target.files)}
-              />
-            </label>
-          </div>
-        </div>
-      ) : (
-        /* Empty picker */
-        <label
-          className="flex min-h-64 cursor-pointer flex-col items-center justify-center gap-4 bg-gradient-to-br from-night via-violet-900 to-crystal p-6 text-white transition-opacity hover:opacity-95"
-          aria-label="Fotoğraf veya kısa tanıtım videosu seç"
-        >
-          {isValidating ? (
-            <>
-              <div className="size-16 animate-spin rounded-full border-4 border-white/30 border-t-white" />
-              <p className="text-sm font-black">Kontrol ediliyor…</p>
-            </>
-          ) : (
-            <>
-              <span className="flex size-16 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-3xl backdrop-blur">
-                {forceReel ? "🎬" : "📸"}
-              </span>
-              <div className="text-center">
-                <p className="text-base font-black">
-                  {forceReel
-                    ? "Kısa Tanıtım Videosu Seç (Maks. 30 sn)"
-                    : "Fotoğraf veya Kısa Tanıtım Videosu Seç"}
-                </p>
-                <p className="mt-1 text-xs font-bold text-white/75">
-                  {forceReel
-                    ? "MP4 · WEBM · Maks. 30 saniye · Maks. 25 MB"
-                    : "Fotoğraf (JPG, PNG, WEBP, GIF) · Kısa Video (MP4/WEBM · Maks. 30 sn, 25 MB)"}
-                </p>
-                <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-xs">
-                  <span>🔗</span>
-                  <span>30 sn üzeri uzun ders videoları için aşağıdan YouTube, Vimeo vb. link ekleyebilirsiniz.</span>
+          {/* ── Short Promo Video Cover Photo (Thumbnail) Picker ── */}
+          {isVideo && (
+            <div className="border-t border-slate-800 bg-slate-900 px-3.5 py-3 text-white">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {videoPoster ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={videoPoster.url}
+                      alt="Video kapak önizlemesi"
+                      className="size-11 shrink-0 rounded-lg border border-violet-400 object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 text-lg">
+                      🖼️
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-white">
+                      {videoPoster ? "Kapak Fotoğrafı Seçildi ✓" : "Video Kapağı (İsteğe Bağlı)"}
+                    </p>
+                    <p className="text-[11px] font-medium text-white/65">
+                      Akış ve Keşfet&apos;te videonuzun kapak görseli olarak görünür.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={captureCurrentVideoFrame}
+                    className="tap-scale rounded-lg bg-violet-600 px-2.5 py-1.5 text-[11px] font-black text-white hover:bg-violet-500"
+                  >
+                    🎞️ Bu Kareyi Kapak Yap
+                  </button>
+                  <label className="tap-scale cursor-pointer rounded-lg bg-white/15 px-2.5 py-1.5 text-[11px] font-black text-white hover:bg-white/25">
+                    🖼️ Galeriden Seç
+                    <input
+                      type="file"
+                      className="sr-only"
+                      accept={IMAGE_ACCEPT}
+                      onChange={(e) => {
+                        void onSelectVideoPoster(e.target.files?.[0] ?? null);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {videoPoster && (
+                    <button
+                      type="button"
+                      onClick={onClearVideoPoster}
+                      className="tap-scale rounded-lg bg-rose-600/80 px-2 py-1.5 text-[11px] font-black text-white hover:bg-rose-500"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               </div>
-            </>
+              {captureError && (
+                <p className="mt-2 rounded-lg bg-amber-500/20 px-2.5 py-1.5 text-[11px] font-bold text-amber-200">
+                  ⚠️ {captureError}
+                </p>
+              )}
+            </div>
           )}
-          <input
-            ref={inputRef}
-            type="file"
-            className="sr-only"
-            accept={accept}
-            multiple={!forceReel}
-            onChange={(e) => onFilesSelect(e.target.files)}
-          />
-        </label>
+        </div>
+      ) : (
+        /* Empty picker with gallery + direct camera capture shortcuts */
+        <div className="bg-gradient-to-br from-night via-violet-900 to-crystal p-6 text-white">
+          <label
+            className="flex min-h-48 cursor-pointer flex-col items-center justify-center gap-3.5 transition-opacity hover:opacity-95"
+            aria-label="Galeriden fotoğraf veya kısa tanıtım videosu seç"
+          >
+            {isValidating ? (
+              <>
+                <div className="size-16 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+                <p className="text-sm font-black">Kontrol ve optimizasyon yapılıyor…</p>
+              </>
+            ) : (
+              <>
+                <span className="flex size-16 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-3xl backdrop-blur">
+                  {forceReel ? "🎬" : "📸"}
+                </span>
+                <div className="text-center">
+                  <p className="text-base font-black">
+                    {forceReel
+                      ? "Kısa Tanıtım Videosu Seç (Maks. 30 sn)"
+                      : "Fotoğraf veya Kısa Tanıtım Videosu Seç"}
+                  </p>
+                  <p className="mt-1 text-xs font-bold text-white/75">
+                    {forceReel
+                      ? "MP4 · WEBM · MOV (iPhone) · M4V · Maks. 30 sn, 25 MB"
+                      : "JPG, PNG, WEBP, GIF, AVIF, HEIC · Kısa Video (MP4, WEBM, MOV · Maks. 30 sn)"}
+                  </p>
+                  <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-xs">
+                    <span>🔗</span>
+                    <span>30 sn üzeri uzun ders videoları için aşağıdan YouTube, Vimeo vb. link ekleyebilirsiniz.</span>
+                  </div>
+                </div>
+              </>
+            )}
+            <input
+              ref={inputRef}
+              type="file"
+              className="sr-only"
+              accept={accept}
+              multiple={!forceReel}
+              onChange={(e) => {
+                onFilesSelect(e.target.files, { append: false });
+                e.target.value = "";
+              }}
+            />
+          </label>
+
+          {/* Direct Camera Capture Shortcuts */}
+          {!isValidating && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 border-t border-white/15 pt-4">
+              {!forceReel && (
+                <label className="tap-scale inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-white/25 bg-white/15 px-3.5 py-2 text-xs font-black text-white backdrop-blur-xs transition hover:bg-white/25">
+                  <span>📷</span>
+                  <span>Fotoğraf Çek</span>
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => {
+                      onFilesSelect(e.target.files, { append: false });
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              )}
+              {ENABLE_DIRECT_VIDEO_UPLOAD && (
+                <label className="tap-scale inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-white/25 bg-white/15 px-3.5 py-2 text-xs font-black text-white backdrop-blur-xs transition hover:bg-white/25">
+                  <span>🎥</span>
+                  <span>30 sn Video Çek</span>
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept={VIDEO_ACCEPT}
+                    capture="environment"
+                    onChange={(e) => {
+                      onFilesSelect(e.target.files, { append: false });
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Undo removed photo banner */}
+      {undoRemovedAvailable && (
+        <div className="mx-4 mt-3 flex items-center justify-between rounded-xl border border-violet-200 bg-violet-50 px-3.5 py-2.5 text-xs font-bold text-violet-900">
+          <span>Fotoğraf slayttan kaldırıldı.</span>
+          <button
+            type="button"
+            onClick={onUndoRemove}
+            className="tap-scale rounded-lg bg-violet-600 px-3 py-1 text-xs font-black text-white hover:bg-violet-700"
+          >
+            ↩️ Geri Al
+          </button>
+        </div>
       )}
 
       {/* Media error */}

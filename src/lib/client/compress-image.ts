@@ -1,18 +1,64 @@
 /**
  * compress-image.ts
  *
- * Lightweight browser-native image compression and resizing utility.
- * Resizes heavy images down to a maximum side of 1600px and compresses to WebP.
+ * Lightweight browser-native image validation, format normalization
+ * (AVIF / HEIC / HEIF -> WebP/JPEG), resizing (max 1600px) and compression.
  */
 
 export const IMAGE_MAX_INPUT_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
 export const IMAGE_COMPRESS_THRESHOLD_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
 
+export const DIRECT_UPLOAD_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+
+export const TRANSCODABLE_IMAGE_TYPES = new Set([
+  "image/avif",
+  "image/heic",
+  "image/heif",
+  "image/heic-sequence",
+  "image/heif-sequence",
+  "image/bmp",
+]);
+
+export const SUPPORTED_IMAGE_MIME_TYPES = new Set([
+  ...DIRECT_UPLOAD_IMAGE_TYPES,
+  ...TRANSCODABLE_IMAGE_TYPES,
+]);
+
+const IMAGE_EXT_REGEX = /\.(jpe?g|png|webp|gif|avif|heic|heif|bmp)$/i;
+const TRANSCODABLE_EXT_REGEX = /\.(avif|heic|heif|bmp)$/i;
+
+/**
+ * Checks whether a file is a supported image format (by MIME type or mobile file extension).
+ */
+export function isSupportedImageFile(file: File): boolean {
+  if (SUPPORTED_IMAGE_MIME_TYPES.has(file.type.toLowerCase())) return true;
+  if (!file.type || file.type === "application/octet-stream") {
+    return IMAGE_EXT_REGEX.test(file.name);
+  }
+  return false;
+}
+
+export function needsImageTranscode(file: File): boolean {
+  const mime = file.type.toLowerCase();
+  if (TRANSCODABLE_IMAGE_TYPES.has(mime)) return true;
+  return TRANSCODABLE_EXT_REGEX.test(file.name);
+}
+
 /**
  * Validates image input file size before upload/processing.
  */
 export function validateImageLimits(file: File): { valid: boolean; error?: string } {
-  if (!file.type.startsWith("image/")) return { valid: true };
+  if (!isSupportedImageFile(file)) {
+    return {
+      valid: false,
+      error: "Desteklenmeyen görsel türü. JPG, PNG, WEBP, GIF, AVIF veya HEIC seçebilirsiniz.",
+    };
+  }
 
   if (file.size > IMAGE_MAX_INPUT_SIZE_BYTES) {
     const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
@@ -26,14 +72,16 @@ export function validateImageLimits(file: File): { valid: boolean; error?: strin
 }
 
 /**
- * Compresses an image file if it exceeds the threshold (1.5 MB).
- * Resizes max side to 1600px and outputs optimized WebP format.
+ * Compresses an image file if it exceeds the threshold (1.5 MB) OR transcodes
+ * mobile/modern formats (AVIF, HEIC, HEIF, BMP) into universally compatible WebP/JPEG.
  */
 export async function compressImage(file: File, maxSide = 1600, quality = 0.82): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
+  if (!isSupportedImageFile(file)) return file;
 
-  // Skip GIFs (to avoid breaking animated frames) and small files under 1.5 MB
-  if (file.type === "image/gif" || file.size <= IMAGE_COMPRESS_THRESHOLD_BYTES) {
+  const mustTranscode = needsImageTranscode(file);
+
+  // Skip animated GIFs and small already-compatible images under 1.5 MB
+  if (!mustTranscode && (file.type === "image/gif" || file.size <= IMAGE_COMPRESS_THRESHOLD_BYTES)) {
     return file;
   }
 
@@ -69,24 +117,32 @@ export async function compressImage(file: File, maxSide = 1600, quality = 0.82):
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              resolve(file);
-              return;
-            }
-            const newName = file.name.replace(/\.[^/.]+$/, ".webp");
-            const compressedFile = new File([blob], newName, {
-              type: "image/webp",
-              lastModified: Date.now(),
-            });
+        const tryEncode = (targetMime: "image/webp" | "image/jpeg", ext: ".webp" | ".jpg") => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                if (targetMime === "image/webp") {
+                  tryEncode("image/jpeg", ".jpg");
+                  return;
+                }
+                resolve(file);
+                return;
+              }
+              const newName = file.name.replace(/\.[^/.]+$/, ext);
+              const compressedFile = new File([blob], newName, {
+                type: targetMime,
+                lastModified: Date.now(),
+              });
 
-            // Return compressed file only if it is actually smaller
-            resolve(compressedFile.size < file.size ? compressedFile : file);
-          },
-          "image/webp",
-          quality,
-        );
+              // Always prefer transcoded output for AVIF/HEIC/HEIF; otherwise only if smaller
+              resolve(mustTranscode || compressedFile.size < file.size ? compressedFile : file);
+            },
+            targetMime,
+            quality,
+          );
+        };
+
+        tryEncode("image/webp", ".webp");
       } catch (err) {
         console.warn("[COMPRESS_IMAGE] Canvas compression failed, using original file:", err);
         resolve(file);
@@ -100,4 +156,32 @@ export async function compressImage(file: File, maxSide = 1600, quality = 0.82):
 
     img.src = objectUrl;
   });
+}
+
+/**
+ * Validates and normalizes an image (including AVIF/HEIC transcoding) right at selection time.
+ * If a desktop browser cannot decode an iPhone HEIC file natively, returns a clear error message.
+ */
+export async function prepareImageForUpload(
+  file: File,
+): Promise<{ valid: true; file: File; converted: boolean } | { valid: false; error: string }> {
+  const limits = validateImageLimits(file);
+  if (!limits.valid) {
+    return { valid: false, error: limits.error ?? "Görsel geçersiz." };
+  }
+
+  if (!needsImageTranscode(file)) {
+    return { valid: true, file, converted: false };
+  }
+
+  const converted = await compressImage(file);
+  if (!DIRECT_UPLOAD_IMAGE_TYPES.has(converted.type.toLowerCase())) {
+    return {
+      valid: false,
+      error:
+        "Bu tarayıcı HEIC/AVIF görselini otomatik dönüştüremedi. Lütfen iPhone/Android kameradan doğrudan çekin veya fotoğrafı JPG/PNG olarak kaydedip seçin.",
+    };
+  }
+
+  return { valid: true, file: converted, converted: true };
 }

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import React, { useRef, useState } from "react";
 
 import { SocialMediaScene, type SocialMediaSceneName } from "@/components/social-media-scenes";
-import { getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
+import { extractVideoPosterUrl, getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
 
 export type MediaFilterPreset = "normal" | "vivid" | "contrast" | "warm" | "bw";
 
@@ -58,9 +58,14 @@ export function SocialMediaFrame({
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const rawUrls = mediaUrls && mediaUrls.length > 0 ? mediaUrls : mediaUrl ? [mediaUrl] : [];
+  const posterUrl = extractVideoPosterUrl(rawUrls[0]);
   const items = rawUrls
     .map((url) => {
-      const isVid = url.includes(".mp4") || url.includes(".webm") || url.includes(".mov");
+      const isVid =
+        url.includes(".mp4") ||
+        url.includes(".webm") ||
+        url.includes(".mov") ||
+        url.includes(".m4v");
       return getMediaPlaybackUrl(url, isVid ? undefined : { width: 720, quality: 80, format: "webp" });
     })
     .filter(Boolean) as string[];
@@ -69,7 +74,11 @@ export function SocialMediaFrame({
   
   // Eğer mediaType belirtilmemişse, URL'den video olduğunu anlamaya çalış.
   const firstUrl = items[0] || "";
-  const isVideoUrl = firstUrl.includes(".mp4") || firstUrl.includes(".webm") || firstUrl.includes(".mov");
+  const isVideoUrl =
+    firstUrl.includes(".mp4") ||
+    firstUrl.includes(".webm") ||
+    firstUrl.includes(".mov") ||
+    firstUrl.includes(".m4v");
   const isVideo = Boolean(hasMedia && (mediaType === "video" || (!mediaType && isVideoUrl)));
 
   React.useEffect(() => {
@@ -244,6 +253,7 @@ export function SocialMediaFrame({
               loop
               muted={isMuted}
               playsInline
+              poster={posterUrl}
               preload="auto"
               src={items[0]}
               onLoadedMetadata={() => setVideoReady(true)}

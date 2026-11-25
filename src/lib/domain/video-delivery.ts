@@ -104,6 +104,27 @@ export function getPrivateSocialMediaUrl(storagePath: string) {
   return `${supabaseUrl}/storage/v1/object/public/social-media/${storagePath.replace(/^\//, "")}`;
 }
 
+/**
+ * Extracts and resolves an optional video poster/thumbnail image URL encoded via
+ * `&poster=<objectPath>` on `/api/social/media?path=...` video URLs.
+ */
+export function extractVideoPosterUrl(mediaUrl?: string | null): string | undefined {
+  if (!mediaUrl || typeof mediaUrl !== "string") return undefined;
+  const match = mediaUrl.match(/[?&]poster=([^&]+)/);
+  if (!match || !match[1]) return undefined;
+  try {
+    const decoded = decodeURIComponent(match[1]).replace(/^\//, "");
+    if (!decoded || decoded.includes("..")) return undefined;
+    return getMediaPlaybackUrl(`/api/social/media?path=${encodeURIComponent(decoded)}`, {
+      width: 720,
+      quality: 80,
+      format: "webp",
+    });
+  } catch {
+    return undefined;
+  }
+}
+
 function generateBunnyToken(_path: string): string {
   const tokenKey = process.env.NEXT_PUBLIC_BUNNY_TOKEN_KEY?.trim();
   const expires = process.env.NEXT_PUBLIC_BUNNY_TOKEN_EXPIRES?.trim();

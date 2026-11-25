@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getMediaPlaybackUrl, getVideoSources } from "@/lib/domain/video-delivery";
+import { extractVideoPosterUrl, getMediaPlaybackUrl, getVideoSources } from "@/lib/domain/video-delivery";
 
 type ReelVideoPlayerProps = {
   mediaUrl: string;
@@ -21,6 +21,7 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
   const progressBarRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const playbackUrl = getMediaPlaybackUrl(mediaUrl);
+  const posterUrl = extractVideoPosterUrl(mediaUrl);
 
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -163,6 +164,7 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
         }}
         onTimeUpdate={handleTimeUpdate}
         playsInline
+        poster={posterUrl}
         preload="metadata"
         src={playbackUrl}
       >

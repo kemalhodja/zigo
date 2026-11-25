@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { SocialMediaFrame } from "@/components/social-media-frame";
-import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
-import { validateVideoLimits } from "@/lib/client/compress-video";
+import { compressImage, isSupportedImageFile, prepareImageForUpload } from "@/lib/client/compress-image";
+import { isSupportedVideoFile, validateVideoLimits } from "@/lib/client/compress-video";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
 import { uploadSocialMedia } from "@/lib/client/upload-media";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
@@ -14,7 +14,8 @@ import type { Messages } from "@/lib/i18n/types";
 
 type Status = "idle" | "saving" | "saved" | "error";
 type PublishStep = "idle" | "uploading" | "publishing" | "done";
-const allowedMediaTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"]);
+const STORY_MEDIA_ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/x-m4v,.avif,.heic,.heif,.mov,.m4v";
+const STORY_VIDEO_ACCEPT = "video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.webm,.mov,.m4v";
 const draftKey = "zigo:story-draft";
 
 type StoryArea = {
@@ -74,15 +75,19 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       return;
     }
 
-    if (!allowedMediaTypes.has(file.type)) {
+    const isVideo = file.type.startsWith("video/") || isSupportedVideoFile(file);
+    const isImage = !isVideo && (file.type.startsWith("image/") || isSupportedImageFile(file));
+
+    if (!isVideo && !isImage) {
       setStatus("error");
-      setMessage(sc.mediaTypeError);
+      setMessage("Desteklenmeyen dosya türü. Fotoğraf (JPG, PNG, WEBP, GIF, AVIF, HEIC) veya kısa video (MP4, WEBM, MOV · maks. 30 sn) seçebilirsiniz.");
       setPreview(null);
       setSelectedFile(null);
       return;
     }
 
-    if (file.type.startsWith("video/")) {
+    let finalFile = file;
+    if (isVideo) {
       const videoVal = await validateVideoLimits(file, { isReel: true });
       if (!videoVal.valid) {
         setStatus("error");
@@ -95,25 +100,23 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
       setVideoDurationSeconds(videoVal.duration);
     } else {
       setVideoDurationSeconds(undefined);
-    }
-
-    if (file.type.startsWith("image/")) {
-      const imgVal = validateImageLimits(file);
-      if (!imgVal.valid) {
+      const prepared = await prepareImageForUpload(file);
+      if (!prepared.valid) {
         setStatus("error");
-        setMessage(imgVal.error ?? sc.mediaSizeError);
+        setMessage(prepared.error);
         setPreview(null);
         setSelectedFile(null);
         return;
       }
+      finalFile = prepared.file;
     }
 
-    setSelectedFile(file);
+    setSelectedFile(finalFile);
     setStatus("idle");
     setMessage(s.expiresNote);
     setPreview({
-      url: URL.createObjectURL(file),
-      type: file.type.startsWith("video/") ? "video" : "image",
+      url: URL.createObjectURL(finalFile),
+      type: isVideo ? "video" : "image",
     });
   }
 
@@ -214,40 +217,76 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
           <div />
         </SocialMediaFrame>
       ) : (
-        <label className="mt-4 flex aspect-[9/16] cursor-pointer items-center justify-center bg-[linear-gradient(135deg,#111827,#334155)] text-center text-white">
-          <span>
-            <span className="mx-auto flex size-16 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-3xl font-black backdrop-blur">
-              <svg aria-hidden="true" className="size-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
+        <div className="mt-4 bg-[linear-gradient(135deg,#111827,#334155)] text-center text-white">
+          <label className="flex aspect-[9/14] cursor-pointer items-center justify-center px-6">
+            <span>
+              <span className="mx-auto flex size-16 items-center justify-center rounded-lg border border-white/30 bg-white/10 text-3xl font-black backdrop-blur">
+                <svg aria-hidden="true" className="size-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </span>
+              <span className="mt-3 block text-sm font-black">{s.chooseMedia}</span>
+              <span className="mt-1 block text-xs font-bold text-white/70">
+                {s.aspectHint} · Fotoğraf (JPG/PNG/WEBP/HEIC) veya Kısa Video (MP4/MOV · maks. 30 sn)
+              </span>
             </span>
-            <span className="mt-3 block text-sm font-black">{s.chooseMedia}</span>
-            <span className="mt-1 block text-xs font-bold text-white/70">{s.aspectHint}</span>
-          </span>
-          <input
-            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
-            className="sr-only"
-            name="file"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              setFilePreview(file);
-            }}
-            type="file"
-          />
-        </label>
+            <input
+              accept={STORY_MEDIA_ACCEPT}
+              className="sr-only"
+              name="file"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                void setFilePreview(file);
+                event.target.value = "";
+              }}
+              type="file"
+            />
+          </label>
+          <div className="flex items-center justify-center gap-2 border-t border-white/15 px-4 py-3">
+            <label className="tap-scale inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/25">
+              📷 Fotoğraf Çek
+              <input
+                accept="image/*"
+                capture="environment"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  void setFilePreview(file);
+                  event.target.value = "";
+                }}
+                type="file"
+              />
+            </label>
+            <label className="tap-scale inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 text-xs font-black text-white hover:bg-white/25">
+              🎥 30 sn Video Çek
+              <input
+                accept={STORY_VIDEO_ACCEPT}
+                capture="environment"
+                className="sr-only"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  void setFilePreview(file);
+                  event.target.value = "";
+                }}
+                type="file"
+              />
+            </label>
+          </div>
+        </div>
       )}
       <div className="space-y-4 px-4 py-4">
         {preview ? (
           <label className="inline-flex cursor-pointer rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-night">
             {s.changeMedia}
             <input
-              accept="image/jpeg,image/png,image/webp,image/gif"
+              accept={STORY_MEDIA_ACCEPT}
               className="sr-only"
               name="file"
               onChange={(event) => {
                 const file = event.target.files?.[0];
-                setFilePreview(file);
+                void setFilePreview(file);
+                event.target.value = "";
               }}
               type="file"
             />

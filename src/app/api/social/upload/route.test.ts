@@ -126,4 +126,26 @@ describe("POST /api/social/upload (short promo video policy)", () => {
     expect(res.status).toBe(400);
     expect(json.error).toContain("25 MB");
   });
+
+  it("accepts iPhone MOV (video/quicktime) short promo video and normalizes storage contentType to video/mp4", async () => {
+    const req = new Request("http://localhost:3000/api/social/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "signed-url",
+        contentType: "video/quicktime",
+        fileSize: 12 * 1024 * 1024,
+        durationSeconds: 18,
+      }),
+    });
+
+    const res = await POST(req);
+    const json = (await res.json()) as {
+      data?: { signedUrl: string; storageContentType: string; objectPath: string };
+    };
+
+    expect(res.status).toBe(200);
+    expect(json.data?.storageContentType).toBe("video/mp4");
+    expect(json.data?.objectPath).toMatch(/^teacher-1\/.+\.mp4$/);
+  });
 });
