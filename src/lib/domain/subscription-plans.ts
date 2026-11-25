@@ -25,10 +25,72 @@ export type SubscriptionPlanGroup = {
   cancelPath: string;
 };
 
+export const SUBSCRIPTION_LIST_PRICES = {
+  student: { monthly: 79, yearly: 690 },
+  parent: { monthly: 79, yearly: 690 },
+  teacher: { monthly: 149, yearly: 1190 },
+  institution: { monthly: 1490, yearly: 14900 },
+  platform: { monthly: 990, yearly: 9900 },
+  publisher: { monthly: 990, yearly: 9900 },
+} as const;
+
+export type B2bEnterpriseTier = {
+  id: string;
+  name: string;
+  seatRange: string;
+  monthlyTry: number | null;
+  yearlyTry: number | null;
+  highlight?: boolean;
+  features: readonly string[];
+};
+
+export const B2B_ENTERPRISE_TIERS: readonly B2bEnterpriseTier[] = [
+  {
+    id: "starter-campus",
+    name: "Başlangıç Kurum",
+    seatRange: "1 – 100 Öğrenci",
+    monthlyTry: SUBSCRIPTION_LIST_PRICES.institution.monthly,
+    yearlyTry: SUBSCRIPTION_LIST_PRICES.institution.yearly,
+    features: [
+      "Kurumsal doğrulanmış vitrin ve marka rozeti",
+      "100 öğrenciye kadar toplu sınıf ve veli takibi",
+      "Branş bazlı Match-Feed içerik dağıtımı",
+      "Sınırsız öğretmen gönderisi ve kısa tanıtım videosu",
+    ],
+  },
+  {
+    id: "growth-campus",
+    name: "Kampüs & Dershane",
+    seatRange: "101 – 500 Öğrenci",
+    monthlyTry: 3990,
+    yearlyTry: 39900,
+    highlight: true,
+    features: [
+      "500 öğrenciye kadar tam Zigo Plus & analitik",
+      "Şube/sınıf bazlı haftalık veli gelişim raporları",
+      "Öncelikli Keşfet vitrini ve kurum içi quiz ligleri",
+      "Özel kurumsal onboarding ve öncelikli destek",
+    ],
+  },
+  {
+    id: "enterprise-chain",
+    name: "Zincir Okul & Yayınevi",
+    seatRange: "500+ Öğrenci / Özel",
+    monthlyTry: null,
+    yearlyTry: null,
+    features: [
+      "Sınırsız kampüs, öğretmen ve öğrenci koltuğu",
+      "Özel yıllık kurumsal lisans ve faturalandırma",
+      "Yayınevi soru bankası ve dijital müfredat vitrini",
+      "Özel hesap yöneticisi ve SLA garantisi",
+    ],
+  },
+] as const;
+
 const LEARNER_BENEFITS = [
-  "Limitsiz soru çözümü ve video izleme",
+  "Limitsiz soru çözümü ve tüm dış ders bağlantıları (YouTube, Vimeo vb.)",
   "Tüm branşlarda detaylı performans analizi",
-  "Kesintisiz ve odaklı öğrenme",
+  "Zeka Oyunları Salonu (günde 2 saat, 08:00–22:00 güvenli erişim)",
   "Gelişmiş aile ve veli raporları",
 ] as const;
 
@@ -62,8 +124,8 @@ function learnerPlans(
     benefits: LEARNER_BENEFITS,
     cancelPath,
     plans: [
-      plan("zigo-plus-student-monthly", "monthly", "Aylık", 49, userCreatedAt, role ?? "student"),
-      plan("zigo-plus-student-yearly", "yearly", "Yıllık", 450, userCreatedAt, role ?? "student"),
+      plan("zigo-plus-student-monthly", "monthly", "Aylık", SUBSCRIPTION_LIST_PRICES.student.monthly, userCreatedAt, role ?? "student"),
+      plan("zigo-plus-student-yearly", "yearly", "Yıllık", SUBSCRIPTION_LIST_PRICES.student.yearly, userCreatedAt, role ?? "student"),
     ],
   };
 }
@@ -76,8 +138,8 @@ function teacherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPla
     benefits: TEACHER_CREATOR_PLUS_BENEFITS,
     cancelPath: "/teacher?billing=cancelled",
     plans: [
-      plan("zigo-plus-teachers-monthly", "monthly", "Aylık", 99, userCreatedAt, "teacher"),
-      plan("zigo-plus-teachers-yearly", "yearly", "Yıllık", 749, userCreatedAt, "teacher"),
+      plan("zigo-plus-teachers-monthly", "monthly", "Aylık", SUBSCRIPTION_LIST_PRICES.teacher.monthly, userCreatedAt, "teacher"),
+      plan("zigo-plus-teachers-yearly", "yearly", "Yıllık", SUBSCRIPTION_LIST_PRICES.teacher.yearly, userCreatedAt, "teacher"),
     ],
   };
 }
@@ -111,8 +173,8 @@ function institutionPlanGroup(userCreatedAt?: string | Date | null): Subscriptio
     benefits: INSTITUTION_BENEFITS,
     cancelPath: "/profile?billing=cancelled",
     plans: [
-      plan("zigo-plus-educational-institutions-monthly", "monthly", "Aylık", 250, userCreatedAt),
-      plan("zigo-plus-educational-institutions-yearly", "yearly", "Yıllık", 2500, userCreatedAt),
+      plan("zigo-plus-educational-institutions-monthly", "monthly", "Aylık", SUBSCRIPTION_LIST_PRICES.institution.monthly, userCreatedAt),
+      plan("zigo-plus-educational-institutions-yearly", "yearly", "Yıllık", SUBSCRIPTION_LIST_PRICES.institution.yearly, userCreatedAt),
     ],
   };
 }
@@ -125,8 +187,8 @@ function platformPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPl
     benefits: PLATFORM_BENEFITS,
     cancelPath: "/profile?billing=cancelled",
     plans: [
-      plan("zigo-plus-platform-monthly", "monthly", "Aylık", 200, userCreatedAt),
-      plan("zigo-plus-platform-yearly", "yearly", "Yıllık", 2000, userCreatedAt),
+      plan("zigo-plus-platform-monthly", "monthly", "Aylık", SUBSCRIPTION_LIST_PRICES.platform.monthly, userCreatedAt),
+      plan("zigo-plus-platform-yearly", "yearly", "Yıllık", SUBSCRIPTION_LIST_PRICES.platform.yearly, userCreatedAt),
     ],
   };
 }
@@ -140,8 +202,8 @@ function publisherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionP
     cancelPath: "/profile?billing=cancelled",
     // Note: Assuming publisher plan IDs for Play Store based on pattern
     plans: [
-      plan("zigo-plus-publisher-monthly", "monthly", "Aylık", 200, userCreatedAt),
-      plan("zigo-plus-publisher-yearly", "yearly", "Yıllık", 2000, userCreatedAt),
+      plan("zigo-plus-publisher-monthly", "monthly", "Aylık", SUBSCRIPTION_LIST_PRICES.publisher.monthly, userCreatedAt),
+      plan("zigo-plus-publisher-yearly", "yearly", "Yıllık", SUBSCRIPTION_LIST_PRICES.publisher.yearly, userCreatedAt),
     ],
   };
 }

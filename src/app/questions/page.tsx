@@ -100,7 +100,16 @@ export default async function QuestionsPage() {
                       {question.is_resolved ? "✓ Çözüldü" : "⏳ Çözüm Bekliyor"}
                     </SocialPill>
                   </div>
-                  <h3 className="mt-1 text-sm font-black text-night">{question.title}</h3>
+                  {question.is_resolved ? (
+                    <Link
+                      href={`/questions/${question.id}`}
+                      className="mt-1 block text-sm font-black text-night hover:text-violet-700 hover:underline"
+                    >
+                      {question.title} ↗
+                    </Link>
+                  ) : (
+                    <h3 className="mt-1 text-sm font-black text-night">{question.title}</h3>
+                  )}
                   <p className="mt-1 text-sm leading-5 text-slate-600">{question.description}</p>
                 </div>
               </div>

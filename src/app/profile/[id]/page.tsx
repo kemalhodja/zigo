@@ -13,6 +13,7 @@ import { ProfileSocialStats } from "@/components/profile-social-stats";
 import { SocialMediaFrame } from "@/components/social-media-frame";
 import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherReviewsSection } from "@/components/teacher-reviews-section";
+import { TeacherShareKit } from "@/components/teacher-share-kit";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { TeacherTrustModal } from "@/components/teacher-trust-modal";
 import { CreatorProfileJsonLd } from "@/components/seo/json-ld";
@@ -58,7 +59,14 @@ export async function generateMetadata(
   const indexable = isIndexableProfile(profile);
   const name = profile.full_name || "Zigo Öğretmeni";
   const bio = profile.bio || "Zigo'da bir profil sayfası.";
-  const avatarImages = indexable && profile.avatar_url ? [profile.avatar_url] : [];
+  const ogCardUrl = indexable
+    ? `${SITE_URL}/api/og/profile?name=${encodeURIComponent(name)}&role=${encodeURIComponent(profile.role)}`
+    : null;
+  const ogImages = ogCardUrl
+    ? [{ url: ogCardUrl, width: 1200, height: 630, alt: `${name} | Zigo` }]
+    : indexable && profile.avatar_url
+      ? [profile.avatar_url]
+      : [];
 
   return {
     title: `${name} | Zigo`,
@@ -70,14 +78,14 @@ export async function generateMetadata(
     openGraph: {
       title: `${name} | Zigo`,
       description: bio,
-      images: avatarImages,
+      images: ogImages,
       type: "profile",
     },
     twitter: {
-      card: "summary",
+      card: ogCardUrl ? "summary_large_image" : "summary",
       title: `${name} | Zigo`,
       description: bio,
-      images: avatarImages,
+      images: ogCardUrl ? [ogCardUrl] : [],
     },
   };
 }
@@ -247,6 +255,16 @@ export default async function PublicProfilePage({ params, searchParams }: Public
               youtubeUrl={(profile as unknown as { youtube_url?: string | null }).youtube_url}
               instagramUrl={(profile as unknown as { instagram_url?: string | null }).instagram_url}
             />
+            {indexableProfile ? (
+              <TeacherShareKit
+                branches={branches}
+                isOwnProfile={isOwnProfile}
+                name={profile.full_name}
+                ogCardUrl={`/api/og/profile?name=${encodeURIComponent(profile.full_name)}&role=${encodeURIComponent(profile.role)}&branches=${encodeURIComponent(branches.slice(0, 3).join(" · "))}&followers=${stats.followers}&posts=${stats.posts}`}
+                profileUrl={`${SITE_URL}/profile/${profile.id}`}
+                role={profile.role}
+              />
+            ) : null}
             {profile.role === "teacher" ? (
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <TeacherTrustBadges

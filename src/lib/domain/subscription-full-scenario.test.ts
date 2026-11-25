@@ -74,7 +74,7 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
       // Öğretmen plan grubu çözümlendiğinde 15. günde %50 indirim sunar
       const teacherGroups = resolveProfilePlanGroups("teacher", false, null, teacher15Days);
       expect(teacherGroups.length).toBeGreaterThan(0);
-      expect(teacherGroups[0].plans[0].priceTry).toBe(50);
+      expect(teacherGroups[0].plans[0].priceTry).toBe(75);
 
       // 35 gün sonra öğretmenin 1 aylık deneme süresi dolmuştur
       const teacher35Days = new Date(Date.now() - 35 * 86400000).toISOString();
@@ -476,15 +476,15 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
     it("Kayıttan sonraki ilk 7 gün içinde havale talebi %50 indirimli fiyat üretir", () => {
       const recentUserCreatedAt = new Date(Date.now() - 2 * 86400000).toISOString();
       const planBundle = resolveBankTransferPlan("zigo-plus-student-monthly", recentUserCreatedAt);
-      expect(planBundle.plan.priceTry).toBe(25);
-      expect(planBundle.plan.compareAtTry).toBe(49);
+      expect(planBundle.plan.priceTry).toBe(40);
+      expect(planBundle.plan.compareAtTry).toBe(79);
     });
 
-    it("Kayıttan 7 gün sonra oluşturulan havale talebi tam liste fiyatı (49 TL) üretir", () => {
+    it("Kayıttan 7 gün sonra oluşturulan havale talebi tam liste fiyatı (79 TL) üretir", () => {
       const olderUserCreatedAt = new Date(Date.now() - 10 * 86400000).toISOString();
       const planBundle = resolveBankTransferPlan("zigo-plus-student-monthly", olderUserCreatedAt);
-      expect(planBundle.plan.priceTry).toBe(49);
-      expect(planBundle.plan.compareAtTry).toBe(49);
+      expect(planBundle.plan.priceTry).toBe(79);
+      expect(planBundle.plan.compareAtTry).toBe(79);
     });
   });
 

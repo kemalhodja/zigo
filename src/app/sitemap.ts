@@ -218,5 +218,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     postRoutes = [];
   }
 
-  return [...staticRoutes, ...topicRoutes, ...areaRoutes, ...profileRoutes, ...postRoutes];
+  let questionRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const { data, error } = await db
+      .from("questions")
+      .select("id, created_at")
+      .eq("is_resolved", true)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+
+    if (!error && Array.isArray(data)) {
+      questionRoutes = (data as unknown as Array<{ id: string; created_at: string | null }>).map(
+        (q) => ({
+          url: `${base}/questions/${q.id}`,
+          lastModified: q.created_at ? new Date(q.created_at) : now,
+          changeFrequency: "weekly" as const,
+          priority: 0.72,
+        }),
+      );
+    }
+  } catch {
+    questionRoutes = [];
+  }
+
+  return [...staticRoutes, ...topicRoutes, ...areaRoutes, ...profileRoutes, ...postRoutes, ...questionRoutes];
 }

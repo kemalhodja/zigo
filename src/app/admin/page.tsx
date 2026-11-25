@@ -19,6 +19,9 @@ const AdminGameMonitor = dynamic(() =>
 const AdminContentModerationQueue = dynamic(() =>
   import('@/components/admin-content-moderation-queue').then(mod => mod.AdminContentModerationQueue)
 );
+const AdminInvestorDashboard = dynamic(() =>
+  import('@/components/admin-investor-dashboard').then(mod => mod.AdminInvestorDashboard)
+);
 import { AdminBankTransferActions } from '@/components/admin-bank-transfer-actions';
 import { AdminBillingGrantLedger } from '@/components/admin-billing-grant-ledger';
 import { AdminBroadcastButton } from '@/components/admin-broadcast-button';
@@ -68,6 +71,7 @@ import {
   parseDensityAgeGroups,
   PRIORITY_EXAM_AGE_GROUPS,
 } from '@/lib/domain/feed-density';
+import { getNorthStarMetrics } from '@/lib/domain/investor-metrics';
 import { LAUNCH_COVERAGE_TARGET, LAUNCH_PRIORITY_TRACKS } from '@/lib/domain/launch-scope';
 import {
   formatRetentionPercent,
@@ -270,6 +274,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   ];
 
   const revenueSplit = await getRevenueBreakdown(metricsClient).catch(() => []);
+  const northStarMetrics =
+    currentTab === "investor"
+      ? await getNorthStarMetrics(metricsClient).catch(() => null)
+      : null;
 
   const avgDailySignups = dailySignups.length > 0
     ? Math.round(dailySignups.slice(-7).reduce((s, d) => s + d.count, 0) / Math.min(7, dailySignups.slice(-7).length))
@@ -290,6 +298,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   const tabs = [
     { id: "overview", label: "📊 Genel Bakış" },
+    { id: "investor", label: "💎 Yatırımcı Panosu" },
     {
       id: "approvals",
       label: `🛡️ Onay & Takip${totalPendingApprovals > 0 ? ` (${totalPendingApprovals})` : ""}`,
@@ -326,6 +335,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           })}
         </div>
       </div>
+
+      {currentTab === 'investor' && northStarMetrics && (
+        <AdminInvestorDashboard metrics={northStarMetrics} />
+      )}
 
       {currentTab === 'overview' && (
         <>

@@ -12,6 +12,11 @@ import {
   purchaseGooglePlaySubscription,
   restoreGooglePlayPurchases,
 } from "@/lib/client/google-play-billing";
+import {
+  B2B_ENTERPRISE_TIERS,
+  formatTryPrice,
+  SUBSCRIPTION_LIST_PRICES,
+} from "@/lib/domain/subscription-plans";
 import { buildWhatsAppSupportUrl } from "@/lib/domain/support-contact";
 import { createClient } from "@/lib/supabase/client";
 
@@ -20,15 +25,15 @@ const ROLE_PLANS = {
     title: "Öğrenci",
     icon: GraduationCap,
     gradient: "from-crystal to-berry",
-    monthly: 49,
-    yearly: 450,
+    monthly: SUBSCRIPTION_LIST_PRICES.student.monthly,
+    yearly: SUBSCRIPTION_LIST_PRICES.student.yearly,
     features: [
-      "Sınırsız soru çözümü ve video izleme",
+      "Sınırsız soru çözümü ve harici ders linkleri (YouTube, Vimeo vb.)",
       "Tüm branşlarda detaylı performans analizi",
       "Focus/Pomodoro ve özel çalışma planı",
-      "Zeka Oyunları Salonu (5 mini oyun)",
+      "Zeka Oyunları Salonu (günde 2 saat, 08:00–22:00)",
       "Mağaza erişimi ve Zigo Puan harcaması",
-      "Kesintisiz odaklı eğitim",
+      "Kesintisiz odaklı eğitim (sıfır reklam)",
       "Gelişmiş veli raporları (veli hesabı varsa)",
     ],
   },
@@ -36,8 +41,8 @@ const ROLE_PLANS = {
     title: "Veli",
     icon: Users,
     gradient: "from-aqua to-mint",
-    monthly: 49,
-    yearly: 450,
+    monthly: SUBSCRIPTION_LIST_PRICES.parent.monthly,
+    yearly: SUBSCRIPTION_LIST_PRICES.parent.yearly,
     features: [
       "Çocuk gelişimi detaylı analitik",
       "Focus/Pomodoro takibi ve raporlar",
@@ -50,14 +55,14 @@ const ROLE_PLANS = {
     title: "Öğretmen",
     icon: Sparkles,
     gradient: "from-sun to-peach",
-    monthly: 99,
-    yearly: 749,
+    monthly: SUBSCRIPTION_LIST_PRICES.teacher.monthly,
+    yearly: SUBSCRIPTION_LIST_PRICES.teacher.yearly,
     features: [
-      "İçerik Stüdyosu tam erişim",
+      "İlk 30 gün tam özellikli ücretsiz deneme",
+      "Sınırsız gönderi ve 30 sn tanıtım videosu + harici ders linkleri",
+      "Gelen özel ders taleplerini ve veli iletişimini açma",
       "Mini quiz oluşturma ve yayınlama",
-      "Yazılı hazırlık linkleri paylaşımı",
-      "Sponsorlu tanıtım gönderileri",
-      "Öğrenci analitiği ve sınıf yönetimi",
+      "Sponsorlu tanıtım gönderileri ve sınıf analitiği",
       "Öncelikli stüdyo araçları",
     ],
   },
@@ -65,9 +70,10 @@ const ROLE_PLANS = {
     title: "Eğitim Kurumu",
     icon: Building2,
     gradient: "from-indigo-400 to-cyan-400",
-    monthly: 250,
-    yearly: 2500,
+    monthly: SUBSCRIPTION_LIST_PRICES.institution.monthly,
+    yearly: SUBSCRIPTION_LIST_PRICES.institution.yearly,
     features: [
+      "100 öğrenciye kadar başlangıç kurumsal lisansı",
       "Kurum vitrini ve branş yönetimi",
       "Toplu kullanıcı (öğretmen/öğrenci/veli) takibi",
       "Kurumsal analitik ve raporlama",
@@ -79,10 +85,10 @@ const ROLE_PLANS = {
     title: "Eğitim Platformu",
     icon: MonitorPlay,
     gradient: "from-fuchsia-400 to-pink-500",
-    monthly: 200,
-    yearly: 2000,
+    monthly: SUBSCRIPTION_LIST_PRICES.platform.monthly,
+    yearly: SUBSCRIPTION_LIST_PRICES.platform.yearly,
     features: [
-      "Dijital platform vitrini",
+      "Dijital platform vitrini ve doğrulanmış rozet",
       "Çok branşlı içerik ve abonelik yönetimi",
       "Match-Feed hedef kitle erişimi",
       "Kurumsal raporlama ve entegrasyon altyapısı",
@@ -93,8 +99,8 @@ const ROLE_PLANS = {
     title: "Yayınevi",
     icon: BookOpen,
     gradient: "from-emerald-400 to-teal-500",
-    monthly: 200,
-    yearly: 2000,
+    monthly: SUBSCRIPTION_LIST_PRICES.publisher.monthly,
+    yearly: SUBSCRIPTION_LIST_PRICES.publisher.yearly,
     features: [
       "Yayınevi vitrini ve marka görünürlüğü",
       "Kitap/materyal/soru bankası dağıtımı",
@@ -886,6 +892,96 @@ export default function PricingPage() {
               <dd className="text-slate-600">Evet. Yıllık plan aylığa göre <strong>%15-23</strong> daha uygun (2 ay bedava mantığıyla).</dd>
             </div>
           </dl>
+        </section>
+
+        {/* Kurumsal B2B Koltuk & Yıllık Lisans Katmanları */}
+        <section className="mt-12 rounded-3xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-violet-50/60 p-6 sm:p-8 shadow-sm">
+          <div className="text-center max-w-2xl mx-auto">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-indigo-800">
+              🏫 Okul, Kurs &amp; Kurumsal B2B Lisanslar
+            </span>
+            <h2 className="mt-2.5 text-xl sm:text-2xl font-black text-night">
+              Kurumunuzun Öğrenci Sayısına Göre Ölçeklenen Paketler
+            </h2>
+            <p className="mt-1.5 text-xs sm:text-sm font-semibold text-slate-600">
+              Özel okullar, dershaneler, kurs merkezleri ve yayınevleri için koltuk bazlı kurumsal lisanslama ve yıllık fatura avantajı.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {B2B_ENTERPRISE_TIERS.map((tier) => {
+              const quoteUrl =
+                buildWhatsAppSupportUrl(
+                  `Merhaba, Zigo ${tier.name} (${tier.seatRange}) kurumsal paketi için teklif almak istiyorum.`,
+                ) ?? "mailto:destek@zigo.com.tr";
+
+              return (
+                <div
+                  key={tier.id}
+                  className={`flex flex-col justify-between rounded-2xl border p-5 transition ${
+                    tier.highlight
+                      ? "border-violet-400 bg-white shadow-md ring-2 ring-violet-200"
+                      : "border-slate-200 bg-white/90 shadow-xs"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-black text-night">{tier.name}</h3>
+                      {tier.highlight && (
+                        <span className="rounded-full bg-violet-600 px-2.5 py-0.5 text-[10px] font-black text-white">
+                          En Popüler
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs font-black text-indigo-700">{tier.seatRange}</p>
+
+                    <div className="mt-4 border-y border-slate-100 py-3">
+                      {tier.monthlyTry !== null && tier.yearlyTry !== null ? (
+                        <>
+                          <p className="text-2xl font-black text-night">
+                            {formatTryPrice(tier.monthlyTry)}
+                            <span className="text-xs font-bold text-slate-400"> / ay</span>
+                          </p>
+                          <p className="mt-0.5 text-xs font-bold text-emerald-700">
+                            Yıllık lisans: {formatTryPrice(tier.yearlyTry)} (2 ay avantajlı)
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-2xl font-black text-night">Özel Teklif</p>
+                          <p className="mt-0.5 text-xs font-bold text-slate-500">
+                            Öğrenci sayısına göre yıllık kurumsal sözleşme
+                          </p>
+                        </>
+                      )}
+                    </div>
+
+                    <ul className="mt-4 space-y-2 text-xs font-semibold text-slate-700">
+                      {tier.features.map((feat) => (
+                        <li key={feat} className="flex items-start gap-2">
+                          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <a
+                    href={quoteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`mt-5 tap-scale flex w-full items-center justify-center rounded-xl py-2.5 text-xs font-black transition ${
+                      tier.highlight
+                        ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm hover:brightness-105"
+                        : "bg-slate-900 text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    Kurumsal Teklif &amp; Demo Al
+                  </a>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         {/* Google Play Güvenli Mobil Ödeme Kartı (Web Ziyaretçileri İçin) */}

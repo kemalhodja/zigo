@@ -333,3 +333,84 @@ export function CreatorProfileJsonLd({
   );
 }
 
+/**
+ * Herkese Açık Çözümlü Soru Sayfaları için Google QAPage JSON-LD (P3.3)
+ * Öğrenci gizliliği korunur (soru sahibi anonimleştirilir); yalnızca doğrulanmış öğretmen çözümleri indekslenir.
+ */
+export type QaPageJsonLdProps = {
+  questionTitle: string;
+  questionText: string;
+  dateCreated: string;
+  url: string;
+  answers: Array<{
+    text: string;
+    dateCreated: string;
+    authorName: string;
+    authorUrl?: string;
+  }>;
+};
+
+export function QaPageJsonLd({
+  questionTitle,
+  questionText,
+  dateCreated,
+  url,
+  answers,
+}: QaPageJsonLdProps) {
+  const [accepted, ...suggested] = answers;
+  const qaSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    inLanguage: "tr-TR",
+    mainEntity: {
+      "@type": "Question",
+      name: questionTitle,
+      text: questionText,
+      answerCount: answers.length,
+      dateCreated,
+      author: {
+        "@type": "Person",
+        name: "Zigo Öğrencisi",
+      },
+      ...(accepted
+        ? {
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: accepted.text,
+              dateCreated: accepted.dateCreated,
+              upvoteCount: 1,
+              url: `${url}#cozum`,
+              author: {
+                "@type": "Person",
+                name: accepted.authorName,
+                ...(accepted.authorUrl ? { url: accepted.authorUrl } : {}),
+              },
+            },
+          }
+        : {}),
+      ...(suggested.length > 0
+        ? {
+            suggestedAnswer: suggested.map((ans, idx) => ({
+              "@type": "Answer",
+              text: ans.text,
+              dateCreated: ans.dateCreated,
+              url: `${url}#cozum-${idx + 2}`,
+              author: {
+                "@type": "Person",
+                name: ans.authorName,
+                ...(ans.authorUrl ? { url: ans.authorUrl } : {}),
+              },
+            })),
+          }
+        : {}),
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(qaSchema) }}
+    />
+  );
+}
+
