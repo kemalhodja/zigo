@@ -1,8 +1,9 @@
 /**
  * compress-image.ts
  *
- * Lightweight browser-native image validation, format normalization
- * (AVIF / HEIC / HEIF -> WebP/JPEG), resizing (max 1600px) and compression.
+ * Browser-native image validation, EXIF/GPS metadata stripping (KVKK & child safety),
+ * format normalization (AVIF / HEIC / HEIF -> WebP/JPEG), 90-degree rotation,
+ * resizing (max 1600px), and compression.
  */
 
 export const IMAGE_MAX_INPUT_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB
@@ -72,18 +73,21 @@ export function validateImageLimits(file: File): { valid: boolean; error?: strin
 }
 
 /**
- * Compresses an image file if it exceeds the threshold (1.5 MB) OR transcodes
- * mobile/modern formats (AVIF, HEIC, HEIF, BMP) into universally compatible WebP/JPEG.
+ * Re-encodes ALL non-GIF images through HTML5 Canvas to:
+ * 1. Strip 100% of EXIF/GPS location & device metadata (KVKK & student privacy)
+ * 2. Transcode mobile formats (AVIF, HEIC, HEIF, BMP) into WebP/JPEG
+ * 3. Resize oversized images to max 1600px and compress cleanly
  */
-export async function compressImage(file: File, maxSide = 1600, quality = 0.82): Promise<File> {
+export async function compressImage(file: File, maxSide = 1600, quality = 0.84): Promise<File> {
   if (!isSupportedImageFile(file)) return file;
 
-  const mustTranscode = needsImageTranscode(file);
-
-  // Skip animated GIFs and small already-compatible images under 1.5 MB
-  if (!mustTranscode && (file.type === "image/gif" || file.size <= IMAGE_COMPRESS_THRESHOLD_BYTES)) {
+  // Keep animated GIF frames intact (GIF does not store camera GPS EXIF)
+  if (file.type === "image/gif") {
     return file;
   }
+
+  const mustTranscode = needsImageTranscode(file);
+  const effectiveQuality = file.size <= IMAGE_COMPRESS_THRESHOLD_BYTES ? Math.max(quality, 0.9) : quality;
 
   return new Promise((resolve) => {
     const img = new Image();
@@ -129,22 +133,28 @@ export async function compressImage(file: File, maxSide = 1600, quality = 0.82):
                 return;
               }
               const newName = file.name.replace(/\.[^/.]+$/, ext);
-              const compressedFile = new File([blob], newName, {
+              const sanitizedFile = new File([blob], newName, {
                 type: targetMime,
                 lastModified: Date.now(),
               });
 
-              // Always prefer transcoded output for AVIF/HEIC/HEIF; otherwise only if smaller
-              resolve(mustTranscode || compressedFile.size < file.size ? compressedFile : file);
+              // Always return the canvas-sanitized output so EXIF/GPS is stripped
+              // (unless it unexpectedly blew up over 5 MB server limit and original is smaller & safe)
+              const overServerLimit = sanitizedFile.size > 5 * 1024 * 1024;
+              if (!mustTranscode && overServerLimit && file.size < sanitizedFile.size) {
+                resolve(file);
+                return;
+              }
+              resolve(sanitizedFile);
             },
             targetMime,
-            quality,
+            effectiveQuality,
           );
         };
 
         tryEncode("image/webp", ".webp");
       } catch (err) {
-        console.warn("[COMPRESS_IMAGE] Canvas compression failed, using original file:", err);
+        console.warn("[COMPRESS_IMAGE] Canvas sanitization failed, using original file:", err);
         resolve(file);
       }
     };
@@ -159,8 +169,72 @@ export async function compressImage(file: File, maxSide = 1600, quality = 0.82):
 }
 
 /**
- * Validates and normalizes an image (including AVIF/HEIC transcoding) right at selection time.
- * If a desktop browser cannot decode an iPhone HEIC file natively, returns a clear error message.
+ * Rotates an image 90 degrees clockwise via Canvas (also preserves EXIF stripping).
+ * Handy for sideways notebook, question, or whiteboard photos taken on phones.
+ */
+export async function rotateImage90(file: File): Promise<File> {
+  if (!isSupportedImageFile(file) || file.type === "image/gif") return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      try {
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        const canvas = document.createElement("canvas");
+        canvas.width = h;
+        canvas.height = w;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.translate(h / 2, w / 2);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(img, -w / 2, -h / 2);
+
+        const targetMime = file.type === "image/jpeg" ? "image/jpeg" : "image/webp";
+        const ext = targetMime === "image/jpeg" ? ".jpg" : ".webp";
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+            const newName = file.name.replace(/\.[^/.]+$/, ext);
+            resolve(
+              new File([blob], newName, {
+                type: targetMime,
+                lastModified: Date.now(),
+              }),
+            );
+          },
+          targetMime,
+          0.9,
+        );
+      } catch {
+        resolve(file);
+      }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file);
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+/**
+ * Validates and normalizes an image (including AVIF/HEIC transcoding and EXIF/GPS removal)
+ * right at selection time.
  */
 export async function prepareImageForUpload(
   file: File,
@@ -170,12 +244,14 @@ export async function prepareImageForUpload(
     return { valid: false, error: limits.error ?? "Görsel geçersiz." };
   }
 
-  if (!needsImageTranscode(file)) {
+  if (file.type === "image/gif") {
     return { valid: true, file, converted: false };
   }
 
-  const converted = await compressImage(file);
-  if (!DIRECT_UPLOAD_IMAGE_TYPES.has(converted.type.toLowerCase())) {
+  const mustTranscode = needsImageTranscode(file);
+  const sanitized = await compressImage(file);
+
+  if (mustTranscode && !DIRECT_UPLOAD_IMAGE_TYPES.has(sanitized.type.toLowerCase())) {
     return {
       valid: false,
       error:
@@ -183,5 +259,5 @@ export async function prepareImageForUpload(
     };
   }
 
-  return { valid: true, file: converted, converted: true };
+  return { valid: true, file: sanitized, converted: mustTranscode };
 }

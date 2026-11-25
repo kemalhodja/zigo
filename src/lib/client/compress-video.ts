@@ -114,6 +114,108 @@ export function isVideoCompressionSupported(): boolean {
   return Capacitor.isNativePlatform();
 }
 
+/**
+ * Automatically extracts a lightweight WebP poster frame from a local video File
+ * (at ~0.4s or 0s for very short clips) so feed videos display an instant cover
+ * without downloading full video bytes until playback begins.
+ */
+export async function extractVideoFrameFile(
+  file: File,
+  seekSeconds = 0.4,
+): Promise<File | null> {
+  if (!isSupportedVideoFile(file)) return null;
+
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    const objectUrl = URL.createObjectURL(file);
+    let settled = false;
+
+    const finish = (result: File | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      URL.revokeObjectURL(objectUrl);
+      resolve(result);
+    };
+
+    const timeoutId = setTimeout(() => finish(null), 4000);
+
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+
+    const capture = () => {
+      try {
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        if (!vw || !vh) {
+          finish(null);
+          return;
+        }
+        const maxSide = 960;
+        let width = vw;
+        let height = vh;
+        if (width > maxSide || height > maxSide) {
+          if (width > height) {
+            height = Math.round((height * maxSide) / width);
+            width = maxSide;
+          } else {
+            width = Math.round((width * maxSide) / height);
+            height = maxSide;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          finish(null);
+          return;
+        }
+        ctx.drawImage(video, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              finish(null);
+              return;
+            }
+            finish(
+              new File([blob], `auto-poster-${Date.now()}.webp`, {
+                type: "image/webp",
+                lastModified: Date.now(),
+              }),
+            );
+          },
+          "image/webp",
+          0.8,
+        );
+      } catch {
+        finish(null);
+      }
+    };
+
+    video.onloadeddata = () => {
+      const targetTime =
+        Number.isFinite(video.duration) && video.duration > 0.6
+          ? Math.min(seekSeconds, video.duration * 0.2)
+          : 0;
+      if (targetTime <= 0.05) {
+        capture();
+      } else {
+        video.onseeked = capture;
+        try {
+          video.currentTime = targetTime;
+        } catch {
+          capture();
+        }
+      }
+    };
+
+    video.onerror = () => finish(null);
+    video.src = objectUrl;
+  });
+}
+
 /** 
  * Compress a video `File` client-side using Native Capacitor Plugins.
  * If running on the Web, or if compression fails, it safely falls back to returning the original file.

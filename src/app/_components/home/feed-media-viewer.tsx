@@ -79,6 +79,8 @@ export function FeedMediaViewer({
         priority={priorityMedia}
         scene={post.scene}
         objectFit="cover"
+        externalUrl={post.externalUrl}
+        canOpenExternalLink={post.canOpenExternalLink}
       />
     </DoubleTapLikeLink>
   );

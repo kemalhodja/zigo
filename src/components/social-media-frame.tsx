@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import React, { useRef, useState } from "react";
 
+import { PromoVideoEndCard } from "@/components/promo-video-end-card";
 import { SocialMediaScene, type SocialMediaSceneName } from "@/components/social-media-scenes";
 import { extractVideoPosterUrl, getMediaPlaybackUrl } from "@/lib/domain/video-delivery";
 
@@ -24,6 +25,8 @@ type SocialMediaFrameProps = {
   objectFit?: "contain" | "cover" | "fill";
   scale?: number;
   filterPreset?: MediaFilterPreset;
+  externalUrl?: string | null;
+  canOpenExternalLink?: boolean;
 };
 
 const filterCssMap: Record<MediaFilterPreset, string> = {
@@ -49,13 +52,17 @@ export function SocialMediaFrame({
   objectFit = "contain",
   scale = 1,
   filterPreset = "normal",
+  externalUrl,
+  canOpenExternalLink,
 }: SocialMediaFrameProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [videoReady, setVideoReady] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
+  const [showEndCard, setShowEndCard] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hasExternalCta = Boolean(externalUrl && externalUrl.trim());
 
   const rawUrls = mediaUrls && mediaUrls.length > 0 ? mediaUrls : mediaUrl ? [mediaUrl] : [];
   const posterUrl = extractVideoPosterUrl(rawUrls[0]);
@@ -250,20 +257,43 @@ export function SocialMediaFrame({
               className={`size-full transition-all duration-300 ${fitClass} ${videoReady ? 'opacity-100' : 'opacity-0'}`}
               controls={controls}
               autoPlay
-              loop
+              loop={!hasExternalCta}
               muted={isMuted}
               playsInline
               poster={posterUrl}
-              preload="auto"
+              preload="metadata"
               src={items[0]}
               onLoadedMetadata={() => setVideoReady(true)}
-              onPlay={() => setIsPlaying(true)}
+              onPlay={() => {
+                setIsPlaying(true);
+                setShowEndCard(false);
+              }}
               onPause={() => setIsPlaying(false)}
+              onEnded={() => {
+                setIsPlaying(false);
+                if (hasExternalCta) setShowEndCard(true);
+              }}
               style={combinedStyle}
             />
 
+            {/* End-card CTA when 30s promo video finishes with an attached full-lesson link */}
+            {showEndCard && externalUrl && (
+              <PromoVideoEndCard
+                externalUrl={externalUrl}
+                canOpenLink={canOpenExternalLink}
+                onReplay={() => {
+                  setShowEndCard(false);
+                  const v = videoRef.current;
+                  if (v) {
+                    v.currentTime = 0;
+                    v.play().then(() => setIsPlaying(true)).catch(() => {});
+                  }
+                }}
+              />
+            )}
+
             {/* Play overlay when paused */}
-            {!isPlaying && (
+            {!isPlaying && !showEndCard && (
               <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/25">
                 <div className="flex size-16 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md shadow-xl ring-2 ring-white/30 transition-transform">
                   <svg className="size-8 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">

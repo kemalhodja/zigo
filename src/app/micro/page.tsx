@@ -150,7 +150,12 @@ function ReelSection({
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.2),transparent_18rem)]" />
       {reel.mediaUrl && reel.mediaType === "video" ? (
-        <ReelVideoPlayer mediaUrl={reel.mediaUrl} reelId={reel.postId ?? reel.id} />
+        <ReelVideoPlayer
+          canOpenExternalLink={isSubscriber}
+          externalUrl={reel.externalUrl}
+          mediaUrl={reel.mediaUrl}
+          reelId={reel.postId ?? reel.id}
+        />
       ) : parsedLink?.type === "youtube" && parsedLink.youtubeEmbedUrl && isSubscriber ? (
         <div className="absolute inset-0 z-0 flex items-center justify-center bg-black">
           <iframe

@@ -6,6 +6,7 @@ import { extractErrorMessage } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { checkRateLimitAsync } from "@/lib/server/rate-limit";
+import { inspectVideoHeader } from "@/lib/server/video-metadata";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -56,9 +57,29 @@ const signedUploadRequestSchema = z.object({
   durationSeconds: z.number().nonnegative().optional(),
 });
 
+const verifySignedUploadSchema = z.object({
+  mode: z.literal("verify-signed"),
+  objectPath: z.string().min(3).max(500),
+});
+
 const cleanupUploadSchema = z.object({
   objectPath: z.string().min(3).max(500),
 });
+
+const MAX_VERIFIED_DURATION_GRACE_SECONDS = MAX_VIDEO_DURATION_SECONDS + 0.6;
+
+async function fetchStorageByteRange(url: string, rangeHeader: string): Promise<Uint8Array | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { Range: rangeHeader },
+      cache: "no-store",
+    });
+    if (!res.ok && res.status !== 206) return null;
+    return new Uint8Array(await res.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
 
 async function hasValidFileSignature(file: File) {
   const header = new Uint8Array(await file.slice(0, 16).arrayBuffer());
@@ -142,9 +163,83 @@ export async function POST(request: Request) {
 
     const contentTypeHeader = request.headers.get("content-type") ?? "";
 
-    // ── Mode A: Direct-to-Storage Signed Upload URL (for short promo videos > 3.5 MB) ──
+    // ── Mode A & C: JSON requests (signed upload URL or post-upload verification) ──
     if (contentTypeHeader.includes("application/json")) {
-      const parsed = signedUploadRequestSchema.safeParse(await request.json());
+      const jsonBody = (await request.json()) as { mode?: string };
+
+      // ── Mode C: Server-side verification of direct-uploaded video container & duration ──
+      if (jsonBody?.mode === "verify-signed") {
+        const parsedVerify = verifySignedUploadSchema.safeParse(jsonBody);
+        if (!parsedVerify.success || !parsedVerify.data.objectPath.startsWith(`${profile.id}/`)) {
+          return NextResponse.json({ error: "Geçersiz doğrulama yolu." }, { status: 400 });
+        }
+
+        const objectPath = parsedVerify.data.objectPath;
+        const supabaseUrl = (
+          process.env.NEXT_PUBLIC_SUPABASE_URL ||
+          "https://fuqnjxcoxopomzgbifve.supabase.co"
+        )
+          .trim()
+          .replace(/\/$/, "");
+        const objectUrl = `${supabaseUrl}/storage/v1/object/public/social-media/${objectPath}`;
+
+        const headBytes = await fetchStorageByteRange(objectUrl, "bytes=0-65535");
+        if (!headBytes) {
+          // If Storage is unreachable or still propagating, do not block legitimate uploads
+          return NextResponse.json({ data: { verified: true, skipped: true } });
+        }
+
+        let inspection = inspectVideoHeader(headBytes);
+        if (inspection.validContainer && inspection.container === "mp4" && inspection.durationSeconds === null) {
+          const tailBytes = await fetchStorageByteRange(objectUrl, "bytes=-65536");
+          inspection = inspectVideoHeader(headBytes, tailBytes);
+        }
+
+        const rejectAndCleanup = async (errorMessage: string) => {
+          await supabase.storage.from("social-media").remove([objectPath]).catch(() => {});
+          const lifecycle = supabase as unknown as {
+            from: (table: "media_uploads") => {
+              update: (value: Record<string, unknown>) => {
+                eq: (col: string, val: string) => {
+                  eq: (col: string, val: string) => Promise<{ error: { message?: string } | null }>;
+                };
+              };
+            };
+          };
+          await lifecycle
+            .from("media_uploads")
+            .update({ status: "deleted", deleted_at: new Date().toISOString() })
+            .eq("object_path", objectPath)
+            .eq("owner_id", profile.id)
+            .catch(() => {});
+          return NextResponse.json({ error: errorMessage }, { status: 400 });
+        };
+
+        if (!inspection.validContainer) {
+          return rejectAndCleanup(
+            "Yüklenen dosya geçerli bir kısa video formatı değil. Lütfen MP4, WEBM, MOV veya M4V seçin.",
+          );
+        }
+
+        if (
+          inspection.durationSeconds !== null &&
+          inspection.durationSeconds > MAX_VERIFIED_DURATION_GRACE_SECONDS
+        ) {
+          return rejectAndCleanup(
+            `Sunucu doğrulaması: Video süresi ${Math.round(inspection.durationSeconds)} sn olarak tespit edildi. Kısa tanıtım videoları en fazla ${MAX_VIDEO_DURATION_SECONDS} saniye olabilir; uzun dersler için YouTube veya Vimeo linki ekleyin.`,
+          );
+        }
+
+        return NextResponse.json({
+          data: {
+            verified: true,
+            container: inspection.container,
+            durationSeconds: inspection.durationSeconds,
+          },
+        });
+      }
+
+      const parsed = signedUploadRequestSchema.safeParse(jsonBody);
       if (!parsed.success) {
         return NextResponse.json({ error: "Geçersiz yükleme isteği." }, { status: 400 });
       }

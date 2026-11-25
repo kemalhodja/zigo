@@ -199,18 +199,45 @@ export function useUploadPipeline() {
         }
 
         setPhase("uploading");
-        setProgress(50 + Math.round((i / input.files.length) * 25));
-        setMessage(isCarousel ? `Medya ${i + 1}/${input.files.length} yükleniyor…` : "Medya yükleniyor…");
+        const baseProgress = 35 + Math.round((i / input.files.length) * 35);
+        setProgress(baseProgress);
+        const isVideoUpload = fileToUpload.type.startsWith("video/") || isSupportedVideoFile(fileToUpload);
+        setMessage(
+          isCarousel
+            ? `Medya ${i + 1}/${input.files.length} yükleniyor…`
+            : isVideoUpload
+              ? "Kısa video yükleniyor… 0%"
+              : "Medya yükleniyor…",
+        );
+
+        const uploadCtrl = new AbortController();
+        abortCtrlRef.current = uploadCtrl;
 
         let currentMediaUrl = "";
         try {
           const uploaded = await uploadSocialMedia(fileToUpload, {
             durationSeconds: videoDurationSeconds,
+            signal: uploadCtrl.signal,
+            onProgress: (ratio) => {
+              if (!isCarousel) {
+                const pct = Math.round(ratio * 100);
+                setProgress(35 + Math.round(ratio * 35));
+                setMessage(isVideoUpload ? `Kısa video yükleniyor… ${pct}%` : `Medya yükleniyor… ${pct}%`);
+              }
+            },
           });
           currentMediaUrl = uploaded.mediaUrl;
           mediaType = uploaded.mediaType;
           uploadedObjectPaths.push(uploaded.objectPath);
         } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") {
+            await Promise.allSettled(uploadedObjectPaths.map((p) => cleanupUploadedMedia(p)));
+            runningRef.current = false;
+            setPhase("idle");
+            setProgress(0);
+            setMessage("");
+            return;
+          }
           console.error("[POST_PIPELINE_UPLOAD_FAILED]", err);
           setPhase("error");
           setError(
@@ -220,6 +247,8 @@ export function useUploadPipeline() {
           );
           runningRef.current = false;
           return;
+        } finally {
+          abortCtrlRef.current = null;
         }
         
         uploadedUrls.push(currentMediaUrl);

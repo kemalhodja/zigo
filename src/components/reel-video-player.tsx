@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PromoVideoEndCard } from "@/components/promo-video-end-card";
 import { extractVideoPosterUrl, getMediaPlaybackUrl, getVideoSources } from "@/lib/domain/video-delivery";
 
 type ReelVideoPlayerProps = {
   mediaUrl: string;
   reelId: string;
+  externalUrl?: string | null;
+  canOpenExternalLink?: boolean;
 };
 
 function formatTime(seconds: number): string {
@@ -16,12 +19,18 @@ function formatTime(seconds: number): string {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
+export function ReelVideoPlayer({
+  mediaUrl,
+  reelId,
+  externalUrl,
+  canOpenExternalLink,
+}: ReelVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const playbackUrl = getMediaPlaybackUrl(mediaUrl);
   const posterUrl = extractVideoPosterUrl(mediaUrl);
+  const hasExternalCta = Boolean(externalUrl && externalUrl.trim());
 
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -29,6 +38,7 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
   const [isSeeking, setIsSeeking] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [showEndCard, setShowEndCard] = useState(false);
 
   function emitPlayback(isPlaying: boolean) {
     window.dispatchEvent(
@@ -145,10 +155,14 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
         ref={videoRef}
         autoPlay
         className="absolute inset-0 size-full object-cover"
-        loop
+        loop={!hasExternalCta}
         muted={isMuted}
         onClick={handleTap}
-        onEnded={() => emitPlayback(false)}
+        onEnded={() => {
+          emitPlayback(false);
+          setIsPaused(true);
+          if (hasExternalCta) setShowEndCard(true);
+        }}
         onLoadedMetadata={handleLoadedMetadata}
         onPause={() => {
           emitPlayback(false);
@@ -157,10 +171,12 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
         onPlay={() => {
           emitPlayback(true);
           setIsPaused(false);
+          setShowEndCard(false);
         }}
         onPlaying={() => {
           emitPlayback(true);
           setIsPaused(false);
+          setShowEndCard(false);
         }}
         onTimeUpdate={handleTimeUpdate}
         playsInline
@@ -191,7 +207,22 @@ export function ReelVideoPlayer({ mediaUrl, reelId }: ReelVideoPlayerProps) {
         )}
       </button>
 
-      {isPaused ? (
+      {showEndCard && externalUrl ? (
+        <PromoVideoEndCard
+          externalUrl={externalUrl}
+          canOpenLink={canOpenExternalLink}
+          onReplay={() => {
+            setShowEndCard(false);
+            const v = videoRef.current;
+            if (v) {
+              v.currentTime = 0;
+              void v.play().catch(() => undefined);
+            }
+          }}
+        />
+      ) : null}
+
+      {isPaused && !showEndCard ? (
         <button
           aria-label="Oynat"
           className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 p-4 backdrop-blur-sm transition-opacity duration-200"

@@ -28,6 +28,7 @@ const ALLOWED_ADMIN_IMPORTS = new Set([
   "src/app/api/account/parental-consent/decide/route.ts",
   "src/app/api/account/parental-consent/route.ts",
   "src/app/api/cron/churn-reengagement/route.ts",
+  "src/app/api/cron/cleanup-orphan-media/route.ts",
   "src/app/api/cron/trial-reminders/route.ts",
   "src/app/api/admin/users/delete/route.ts",
   "src/app/api/billing/dev-activate/route.ts",

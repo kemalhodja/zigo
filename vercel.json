@@ -17,6 +17,10 @@
     {
       "path": "/api/cron/churn-reengagement",
       "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-orphan-media",
+      "schedule": "0 3 * * *"
     }
   ],
   "headers": [

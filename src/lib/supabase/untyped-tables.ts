@@ -27,6 +27,9 @@ type ResultLike<T> = PromiseLike<{ data: T; error: { message: string } | null }>
 
 type Filterable<T> = T & {
   eq: (column: string, value: unknown) => Filterable<T>;
+  is: (column: string, value: unknown) => Filterable<T>;
+  lt: (column: string, value: unknown) => Filterable<T>;
+  in: (column: string, values: readonly unknown[]) => Filterable<T>;
 };
 
 /**

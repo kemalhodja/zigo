@@ -14,21 +14,83 @@ export type UploadedSocialMedia = {
   objectPath: string;
 };
 
+export type UploadSocialMediaOptions = {
+  durationSeconds?: number;
+  onProgress?: (ratio: number) => void;
+  signal?: AbortSignal;
+};
+
+function putWithProgress(
+  url: string,
+  file: File,
+  contentType: string,
+  onProgress?: (ratio: number) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Yükleme iptal edildi.", "AbortError"));
+      return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url, true);
+    xhr.setRequestHeader("Content-Type", contentType);
+    xhr.setRequestHeader("x-upsert", "false");
+
+    const onAbort = () => {
+      xhr.abort();
+      reject(new DOMException("Yükleme iptal edildi.", "AbortError"));
+    };
+
+    signal?.addEventListener("abort", onAbort, { once: true });
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0) {
+        onProgress?.(Math.min(0.99, event.loaded / event.total));
+      }
+    };
+
+    xhr.onload = () => {
+      signal?.removeEventListener("abort", onAbort);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress?.(1);
+        resolve();
+      } else {
+        reject(new Error("Kısa video depolama alanına yüklenemedi. Lütfen bağlantınızı kontrol edip tekrar deneyin."));
+      }
+    };
+
+    xhr.onerror = () => {
+      signal?.removeEventListener("abort", onAbort);
+      reject(new Error("Ağ hatası nedeniyle video yüklenemedi. Lütfen tekrar deneyin."));
+    };
+
+    xhr.onabort = () => {
+      signal?.removeEventListener("abort", onAbort);
+      reject(new DOMException("Yükleme iptal edildi.", "AbortError"));
+    };
+
+    xhr.send(file);
+  });
+}
+
 /**
  * Uploads an image or short promo video to Zigo social-media storage.
  * - Images and small videos (<= 3.5 MB) go through POST /api/social/upload FormData.
  * - Larger short promo videos (> 3.5 MB, up to 25 MB / 30s) request a signed
- *   upload URL from POST /api/social/upload and PUT directly to Supabase Storage,
- *   avoiding serverless payload size limits while keeping full server-side validation.
+ *   upload URL from POST /api/social/upload, stream via XHR with live progress + abort,
+ *   and finish with server-side MP4 container & duration verification.
  */
 export async function uploadSocialMedia(
   file: File,
-  options?: { durationSeconds?: number },
+  options?: UploadSocialMediaOptions,
 ): Promise<UploadedSocialMedia> {
   const isVideo = file.type.startsWith("video/") || isSupportedVideoFile(file);
   const resolvedContentType = isVideo ? resolveVideoMimeType(file) : file.type;
 
   if (isVideo && file.size > DIRECT_SIGNED_UPLOAD_THRESHOLD_BYTES) {
+    options?.onProgress?.(0.02);
     const ticketRes = await fetchWithRetry("/api/social/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -55,20 +117,37 @@ export async function uploadSocialMedia(
       };
     };
 
-    const putRes = await fetch(ticket.data.signedUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": ticket.data.storageContentType || "video/mp4",
-        "x-upsert": "false",
-      },
-      body: file,
-    });
-
-    if (!putRes.ok) {
+    try {
+      await putWithProgress(
+        ticket.data.signedUrl,
+        file,
+        ticket.data.storageContentType || "video/mp4",
+        (ratio) => options?.onProgress?.(0.05 + ratio * 0.85),
+        options?.signal,
+      );
+    } catch (err) {
       await cleanupUploadedMedia(ticket.data.objectPath);
-      throw new Error("Kısa video depolama alanına yüklenemedi. Lütfen bağlantınızı kontrol edip tekrar deneyin.");
+      throw err;
     }
 
+    // Server-side MP4 container & duration verification (blocks spoofed durations)
+    const verifyRes = await fetch("/api/social/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "verify-signed",
+        objectPath: ticket.data.objectPath,
+      }),
+    });
+
+    if (!verifyRes.ok) {
+      const body = (await verifyRes.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(
+        body?.error ?? "Kısa video sunucu doğrulamasından geçemedi. Maksimum 30 saniyelik geçerli bir video seçin.",
+      );
+    }
+
+    options?.onProgress?.(1);
     return {
       mediaUrl: ticket.data.mediaUrl,
       mediaType: "video",
@@ -91,6 +170,7 @@ export async function uploadSocialMedia(
   const uploadRes = await fetchWithRetry("/api/social/upload", {
     method: "POST",
     body: uploadData,
+    signal: options?.signal,
   });
 
   if (!uploadRes.ok) {
@@ -98,6 +178,7 @@ export async function uploadSocialMedia(
     throw new Error(body?.error ?? "Medya yüklenemedi. Lütfen tekrar deneyin.");
   }
 
+  options?.onProgress?.(1);
   const uploadBody = (await uploadRes.json()) as {
     data: UploadedSocialMedia;
   };

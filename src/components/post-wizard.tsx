@@ -20,8 +20,10 @@ import { ExternalLinkCard } from "@/components/external-link-card";
 import {
   isSupportedImageFile,
   prepareImageForUpload,
+  rotateImage90,
 } from "@/lib/client/compress-image";
 import {
+  extractVideoFrameFile,
   isSupportedVideoFile,
   validateVideoLimits,
 } from "@/lib/client/compress-video";
@@ -52,6 +54,7 @@ type MediaPreviewItem = {
 type VideoPosterItem = {
   file: File;
   url: string;
+  isAuto?: boolean;
 };
 const OVERLAY_STEPS: { id: UploadPhase; label: string }[] = [
   { id: "validating", label: "Doğrulanıyor" },
@@ -272,7 +275,41 @@ export function PostWizard({
       });
       clearVideoPoster();
       setMediaItems(nextItems);
+
+      // Automatically extract a lightweight WebP poster frame for short promo videos
+      // so feed videos render an instant cover without pre-downloading video bytes.
+      if (nextItems.length === 1 && nextItems[0]?.type === "video") {
+        const videoFile = nextItems[0].file;
+        void extractVideoFrameFile(videoFile).then((autoPosterFile) => {
+          if (!autoPosterFile) return;
+          setVideoPoster((prev) => {
+            if (prev) return prev; // Keep user's custom cover if already chosen
+            return {
+              file: autoPosterFile,
+              url: URL.createObjectURL(autoPosterFile),
+              isAuto: true,
+            };
+          });
+        });
+      }
     }
+  }
+
+  async function handleRotateImageAt(index: number) {
+    const target = mediaItems[index];
+    if (!target || target.type !== "image") return;
+    vibrate(15);
+    setIsValidatingMedia(true);
+    const rotatedFile = await rotateImage90(target.file);
+    setIsValidatingMedia(false);
+    const nextUrl = URL.createObjectURL(rotatedFile);
+    setMediaItems((prev) =>
+      prev.map((item, idx) => {
+        if (idx !== index) return item;
+        if (item.url.startsWith("blob:")) URL.revokeObjectURL(item.url);
+        return { ...item, file: rotatedFile, url: nextUrl };
+      }),
+    );
   }
 
   function handleRemoveMediaAt(index: number) {
@@ -369,7 +406,11 @@ export function PostWizard({
           phase={pipeline.phase}
           progress={pipeline.progress}
           message={pipeline.message}
-          onCancel={pipeline.phase === "compressing" ? pipeline.abort : undefined}
+          onCancel={
+            pipeline.phase === "compressing" || pipeline.phase === "uploading"
+              ? pipeline.abort
+              : undefined
+          }
         />
       )}
 
@@ -399,6 +440,7 @@ export function PostWizard({
             onRemoveMediaAt={handleRemoveMediaAt}
             onUndoRemove={handleUndoRemove}
             onMoveMedia={handleMoveMedia}
+            onRotateMediaAt={handleRotateImageAt}
             onSelectVideoPoster={handleSelectVideoPoster}
             onCaptureVideoPoster={handleCaptureVideoPosterFromFile}
             onClearVideoPoster={clearVideoPoster}
@@ -450,6 +492,7 @@ type MediaPickerStepProps = {
   onRemoveMediaAt: (index: number) => void;
   onUndoRemove: () => void;
   onMoveMedia: (index: number, direction: -1 | 1) => void;
+  onRotateMediaAt: (index: number) => void;
   onSelectVideoPoster: (file: File | null) => void;
   onCaptureVideoPoster: (file: File) => void;
   onClearVideoPoster: () => void;
@@ -470,6 +513,7 @@ function MediaPickerStep({
   onRemoveMediaAt,
   onUndoRemove,
   onMoveMedia,
+  onRotateMediaAt,
   onSelectVideoPoster,
   onCaptureVideoPoster,
   onClearVideoPoster,
@@ -575,13 +619,24 @@ function MediaPickerStep({
             )}
 
             {/* Overlay buttons */}
-            <div className="absolute right-3 top-3 flex gap-2">
+            <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1.5">
+              {!isVideo && (
+                <button
+                  type="button"
+                  disabled={isValidating}
+                  onClick={() => onRotateMediaAt(safeSlideIndex)}
+                  className="tap-scale flex items-center gap-1 rounded-xl bg-black/65 px-3 py-1.5 text-xs font-black text-white backdrop-blur-sm transition hover:bg-black/85 disabled:opacity-50"
+                  title="Fotoğrafı 90° sağa döndür"
+                >
+                  ↻ Döndür
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onClearMedia}
                 className="flex items-center gap-1 rounded-xl bg-black/65 px-3 py-1.5 text-xs font-black text-white backdrop-blur-sm transition hover:bg-black/85"
               >
-                ✕ Tümünü Kaldır
+                ✕ Kaldır
               </button>
               <label className="flex cursor-pointer items-center gap-1 rounded-xl bg-black/65 px-3 py-1.5 text-xs font-black text-white backdrop-blur-sm transition hover:bg-black/85">
                 🔄 Değiştir
@@ -733,7 +788,11 @@ function MediaPickerStep({
                   )}
                   <div className="min-w-0">
                     <p className="text-xs font-black text-white">
-                      {videoPoster ? "Kapak Fotoğrafı Seçildi ✓" : "Video Kapağı (İsteğe Bağlı)"}
+                      {videoPoster
+                        ? videoPoster.isAuto
+                          ? "Otomatik Kapak Oluşturuldu ✓"
+                          : "Özel Kapak Fotoğrafı Seçildi ✓"
+                        : "Video Kapağı (İsteğe Bağlı)"}
                     </p>
                     <p className="text-[11px] font-medium text-white/65">
                       Akış ve Keşfet&apos;te videonuzun kapak görseli olarak görünür.
