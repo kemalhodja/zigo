@@ -22,6 +22,20 @@ describe("admin-user-details domain logic", () => {
     expect(result.remainingDays).toBe(0);
   });
 
+  it("calculates 30-day trial eligibility for teachers correctly", () => {
+    const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+    const result = calculateTrialEligibility(fifteenDaysAgo, "teacher");
+    expect(result.isWithin7Days).toBe(true);
+    expect(result.discountPercent).toBe(50);
+    expect(result.remainingDays).toBeGreaterThanOrEqual(14);
+
+    const thirtyFiveDaysAgo = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString();
+    const expiredResult = calculateTrialEligibility(thirtyFiveDaysAgo, "teacher");
+    expect(expiredResult.isWithin7Days).toBe(false);
+    expect(expiredResult.discountPercent).toBe(0);
+    expect(expiredResult.remainingDays).toBe(0);
+  });
+
   it("calculates curfew status based on Istanbul time (UTC+3)", () => {
     // 23:00 Istanbul time -> 20:00 UTC
     const dateNight = new Date("2026-09-11T20:00:00.000Z");

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 
+import { GooglePlayBadge } from "@/components/google-play-badge";
+
 export function SeoFooter() {
   const pathname = usePathname();
 
@@ -221,6 +223,25 @@ export function SeoFooter() {
                 </Link>
               </li>
             </ul>
+          </div>
+        </div>
+
+        {/* Mobil Uygulama & Google Play İndirme Bandı */}
+        <div className="mt-10 rounded-3xl border border-slate-200/90 bg-gradient-to-r from-slate-900 via-slate-950 to-indigo-950 p-6 text-white shadow-xl shadow-slate-900/10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-1.5 text-center md:text-left">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-400">
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Resmi Android Uygulaması</span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
+              Zigo&apos;yu Android Cihazınıza İndirin
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-xl">
+              Canlı bilgi düelloları, zeka oyunları ve sınav hazırlık içeriklerine telefonunuzdan tek dokunuşla kesintisiz erişin.
+            </p>
+          </div>
+          <div className="shrink-0">
+            <GooglePlayBadge variant="dark" />
           </div>
         </div>
 

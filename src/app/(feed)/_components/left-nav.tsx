@@ -90,10 +90,10 @@ export function LeftNav() {
           <span className="text-xs font-black uppercase tracking-wider">Zigo Plus</span>
         </div>
         <p className="mt-1 text-xs font-bold text-slate-800">
-          7 Gün Ücretsiz Deneyin!
+          Ücretsiz Deneme Fırsatı!
         </p>
         <p className="mt-0.5 text-[11px] text-slate-500">
-          İlk 7 gün içinde %50 indirim avantajı.
+          Deneme süresinde %50 indirim avantajı.
         </p>
         <Link
           href="/subscription"

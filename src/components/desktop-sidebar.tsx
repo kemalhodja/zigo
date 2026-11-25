@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
+import { GooglePlayBadge } from "@/components/google-play-badge";
 
 type DesktopSidebarProps = {
   canCreateSocialPost?: boolean;
@@ -327,7 +328,7 @@ export function DesktopSidebar({
               Ayrıcalıkları Keşfet
             </p>
             <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-              7 gün ücretsiz deneme & %50 fırsat.
+              Ücretsiz tam deneme & %50 fırsat.
             </p>
             <Link
               href="/pricing"
@@ -348,6 +349,10 @@ export function DesktopSidebar({
               <span>Masaüstüne Yükle (PWA)</span>
             </button>
           )}
+
+          <div className="pt-0.5">
+            <GooglePlayBadge variant="compact" className="w-full justify-center" />
+          </div>
 
           <div className="px-2 flex items-center justify-between text-[11px] font-bold text-slate-400">
             <span>Zigo v1.3.5</span>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { GooglePlaySubscriptionModal } from "@/components/google-play-subscription-modal";
+import { GooglePlayBadge, GooglePlayIcon } from "@/components/google-play-badge";
 import { isCapacitorAndroidClient } from "@/lib/client/capacitor-runtime";
 import {
   isGooglePlayBillingAvailable,
@@ -251,9 +252,7 @@ function PlanCard({
               }}
               className="tap-scale w-full py-3.5 px-5 rounded-2xl text-white font-black text-sm shadow-lg hover:brightness-105 transition flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600"
             >
-              <svg aria-hidden="true" className="size-5 fill-current" viewBox="0 0 24 24">
-                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.99 1.99 0 0 1-.61-1.42V3.234c0-.553.224-1.053.609-1.42zM15.206 13.414l2.585 2.585-12.87 7.43 10.285-10.015zM15.206 10.586L4.921 .571l12.87 7.43-2.585 2.585zM19.393 12l2.366-1.366c.64-.37.64-1.63 0-2l-2.366-1.366-2.585 2.585L19.393 12z" />
-              </svg>
+              <GooglePlayIcon className="size-5 shrink-0" />
               <span>Google Play ile Abone Ol</span>
             </button>
 
@@ -484,9 +483,10 @@ function usePricingSubscription(): SubscriptionState {
           const createdTime = new Date(userData.created_at).getTime();
           const diffTime = Date.now() - createdTime;
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays >= 0 && diffDays < 7) {
+          const trialLimit = userRole === "teacher" ? 30 : 7;
+          if (diffDays >= 0 && diffDays < trialLimit) {
             isTrialActive = true;
-            trialDaysRemaining = Math.max(0, 6 - diffDays);
+            trialDaysRemaining = Math.max(0, (trialLimit - 1) - diffDays);
           }
         }
 
@@ -783,7 +783,7 @@ export default function PricingPage() {
             {isTrial && trialDaysRemaining > 0 && (
               <div className="mt-5 inline-flex items-center gap-2.5 rounded-full bg-amber-500/10 px-4 py-2 text-sm font-black text-amber-800 border border-amber-500/30 shadow-sm backdrop-blur-md">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-night text-xs">⏳</span>
-                <span>7 Günlük Denemenizin Bitmesine <strong>{trialDaysRemaining} Gün Kaldı</strong> (%50 İndirim Fırsatı)</span>
+                <span>{userRole === "teacher" ? "30 Günlük" : "7 Günlük"} Denemenizin Bitmesine <strong>{trialDaysRemaining} Gün Kaldı</strong> (%50 İndirim Fırsatı)</span>
               </div>
             )}
 
@@ -865,12 +865,12 @@ export default function PricingPage() {
           <h2 className="text-xl font-black text-night mb-6 text-center">Sık Sorulan Sorular</h2>
           <dl className="space-y-4 max-w-3xl mx-auto">
             <div className="border border-slate-200 rounded-xl p-4">
-              <dt className="font-black text-night mb-1">7 günlük deneme nasıl çalışıyor?</dt>
-              <dd className="text-slate-600">Kayıttan sonraki ilk 7 gün boyunca tüm Zigo Plus özelliklerini ücretsiz deneyebilirsiniz. 7 gün dolmadan önce abonelik başlatırsanız %50 indirimli fiyat uygulanır.</dd>
+              <dt className="font-black text-night mb-1">Ücretsiz deneme süresi nasıl çalışıyor?</dt>
+              <dd className="text-slate-600">Öğretmenler için ilk 30 gün (1 ay), öğrenci ve veliler için ilk 7 gün boyunca tüm Zigo Plus özelliklerini ücretsiz deneyebilirsiniz. Deneme süresi dolmadan önce abone olursanız %50 indirimli dinamik fiyat uygulanır.</dd>
             </div>
             <div className="border border-slate-200 rounded-xl p-4">
               <dt className="font-black text-night mb-1">%50 indirim nasıl uygulanır?</dt>
-              <dd className="text-slate-600">Kayıttan sonraki ilk 7 gün içinde ödeme sayfasında <strong>ZIGO50</strong> promo kodunu girin. İndirim otomatik uygulanır. 7 gün geçtise kod çalışmaz.</dd>
+              <dd className="text-slate-600">Deneme süresi içinde ödeme sayfasında <strong>ZIGO50</strong> promo kodunu girin. İndirim otomatik uygulanır. Deneme süresi geçtikten sonra standart tam liste fiyatı geçerlidir.</dd>
             </div>
             <div className="border border-slate-200 rounded-xl p-4">
               <dt className="font-black text-night mb-1">Abonelik iptali nasıl yapılır?</dt>
@@ -886,6 +886,26 @@ export default function PricingPage() {
             </div>
           </dl>
         </section>
+
+        {/* Google Play Tanıtım Kartı (Web Ziyaretçileri İçin) */}
+        {!isNativeClient && (
+          <div className="mt-12 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 to-indigo-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center sm:text-left">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-300">
+                <span>📱 Android Cihazlar İçin</span>
+              </span>
+              <h3 className="text-lg sm:text-xl font-black text-white">
+                Mobil Uygulamadan Doğrudan Abone Olun
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-lg">
+                Zigo Android uygulamasını Google Play Store üzerinden indirerek aboneliğinizi Google Play güvencesi ve tek tıkla başlatabilirsiniz.
+              </p>
+            </div>
+            <div className="shrink-0">
+              <GooglePlayBadge variant="dark" />
+            </div>
+          </div>
+        )}
 
         <div className="mt-12 text-center">
           <p className="text-sm font-bold text-slate-500 mb-4">

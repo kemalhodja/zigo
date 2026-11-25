@@ -56,6 +56,39 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
       expect(planPricing.compareAtTry).toBe(49);
     });
 
+    it("Öğretmenler için deneme süresi 1 aydır (30 gün); 15. günde %50 indirimli, 35. günde liste fiyatıdır", () => {
+      // 15 gün önce kayıt olan öğretmen hala deneme süresi içindedir
+      const teacher15Days = new Date(Date.now() - 15 * 86400000).toISOString();
+      const pricing15 = calculateDynamicPrice(99, teacher15Days, new Date(), "teacher");
+      expect(pricing15.isWithinTrialWindow).toBe(true);
+      expect(pricing15.discountPercent).toBe(50);
+      expect(pricing15.priceTry).toBe(50);
+      expect(pricing15.trialDaysRemaining).toBe(15);
+      expect(pricing15.trialDays).toBe(30);
+
+      // Öğretmen için 30 gün içinde ZIGO50 kodu geçerlidir
+      const promoResult15 = applyPromoCode(99, "ZIGO50", true, "teacher");
+      expect(promoResult15.success).toBe(true);
+      expect(promoResult15.priceTry).toBe(50);
+
+      // Öğretmen plan grubu çözümlendiğinde 15. günde %50 indirim sunar
+      const teacherGroups = resolveProfilePlanGroups("teacher", false, null, teacher15Days);
+      expect(teacherGroups.length).toBeGreaterThan(0);
+      expect(teacherGroups[0].plans[0].priceTry).toBe(50);
+
+      // 35 gün sonra öğretmenin 1 aylık deneme süresi dolmuştur
+      const teacher35Days = new Date(Date.now() - 35 * 86400000).toISOString();
+      const pricing35 = calculateDynamicPrice(99, teacher35Days, new Date(), "teacher");
+      expect(pricing35.isWithinTrialWindow).toBe(false);
+      expect(pricing35.discountPercent).toBe(0);
+      expect(pricing35.priceTry).toBe(99);
+      expect(pricing35.trialDaysRemaining).toBe(0);
+
+      const promoResult35 = applyPromoCode(99, "ZIGO50", false, "teacher");
+      expect(promoResult35.success).toBe(false);
+      expect(promoResult35.message).toContain("30 gün");
+    });
+
     it("Tüm roller için plan grupları oluşturulabilir ve formatlanabilir", () => {
       const studentGroups = resolveProfilePlanGroups("student", "/student", new Date().toISOString());
       expect(studentGroups.length).toBeGreaterThan(0);
@@ -143,6 +176,84 @@ describe("Uçtan Uca Abonelik Senaryosu (End-to-End Subscription Journey)", () =
       expect(sub.isPremium).toBe(true);
       expect(sub.tier).toBe("zigo_plus");
       expect(sub.isTrial).toBe(false);
+    });
+
+    it("Öğretmen kullanıcısı 15. günde 1 aylık deneme süresiyle Zigo Plus haklarına sahiptir; 35. günde free olur", async () => {
+      const teacherId = "00000000-0000-4000-8000-000000000101";
+      const teacher15Days = new Date(Date.now() - 15 * 86400000).toISOString();
+
+      const mockDbActive = {
+        from: vi.fn((table: string) => {
+          if (table === "user_subscriptions" || table === "google_play_purchases") {
+            return {
+              select: () => ({
+                eq: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            };
+          }
+          if (table === "users") {
+            return {
+              select: () => ({
+                eq: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve({
+                      data: { is_premium: false, role: "teacher", created_at: teacher15Days },
+                      error: null,
+                    }),
+                }),
+              }),
+            };
+          }
+          return {};
+        }),
+      } as unknown as Parameters<typeof getUserSubscription>[0];
+
+      const sub15 = await getUserSubscription(mockDbActive, teacherId);
+      expect(sub15.isPremium).toBe(true);
+      expect(sub15.tier).toBe("zigo_plus");
+      expect(sub15.isTrial).toBe(true);
+      expect(sub15.trialDaysRemaining).toBe(14);
+
+      // 35 gün sonra:
+      const teacher35Days = new Date(Date.now() - 35 * 86400000).toISOString();
+      const mockDbExpired = {
+        from: vi.fn((table: string) => {
+          if (table === "user_subscriptions" || table === "google_play_purchases") {
+            return {
+              select: () => ({
+                eq: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            };
+          }
+          if (table === "users") {
+            return {
+              select: () => ({
+                eq: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve({
+                      data: { is_premium: false, role: "teacher", created_at: teacher35Days },
+                      error: null,
+                    }),
+                }),
+              }),
+            };
+          }
+          return {};
+        }),
+      } as unknown as Parameters<typeof getUserSubscription>[0];
+
+      const sub35 = await getUserSubscription(mockDbExpired, teacherId);
+      expect(sub35.isPremium).toBe(false);
+      expect(sub35.tier).toBe("free");
+      expect(sub35.isTrial).toBe(false);
     });
   });
 

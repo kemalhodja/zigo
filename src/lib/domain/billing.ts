@@ -54,7 +54,8 @@ export async function createZigoPlusCheckoutSession(
     "metadata[plan_id]": planId,
   });
 
-  const dynamicPricing = calculateDynamicPrice(100, userCreatedAt);
+  const role = planId.includes("teacher") ? "teacher" : null;
+  const dynamicPricing = calculateDynamicPrice(100, userCreatedAt, new Date(), role);
   const discountPercent = dynamicPricing.discountPercent;
 
   // Her zaman deneme süresi içindeyse %50 indirim kuponunu uygula

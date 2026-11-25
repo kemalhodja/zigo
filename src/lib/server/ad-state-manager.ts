@@ -186,14 +186,14 @@ export async function getTotalAdFreeHours(userId: string): Promise<number> {
 }
 
 /**
- * Check if user is in 7-day trial period
+ * Check if user is in trial period (30 days for teachers, 7 days for students/parents)
  */
 export async function isUserInTrial(userId: string): Promise<boolean> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("users")
-    .select("is_premium, created_at")
+    .select("is_premium, created_at, role")
     .eq("id", userId)
     .single();
 
@@ -203,10 +203,11 @@ export async function isUserInTrial(userId: string): Promise<boolean> {
 
   if (data.created_at) {
     const createdDate = new Date(data.created_at);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const trialDays = data.role === "teacher" ? 30 : 7;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - trialDays);
 
-    return createdDate > sevenDaysAgo;
+    return createdDate > cutoffDate;
   }
 
   return false;
@@ -223,10 +224,12 @@ export async function autoDowngradeExpiredTrials(): Promise<{
 
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const { data: expiredTrialUsers, error: fetchError } = await supabase
     .from("users")
-    .select("id")
+    .select("id, role, created_at")
     .eq("is_premium", true)
     .lt("created_at", sevenDaysAgo.toISOString());
 
@@ -241,6 +244,12 @@ export async function autoDowngradeExpiredTrials(): Promise<{
   const errors: string[] = [];
 
   for (const user of expiredTrialUsers) {
+    const isTeacher = user.role === "teacher";
+    const cutoff = isTeacher ? thirtyDaysAgo : sevenDaysAgo;
+    if (user.created_at && new Date(user.created_at) > cutoff) {
+      continue;
+    }
+
     const success = await downgradeFromPremium(user.id);
     if (success) {
       downgraded++;

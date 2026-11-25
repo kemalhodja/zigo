@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const body = resetTrialSchema.parse(await request.json().catch(() => ({})));
     const adminClient = createAdminClient() ?? auth.supabase;
 
-    // Resetting created_at to now gives the user a fresh 7-day trial and 50% discount window
+    // Resetting created_at to now gives the user a fresh trial (30 days for teacher, 7 days for others) and 50% discount window
     const nowIso = new Date().toISOString();
 
     const { error } = await adminClient
@@ -30,9 +30,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message || "İndirim süresi sıfırlanamadı." }, { status: 400 });
     }
 
+    let trialDays = 7;
+    try {
+      const { data: userRow } = await adminClient
+        .from("users")
+        .select("role")
+        .eq("id", body.userId)
+        .maybeSingle();
+      if (userRow?.role === "teacher") {
+        trialDays = 30;
+      }
+    } catch {
+      // best-effort
+    }
+
     return NextResponse.json({
       success: true,
-      message: "7 günlük deneme ve %50 indirim penceresi sıfırlandı. Kullanıcıya bugünden itibaren 7 gün indirim tanımlandı.",
+      trialDays,
+      message: `${trialDays} günlük deneme ve %50 indirim penceresi sıfırlandı. Kullanıcıya bugünden itibaren ${trialDays} gün indirim tanımlandı.`,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -2,10 +2,12 @@
 
 ## 1. Business Model & Subscription (SaaS) Engine
 - **No Ads Policy**: Uygulamada reklam (AdMob vb.) KESİNLİKLE YOKTUR.
-- **7-Day Full Trial**: Kullanıcılar kayıt olduktan sonra ilk 7 gün boyunca tam özellikli ücretsiz deneme (Trial) hakkına sahiptir.
+- **Full Trial (Ücretsiz Deneme)**:
+  - **Öğretmenler**: Kayıttan sonraki **ilk 30 gün (1 ay)** boyunca tam özellikli ücretsiz deneme (Trial) hakkına sahiptir.
+  - **Öğrenci & Veli**: Kayıttan sonraki **ilk 7 gün** boyunca tam özellikli ücretsiz deneme hakkına sahiptir.
 - **Dynamic Pricing Engine**:
-  - Kayıttan sonraki **ilk 7 gün içinde** abone olan kullanıcılara **%50 indirimli** dinamik fiyat uygulanır (Promo kodu: ZIGO50).
-  - **7 günden sonra** abone olan kullanıcılara indirim uygulanmaz (**%0 / Standart Tam Liste Fiyatı** uygulanır).
+  - Deneme süresi içinde (öğretmen için ilk 30 gün, diğer kullanıcılar için ilk 7 gün) abone olan kullanıcılara **%50 indirimli** dinamik fiyat uygulanır (Promo kodu: ZIGO50).
+  - Deneme süresi dolduktan sonra indirim uygulanmaz (**%0 / Standart Tam Liste Fiyatı** uygulanır).
   - Fiyatlandırma motoru (`subscription-campaign.ts` / `subscription-plans.ts`) her zaman bu dinamik hesaba göre çalışmalıdır.
 - **Oyun Salonu Kuralı (Game Gate)**:
   - Abonesiz kullanıcılara oyun hakkı **YOKTUR** (`0 dk`). Oyun salonuna erişmek için Zigo Plus aboneliği zorunludur.

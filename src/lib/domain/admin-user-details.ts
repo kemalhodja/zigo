@@ -197,19 +197,21 @@ export type User360Data = {
 };
 
 /**
- * Calculates 7-day trial and 50% discount window eligibility
+ * Calculates trial (30 days for teacher, 7 days for others) and 50% discount window eligibility
  */
-export function calculateTrialEligibility(createdAtStr: string) {
+export function calculateTrialEligibility(createdAtStr: string, role?: string | null) {
   const createdAt = new Date(createdAtStr);
   const now = new Date();
   const diffMs = now.getTime() - createdAt.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const trialDays = role === "teacher" ? 30 : 7;
 
-  if (diffDays < 7) {
+  if (diffDays < trialDays) {
     return {
       isWithin7Days: true,
-      remainingDays: Math.max(0, 7 - diffDays),
+      remainingDays: Math.max(0, trialDays - diffDays),
       discountPercent: 50,
+      trialDays,
     };
   }
 
@@ -217,6 +219,7 @@ export function calculateTrialEligibility(createdAtStr: string) {
     isWithin7Days: false,
     remainingDays: 0,
     discountPercent: 0,
+    trialDays,
   };
 }
 
@@ -282,7 +285,7 @@ export async function getUser360Details(
     grade_level: rawUser.grade_level ?? null,
   };
 
-  const trial = calculateTrialEligibility(user.created_at);
+  const trial = calculateTrialEligibility(user.created_at, user.role);
 
   // Parallel resilient queries – split into two batches to avoid TS deep instantiation
   type AnyResult = { data: unknown; error: unknown };

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { isCapacitorAndroidClient, isCapacitorClient } from "@/lib/client/capacitor-runtime";
 import { isGooglePlayBillingAvailable } from "@/lib/client/google-play-billing";
+import { GooglePlayBadge } from "@/components/google-play-badge";
 
 type Platform = "ios" | "android" | "desktop" | null;
 
@@ -272,6 +273,15 @@ export function PwaInstallBanner() {
               >
                 Anladım ✓
               </button>
+              {platform === "android" && (
+                <div className="pt-1">
+                  <GooglePlayBadge
+                    variant="compact"
+                    className="w-full justify-center bg-white/10 hover:bg-white/15 border-white/20"
+                    subText="Google Play'den"
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -296,6 +306,15 @@ export function PwaInstallBanner() {
                 <Download className="size-4 stroke-[2.5]" />
                 <span>{installing ? "Kısayol İndiriliyor…" : "Kısayolu İndir — Ücretsiz"}</span>
               </button>
+              {platform === "android" && (
+                <div className="pt-0.5">
+                  <GooglePlayBadge
+                    variant="compact"
+                    className="w-full justify-center bg-white/10 hover:bg-white/15 border-white/20"
+                    subText="Resmi Uygulama"
+                  />
+                </div>
+              )}
               <button
                 type="button"
                 onClick={handleDismiss}

@@ -25,6 +25,7 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [isWithinTrial, setIsWithinTrial] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -41,9 +42,11 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
       // Get user created_at to determine trial window
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
+      const role = (user?.user_metadata?.role as string) || null;
+      setUserRole(role);
       let trialWindow = false;
       if (user?.created_at) {
-        const { isWithinTrialWindow } = calculateDynamicPrice(100, user.created_at);
+        const { isWithinTrialWindow } = calculateDynamicPrice(100, user.created_at, new Date(), role);
         trialWindow = isWithinTrialWindow;
         setIsWithinTrial(trialWindow);
       }
@@ -71,7 +74,7 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   function handleApplyPromo() {
     if (!promoCode.trim()) return;
 
-    const result = applyPromoCode(100, promoCode, isWithinTrial);
+    const result = applyPromoCode(100, promoCode, isWithinTrial, userRole);
     
     if (result.success) {
       toast.success(result.message);

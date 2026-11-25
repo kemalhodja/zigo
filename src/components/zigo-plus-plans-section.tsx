@@ -45,14 +45,16 @@ export function ZigoPlusPlansSection({
   const [, setPlatformMessage] = useState("");
   const campaignActive = isSubscriptionCampaignActive();
 
-  let trialDaysRemaining = 7;
+  const isTeacherGroup = groups.some((g) => g.id === "teacher");
+  const totalTrialDays = isTeacherGroup ? 30 : 7;
+  let trialDaysRemaining = totalTrialDays;
   let isWithinTrial = true;
   if (userCreatedAt) {
     const createdTime = new Date(userCreatedAt).getTime();
     const diffTime = Math.abs(Date.now() - createdTime);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    trialDaysRemaining = Math.max(0, 7 - diffDays);
-    isWithinTrial = diffDays <= 7;
+    trialDaysRemaining = Math.max(0, totalTrialDays - diffDays);
+    isWithinTrial = diffDays <= totalTrialDays;
   }
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export function ZigoPlusPlansSection({
         <div className="rounded-xl border border-amber-300/40 bg-gradient-to-r from-amber-500/20 to-orange-500/20 p-4">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">
-              🎁 7 Gün Ücretsiz Deneme {isWithinTrial ? `· Kalan: ${trialDaysRemaining} Gün` : "· Süre Doldu"}
+              🎁 {totalTrialDays} Gün Ücretsiz Deneme {isWithinTrial ? `· Kalan: ${trialDaysRemaining} Gün` : "· Süre Doldu"}
             </p>
             <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[0.65rem] font-black uppercase tracking-wider text-night">
               {isWithinTrial ? "%50 İNDİRİM FIRSATI" : "STANDART LİSTE FİYATI"}
@@ -98,8 +100,8 @@ export function ZigoPlusPlansSection({
           </div>
           <p className="mt-2 text-sm font-bold leading-snug text-white">
             {isWithinTrial
-              ? `Ücretsiz 7 günlük tam deneme sürenizin bitmesine ${trialDaysRemaining} gün kaldı! Şimdi kaydolun ve tüm planlarda %50 indirim avantajını yakalayın.`
-              : "7 günlük ücretsiz deneme süreniz doldu. Planlara tam liste fiyatıyla devam edebilirsiniz."}
+              ? `Ücretsiz ${totalTrialDays} günlük tam deneme sürenizin bitmesine ${trialDaysRemaining} gün kaldı! Şimdi kaydolun ve tüm planlarda %50 indirim avantajını yakalayın.`
+              : `${totalTrialDays} günlük ücretsiz deneme süreniz doldu. Planlara tam liste fiyatıyla devam edebilirsiniz.`}
           </p>
         </div>
       ) : null}

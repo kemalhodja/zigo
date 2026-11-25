@@ -116,7 +116,7 @@ export async function getUserSubscription(
   try {
     const { data: user } = await db
       .from("users")
-      .select("is_premium, created_at")
+      .select("is_premium, created_at, role")
       .eq("id", userId)
       .maybeSingle();
 
@@ -125,13 +125,14 @@ export async function getUserSubscription(
       return { tier: "zigo_plus", isPremium: true, isTrial: false, trialDaysRemaining: 0 };
     }
 
-    // 7 günlük kayıt denemesi
+    // Kayıt denemesi: Öğretmenler için 30 gün (1 ay), Öğrenci & Veli için 7 gün
     if (user?.created_at) {
       const createdTime = new Date(user.created_at).getTime();
       if (!Number.isNaN(createdTime)) {
         const diffDays = Math.floor((Date.now() - createdTime) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 0 && diffDays < 7) {
-          const trialDaysRemaining = Math.max(0, 6 - diffDays);
+        const trialLimit = user.role === "teacher" ? 30 : 7;
+        if (diffDays >= 0 && diffDays < trialLimit) {
+          const trialDaysRemaining = Math.max(0, (trialLimit - 1) - diffDays);
           return {
             tier: "zigo_plus",
             isPremium: true,
@@ -154,8 +155,10 @@ export async function getUserSubscription(
         const createdTime = new Date(authData.user.created_at).getTime();
         if (!Number.isNaN(createdTime)) {
           const diffDays = Math.floor((Date.now() - createdTime) / (1000 * 60 * 60 * 24));
-          if (diffDays >= 0 && diffDays < 7) {
-            const trialDaysRemaining = Math.max(0, 6 - diffDays);
+          const isTeacher = authData.user.user_metadata?.role === "teacher";
+          const trialLimit = isTeacher ? 30 : 7;
+          if (diffDays >= 0 && diffDays < trialLimit) {
+            const trialDaysRemaining = Math.max(0, (trialLimit - 1) - diffDays);
             return {
               tier: "zigo_plus",
               isPremium: true,

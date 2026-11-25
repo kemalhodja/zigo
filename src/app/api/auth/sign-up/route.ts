@@ -159,7 +159,7 @@ export async function POST(request: Request) {
         profileCreated: Boolean(created.user),
         needsEmailConfirmation: false,
         parentalConsentRequired: isMinor && !body.parentEmail,
-        message: getSignUpSuccessMessage(false),
+        message: getSignUpSuccessMessage(false, account.role),
       });
     }
 
@@ -247,7 +247,7 @@ export async function POST(request: Request) {
       },
       profileCreated: Boolean(data.user),
       needsEmailConfirmation,
-      message: getSignUpSuccessMessage(needsEmailConfirmation),
+      message: getSignUpSuccessMessage(needsEmailConfirmation, account.role),
     });
   } catch (error) {
     if (error instanceof RateLimitExceededError) {
@@ -293,8 +293,9 @@ function getSignUpStatus(message: string, status?: number) {
   return 400;
 }
 
-function getSignUpSuccessMessage(needsEmailConfirmation: boolean) {
-  const campaignMessage = isSubscriptionCampaignActive() ? " 7 gün ücretsiz deneme süresi ile başlayın." : "";
+function getSignUpSuccessMessage(needsEmailConfirmation: boolean, role?: string) {
+  const trialText = role === "teacher" ? "30 gün (1 ay)" : "7 gün";
+  const campaignMessage = isSubscriptionCampaignActive() ? ` ${trialText} ücretsiz deneme süresi ile başlayın.` : "";
   return needsEmailConfirmation
     ? `Hesap oluşturuldu. E-postanı doğrula, ardından giriş yap.${campaignMessage}`
     : `Hesap oluşturuldu. Kuruluma devam et.${campaignMessage}`;

@@ -26,9 +26,15 @@ export async function GET(request: Request) {
   }
 
   const now = new Date();
-  const results = { day5: { found: 0, pushed: 0 }, day7: { found: 0, pushed: 0 } };
+  const results = {
+    day5: { found: 0, pushed: 0 },
+    day7: { found: 0, pushed: 0 },
+    teacherDay28: { found: 0, pushed: 0 },
+    teacherDay30: { found: 0, pushed: 0 },
+  };
 
-  async function processDay(daysAgo: number, label: "day5" | "day7") {
+  async function processDay(daysAgo: number, label: "day5" | "day7" | "teacherDay28" | "teacherDay30") {
+    const isTeacherCohort = label === "teacherDay28" || label === "teacherDay30";
     const windowStart = new Date(now);
     windowStart.setDate(windowStart.getDate() - daysAgo);
     windowStart.setHours(windowStart.getHours() - 1);
@@ -38,16 +44,22 @@ export async function GET(request: Request) {
 
     const { data: usersInWindow } = await admin!
       .from("users")
-      .select("id, is_premium")
+      .select("id, is_premium, role")
       .gte("created_at", windowStart.toISOString())
       .lte("created_at", windowEnd.toISOString());
 
     if (!usersInWindow || usersInWindow.length === 0) return;
 
-    const alreadyPremiumUserIds = new Set(
-      usersInWindow.filter((u) => u.is_premium === true).map((u) => u.id),
+    // Öğretmenler için deneme süresi 30 gün (1 ay), diğer kullanıcılar için 7 gündür.
+    const targetCohort = usersInWindow.filter((u) =>
+      isTeacherCohort ? u.role === "teacher" : u.role !== "teacher"
     );
-    const windowIds = usersInWindow.map((u) => u.id).filter((id) => !alreadyPremiumUserIds.has(id));
+    if (targetCohort.length === 0) return;
+
+    const alreadyPremiumUserIds = new Set(
+      targetCohort.filter((u) => u.is_premium === true).map((u) => u.id),
+    );
+    const windowIds = targetCohort.map((u) => u.id).filter((id) => !alreadyPremiumUserIds.has(id));
     if (windowIds.length === 0) return;
 
     const { data: premiumCheck } = await (admin!
@@ -71,24 +83,28 @@ export async function GET(request: Request) {
     results[label].found = freeIds.length;
     if (freeIds.length === 0) return;
 
-    const is5 = daysAgo === 5;
-    const pushPayload = is5
+    const isWarning = daysAgo === 5 || daysAgo === 28;
+    const pushPayload = isWarning
       ? {
           title: "⏳ Deneme sürenin bitmesine 2 gün kaldı!",
-          message: "Zigo Plus ile öğrenmeye kesintisiz devam et. Hemen abone ol!",
+          message: "Zigo Plus ile kesintisiz devam et. Hemen abone ol!",
           url: "/billing",
-          data: { kind: "trial_reminder", day: "5" },
+          data: { kind: "trial_reminder", day: String(daysAgo) },
         }
       : {
-          title: "🎓 7 günlük deneme süren sona erdi",
-          message: "Öğrenme yolculuğun burada bitmesin! Zigo Plus ile devam et.",
+          title: isTeacherCohort ? "🎓 1 aylık ücretsiz deneme süren sona erdi" : "🎓 7 günlük deneme süren sona erdi",
+          message: isTeacherCohort
+            ? "Öğretmen araçları ve özel ders talepleri için Zigo Plus'a abone ol!"
+            : "Öğrenme yolculuğun burada bitmesin! Zigo Plus ile devam et.",
           url: "/billing",
-          data: { kind: "trial_expired", day: "7" },
+          data: { kind: "trial_expired", day: String(daysAgo) },
         };
 
-    const inAppMessage = is5
-      ? "⏳ Deneme sürenin bitmesine 2 gün kaldı! Zigo Plus'a geç ve öğrenmeye kesintisiz devam et."
-      : "🎓 7 günlük deneme süren sona erdi. Öğrenmeye devam etmek için Zigo Plus'a abone ol!";
+    const inAppMessage = isWarning
+      ? "⏳ Deneme sürenin bitmesine 2 gün kaldı! Zigo Plus'a geç ve ayrıcalıklardan kesintisiz faydalan."
+      : isTeacherCohort
+        ? "🎓 1 aylık ücretsiz deneme süren sona erdi. Öğretmen araçlarına devam etmek için Zigo Plus'a abone ol!"
+        : "🎓 7 günlük deneme süren sona erdi. Öğrenmeye devam etmek için Zigo Plus'a abone ol!";
 
     await sendPushToUsers(freeIds, pushPayload);
 
@@ -105,6 +121,8 @@ export async function GET(request: Request) {
 
   await processDay(5, "day5");
   await processDay(7, "day7");
+  await processDay(28, "teacherDay28");
+  await processDay(30, "teacherDay30");
 
   return NextResponse.json({ ok: true, results });
 }

@@ -272,17 +272,18 @@ async function main() {
   // =========================================================================
   console.log(`\n--- [3/7] SaaS Dinamik Fiyatlandırma ve Banka Havale / FAST Akışı ---`);
 
-  function calculateDynamicPrice(listPrice, daysSinceRegistration) {
-    const isPromoEligible = daysSinceRegistration <= 7;
+  function calculateDynamicPrice(listPrice, daysSinceRegistration, role = "student") {
+    const trialDays = role === "teacher" ? 30 : 7;
+    const isPromoEligible = daysSinceRegistration <= trialDays;
     const discount = isPromoEligible ? 50 : 0;
     const finalPrice = Math.max(1, Math.round(listPrice * ((100 - discount) / 100)));
     return { finalPrice, discount, isPromoEligible };
   }
 
-  const studentPriceDay2 = calculateDynamicPrice(49, 2);
-  const studentPriceDay8 = calculateDynamicPrice(49, 8);
-  const teacherPriceDay3 = calculateDynamicPrice(99, 3);
-  const teacherPriceDay15 = calculateDynamicPrice(99, 15);
+  const studentPriceDay2 = calculateDynamicPrice(49, 2, "student");
+  const studentPriceDay8 = calculateDynamicPrice(49, 8, "student");
+  const teacherPriceDay15 = calculateDynamicPrice(99, 15, "teacher");
+  const teacherPriceDay35 = calculateDynamicPrice(99, 35, "teacher");
 
   record(
     "Dinamik Fiyat",
@@ -300,16 +301,16 @@ async function main() {
 
   record(
     "Dinamik Fiyat",
-    "İlk 7 Gün İçinde Öğretmen %50 İndirimli (99 TL -> 50 TL)",
-    teacherPriceDay3.finalPrice === 50 && teacherPriceDay3.discount === 50,
-    `3. Gün: ${teacherPriceDay3.finalPrice} ₺ (İndirim: %${teacherPriceDay3.discount})`,
+    "İlk 30 Gün (1 Ay) İçinde Öğretmen %50 İndirimli (99 TL -> 50 TL)",
+    teacherPriceDay15.finalPrice === 50 && teacherPriceDay15.discount === 50,
+    `15. Gün: ${teacherPriceDay15.finalPrice} ₺ (İndirim: %${teacherPriceDay15.discount})`,
   );
 
   record(
     "Dinamik Fiyat",
-    "7 Gün Sonrası Öğretmen Tam Liste Fiyatı (99 TL)",
-    teacherPriceDay15.finalPrice === 99 && teacherPriceDay15.discount === 0,
-    `15. Gün: ${teacherPriceDay15.finalPrice} ₺ (İndirim: %${teacherPriceDay15.discount})`,
+    "30 Gün Sonrası Öğretmen Tam Liste Fiyatı (99 TL)",
+    teacherPriceDay35.finalPrice === 99 && teacherPriceDay35.discount === 0,
+    `35. Gün: ${teacherPriceDay35.finalPrice} ₺ (İndirim: %${teacherPriceDay35.discount})`,
   );
 
   function generateReferenceCode() {

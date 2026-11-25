@@ -38,8 +38,9 @@ function plan(
   intervalLabel: string,
   listPriceTry: number,
   userCreatedAt?: string | Date | null,
+  role?: string | null,
 ): SubscriptionPlan {
-  const pricing = resolveSubscriptionPlanPricing(listPriceTry, userCreatedAt);
+  const pricing = resolveSubscriptionPlanPricing(listPriceTry, userCreatedAt, new Date(), role);
   return {
     id,
     interval,
@@ -52,6 +53,7 @@ function plan(
 function learnerPlans(
   cancelPath: string,
   userCreatedAt?: string | Date | null,
+  role?: string | null,
 ): SubscriptionPlanGroup {
   return {
     id: "learner",
@@ -60,8 +62,8 @@ function learnerPlans(
     benefits: LEARNER_BENEFITS,
     cancelPath,
     plans: [
-      plan("zigo-plus-student-monthly", "monthly", "Aylık", 49, userCreatedAt),
-      plan("zigo-plus-student-yearly", "yearly", "Yıllık", 450, userCreatedAt),
+      plan("zigo-plus-student-monthly", "monthly", "Aylık", 49, userCreatedAt, role ?? "student"),
+      plan("zigo-plus-student-yearly", "yearly", "Yıllık", 450, userCreatedAt, role ?? "student"),
     ],
   };
 }
@@ -74,8 +76,8 @@ function teacherPlanGroup(userCreatedAt?: string | Date | null): SubscriptionPla
     benefits: TEACHER_CREATOR_PLUS_BENEFITS,
     cancelPath: "/teacher?billing=cancelled",
     plans: [
-      plan("zigo-plus-teachers-monthly", "monthly", "Aylık", 99, userCreatedAt),
-      plan("zigo-plus-teachers-yearly", "yearly", "Yıllık", 749, userCreatedAt),
+      plan("zigo-plus-teachers-monthly", "monthly", "Aylık", 99, userCreatedAt, "teacher"),
+      plan("zigo-plus-teachers-yearly", "yearly", "Yıllık", 749, userCreatedAt, "teacher"),
     ],
   };
 }
@@ -173,8 +175,8 @@ export function resolveProfilePlanGroups(
   }
 
   if (role === "teacher") return [teacherPlanGroup(userCreatedAt)];
-  if (role === "parent") return [learnerPlans("/parent?billing=cancelled", userCreatedAt)];
-  if (role === "student") return [learnerPlans("/student?billing=cancelled", userCreatedAt)];
+  if (role === "parent") return [learnerPlans("/parent?billing=cancelled", userCreatedAt, "parent")];
+  if (role === "student") return [learnerPlans("/student?billing=cancelled", userCreatedAt, "student")];
   return [];
 }
 

@@ -23,7 +23,7 @@ export function SubscribeButton({
     <Link href="/pricing" className={className} onClick={onClick}>
       <span>{buttonText}</span>
       <span className="mt-0.5 rounded-full bg-white/20 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider text-amber-900/80 backdrop-blur-sm">
-        İlk 7 Güne Özel %50 İndirim
+        Deneme Süresine Özel %50 İndirim
       </span>
     </Link>
   );

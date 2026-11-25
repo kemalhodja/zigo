@@ -94,7 +94,7 @@ async function fetchTrialStatusUncached(): Promise<TrialSubscription> {
   try {
     const { data: userData } = await supabase
       .from("users")
-      .select("is_premium, created_at")
+      .select("is_premium, created_at, role")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -104,8 +104,9 @@ async function fetchTrialStatusUncached(): Promise<TrialSubscription> {
 
     if (userData?.created_at) {
       const diffDays = Math.floor((Date.now() - new Date(userData.created_at).getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays >= 0 && diffDays < 7) {
-        return { isTrial: true, trialDaysRemaining: Math.max(0, 6 - diffDays), isLoading: false };
+      const trialLimit = userData.role === "teacher" ? 30 : 7;
+      if (diffDays >= 0 && diffDays < trialLimit) {
+        return { isTrial: true, trialDaysRemaining: Math.max(0, (trialLimit - 1) - diffDays), isLoading: false };
       }
     }
   } catch {
@@ -212,7 +213,7 @@ export function TrialBanner({
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg">⏳</span>
             <div>
               <p className="font-black text-sm">Deneme süreniz: <span className="text-white">{trialDaysRemaining}</span> gün kaldı</p>
-              <p className="text-xs font-bold opacity-90">İlk 7 gün içinde abone olursanız %50 indirim (ZIGO50)</p>
+              <p className="text-xs font-bold opacity-90">Deneme süreniz içinde %50 indirim fırsatı (ZIGO50)</p>
             </div>
           </div>
           <button
@@ -233,7 +234,7 @@ export function TrialBanner({
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 text-base">⏳</span>
           <div>
             <p className="font-black text-sm">Deneme süreniz: <span className="text-white">{trialDaysRemaining}</span> gün kaldı</p>
-            <p className="text-[0.7rem] font-bold opacity-90">İlk 7 gün içinde abone olursanız %50 indirim (ZIGO50)</p>
+            <p className="text-[0.7rem] font-bold opacity-90">Deneme süreniz içinde %50 indirim fırsatı (ZIGO50)</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">

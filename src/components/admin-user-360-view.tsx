@@ -87,7 +87,9 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
 
   // Quick action: Reset trial & 50% discount window
   async function handleResetTrial() {
-    if (!confirm("Kullanıcının 7 günlük deneme ve %50 indirim süresi bugünden itibaren 7 gün olarak sıfırlanacak. Onaylıyor musunuz?")) {
+    const isTeacher = data.user.role === "teacher";
+    const trialDays = isTeacher ? 30 : 7;
+    if (!confirm(`Kullanıcının ${trialDays} günlük deneme ve %50 indirim süresi bugünden itibaren ${trialDays} gün olarak sıfırlanacak. Onaylıyor musunuz?`)) {
       return;
     }
 
@@ -100,15 +102,16 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "İşlem başarısız");
 
+      const refreshedDays = Number(json.trialDays) || trialDays;
       setData((prev) => ({
         ...prev,
         trial: {
           isWithin7Days: true,
-          remainingDays: 7,
+          remainingDays: refreshedDays,
           discountPercent: 50,
         },
       }));
-      showToast("✓ 7 Günlük Deneme & %50 indirim süresi yenilendi!");
+      showToast(`✓ ${refreshedDays} Günlük Deneme & %50 indirim süresi yenilendi!`);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Hata oluştu");
     }
@@ -851,7 +854,7 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
             <div className="rounded-3xl bg-white p-6 border border-slate-200 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
-                  7 Günlük Deneme & %50 İndirim Penceresi
+                  {data.user.role === "teacher" ? "30 Günlük" : "7 Günlük"} Deneme & %50 İndirim Penceresi
                 </h2>
                 <span
                   className={`rounded-full px-3 py-0.5 text-xs font-black ${
@@ -873,8 +876,8 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
                 </p>
                 <p className="text-slate-500 font-medium">
                   {data.trial.isWithin7Days
-                    ? "Kullanıcı ilk 7 gün içinde olduğu için ZIGO50 kodu ve %50 indirimli fiyat uygulanır."
-                    : "7 gün geçtiği için sistem otomatik olarak %0 standart liste fiyatına geçmiştir."}
+                    ? `Kullanıcı ilk ${data.user.role === "teacher" ? "30 gün (1 ay)" : "7 gün"} içinde olduğu için ZIGO50 kodu ve %50 indirimli fiyat uygulanır.`
+                    : `${data.user.role === "teacher" ? "30 gün" : "7 gün"} geçtiği için sistem otomatik olarak %0 standart liste fiyatına geçmiştir.`}
                 </p>
               </div>
 
@@ -883,7 +886,7 @@ export function AdminUser360View({ initialData }: AdminUser360ViewProps) {
                 onClick={handleResetTrial}
                 className="w-full tap-scale rounded-xl bg-slate-900 py-2.5 text-xs font-black text-white hover:bg-slate-800 transition shadow-sm"
               >
-                🔄 7 Günlük %50 İndirim Hakkını Sıfırla (Yeniden Tanımla)
+                🔄 {data.user.role === "teacher" ? "30 Günlük" : "7 Günlük"} %50 İndirim Hakkını Sıfırla (Yeniden Tanımla)
               </button>
             </div>
           </div>
