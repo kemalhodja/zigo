@@ -15,8 +15,10 @@ import { SocialAvatar, VerifiedBadge } from "@/components/social-primitives";
 import { TeacherReviewsSection } from "@/components/teacher-reviews-section";
 import { TeacherTrustBadges } from "@/components/teacher-trust-badges";
 import { TeacherTrustModal } from "@/components/teacher-trust-modal";
+import { CreatorProfileJsonLd } from "@/components/seo/json-ld";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile, getUserInterestAreaNames } from "@/lib/domain/profiles";
+import { isIndexableProfile, NOINDEX, SITE_URL } from "@/lib/domain/seo-indexing";
 import {
   getProfileSocialStats,
   getPublicProfile,
@@ -50,27 +52,33 @@ export async function generateMetadata(
   const profile = await getPublicProfile(dbClient, id);
 
   if (!profile) {
-    return { title: "Profil Bulunamadı | Zigo" };
+    return { title: "Profil Bulunamadı | Zigo", robots: NOINDEX };
   }
 
+  const indexable = isIndexableProfile(profile);
   const name = profile.full_name || "Zigo Öğretmeni";
   const bio = profile.bio || "Zigo'da bir profil sayfası.";
-  
+  const avatarImages = indexable && profile.avatar_url ? [profile.avatar_url] : [];
+
   return {
     title: `${name} | Zigo`,
     description: bio,
+    ...(indexable ? {} : { robots: NOINDEX }),
+    alternates: {
+      canonical: `/profile/${id}`,
+    },
     openGraph: {
       title: `${name} | Zigo`,
       description: bio,
-      images: profile.avatar_url ? [profile.avatar_url] : [],
+      images: avatarImages,
       type: "profile",
     },
     twitter: {
       card: "summary",
       title: `${name} | Zigo`,
       description: bio,
-      images: profile.avatar_url ? [profile.avatar_url] : [],
-    }
+      images: avatarImages,
+    },
   };
 }
 
@@ -105,6 +113,7 @@ export default async function PublicProfilePage({ params, searchParams }: Public
     profile.role === "teacher" ? await getUserInterestAreaNames(dbClient, profile.id) : [];
 
   const isTeacher = profile.role === "teacher";
+  const indexableProfile = isIndexableProfile(profile);
   const [stats, posts, following, followRequested, reviewSummary, teacherReviews] = await Promise.all([
     getProfileSocialStats(dbClient, profile.id),
     activeTab === "reels"
@@ -123,6 +132,15 @@ export default async function PublicProfilePage({ params, searchParams }: Public
 
   return (
     <div className="space-y-0 pb-3">
+      {indexableProfile ? (
+        <CreatorProfileJsonLd
+          description={profile.bio}
+          image={profile.avatar_url}
+          name={profile.full_name}
+          role={profile.role}
+          url={`${SITE_URL}/profile/${profile.id}`}
+        />
+      ) : null}
       <div className="-mx-4 flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2.5">
         <BackButton className="tap-scale flex size-9 items-center justify-center text-night" fallbackHref="/explore" />
         <div className="flex min-w-0 items-center gap-2">

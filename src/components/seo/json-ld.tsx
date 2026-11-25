@@ -1,5 +1,7 @@
 import React from "react";
 
+import { GOOGLE_PLAY_STORE_URL } from "@/lib/app-links";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.zigo.com.tr";
 
 /**
@@ -63,20 +65,14 @@ export function JsonLd() {
     "@type": "SoftwareApplication",
     name: "Zigo",
     applicationCategory: "EducationalApplication",
-    operatingSystem: "Web, Android, iOS",
+    operatingSystem: "Web, Android",
     url: SITE_URL,
+    downloadUrl: GOOGLE_PLAY_STORE_URL,
     offers: {
       "@type": "Offer",
       price: "0",
       priceCurrency: "TRY",
-      description: "7 gün tam özellikli ücretsiz deneme sürümü",
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      ratingCount: "1250",
-      bestRating: "5",
-      worstRating: "1",
+      description: "Öğretmenlere 30 gün, öğrenci ve velilere 7 gün tam özellikli ücretsiz deneme",
     },
     featureList: [
       "2026 MEB Uyumlu LGS Puan Hesaplama Robotu",
@@ -285,6 +281,51 @@ export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }) {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+    />
+  );
+}
+
+/**
+ * Doğrulanmış / Herkese Açık İçerik Üreticisi Profil Şeması (Person / EducationalOrganization)
+ */
+export type CreatorProfileJsonLdProps = {
+  name: string;
+  url: string;
+  image?: string | null;
+  description?: string | null;
+  role: string;
+};
+
+export function CreatorProfileJsonLd({
+  name,
+  url,
+  image,
+  description,
+  role,
+}: CreatorProfileJsonLdProps) {
+  const isTeacher = role === "teacher";
+  const schema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": isTeacher ? "Person" : "EducationalOrganization",
+    name,
+    url,
+    inLanguage: "tr-TR",
+  };
+
+  if (isTeacher) {
+    schema.jobTitle = "Öğretmen";
+  }
+  if (image) {
+    schema.image = image;
+  }
+  if (description) {
+    schema.description = description;
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
 }

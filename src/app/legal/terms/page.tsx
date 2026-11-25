@@ -4,7 +4,10 @@ import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
   title: "Kullanım Şartları",
-  description: "Zigo kullanım şartları, topluluk kuralları ve platform politikaları."
+  description: "Zigo kullanım şartları, topluluk kuralları ve platform politikaları.",
+  alternates: {
+    canonical: "/legal/terms",
+  },
 };
 
 export default function TermsPage() {

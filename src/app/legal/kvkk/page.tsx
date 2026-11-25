@@ -5,7 +5,10 @@ import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
   title: "KVKK Aydınlatma Metni",
-  description: "Zigo Kişisel Verilerin Korunması Kanunu aydınlatma metni."
+  description: "Zigo Kişisel Verilerin Korunması Kanunu aydınlatma metni.",
+  alternates: {
+    canonical: "/legal/kvkk",
+  },
 };
 
 export default function KvkkPage() {

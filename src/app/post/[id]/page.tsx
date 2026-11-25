@@ -6,6 +6,7 @@ import { FeedPostCard } from "@/app/_components/home/match-feed";
 import { ExploreFeedViewer } from "@/components/explore-feed-viewer";
 import { hasSupabaseEnv } from "@/lib/config";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { isIndexablePost, NOINDEX } from "@/lib/domain/seo-indexing";
 import { getSocialPostById, isFollowing,searchSocialPosts } from "@/lib/domain/social";
 import { getServerMessages } from "@/lib/i18n/server";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
@@ -32,7 +33,7 @@ export async function generateMetadata(
   const post = await getSocialPostById(dbClient, id);
 
   if (!post) {
-    return { title: "Gönderi Bulunamadı | Zigo" };
+    return { title: "Gönderi Bulunamadı | Zigo", robots: NOINDEX };
   }
 
   const authorName = post.author?.full_name || "Zigo Öğretmeni";
@@ -63,6 +64,16 @@ export async function generateMetadata(
   return {
     title: `${authorName} | Zigo`,
     description: caption,
+    ...(isIndexablePost({
+      followers_only: post.followers_only,
+      is_discoverable: (post as { is_discoverable?: boolean | null }).is_discoverable,
+      author: post.author,
+    })
+      ? {}
+      : { robots: NOINDEX }),
+    alternates: {
+      canonical: `/post/${id}`,
+    },
     openGraph: {
       title: `${authorName} | Zigo`,
       description: caption,

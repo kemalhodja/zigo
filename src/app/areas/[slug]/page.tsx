@@ -21,6 +21,9 @@ export async function generateMetadata({ params }: AreaLandingPageProps): Promis
   return {
     title: `${area.area_name} · Zigo`,
     description: `${area.area_name} için doğrulanmış öğretmen içerikleri, kısa dersler ve quizler.`,
+    alternates: {
+      canonical: `/areas/${slug}`,
+    },
     openGraph: {
       title: `${area.area_name} · Zigo`,
       description: `${area.area_name} Match-Feed eğitim alanı.`,

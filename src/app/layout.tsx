@@ -97,9 +97,6 @@ export async function generateMetadata(): Promise<Metadata> {
       statusBarStyle: "default",
       title: "Zigo",
     },
-    alternates: {
-      canonical: "/",
-    },
     icons: {
       icon: [
         { url: "/icon.svg", type: "image/svg+xml" },

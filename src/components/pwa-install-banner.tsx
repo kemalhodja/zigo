@@ -219,7 +219,7 @@ export function PwaInstallBanner() {
           {isAndroid ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[11px] text-slate-300 bg-white/[0.06] rounded-xl px-3 py-2">
-                <span>Puan: <strong className="text-amber-400">4.9 ★★★★★</strong></span>
+                <span>Ücretsiz · Reklamsız</span>
                 <span className="text-emerald-400 font-bold">Ücretsiz İndir</span>
               </div>
               <div className="flex justify-center pt-0.5">

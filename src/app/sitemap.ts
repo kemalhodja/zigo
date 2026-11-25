@@ -3,10 +3,14 @@ import type { MetadataRoute } from "next";
 import { hasSupabaseEnv } from "@/lib/config";
 import { slugifyEducationArea } from "@/lib/domain/education-area-slug";
 import { getEducationAreas } from "@/lib/domain/profiles";
+import { INDEXABLE_CREATOR_ROLES, SITE_URL } from "@/lib/domain/seo-indexing";
+import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.zigo.com.tr";
+  const base = SITE_URL;
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -120,17 +124,84 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
   }
 
+  const db = (hasServiceRoleEnv() ? createAdminClient() : null) ?? (await createClient());
+
+  let areaRoutes: MetadataRoute.Sitemap = [];
   try {
-    const supabase = await createClient();
-    const areas = await getEducationAreas(supabase);
-    const areaRoutes = areas.slice(0, 120).map((area) => ({
+    const areas = await getEducationAreas(db);
+    areaRoutes = areas.slice(0, 120).map((area) => ({
       url: `${base}/areas/${slugifyEducationArea(area.area_name)}`,
       lastModified: now,
       changeFrequency: "weekly" as const,
       priority: 0.65,
     }));
-    return [...staticRoutes, ...areaRoutes];
   } catch {
-    return staticRoutes;
+    areaRoutes = [];
   }
+
+  let profileRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const creatorRoles = [...INDEXABLE_CREATOR_ROLES];
+    let { data, error } = await db
+      .from("users")
+      .select("id, created_at")
+      .in("role", creatorRoles)
+      .eq("account_status", "active")
+      .or("is_private.is.null,is_private.eq.false")
+      .order("created_at", { ascending: false })
+      .limit(2000);
+
+    if (error) {
+      const retry = await db
+        .from("users")
+        .select("id, created_at")
+        .in("role", creatorRoles)
+        .eq("account_status", "active")
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (!error && Array.isArray(data)) {
+      profileRoutes = (data as unknown as Array<{ id: string; created_at: string | null }>).map(
+        (user) => ({
+          url: `${base}/profile/${user.id}`,
+          lastModified: user.created_at ? new Date(user.created_at) : now,
+          changeFrequency: "weekly" as const,
+          priority: 0.7,
+        }),
+      );
+    }
+  } catch {
+    profileRoutes = [];
+  }
+
+  let postRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const creatorRoles = [...INDEXABLE_CREATOR_ROLES];
+    const { data, error } = await db
+      .from("social_posts")
+      .select("id, created_at, author:users!author_id!inner(role)")
+      .eq("followers_only", false)
+      .eq("is_discoverable", true)
+      .in("author.role", creatorRoles)
+      .order("created_at", { ascending: false })
+      .limit(5000);
+
+    if (!error && Array.isArray(data)) {
+      postRoutes = (data as unknown as Array<{ id: string; created_at: string | null }>).map(
+        (post) => ({
+          url: `${base}/post/${post.id}`,
+          lastModified: post.created_at ? new Date(post.created_at) : now,
+          changeFrequency: "weekly" as const,
+          priority: 0.6,
+        }),
+      );
+    }
+  } catch {
+    postRoutes = [];
+  }
+
+  return [...staticRoutes, ...areaRoutes, ...profileRoutes, ...postRoutes];
 }

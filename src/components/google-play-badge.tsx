@@ -2,8 +2,9 @@
 
 import React from "react";
 
-export const GOOGLE_PLAY_STORE_URL =
-  "https://play.google.com/store/apps/details?id=com.zigo.education";
+import { GOOGLE_PLAY_STORE_URL } from "@/lib/app-links";
+
+export { GOOGLE_PLAY_STORE_URL };
 
 export type GooglePlayBadgeProps = {
   className?: string;

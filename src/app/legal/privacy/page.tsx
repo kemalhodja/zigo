@@ -5,7 +5,10 @@ import { LegalLayout } from "@/components/legal-layout";
 
 export const metadata: Metadata = {
   title: "Gizlilik Politikası",
-  description: "Zigo gizlilik politikası ve kullanıcı verilerinin korunması."
+  description: "Zigo gizlilik politikası ve kullanıcı verilerinin korunması.",
+  alternates: {
+    canonical: "/legal/privacy",
+  },
 };
 
 export default function PrivacyPage() {

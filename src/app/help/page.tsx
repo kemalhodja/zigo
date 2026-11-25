@@ -3,7 +3,10 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Yardım ve SSS",
-  description: "Zigo kullanımı hakkında sıkça sorulan sorular ve destek."
+  description: "Zigo kullanımı hakkında sıkça sorulan sorular ve destek.",
+  alternates: {
+    canonical: "/help",
+  },
 };
 
 export default function HelpPage() {
