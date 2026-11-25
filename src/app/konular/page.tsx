@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Calculator, Clock, Sparkles } from "lucide-react";
 
 import { BreadcrumbJsonLd } from "@/components/seo/json-ld";
+import { TopicSearchBar } from "@/components/seo/topic-search";
 import { getAllTopics, getGroupedSubjects } from "@/lib/domain/curriculum-topics";
 
 export const metadata: Metadata = {
@@ -18,13 +19,31 @@ export const metadata: Metadata = {
       "LGS ve YKS hazırlığında tüm konuların özetleri, püf noktaları ve çözümlü alıştırma soruları.",
     url: "https://www.zigo.com.tr/konular",
     type: "website",
+    images: [
+      {
+        url: "/api/og/topic?title=LGS+%26+YKS+Konu+Rehberi+2026&subject=T%C3%BCm+Dersler&exam=2026+M%C3%BCfredat&questions=77+Detayl%C4%B1+Konu",
+        width: 1200,
+        height: 630,
+        alt: "Zigo LGS ve YKS Konu Rehberi",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LGS & YKS Konu Rehberi 2026 | Zigo",
+    description:
+      "LGS ve YKS hazırlığında tüm konuların özetleri, püf noktaları ve çözümlü alıştırma soruları.",
+    images: [
+      "/api/og/topic?title=LGS+%26+YKS+Konu+Rehberi+2026&subject=T%C3%BCm+Dersler&exam=2026+M%C3%BCfredat&questions=77+Detayl%C4%B1+Konu",
+    ],
   },
 };
 
 export default function TopicsHubPage() {
   const lgsSubjects = getGroupedSubjects("lgs");
   const yksSubjects = getGroupedSubjects("yks");
-  const totalCount = getAllTopics().length;
+  const allTopics = getAllTopics();
+  const totalCount = allTopics.length;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -48,7 +67,9 @@ export default function TopicsHubPage() {
             Her konu için sınav soru ağırlığı, kritik kurallar, sık yapılan hatalar ve anında çözümlü interaktif mini testler bir arada.
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 space-y-4">
+            <TopicSearchBar topics={allTopics} />
+            <div className="flex flex-wrap gap-3">
             <a
               href="#lgs"
               className="tap-scale rounded-xl bg-violet-600 px-4 py-2.5 text-xs sm:text-sm font-black text-white shadow-sm hover:bg-violet-700 transition"
@@ -75,6 +96,7 @@ export default function TopicsHubPage() {
               <Calculator className="size-4 text-indigo-600" />
               <span>YKS Puan Hesapla</span>
             </Link>
+            </div>
           </div>
         </div>
       </header>

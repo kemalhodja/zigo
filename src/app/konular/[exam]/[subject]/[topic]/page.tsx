@@ -52,6 +52,7 @@ export async function generateMetadata({
 
   const canonicalPath = `/konular/${item.exam}/${item.subjectSlug}/${item.topicSlug}`;
   const pageTitle = `${item.title} | ${item.subjectName} Konu Anlatımı 2026`;
+  const ogImageUrl = `/api/og/topic?title=${encodeURIComponent(item.title)}&subject=${encodeURIComponent(item.subjectName)}&exam=${encodeURIComponent(item.examLabel)}&questions=${encodeURIComponent(item.avgQuestions)}`;
 
   return {
     title: pageTitle,
@@ -64,11 +65,20 @@ export async function generateMetadata({
       description: item.shortDesc,
       url: `${SITE_URL}${canonicalPath}`,
       type: "article",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: pageTitle,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: pageTitle,
       description: item.shortDesc,
+      images: [ogImageUrl],
     },
   };
 }

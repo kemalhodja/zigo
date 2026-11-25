@@ -1510,6 +1510,1024 @@ export const CURRICULUM_TOPICS: CurriculumTopic[] = [
       },
     ],
   },
+
+  // ─── LGS T.C. İNKILAP TARİHİ VE ATATÜRKÇÜLÜK ──────────────────────────────
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "inkilap-tarihi",
+    subjectName: "LGS İnkılap Tarihi",
+    topicSlug: "bir-kahraman-doguyor",
+    title: "Bir Kahraman Doğuyor (20. Yüzyıl Başlarında Osmanlı)",
+    shortDesc:
+      "Avrupa'daki gelişmeler, fikir akımları (Osmanlıcılık, İslamcılık, Batıcılık, Türkçülük), Mustafa Kemal'in eğitim hayatı ve kişilik özellikleri.",
+    avgQuestions: "1 - 2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 35,
+    keyPoints: [
+      "Fransız İhtilali'nin yaydığı milliyetçilik akımı çok uluslu Osmanlı Devleti'ni olumsuz etkiledi.",
+      "Selanik; limanı, demiryolu ve çok kültürlü yapısıyla Mustafa Kemal'in fikir hayatını şekillendirdi.",
+      "31 Mart Olayı'nı bastıran Hareket Ordusu'nda görev alması meşrutiyet/yenilik yanlısı olduğunu gösterir.",
+    ],
+    commonMistakes: [
+      "Sanayi İnkılabı (sömürgecilik/hammadde) ile Fransız İhtilali'ni (milliyetçilik/demokrasi) karıştırmak.",
+    ],
+    strategyTip:
+      "Mustafa Kemal'in sözü veya olay verilen sorularda 'ileri görüşlülük, vatanseverlik, çok yönlülük, teşkilatçılık' kavramlarını paragraftaki ipucuyla doğrudan eşleştir.",
+    questions: [
+      {
+        question: "Mustafa Kemal'in 'Vatan ve Hürriyet Cemiyeti'ni kurması hangi kişilik özelliğini doğrudan gösterir?",
+        options: ["Teşkilatçılık ve vatanseverlik", "Sanatseverlik", "Sabırsızlık", "İleri görüşlülük"],
+        correctIndex: 0,
+        explanation: "Cemiyet kurmak ve insanları bir amaç etrafında örgütlemek teşkilatçılık özelliğini gösterir.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "inkilap-tarihi",
+    subjectName: "LGS İnkılap Tarihi",
+    topicSlug: "milli-uyanis",
+    title: "Millî Uyanış: Bağımsızlık Yolunda Atılan Adımlar",
+    shortDesc:
+      "I. Dünya Savaşı cepheleri, Mondros Ateşkesi, cemiyetler, Havza-Amasya Genelgeleri, Erzurum-Sivas Kongreleri ve Misak-ı Millî.",
+    avgQuestions: "3 - 4 Soru",
+    difficulty: "Orta",
+    studyMinutes: 50,
+    keyPoints: [
+      "Amasya Genelgesi'nde 'Milletin bağımsızlığını yine milletin azim ve kararı kurtaracaktır' maddesiyle ilk kez millî egemenlik vurgulanmıştır.",
+      "Erzurum Kongresi toplanış bakımından bölgesel, aldığı kararlar bakımından ulusaldır; ilk kez 'manda ve himaye kabul edilemez' denmiştir.",
+      "Sivas Kongresi'nde tüm millî cemiyetler 'Anadolu ve Rumeli Müdafaa-i Hukuk Cemiyeti' adıyla birleştirilmiştir.",
+    ],
+    commonMistakes: [
+      "Millî bağımsızlık (vatanın kurtuluşu) ile millî egemenlik (halkın yönetimi/cumhuriyet) kavramlarını birbirine karıştırmak.",
+    ],
+    strategyTip:
+      "Kronoloji sorularında Havza → Amasya → Erzurum → Sivas → Amasya Görüşmeleri → Son Osmanlı Mebusan Meclisi (Misak-ı Millî) → TBMM'nin Açılışı sırasını net tut.",
+    questions: [
+      {
+        question: "Tüm millî cemiyetlerin tek çatı altında birleştirildiği kongre aşağıdakilerden hangisidir?",
+        options: ["Erzurum Kongresi", "Sivas Kongresi", "Balıkesir Kongresi", "Alaşehir Kongresi"],
+        correctIndex: 1,
+        explanation: "Sivas Kongresi'nde yurdun dört bir yanındaki yararlı cemiyetler tek çatı altında birleştirilmiştir.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "inkilap-tarihi",
+    subjectName: "LGS İnkılap Tarihi",
+    topicSlug: "milli-bir-destan",
+    title: "Millî Bir Destan: Ya İstiklal Ya Ölüm!",
+    shortDesc:
+      "Doğu-Güney-Batı cepheleri, Sakarya Meydan Muharebesi, Büyük Taarruz, Mudanya ve Lozan Barış Antlaşması.",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "Orta",
+    studyMinutes: 45,
+    keyPoints: [
+      "Doğu Cephesi Gümrü Antlaşması ile, Güney Cephesi Ankara Antlaşması ile, Batı Cephesi Mudanya Ateşkesi ile kapanmıştır.",
+      "Kütahya-Eskişehir savaşlarından sonra Tekâlif-i Millîye Emirleri çıkarılarak ordunun ihtiyaçları halktan karşılanmıştır.",
+      "Lozan Barış Antlaşması ile kapitülasyonlar kesin olarak kaldırılmış ve Türkiye'nin bağımsızlığı dünyaca tanınmıştır.",
+    ],
+    commonMistakes: [
+      "Maarif Kongresi'nin barış döneminde yapıldığını sanmak (Kütahya-Eskişehir Savaşları sürerken toplanmıştır).",
+    ],
+    strategyTip:
+      "Savaşların diplomatik sonuçlarını eşleştir: I. İnönü → Londra Konferansı / Moskova Ant., Sakarya → Kars / Ankara Ant., Büyük Taarruz → Mudanya.",
+    questions: [
+      {
+        question: "TBMM'yi tanıyan ilk devlet aşağıdakilerden hangisidir?",
+        options: ["Fransa", "İngiltere", "Ermenistan (Gümrü Antlaşması)", "İtalya"],
+        correctIndex: 2,
+        explanation: "Doğu Cephesi sonunda imzalanan Gümrü Antlaşması ile TBMM'yi tanıyan ilk devlet Ermenistan olmuştur.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "inkilap-tarihi",
+    subjectName: "LGS İnkılap Tarihi",
+    topicSlug: "ataturkculuk-ve-inkilaplar",
+    title: "Atatürkçülük, İlkeler ve İnkılaplar",
+    shortDesc:
+      "6 temel Atatürk ilkesi (Cumhuriyetçilik, Milliyetçilik, Halkçılık, Devletçilik, Laiklik, İnkılapçılık) ve yapılan inkılaplar.",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "Temel",
+    studyMinutes: 45,
+    keyPoints: [
+      "Cumhuriyetçilik: Ulusal egemenlik, seçim, meclis, çok partili hayat.",
+      "Halkçılık: Eşitlik, toplumsal dayanışma, aşar vergisinin kaldırılması, Soyadı Kanunu.",
+      "Laiklik: Din ve devlet işlerinin ayrılması, akıl ve bilimin rehber alınması.",
+      "Devletçilik: Özel sektörün yetersiz kaldığı alanlarda ekonomide devletin yatırım yapması.",
+    ],
+    commonMistakes: [
+      "Aşar vergisinin kaldırılmasını sadece Devletçilikle ilişkilendirmek (köylüyü rahatlattığı için doğrudan Halkçılıktır).",
+    ],
+    strategyTip:
+      "Anahtar kelime yöntemi: Seçim/Meclis = Cumhuriyetçilik; Eşitlik/Ayrıcalıksız toplum = Halkçılık; Akıl/Bilim/Din özgürlüğü = Laiklik; Fabrika/Kalkınma = Devletçilik.",
+    questions: [
+      {
+        question: "Medeni Kanun'un kabulü ile kadın-erkek eşitliğinin sosyal ve hukuki alanda sağlanması en çok hangi iki ilkeyle ilgilidir?",
+        options: [
+          "Devletçilik - Milliyetçilik",
+          "Halkçılık - Laiklik",
+          "Devletçilik - Cumhuriyetçilik",
+          "Milliyetçilik - Devletçilik",
+        ],
+        correctIndex: 1,
+        explanation: "Eşitlik sağladığı için Halkçılık, hukuku din kurallarından ayırıp akıl/çağdaş hukuka dayandırdığı için Laiklik ilkesiyle ilgilidir.",
+      },
+    ],
+  },
+
+  // ─── LGS İNGİLİZCE ────────────────────────────────────────────────────────
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "ingilizce",
+    subjectName: "LGS İngilizce",
+    topicSlug: "friendship-unit-1",
+    title: "Unit 1: Friendship (Davet Etme, Kabul ve Reddetme)",
+    shortDesc:
+      "Accepting and refusing invitations, making excuses, personality traits (honest, supportive, laid-back) ve soru kalıpları.",
+    avgQuestions: "1 - 2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 30,
+    keyPoints: [
+      "Davet kalıpları: 'Would you like to...?', 'How about + V-ing?', 'Shall we...?', 'Why don't we...?'",
+      "Kabul: 'Sure, that sounds awesome!', 'I'd love to.', 'Why not?'",
+      "Reddetme + Mazeret: 'I'd love to, but I must...', 'I'm sorry, I can't make it.'",
+    ],
+    commonMistakes: [
+      "'Why not?' ifadesini 'Neden olmasın?' (kabul) yerine 'Hayır' (red) sanmak.",
+    ],
+    strategyTip:
+      "Diyalog sorularında boşluktan sonraki cümlede 'mazeret (excuse)' varsa mutlaka reddetme ifadesi seç.",
+    questions: [
+      {
+        question: "Ali: 'Would you like to join my slumber party tonight?' — Can: '____. I have to finish my science project.' Boşluğa hangisi gelmelidir?",
+        options: [
+          "Sure, it sounds great",
+          "I'd love to, but I can't",
+          "Yes, I'll definitely be there",
+          "Why not? See you tonight",
+        ],
+        correctIndex: 1,
+        explanation: "Devamında mazeret ('fen projemi bitirmeliyim') geldiği için nazikçe reddetme kalıbı seçilmelidir.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "ingilizce",
+    subjectName: "LGS İngilizce",
+    topicSlug: "teen-life-and-kitchen",
+    title: "Unit 2-3: Teen Life & In the Kitchen",
+    shortDesc:
+      "Günlük rutinler, müzik/kitap tercihleri (prefer), yemek tarifleri ve pişirme yöntemleri (boil, fry, bake, grill, steam).",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "Temel",
+    studyMinutes: 35,
+    keyPoints: [
+      "Sıralama bağlaçları (Sequencing): First → Second → Next → After that → Finally.",
+      "'Prefer A to B': A'yı B'ye tercih etmek. Fiil gelirse V-ing alır ('I prefer reading to watching TV').",
+      "Pişirme yöntemleri: Boil (haşlamak), Fry (kızartmak), Bake (fırında pişirmek), Grill (ızgara), Steam (buharda).",
+    ],
+    commonMistakes: [
+      "Tarif sorularında 'First' ve 'Finally' ipuçlarına bakmadan sıralamayı karıştırmak.",
+    ],
+    strategyTip:
+      "Yemek tarifi sorularında 'First' ile başlayan adımı en başa, 'Finally / Serve hot' içeren adımı en sona koyarak şıkları hızla ele.",
+    questions: [
+      {
+        question: "Which cooking method uses hot water in a pot?",
+        options: ["Grill", "Bake", "Boil", "Roast"],
+        correctIndex: 2,
+        explanation: "'Boil' tencerede kaynar su kullanarak haşlamak anlamına gelir.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "ingilizce",
+    subjectName: "LGS İngilizce",
+    topicSlug: "on-the-phone-and-internet",
+    title: "Unit 4-5: On the Phone & The Internet",
+    shortDesc:
+      "Telefon konuşması kalıpları (hold on, put through, leave a message) ve internet güvenliği / alışkanlıkları.",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "Orta",
+    studyMinutes: 35,
+    keyPoints: [
+      "'Hold on a moment' (bir dakika bekleyin), 'I'll put you through' (sizi bağlıyorum), 'He is not available' (müsait değil).",
+      "İnternet kelimeleri: Attachment (ek), Download/Upload, Browser, Confirm, Account, Password.",
+    ],
+    commonMistakes: [
+      "'Hang on' (bekle) ile 'Hang up' (telefonu kapat) ifadelerini karıştırmak.",
+    ],
+    strategyTip:
+      "Telefon diyaloğunda aranan kişi evde/ofiste değilse devamında genellikle 'Would you like to leave a message?' sorusu gelir.",
+    questions: [
+      {
+        question: "Secretary: 'Hold on, please. I will ____ you ____ to the manager.'",
+        options: ["hang / up", "put / through", "call / back", "pick / up"],
+        correctIndex: 1,
+        explanation: "'put someone through' birini telefonda başka birine bağlamak anlamında kullanılır.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "ingilizce",
+    subjectName: "LGS İngilizce",
+    topicSlug: "adventures-and-tourism",
+    title: "Unit 6-7: Adventures & Tourism",
+    shortDesc:
+      "Ekstrem sporlar, karşılaştırmalar (comparatives), tatil türleri ve Present Perfect Tense (Have you ever...?).",
+    avgQuestions: "2 Soru",
+    difficulty: "Orta",
+    studyMinutes: 35,
+    keyPoints: [
+      "Karşılaştırma: Tek heceliler '-er than', uzun sıfatlar 'more ... than' alır.",
+      "'Have you ever been to ...?': Hayatında hiç ... bulundun mu? (Deneyim sorusu).",
+      "Turizm kelimeleri: Accommodation (konaklama), Historic site, All-inclusive, Souvenir.",
+    ],
+    commonMistakes: [
+      "'Been to' (gidip dönmüş olmak) ile 'Gone to' (gitmiş, hâlâ orada olmak) farkını kaçırmak.",
+    ],
+    strategyTip:
+      "Grafik/tablo sorularında 'prefer', 'more thrilling than', 'safer than' gibi karşılaştırma kalıplarını sayısal verilerle tek tek doğrula.",
+    questions: [
+      {
+        question: "I think skydiving is ____ than trekking because it involves jumping from a plane.",
+        options: ["more dangerous", "safer", "easier", "more boring"],
+        correctIndex: 0,
+        explanation: "Uçaktan atlamayı içerdiği için skydiving (gökyüzü dalışı) trekking'e göre daha tehlikelidir (more dangerous).",
+      },
+    ],
+  },
+
+  // ─── LGS DİN KÜLTÜRÜ VE AHLAK BİLGİSİ ───────────────────────────────────
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "din-kulturu",
+    subjectName: "LGS Din Kültürü",
+    topicSlug: "kader-inanci",
+    title: "Kader İnancı (Kaza, Kader, Evrenin Yasaları, Tevekkül)",
+    shortDesc:
+      "Fiziksel, biyolojik ve toplumsal yasalar (Sünnetullah), külli-cüzi irade, emek-rızık ve doğru tevekkül anlayışı.",
+    avgQuestions: "3 Soru",
+    difficulty: "Temel",
+    studyMinutes: 35,
+    keyPoints: [
+      "Fiziksel yasalar madde ve enerjiyle (suyun kaynaması, yerçekimi); Biyolojik yasalar canlıların yapısıyla (fotosentez, üreme); Toplumsal yasalar insan ilişkileriyle (adalet, göç) ilgilidir.",
+      "Cüzi irade insanın kendi özgür seçimidir ve sorumluluğu insana aittir.",
+      "Tevekkül: Önce elinden gelen tüm çabayı göstermek, ardından Allah'a güvenmektir (tedbir + dua).",
+    ],
+    commonMistakes: [
+      "Tevekkülü hiçbir çaba göstermeden sadece beklemek sanmak.",
+    ],
+    strategyTip:
+      "Ayet verilen sorularda 'ölçü, düzen, denge' geçiyorsa Evrensel Yasalar; 'tercih, sorumluluk' geçiyorsa Cüzi İrade şıkkına odaklan.",
+    questions: [
+      {
+        question: "Kur'an-ı Kerim'de adalet, kul hakkı ve toplumsal dayanışmayı konu alan yasalar hangi kapsamdadır?",
+        options: ["Fiziksel yasalar", "Biyolojik yasalar", "Toplumsal yasalar", "Kimyasal yasalar"],
+        correctIndex: 2,
+        explanation: "Toplumun huzur ve düzenini sağlayan kurallar Toplumsal Yasalar kapsamına girer.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "din-kulturu",
+    subjectName: "LGS Din Kültürü",
+    topicSlug: "zekat-ve-sadaka",
+    title: "Zekât ve Sadaka İbadeti",
+    shortDesc:
+      "Nisap miktarı, zekât oranları (1/40, 1/30, 1/10), kimlere verilir, sadaka-i cariye ve fitre.",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "Temel",
+    studyMinutes: 35,
+    keyPoints: [
+      "Zekât farzdır ve nisap miktarı (temel ihtiyaçlar hariç 85 g altın veya dengi mal) zenginliğe sahip olanlarca yılda bir kez verilir.",
+      "Altın, gümüş, nakit para ve ticaret mallarında zekât oranı 1/40 (%2,5)'tir.",
+      "Sadaka-i Cariye: İnsan öldükten sonra da sevabı devam eden kalıcı hayır işleridir (okul, çeşme, ağaç, hayırlı evlat, ilmi eser).",
+    ],
+    commonMistakes: [
+      "Zekâtın anne, baba, eş, çocuk ve torunlara verilebileceğini sanmak (bakmakla yükümlü olunan kişilere zekât verilmez).",
+    ],
+    strategyTip:
+      "Kimlere zekât verilmez? 'Bakmakla yükümlü oldukların + Zenginler'. Bu iki grubu elemen yeterli.",
+    questions: [
+      {
+        question: "80.000 TL nakit birikimi olan ve nisap şartını taşıyan bir kişi yılda kaç TL zekât vermelidir?",
+        options: ["1.000 TL", "2.000 TL", "4.000 TL", "8.000 TL"],
+        correctIndex: 1,
+        explanation: "Nakit parada zekât oranı 1/40 (%2,5)'tir. 80.000 / 40 = 2.000 TL olur.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "din-kulturu",
+    subjectName: "LGS Din Kültürü",
+    topicSlug: "din-ve-hayat",
+    title: "Din ve Hayat (Zarurat-ı Hamse: 5 Temel Değer)",
+    shortDesc:
+      "Canın, aklın, neslin, malın ve dinin korunması ilkeleri; İslam'ın birey ve toplum hayatına katkıları.",
+    avgQuestions: "2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 30,
+    keyPoints: [
+      "İslam'ın korunmasını esas aldığı 5 temel ilke: Can, Akıl, Nesil, Mal ve Din güvenliği.",
+      "Zararlı alışkanlıklardan kaçınmak aklın ve canın korunmasına; hırsızlık/faiz yasağı malın korunmasına; aile kurumu neslin korunmasına örnektir.",
+    ],
+    commonMistakes: [
+      "İş sağlığı ve güvenliği önlemlerini sadece mal güvenliği sanmak (öncelikle Canın Korunması ilkesidir).",
+    ],
+    strategyTip:
+      "Paragraftaki yasağı veya tavsiyeyi oku: 'Zarar verici içecekler' → Akıl; 'Alın teri/Ticaret ahlakı' → Mal; 'Aile' → Nesil.",
+    questions: [
+      {
+        question: "Trafik kurallarına uymak ve iş güvenliği önlemleri almak öncelikle hangi temel hakkın korunmasına yöneliktir?",
+        options: ["Malın korunması", "Canın korunması", "Dinin korunması", "Neslin korunması"],
+        correctIndex: 1,
+        explanation: "İnsan yaşamını ve sağlığını korumayı amaçlayan kurallar Canın Korunması ilkesiyle ilgilidir.",
+      },
+    ],
+  },
+  {
+    exam: "lgs",
+    examLabel: "LGS (8. Sınıf)",
+    subjectSlug: "din-kulturu",
+    subjectName: "LGS Din Kültürü",
+    topicSlug: "hz-muhammedin-ornekligi",
+    title: "Hz. Muhammed'in Örnekliği (Muhammedü'l-Emîn)",
+    shortDesc:
+      "Doğruluk ve güvenilirlik, merhamet, istişare (danışma), kararlılık, hak gözetme ve Kureyş Suresi/Maun Suresi mesajları.",
+    avgQuestions: "2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 30,
+    keyPoints: [
+      "Hz. Muhammed'e dürüstlüğü ve emanete sahip çıkması nedeniyle 'Muhammedü'l-Emîn' (Güvenilir Muhammed) denmiştir.",
+      "Bedir, Uhud ve Hendek savaşları öncesinde arkadaşlarının fikrini alması 'istişare'ye verdiği önemi gösterir.",
+    ],
+    commonMistakes: [
+      "İstişare kavramını tek başına karar vermekle karıştırmak (danışarak ortak akıl üretmektir).",
+    ],
+    strategyTip:
+      "Olay metinlerinde arkadaşlarına danışma varsa İstişare, sözünde durma varsa Güvenilirlik, affetme varsa Merhamet seç.",
+    questions: [
+      {
+        question: "Hendek Savaşı'nda Selman-ı Farisî'nin hendek kazma önerisinin kabul edilmesi Hz. Muhammed'in hangi özelliğini yansıtır?",
+        options: ["İstişareye önem vermesi", "Yalnız karar alması", "Ticaret bilgisi", "Sabırsızlığı"],
+        correctIndex: 0,
+        explanation: "Sahabelerin görüşlerini dinleyip en uygun fikri uygulaması istişareye (danışmaya) verdiği önemi gösterir.",
+      },
+    ],
+  },
+
+  // ─── YKS GEOMETRİ ─────────────────────────────────────────────────────────
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "geometri",
+    subjectName: "YKS Geometri",
+    topicSlug: "ucgende-acilar-ve-alan",
+    title: "Doğruda ve Üçgende Açılar, Açıortay-Kenarortay ve Alan",
+    shortDesc:
+      "Z-M-U kuralları, ikizkenar/eşkenar üçgen, muhteşem üçlü, 30-60-90 üçgeni ve üçgende alan bölme.",
+    avgQuestions: "4 - 5 Soru",
+    difficulty: "Orta",
+    studyMinutes: 60,
+    keyPoints: [
+      "Dik üçgende hipotenüse ait kenarortay hipotenüsün yarısına eşittir (Muhteşem Üçlü).",
+      "30°-60°-90° üçgeninde kenarlar a, a√3, 2a oranındadır.",
+      "Yükseklikleri eşit olan üçgenlerin alanları oranı tabanları oranına eşittir.",
+    ],
+    commonMistakes: [
+      "İkizkenar üçgende tepe açısından indirilen yüksekliğin hem açıortay hem kenarortay olduğunu (YA-Kİ) görmemek.",
+    ],
+    strategyTip:
+      "Açıortay ve paralelliğin bir arada olduğu her soruda Z kuralı ile ikizkenar üçgen yakalarsın!",
+    questions: [
+      {
+        question: "Bir dik üçgende hipotenüs uzunluğu 12 cm ise hipotenüse ait kenarortay uzunluğu kaç cm'dir?",
+        options: ["4", "6", "8", "12"],
+        correctIndex: 1,
+        explanation: "Muhteşem üçlü kuralına göre hipotenüse ait kenarortay hipotenüsün yarısıdır: 12 / 2 = 6 cm.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "geometri",
+    subjectName: "YKS Geometri",
+    topicSlug: "cokgenler-ve-dortgenler",
+    title: "Çokgenler ve Özel Dörtgenler (Paralelkenar, Eşkenar Dörtgen, Yamuk)",
+    shortDesc:
+      "İç-dış açılar toplamı, yamukta orta taban, paralelkenar alan paylaşımı ve deltoid-kare-dikdörtgen.",
+    avgQuestions: "3 - 4 Soru",
+    difficulty: "Orta",
+    studyMinutes: 55,
+    keyPoints: [
+      "Tüm çokgenlerin dış açıları toplamı daima 360°'dir.",
+      "Yamukta orta taban = (Alt Taban + Üst Taban) / 2.",
+      "Eşkenar dörtgende köşegenler dik kesişir ve açıortaydır.",
+    ],
+    commonMistakes: [
+      "Yamuk sorularında üst köşeden paralel veya dik indirmeden açı-kenar aramaya çalışmak.",
+    ],
+    strategyTip:
+      "Çokgenlerde iç açı formülü yerine önce Dış Açı = 360° / n formülünü kullanmak işlemleri çok kısaltır.",
+    questions: [
+      {
+        question: "Bir düzgün çokgenin bir dış açısı 30° olduğuna göre bu çokgen kaç kenarlıdır?",
+        options: ["8", "10", "12", "15"],
+        correctIndex: 2,
+        explanation: "n = 360° / 30° = 12 kenarlıdır.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "geometri",
+    subjectName: "YKS Geometri",
+    topicSlug: "cember-ve-daire",
+    title: "Çemberde Açılar, Uzunluk ve Dairede Alan",
+    shortDesc:
+      "Merkez açı, çevre açı, teğet-kiriş açı, kiriş özellikler ve daire dilimi alanı.",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "İleri",
+    studyMinutes: 55,
+    keyPoints: [
+      "Çapı gören çevre açı daima 90°'dir.",
+      "Merkezden kirişe indirilen dikme kirişi iki eşit parçaya böler.",
+      "Merkezden teğet değme noktasına çizilen yarıçap teğete diktir.",
+    ],
+    commonMistakes: [
+      "Çevre açının gördüğü yayın yarısına eşit olduğunu unutup merkez açıyla karıştırmak.",
+    ],
+    strategyTip:
+      "Çemberde uzunluk sorularında ilk iş: Merkezden teğete dik çiz, merkezden kirişe dik indir!",
+    questions: [
+      {
+        question: "Yarıçapı 6 cm olan bir dairenin 60°'lik diliminin alanı kaç π cm²'dir?",
+        options: ["3π", "6π", "9π", "12π"],
+        correctIndex: 1,
+        explanation: "Alan = π·r²·(α/360) = π·36·(60/360) = 6π cm².",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "geometri",
+    subjectName: "YKS Geometri",
+    topicSlug: "analitik-geometri",
+    title: "Noktanın ve Doğrunun Analitiği",
+    shortDesc:
+      "İki nokta arası uzaklık, orta nokta, eğim, paralel-dik doğrular ve noktanın doğruya uzaklığı.",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "İleri",
+    studyMinutes: 55,
+    keyPoints: [
+      "İki nokta arası uzaklık: |AB| = √[(x₂ - x₁)² + (y₂ - y₁)²].",
+      "Dik kesişen iki doğrunun eğimleri çarpımı -1'dir: m₁ · m₂ = -1.",
+      "Paralel doğruların eğimleri birbirine eşittir: m₁ = m₂.",
+    ],
+    commonMistakes: [
+      "Dik doğruların eğimlerinin çarpımını +1 almak.",
+    ],
+    strategyTip:
+      "Koordinat düzleminde alan veya uzunluk sorularında dik üçgen benzerliği (eş üçgen) kurmak çoğu soruyu formülsüz çözer.",
+    questions: [
+      {
+        question: "Eğimi 2 olan bir doğruya dik olan doğrunun eğimi kaçtır?",
+        options: ["-2", "-1/2", "1/2", "2"],
+        correctIndex: 1,
+        explanation: "m₁ · m₂ = -1 olduğundan 2 · m₂ = -1 → m₂ = -1/2.",
+      },
+    ],
+  },
+
+  // ─── YKS: TYT KİMYA ───────────────────────────────────────────────────────
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-kimya",
+    subjectName: "TYT Kimya",
+    topicSlug: "kimya-bilimi-ve-atom",
+    title: "Kimya Bilimi, Atom Modelleri ve Atomun Yapısı",
+    shortDesc:
+      "Simya-kimya farkı, güvenlik işaretleri, Dalton-Thomson-Rutherford-Bohr modelleri, izotop-izoton-izobar.",
+    avgQuestions: "2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 40,
+    keyPoints: [
+      "Kütle Numarası (A) = Proton Sayısı (Z) + Nötron Sayısı (N).",
+      "İzotop atomların proton sayıları aynı, nötron ve kütle numaraları farklıdır.",
+      "Bir atom elektron verdikçe çapı küçülür (katyon), elektron aldıkça çapı büyür (anyon).",
+    ],
+    commonMistakes: [
+      "İzotop atomların fiziksel özelliklerinin de aynı olduğunu düşünmek (kimyasal özellikleri aynı, fiziksel özellikleri farklıdır).",
+    ],
+    strategyTip:
+      "Atom numarasının sol alt köşeye, yükün sağ üst köşeye yazıldığını sabitle; iyon yükü + elektron sayısı = proton sayısıdır.",
+    questions: [
+      {
+        question: "Proton sayısı 12, nötron sayısı 12 olan Mg²⁺ iyonunun elektron sayısı kaçtır?",
+        options: ["10", "12", "14", "24"],
+        correctIndex: 0,
+        explanation: "2 elektron verdiği için 12 - 2 = 10 elektronu vardır.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-kimya",
+    subjectName: "TYT Kimya",
+    topicSlug: "periyodik-sistem-ve-baglar",
+    title: "Periyodik Sistem ve Kimyasal Türler Arası Etkileşimler",
+    shortDesc:
+      "İyonlaşma enerjisi (3 aşağı 5 yukarı), elektronegatiflik, iyonik-kovalent-metalik bağlar ve zayıf etkileşimler.",
+    avgQuestions: "2 - 3 Soru",
+    difficulty: "Orta",
+    studyMinutes: 50,
+    keyPoints: [
+      "Aynı periyotta soldan sağa doğru atom yarıçapı genellikle azalır, iyonlaşma enerjisi genellikle artar (2A > 3A, 5A > 6A istisnası).",
+      "Hidrojen bağı: H atomunun F, O, N atomlarından birine bağlı olduğu polar moleküller arasında görülür.",
+    ],
+    commonMistakes: [
+      "Hidrojen içeren her bileşikte (ör. HCl veya CH₄) hidrojen bağı olduğunu sanmak (yalnızca F, O, N ile doğrudan bağlıysa vardır).",
+    ],
+    strategyTip:
+      "Zayıf etkileşimler (Hidrojen bağı, Dipol-dipol, London) fiziksel bağlardır; kaynama noktasını belirlerler.",
+    questions: [
+      {
+        question: "Aşağıdaki moleküllerden hangisinin kendi molekülleri arasında hidrojen bağı görülür?",
+        options: ["CH₄", "HCl", "H₂O", "CO₂"],
+        correctIndex: 2,
+        explanation: "H₂O'da H atomu doğrudan Oksijen'e bağlı olduğu için moleküller arası hidrojen bağı bulunur.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-kimya",
+    subjectName: "TYT Kimya",
+    topicSlug: "maddenin-halleri-ve-karisimlar",
+    title: "Maddenin Halleri ve Karışımların Ayrılması",
+    shortDesc:
+      "Buhar basıncı, kaynama noktası, homojen-heterojen karışımlar, koligatif özellikler ve ayırma teknikleri.",
+    avgQuestions: "2 Soru",
+    difficulty: "Orta",
+    studyMinutes: 45,
+    keyPoints: [
+      "Buhar basıncı yalnızca sıvının cinsine, sıcaklığına ve safsızlığına bağlıdır (dış basınca bağlı değildir).",
+      "Sıvı-sıvı homojen karışımlar (alkol-su) ayrımsal damıtma ile; heterojen sıvı-sıvı karışımlar (zeytinyağı-su) ayırma hunisi ile ayrılır.",
+    ],
+    commonMistakes: [
+      "Kaynama noktası ile buhar basıncını doğru orantılı sanmak (aynı sıcaklıkta kaynama noktası büyük olanın buhar basıncı düşüktür).",
+    ],
+    strategyTip:
+      "Suya tuz eklendiğinde kaynama noktası yükselir, donma noktası alçalır (koligatif özellik).",
+    questions: [
+      {
+        question: "Zeytinyağı ve su karışımını ayırmak için hangi yöntem kullanılır?",
+        options: ["Ayrımsal damıtma", "Ayırma hunisi", "Süzme", "Mıknatıslama"],
+        correctIndex: 1,
+        explanation: "Birbiri içinde çözünmeyen yoğunlukları farklı iki sıvıyı ayırmak için ayırma hunisi kullanılır.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-kimya",
+    subjectName: "TYT Kimya",
+    topicSlug: "asitler-bazlar-tuzlar",
+    title: "Asitler, Bazlar ve Tuzlar",
+    shortDesc:
+      "Asit-baz tepkimeleri (nötralleşme), aktif-yarı soy-soy metallerin tepkimeleri ve günlük yaşam kimyasalları.",
+    avgQuestions: "1 Soru",
+    difficulty: "Orta",
+    studyMinutes: 40,
+    keyPoints: [
+      "Aktif metaller asitlerle tepkimeye girerek H₂ gazı açığa çıkarır.",
+      "Yarı soy metaller (Cu, Hg, Ag) yalnızca oksijenli kuvvetli asitlerle (HNO₃, H₂SO₄) tepkime verir.",
+      "Amfoter metaller (Zn, Al, Cr, Sn, Pb, Be) hem asitlerle hem kuvvetli bazlarla tepkime verir.",
+    ],
+    commonMistakes: [
+      "Bakır (Cu) metalinin HCl asidi ile tepkime vereceğini sanmak (Cu yarı soy metaldir, HCl ile tepkime vermez).",
+    ],
+    strategyTip:
+      "'Zengin Pablo Cariyesine Al Beni' kodlamasıyla amfoter metalleri (Zn, Pb, Cr, Al, Be) kolayca hatırla.",
+    questions: [
+      {
+        question: "Hangi metal hem kuvvetli asitlerle hem de kuvvetli bazlarla tepkimeye girerek H₂ gazı açığa çıkarır?",
+        options: ["Cu (Bakır)", "Au (Altın)", "Al (Alüminyum)", "Ag (Gümüş)"],
+        correctIndex: 2,
+        explanation: "Alüminyum (Al) amfoter bir metal olduğu için hem asitlerle hem de kuvvetli bazlarla H₂ gazı oluşturur.",
+      },
+    ],
+  },
+
+  // ─── YKS: TYT BİYOLOJİ ────────────────────────────────────────────────────
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-biyoloji",
+    subjectName: "TYT Biyoloji",
+    topicSlug: "canlilarin-temel-bilesenleri",
+    title: "Canlıların Ortak Özellikleri ve Temel Bileşenleri",
+    shortDesc:
+      "Karbonhidratlar, lipitler, proteinler, enzimler, vitaminler ve nükleik asitler.",
+    avgQuestions: "2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 45,
+    keyPoints: [
+      "Enerji verici olarak kullanım sırası: Karbonhidrat → Yağ → Protein. Birim gram başına en çok enerji veren: Yağ.",
+      "Enzimler aktivasyon enerjisini düşürür, tepkimeden değişmeden çıkarlar ve sıcaklık-pH değişimlerinden etkilenirler.",
+      "Vitaminler enerji vermez, düzenleyicidirler; A, D, E, K yağda; B ve C suda çözünür.",
+    ],
+    commonMistakes: [
+      "Vitaminlerin sindirime uğradığını veya enerji verdiğini sanmak (küçük yapılıdırlar, sindirilmezler).",
+    ],
+    strategyTip:
+      "Enzim sorularında yüksek sıcaklığın (55°C+) protein yapıyı kalıcı bozduğunu (denatürasyon), 0°C'nin ise yalnızca geçici durdurduğunu unutma.",
+    questions: [
+      {
+        question: "Aşağıdaki moleküllerden hangisi hücrede enerji verici olarak KULLANILMAZ?",
+        options: ["Glikoz", "Trigliserit (Yağ)", "Protein", "Vitamin"],
+        correctIndex: 3,
+        explanation: "Vitaminler, mineraller ve su enerji verici değil düzenleyici bileşiklerdir.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-biyoloji",
+    subjectName: "TYT Biyoloji",
+    topicSlug: "hucre-ve-organeller",
+    title: "Hücre Zarı, Madde Geçişleri ve Organeller",
+    shortDesc:
+      "Prokaryot-ökaryot farkı, difüzyon, osmoz, aktif taşıma, endositoz-ekzositoz ve organel görevleri.",
+    avgQuestions: "1 - 2 Soru",
+    difficulty: "Orta",
+    studyMinutes: 45,
+    keyPoints: [
+      "Pasif taşıma (difüzyon, osmoz) çok yoğun ortamdan az yoğun ortama ATP harcanmadan gerçekleşir.",
+      "Aktif taşıma az yoğundan çoka doğru ATP harcanarak ve canlı hücrelerde gerçekleşir.",
+      "Ribozom zarsız bir organeldir ve hem prokaryot hem ökaryot tüm canlı hücrelerde bulunur.",
+    ],
+    commonMistakes: [
+      "Bitki ve mantar hücrelerinin hücre duvarı yüzünden endositoz yapabileceğini düşünmek (çeper endositoza izin vermez).",
+    ],
+    strategyTip:
+      "Hücre hipertonik (çok yoğun) ortama konursa su kaybedip büzülür (plazmoliz), hipotonik ortamda su alıp şişer.",
+    questions: [
+      {
+        question: "Tüm canlı hücrelerde (prokaryot ve ökaryot) ortak olarak bulunan organel hangisidir?",
+        options: ["Mitokondri", "Ribozom", "Golgi aygıtı", "Kloroplast"],
+        correctIndex: 1,
+        explanation: "Protein sentezini gerçekleştiren Ribozom tüm prokaryot ve ökaryot hücrelerde ortaktır.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-biyoloji",
+    subjectName: "TYT Biyoloji",
+    topicSlug: "mitoz-ve-mayoz",
+    title: "Hücre Bölünmeleri (Mitoz, Mayoz ve Eşeysiz Üreme)",
+    shortDesc:
+      "İnterfaz, mitoz evreleri, mayoz I-II, krossing over, kromozom sayısı ve DNA miktarı grafikleri.",
+    avgQuestions: "1 Soru",
+    difficulty: "Orta",
+    studyMinutes: 40,
+    keyPoints: [
+      "Mitozda 2n kromozomlu 1 hücreden kalıtsal yapısı aynı 2n kromozomlu 2 hücre oluşur.",
+      "Mayoz I'de homolog kromozomlar ayrıldığı için kromozom sayısı yarıya iner (2n → n) ve krossing over ile çeşitlilik sağlanır.",
+    ],
+    commonMistakes: [
+      "DNA eşlenmesinin (interfaz) Mayoz II öncesinde de gerçekleştiğini sanmak (DNA yalnızca Mayoz I öncesinde eşlenir).",
+    ],
+    strategyTip:
+      "Mayoz bölünme sorularında 'homolog kromozom ayrılması' = Mayoz I, 'kardeş kromatit ayrılması' = Mayoz II (ve Mitoz) ayrımını kullan.",
+    questions: [
+      {
+        question: "Mayoz bölünmede kalıtsal çeşitliliği sağlayan krossing over (parça değişimi) hangi evrede gerçekleşir?",
+        options: ["Profaz I", "Metafaz I", "Anafaz II", "Telofaz II"],
+        correctIndex: 0,
+        explanation: "Krossing over ve sinapsis olayları Mayoz I'in Profaz I evresinde gerçekleşir.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-biyoloji",
+    subjectName: "TYT Biyoloji",
+    topicSlug: "kalitim-ve-ekosistem",
+    title: "TYT Kalıtım, Soyağacı ve Ekosistem Ekolojisi",
+    shortDesc:
+      "Soyağacı analizleri, eş baskınlık, X'e bağlı kalıtım, besin zinciri, biyolojik birikim ve madde döngüleri.",
+    avgQuestions: "2 Soru",
+    difficulty: "Orta",
+    studyMinutes: 45,
+    keyPoints: [
+      "Besin piramidinde üreticiden son tüketiciye doğru gidildikçe aktarılan enerji azalır (%10 kuralı), biyolojik birikim (zehirli madde) artar.",
+      "Otozomal çekinik özellikte (ör. aa) anne ve baba taralı değilken çocuk taralıysa, anne-baba kesinlikle taşıyıcıdır (Aa).",
+    ],
+    commonMistakes: [
+      "X'e bağlı çekinik kalıtımda hasta annenin (XᵃXᵃ) erkek çocuğunun sağlıklı olabileceğini düşünmek (erkek çocuk X'i anneden aldığı için kesin hastadır).",
+    ],
+    strategyTip:
+      "Soyağacında X'e bağlı çekinik kontrol ederken daima 'Taralı anne → Tüm erkek çocukları taralı olmalı' ve 'Taralı kız → Babası kesin taralı olmalı' testini yap.",
+    questions: [
+      {
+        question: "Bir besin piramidinin tabanından en üst basamağına çıkıldıkça aşağıdakilerden hangisi ARTAR?",
+        options: ["Aktarılan enerji miktarı", "Birey sayısı", "Biyokütle", "Biyolojik birikim (zehirli madde)"],
+        correctIndex: 3,
+        explanation: "Üreticiden son tüketiciye çıkıldıkça dokularda biriken zehirli madde (biyolojik birikim) oranı artar.",
+      },
+    ],
+  },
+
+  // ─── YKS: AYT EDEBİYAT ────────────────────────────────────────────────────
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "ayt-edebiyat",
+    subjectName: "AYT Edebiyat",
+    topicSlug: "siir-bilgisi-ve-sanatlar",
+    title: "Şiir Bilgisi, Nazım Biçimleri ve Edebi Sanatlar",
+    shortDesc:
+      "Ölçü (hece-aruz), kafiye-redif, teşbih, istiare, kinaye, tevriye, hüsn-i talil ve tecahül-i arif.",
+    avgQuestions: "3 - 4 Soru",
+    difficulty: "Orta",
+    studyMinutes: 45,
+    keyPoints: [
+      "Redif yazılışı ve görevi aynı olan ek/kelimelerdir; kafiye ise köklerdeki ses benzerliğidir.",
+      "Açık istiarede yalnızca kendisine benzetilen söylenir; kapalı istiarede ise yalnızca benzeyen söylenir (kendisine benzetilen söylenmez).",
+      "Hüsn-i talil bir olayı gerçek nedeninin dışında güzel bir hayali nedene bağlamaktır.",
+    ],
+    commonMistakes: [
+      "Redif ile kafiyeyi ayırırken kelimelerin eklerini kökünden ayırmadan ses benzerliği aramak.",
+    ],
+    strategyTip:
+      "Şiirde önce ekleri ayırıp Redif'i bul, geriye kalan kökün son harflerinde Yarım (1 ses), Tam (2 ses) veya Zengin (3+ ses) kafiyeye bak.",
+    questions: [
+      {
+        question: "Bir gerçeği bildiği halde bilmezden gelme sanatına ne ad verilir?",
+        options: ["Tevriye", "Tecahül-i Arif", "Kinaye", "Tariz"],
+        correctIndex: 1,
+        explanation: "Şairin bildiği bir durumu bilmiyormuş gibi aktarması Tecahül-i Arif sanatıdır.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "ayt-edebiyat",
+    subjectName: "AYT Edebiyat",
+    topicSlug: "islamiyet-oncesi-ve-gecis",
+    title: "İslamiyet Öncesi, Geçiş Dönemi ve Halk Edebiyatı",
+    shortDesc:
+      "Koşuk-Sagu-Destan, Kutadgu Bilig-Divanü Lügati't-Türk, Yunus Emre, Karacaoğlan ve Aşık Edebiyatı.",
+    avgQuestions: "3 Soru",
+    difficulty: "Temel",
+    studyMinutes: 45,
+    keyPoints: [
+      "İslamiyet Öncesi nazım biçimleri: Koşuk (aşk/doğa), Sagu (ağıt), Sav (atasözü), Destan.",
+      "Geçiş Dönemi'nin 4 temel eseri: Kutadgu Bilig (Yusuf Has Hacib), Divanü Lügati't-Türk (Kaşgarlı Mahmud), Atabetü'l-Hakayık, Divan-ı Hikmet.",
+    ],
+    commonMistakes: [
+      "İlk siyasetname olan Kutadgu Bilig ile ilk Türkçe sözlük olan Divanü Lügati't-Türk'ün yazarlarını karıştırmak.",
+    ],
+    strategyTip:
+      "Halk edebiyatında tekke (Yunus Emre, Hacı Bektaş), aşık (Karacaoğlan, Dadaloğlu) ve anonim (mani, türkü) kollarını ayırt et.",
+    questions: [
+      {
+        question: "Türk dilinin bilinen ilk sözlüğü ve dil bilgisi kitabı olan 'Divanü Lügati't-Türk' kimin eseridir?",
+        options: ["Yusuf Has Hacib", "Kaşgarlı Mahmud", "Edip Ahmed Yükneki", "Ahmet Yesevi"],
+        correctIndex: 1,
+        explanation: "Divanü Lügati't-Türk, XI. yüzyılda Kaşgarlı Mahmud tarafından yazılmıştır.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "ayt-edebiyat",
+    subjectName: "AYT Edebiyat",
+    topicSlug: "divan-edebiyati",
+    title: "Divan Edebiyatı Nazım Biçimleri ve Şairleri",
+    shortDesc:
+      "Gazel, kaside, mesnevi, rubai, tuyuğ; Fuzuli, Baki, Nedim, Nabi ve Şeyh Galip.",
+    avgQuestions: "4 Soru",
+    difficulty: "İleri",
+    studyMinutes: 55,
+    keyPoints: [
+      "Gazel (aa ba ca...) genellikle aşk, şarap ve tabiat konularını işler; 5-15 beyittir.",
+      "Kaside din veya devlet büyüklerini övmek için yazılır (33-99 beyit).",
+      "Mesnevi her beyti kendi içinde kafiyeli (aa bb cc...) olduğu için uzun hikayelerin yazımında kullanılır.",
+    ],
+    commonMistakes: [
+      "Türklerin Divan edebiyatına kazandırdığı iki nazım biçimi olan Tuyuğ ve Şarkı'yı Arap/İran kökenli sanmak.",
+    ],
+    strategyTip:
+      "Mahlas (şairin adı) geçen beyit gazel veya kasidenin daima SON beytidir (makta beyti).",
+    questions: [
+      {
+        question: "Divan edebiyatında 'aşk ve ıstırap şairi' olarak bilinen, 'Su Kasidesi' ve 'Leyla vü Mecnun'un yazarı kimdir?",
+        options: ["Baki", "Nedim", "Fuzuli", "Nefi"],
+        correctIndex: 2,
+        explanation: "Su Kasidesi ve Leyla vü Mecnun mesnevisi Fuzuli'nin en tanınmış eserlerindendir.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "ayt-edebiyat",
+    subjectName: "AYT Edebiyat",
+    topicSlug: "tanzimattan-cumhuriyete",
+    title: "Tanzimat, Servet-i Fünun, Millî Edebiyat ve Cumhuriyet",
+    shortDesc:
+      "Batılı anlamda ilk roman/tiyatro, Namık Kemal, Tevfik Fikret, Ömer Seyfettin, Beş Hececiler ve Cumhuriyet dönemi.",
+    avgQuestions: "6 - 8 Soru",
+    difficulty: "İleri",
+    studyMinutes: 65,
+    keyPoints: [
+      "Tanzimat I. Dönem: Toplum için sanat (Şinasi, Namık Kemal, Ziya Paşa). II. Dönem: Sanat için sanat (Recaizade, Abdülhak Hamit).",
+      "Servet-i Fünun: Ağır dil, bireysel konular; Halit Ziya Uşaklıgil (Mai ve Siyah, Aşk-ı Memnu) modern romanı kurdu.",
+      "Millî Edebiyat: Genç Kalemler dergisinde 'Yeni Lisan' makalesiyle sade Türkçe hareketi başladı (Ömer Seyfettin, Ziya Gökalp).",
+    ],
+    commonMistakes: [
+      "İlk yerli roman (Taaşşuk-ı Talat ve Fitnat) ile ilk edebi roman (İntibah) arasındaki ayrımı karıştırmak.",
+    ],
+    strategyTip:
+      "İlkler tablosunu çıkar: İlk tiyatro Şair Evlenmesi, ilk tarihi roman Cezmi, ilk realist roman Araba Sevdası, ilk köy romanı Karabibik.",
+    questions: [
+      {
+        question: "Türk edebiyatında ilk realist roman kabul edilen 'Araba Sevdası'nın yazarı kimdir?",
+        options: ["Namık Kemal", "Recaizade Mahmut Ekrem", "Samipaşazade Sezai", "Nabizade Nazım"],
+        correctIndex: 1,
+        explanation: "Araba Sevdası, Recaizade Mahmut Ekrem tarafından yazılmıştır ve ilk realist roman kabul edilir.",
+      },
+    ],
+  },
+
+  // ─── YKS: TYT TARİH & COĞRAFYA ────────────────────────────────────────────
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-tarih",
+    subjectName: "TYT Tarih",
+    topicSlug: "ilk-ve-orta-cagda-turkler",
+    title: "Tarih Bilimi, İlk ve Orta Çağlarda Türk Dünyası",
+    shortDesc:
+      "Tarihin kaynakları, Hun-Göktürk-Uygur devletleri, Kut anlayışı, kurultay ve töre.",
+    avgQuestions: "2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 35,
+    keyPoints: [
+      "Tarihi olaylar mutlaka döneminin şartlarına göre değerlendirilmelidir (anakronizmden kaçınma).",
+      "Asya Hun Devleti'nde Mete Han orduyu onluk sisteme göre düzenledi.",
+      "Uygurlar yerleşik hayata geçerek tarım, matbaa ve mimari eserler bırakan ilk Türk devleti oldu.",
+    ],
+    commonMistakes: [
+      "Orhun Kitabeleri'nin Uygurlara ait olduğunu sanmak (II. Göktürk Devleti dönemine aittir).",
+    ],
+    strategyTip:
+      "TYT Tarih soruları ağırlıklı olarak yorum + temel bilgi içerir; paragrafta verilen 'yerleşik hayat, ikili teşkilat, kut' kavramlarını iyi analiz et.",
+    questions: [
+      {
+        question: "Yerleşik hayata geçerek tapınaklar ve matbaa kullanan ilk Türk devleti hangisidir?",
+        options: ["Asya Hun Devleti", "I. Göktürk Devleti", "Uygurlar", "Kırgızlar"],
+        correctIndex: 2,
+        explanation: "Maniheizm dinini kabul eden Uygurlar yerleşik hayata geçen ilk Türk devletidir.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-tarih",
+    subjectName: "TYT Tarih",
+    topicSlug: "osmanli-kurulus-ve-inkilap",
+    title: "Osmanlı Kültür-Medeniyeti ve Millî Mücadele Özeti",
+    shortDesc:
+      "Divan-ı Hümayun, Tımar sistemi, Islahat-Tanzimat Fermanları ve Kurtuluş Savaşı dönüm noktaları.",
+    avgQuestions: "3 Soru",
+    difficulty: "Orta",
+    studyMinutes: 45,
+    keyPoints: [
+      "Tımar sistemi ile devlet hazineden para çıkarmadan hem tarımda süreklilik sağlamış hem de Cebelu (asker) yetiştirmiştir.",
+      "Tanzimat Fermanı ile ilk kez kanun üstünlüğü ilkesi benimsenmiştir.",
+    ],
+    commonMistakes: [
+      "Divan-ı Hümayun'un yasama meclisi olduğunu sanmak (padişaha danışma ve yüksek mahkeme niteliğindedir; son söz padişahındır).",
+    ],
+    strategyTip:
+      "Tımar sisteminin ekonomik, askeri ve idari faydalarını tek şemada tut: Üretim + Asker + Güvenlik.",
+    questions: [
+      {
+        question: "Osmanlı Devleti'nde dirlik sahiplerinin vergi gelirleri karşılığında yetiştirdiği atlı askerlere ne ad verilirdi?",
+        options: ["Yeniçeri", "Cebelü", "Akıncı", "Lağımcı"],
+        correctIndex: 1,
+        explanation: "Tımar sahiplerinin beslediği atlı askerlere Cebelü denir.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-cografya",
+    subjectName: "TYT Coğrafya",
+    topicSlug: "cografi-konum-ve-iklim",
+    title: "Coğrafi Konum, Harita Bilgisi ve İklim Elemanları",
+    shortDesc:
+      "Türkiye'nin mutlak-göreceli konumu (36°-42° K, 26°-45° D), izohipsler, basınç ve Türkiye'de iklim tipleri.",
+    avgQuestions: "3 Soru",
+    difficulty: "Orta",
+    studyMinutes: 45,
+    keyPoints: [
+      "Türkiye 36°-42° Kuzey paralelleri (Orta Kuşak) ile 26°-45° Doğu meridyenleri arasındadır (en doğu ile en batı arası 76 dakika).",
+      "İzohips haritalarında çizgilerin sıklaştığı yerlerde eğim fazladır; deniz kıyısı 0 m eğrisidir.",
+    ],
+    commonMistakes: [
+      "Türkiye'de dağların güney yamaçlarının daha sıcak olmasını göreceli konum sanmak (Kuzey Yarım Küre'de olduğumuz için Mutlak/Matematik konumdur).",
+    ],
+    strategyTip:
+      "Kuzey Yarım Küre + Orta Kuşak sonuçları = Mutlak Konum; Dağların uzanışı, yükselti, denizellik = Göreceli (Özel) Konum.",
+    questions: [
+      {
+        question: "Türkiye'de dört mevsimin belirgin olarak yaşanması aşağıdakilerden hangisinin sonucudur?",
+        options: [
+          "Üç tarafının denizlerle çevrili olmasının",
+          "Orta Kuşak'ta yer almasının (Mutlak Konum)",
+          "Ortalama yükseltisinin fazla olmasının",
+          "Dağların doğu-batı yönlü uzanmasının",
+        ],
+        correctIndex: 1,
+        explanation: "Dört mevsimin belirgin yaşanması Orta Kuşak (36°-42° K) yani Mutlak Konum sonucudur.",
+      },
+    ],
+  },
+  {
+    exam: "yks",
+    examLabel: "YKS (TYT - AYT)",
+    subjectSlug: "tyt-cografya",
+    subjectName: "TYT Coğrafya",
+    topicSlug: "ic-ve-dis-kuvvetler",
+    title: "İç-Dış Kuvvetler, Nüfus ve Doğal Afetler",
+    shortDesc:
+      "Orojenez, epirojenez, akarsu-rüzgar-karstik şekiller, nüfus piramitleri ve Türkiye'de doğal afet dağılışı.",
+    avgQuestions: "2 Soru",
+    difficulty: "Temel",
+    studyMinutes: 40,
+    keyPoints: [
+      "Karstik şekiller (lapya, dolin, obruk, traverten) Türkiye'de en yoğun Akdeniz Bölgesi'nde (kireçtaşı) görülür.",
+      "Heyelan en fazla Karadeniz Bölgesi'nde (eğim + killi toprak + bol yağış) ve ilkbahar mevsiminde yaşanır.",
+    ],
+    commonMistakes: [
+      "Erozyon ile heyelanı karıştırmak (erozyon toprağın üst kısmının süpürülmesidir, ağaçlandırmayla önlenir; heyelan kütle hareketidir).",
+    ],
+    strategyTip:
+      "Delta ovası oluşumu için akarsuyun bol alüvyon taşıması, kıyının sığ olması ve gelgit/akıntının az olması gerekir.",
+    questions: [
+      {
+        question: "Türkiye'de heyelan olaylarının en sık görüldüğü bölge ve mevsim eşleştirmesi hangisidir?",
+        options: [
+          "İç Anadolu - Yaz",
+          "Karadeniz - İlkbahar",
+          "Ege - Kış",
+          "Güneydoğu Anadolu - Sonbahar",
+        ],
+        correctIndex: 1,
+        explanation: "Kar erimeleriyle toprağın suya doyduğu İlkbahar'da ve eğimli Karadeniz Bölgesi'nde heyelan en sıktır.",
+      },
+    ],
+  },
 ];
 
 export function getAllTopics(): CurriculumTopic[] {
