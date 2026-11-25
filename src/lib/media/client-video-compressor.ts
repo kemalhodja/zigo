@@ -2,13 +2,13 @@
  * Zigo Client-Side Video & Media Compressor
  * 
  * Rules:
- * - Max File Size: 100 MB (104,857,600 bytes)
- * - Max Video Duration: 90 seconds
- * - Automatic client-side video file size check & lightweight canvas/MediaRecorder compression helper
+ * - Max File Size: 25 MB (short promo videos only)
+ * - Max Video Duration: 30 seconds
+ * - Long videos are redirected via external links (YouTube, Vimeo, etc.)
  */
 
-export const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
-export const MAX_VIDEO_DURATION_SECONDS = 90;
+export const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+export const MAX_VIDEO_DURATION_SECONDS = 30;
 
 export type CompressVideoOptions = {
   maxSizeBytes?: number;

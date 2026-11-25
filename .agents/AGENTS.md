@@ -34,10 +34,11 @@ Sistemde 6 temel rol bulunur. Her ekran ve rota (Route Guards) kullanıcının r
     - Abonesiz ise: Günde **maksimum 1 gönderi** (`MAX_DAILY_POSTS = 1`).
   - **Öğrenci & Veli (Zigo Plus)**: Günde maksimum 2 gönderi (`MAX_DAILY_POSTS = 2`).
   - **Gizlilik Kuralı**: Öğrenci ve veli gönderileri Keşfet'e (`/explore`) ASLA düşmez; yalnızca karşılıklı takipleşen kullanıcıların ana sayfa akışında (`/`) görünür.
-- **Video & Reels Policy (Uzun Video Kuralı)**:
-  - **Zigo'da uzun video KESİNLİKLE barındırılmaz.** Uzun ders videoları için içerik üreticileri gönderilerine **YouTube, Vimeo, Dailymotion, Loom, EBA, Khan Academy** vb. harici platform bağlantıları ekler ve öğrenciler bu linkler üzerinden ilgili platforma yönlendirilir.
+- **Video & Reels Policy (Kısa Tanıtım Videosu + Harici Uzun Video Kuralı)**:
+  - Kullanıcılar doğrudan **fotoğraf/görsel** (JPG, PNG, WEBP, GIF) ve yalnızca **kısa tanıtım videosu** (MP4, WEBM) paylaşabilir.
+  - **Kısa Tanıtım Videosu Limitleri**: Maksimum süre **30 saniye**, maksimum dosya boyutu **25 MB** (12 MB üzeri istemci sıkıştırması, 3.5 MB üzeri doğrudan imzalı Storage yüklemesi).
+  - **Zigo'da uzun video KESİNLİKLE barındırılmaz.** 30 saniyeyi aşan uzun ders videoları için içerik üreticileri gönderilerine **YouTube, Vimeo, Dailymotion, Loom, EBA, Khan Academy** vb. harici platform bağlantıları ekler ve öğrenciler bu linkler üzerinden ilgili platforma yönlendirilir.
   - Tüm harici video/ders bağlantıları **Shared Link Gate** kapsamındadır (yalnızca Zigo Plus aboneleri açabilir; abonesiz kullanıcılar `SharedLinkPaywallModal` görür).
-  - Doğrudan medya yükleme şu an yalnızca görseller (JPG, PNG, WEBP, GIF) içindir; ileride kısa klip/Reel yüklemesi yeniden açılırsa maksimum **60-90 saniye** ve **100 MB** (istemci sıkıştırmalı) ile sınırlıdır.
 
 ## 4. Coding & Output Standard
 - Asla tüm projeyi veya gereksiz dosyaları yeniden yazma.

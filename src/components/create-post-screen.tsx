@@ -4,6 +4,7 @@ import React, { useState } from "react";
 
 import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
 import { validateVideoLimits } from "@/lib/client/compress-video";
+import { uploadSocialMedia } from "@/lib/client/upload-media";
 
 export interface CreatePostScreenProps {
   onSuccess?: () => void;
@@ -12,6 +13,7 @@ export interface CreatePostScreenProps {
 
 export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScreenProps) {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | undefined>(undefined);
   const [caption, setCaption] = useState<string>("");
   const [externalUrl, setExternalUrl] = useState<string>("");
   const [areaId, _setAreaId] = useState<number>(defaultAreaId);
@@ -19,24 +21,29 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
     setError(null);
     setSuccessMessage(null);
 
     if (!file) {
       setMediaFile(null);
+      setVideoDurationSeconds(undefined);
       return;
     }
 
     if (file.type.startsWith("video/")) {
-      setError("Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısını aşağıya ekleyebilirsiniz.");
-      setMediaFile(null);
-      event.target.value = "";
-      return;
-    }
-
-    if (file.type.startsWith("image/")) {
+      const videoVal = await validateVideoLimits(file, { isReel: true });
+      if (!videoVal.valid) {
+        setError(videoVal.error ?? "Kısa tanıtım videosu en fazla 30 saniye ve 25 MB olabilir.");
+        setMediaFile(null);
+        setVideoDurationSeconds(undefined);
+        event.target.value = "";
+        return;
+      }
+      setVideoDurationSeconds(videoVal.duration);
+    } else if (file.type.startsWith("image/")) {
+      setVideoDurationSeconds(undefined);
       const imgVal = validateImageLimits(file);
       if (!imgVal.valid) {
         setError(imgVal.error ?? "Görsel boyutu 15 MB sınırını aşıyor.");
@@ -77,22 +84,11 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
         if (fileToUpload.type.startsWith("image/")) {
           fileToUpload = await compressImage(fileToUpload);
         }
-        mediaType = fileToUpload.type.startsWith("video/") ? "video" : "image";
-        const formData = new FormData();
-        formData.append("file", fileToUpload);
-
-        const uploadRes = await fetch("/api/social/upload", {
-          method: "POST",
-          body: formData,
+        const uploaded = await uploadSocialMedia(fileToUpload, {
+          durationSeconds: videoDurationSeconds,
         });
-
-        const uploadData = await uploadRes.json().catch(() => null);
-
-        if (!uploadRes.ok) {
-          throw new Error(uploadData?.error ?? "Medya yükleme işlemi başarısız oldu.");
-        }
-
-        mediaUrl = uploadData?.data?.mediaUrl ?? "";
+        mediaUrl = uploaded.mediaUrl;
+        mediaType = uploaded.mediaType;
       }
 
       // 2. Gönderiyi veritabanına kaydet
@@ -137,18 +133,18 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
         {/* Medya Seçimi */}
         <div>
           <label htmlFor="media-upload-input" className="mb-1 block text-xs font-semibold text-slate-600">
-            Fotoğraf Seç (Maks. 15 MB)
+            Fotoğraf veya Kısa Tanıtım Videosu Seç (Fotoğraf: 15 MB · Kısa Video: maks. 30 sn, 25 MB)
           </label>
           <input
             id="media-upload-input"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
             onChange={handleFileChange}
             disabled={isLoading}
             className="w-full cursor-pointer rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-700 transition file:mr-3 file:rounded-md file:border-0 file:bg-violet-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-violet-700 disabled:opacity-50"
           />
           <p className="mt-1 text-[11px] text-slate-500 font-medium">
-            💡 Not: Zigo&apos;da uzun video barındırılmaz. Uzun ders videolarınızı YouTube, Vimeo veya benzeri platformlara yükleyip aşağıdan yönlendirme linki ekleyebilirsiniz.
+            🎬 Kısa tanıtım videoları en fazla 30 saniye (25 MB) olabilir. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısını aşağıya ekleyebilirsiniz.
           </p>
           {mediaFile && (
             <p className="mt-1 text-xs text-emerald-600 font-medium">

@@ -11,15 +11,16 @@ import { Directory,Filesystem } from '@capacitor/filesystem';
 
 import { NativeVideoCompressor } from './capacitor/native-video-compressor';
 
-export const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB üst limit
-export const VIDEO_COMPRESS_THRESHOLD_BYTES = 25 * 1024 * 1024; // 25 MB üzeri videoları sıkıştır
-export const VIDEO_MIN_DURATION_SECONDS = 5;
-export const REEL_MAX_DURATION_SECONDS = 90; // Kısa video / Reel için maksimum 90 saniye
-// Zigo'da uzun video barındırılmaz; uzun ders videoları YouTube veya benzeri platform bağlantısı ile paylaşılır.
-export const LESSON_VIDEO_MAX_DURATION_SECONDS = REEL_MAX_DURATION_SECONDS;
-export const VIDEO_MAX_DURATION_SECONDS = REEL_MAX_DURATION_SECONDS;
+export const VIDEO_MAX_SIZE_BYTES = 25 * 1024 * 1024; // Kısa tanıtım videosu için 25 MB üst limit
+export const VIDEO_COMPRESS_THRESHOLD_BYTES = 12 * 1024 * 1024; // 12 MB üzeri videoları sıkıştır
+export const VIDEO_MIN_DURATION_SECONDS = 2;
+export const SHORT_VIDEO_MAX_DURATION_SECONDS = 30; // Kısa tanıtım videosu için maksimum 30 saniye
+export const REEL_MAX_DURATION_SECONDS = SHORT_VIDEO_MAX_DURATION_SECONDS;
+// Zigo'da uzun video barındırılmaz; uzun ders videoları YouTube, Vimeo veya benzeri platform bağlantısı ile paylaşılır.
+export const LESSON_VIDEO_MAX_DURATION_SECONDS = SHORT_VIDEO_MAX_DURATION_SECONDS;
+export const VIDEO_MAX_DURATION_SECONDS = SHORT_VIDEO_MAX_DURATION_SECONDS;
 
-/** Validate client-side video file size (100 MB max) and duration. */
+/** Validate client-side short promo video file size (25 MB max) and duration (30s max). */
 export async function validateVideoLimits(
   file: File,
   options?: { isReel?: boolean; maxDurationSeconds?: number }
@@ -29,11 +30,11 @@ export async function validateVideoLimits(
   if (file.size > VIDEO_MAX_SIZE_BYTES) {
     return {
       valid: false,
-      error: `Video dosya boyutu 100 MB sınırını aşamaz (${(file.size / (1024 * 1024)).toFixed(1)} MB). Lütfen sıkıştırarak tekrar deneyin.`,
+      error: `Kısa tanıtım videosu en fazla 25 MB olabilir (${(file.size / (1024 * 1024)).toFixed(1)} MB). Daha uzun veya büyük videolar için YouTube, Vimeo vb. link ekleyebilirsiniz.`,
     };
   }
 
-  const maxDuration = options?.maxDurationSeconds ?? REEL_MAX_DURATION_SECONDS;
+  const maxDuration = options?.maxDurationSeconds ?? SHORT_VIDEO_MAX_DURATION_SECONDS;
 
   return new Promise((resolve) => {
     const video = document.createElement("video");
@@ -42,15 +43,14 @@ export async function validateVideoLimits(
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(video.src);
       const duration = video.duration;
-      if (duration > maxDuration) {
-        const limitText = `${maxDuration} saniye`;
+      if (Number.isFinite(duration) && duration > maxDuration) {
         resolve({
           valid: false,
-          error: `Zigo'da uzun video barındırılmaz (maks. ${limitText}). Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.`,
+          error: `Kısa tanıtım videoları en fazla ${maxDuration} saniye olabilir (seçilen video: ${Math.round(duration)} sn). Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.`,
           duration,
         });
       } else {
-        resolve({ valid: true, duration });
+        resolve({ valid: true, duration: Number.isFinite(duration) ? duration : undefined });
       }
     };
 

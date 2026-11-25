@@ -15,6 +15,7 @@ import {
 } from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
+import { uploadSocialMedia } from "@/lib/client/upload-media";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { INDIVIDUAL_GRADE_LEVEL_OPTIONS } from "@/lib/domain/grade-level";
 import { useMessages } from "@/lib/i18n/locale-context";
@@ -115,7 +116,7 @@ export function SocialCreateForm({
     }
   }, [caption, forceReel, mediaTypeValue, selectedAreaId, shareAsReel, targetAudience, targetGrade]);
 
-  function setFilePreview(file?: File) {
+  async function setFilePreview(file?: File) {
     if (preview?.url.startsWith("blob:")) {
       URL.revokeObjectURL(preview.url);
     }
@@ -135,10 +136,25 @@ export function SocialCreateForm({
     }
 
     if (file.type.startsWith("video/")) {
-      setStatus("error");
-      setMessage("Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.");
-      setSelectedFile(null);
-      setPreview(null);
+      setIsValidating(true);
+      const videoVal = await validateVideoLimits(file, { isReel: true });
+      setIsValidating(false);
+      if (!videoVal.valid) {
+        setStatus("error");
+        setMessage(videoVal.error ?? "Kısa tanıtım videosu en fazla 30 saniye ve 25 MB olabilir.");
+        setSelectedFile(null);
+        setPreview(null);
+        return;
+      }
+
+      setSelectedFile(file);
+      setMediaTypeValue("video");
+      setStatus("idle");
+      setMessage("");
+      setPreview({
+        url: URL.createObjectURL(file),
+        type: "video",
+      });
       return;
     }
 
@@ -237,38 +253,18 @@ export function SocialCreateForm({
 
       setStep("uploading");
       setMessage(sc.publishing);
-      const uploadData = new FormData();
-      uploadData.set("file", fileToUpload);
-
-      let uploadResponse: Response;
       try {
-        uploadResponse = await fetchWithRetry("/api/social/upload", {
-          method: "POST",
-          body: uploadData,
-        });
-      } catch {
+        const uploaded = await uploadSocialMedia(fileToUpload);
+        mediaUrl = uploaded.mediaUrl;
+        mediaType = uploaded.mediaType;
+        uploadedObjectPath = uploaded.objectPath;
+      } catch (err) {
         setStatus("error");
         setStep("idle");
-        setMessage(sc.uploadFailed);
+        setMessage(err instanceof Error && err.message ? err.message : sc.uploadFailed);
         isSubmittingRef.current = false;
         return;
       }
-
-      if (!uploadResponse.ok) {
-        const payload = (await uploadResponse.json().catch(() => null)) as { error?: string } | null;
-        setStatus("error");
-        setStep("idle");
-        setMessage(payload?.error ?? sc.uploadError);
-        isSubmittingRef.current = false;
-        return;
-      }
-
-      const payload = (await uploadResponse.json()) as {
-        data: { mediaUrl: string; mediaType: "image" | "video"; objectPath: string };
-      };
-      mediaUrl = payload.data.mediaUrl;
-      mediaType = payload.data.mediaType;
-      uploadedObjectPath = payload.data.objectPath;
     }
 
     setStep("publishing");
@@ -408,7 +404,7 @@ export function SocialCreateForm({
             <span className="mt-1 block text-xs font-bold text-white/70">{sc.chooseMediaHint}</span>
           </span>
           <input
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
             className="sr-only"
             name="file"
             onChange={(event) => {
@@ -430,7 +426,7 @@ export function SocialCreateForm({
               <label className="shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-night shadow-sm hover:bg-slate-100">
                 {sc.change}
                 <input
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
                   className="sr-only"
                   name="file"
                   onChange={(event) => {

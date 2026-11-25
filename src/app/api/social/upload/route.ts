@@ -8,16 +8,22 @@ import { getUserSubscription } from "@/lib/domain/subscription";
 import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
-const ALLOWED_TYPES = new Set([
+const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
+]);
+const ALLOWED_VIDEO_TYPES = new Set([
   "video/mp4",
   "video/webm",
 ]);
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+const ALLOWED_TYPES = new Set([...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES]);
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB (sıkıştırılmış görsel)
+const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB (kısa tanıtım videosu)
+const MAX_VIDEO_DURATION_SECONDS = 30; // 30 saniye kısa tanıtım videosu limiti
+
 const EXTENSION_BY_TYPE = new Map([
   ["image/jpeg", "jpg"],
   ["image/png", "png"],
@@ -26,6 +32,14 @@ const EXTENSION_BY_TYPE = new Map([
   ["video/mp4", "mp4"],
   ["video/webm", "webm"],
 ]);
+
+const signedUploadRequestSchema = z.object({
+  mode: z.literal("signed-url"),
+  contentType: z.string().min(3).max(80),
+  fileSize: z.number().int().positive(),
+  durationSeconds: z.number().nonnegative().optional(),
+});
+
 const cleanupUploadSchema = z.object({
   objectPath: z.string().min(3).max(500),
 });
@@ -95,7 +109,7 @@ export async function POST(request: Request) {
     }
 
     // A carousel may contain up to 10 assets. Keep a meaningful abuse guard while
-    // allowing two daily posts plus normal retries or a replacement upload.
+    // allowing daily posts plus normal retries or a replacement upload.
     const rateLimit = await checkRateLimitAsync(`social-upload:v2:${profile.id}`, 60, 60 * 60_000);
     if (!rateLimit.allowed) {
       return NextResponse.json(
@@ -104,6 +118,86 @@ export async function POST(request: Request) {
       );
     }
 
+    const contentTypeHeader = request.headers.get("content-type") ?? "";
+
+    // ── Mode A: Direct-to-Storage Signed Upload URL (for short promo videos > 3.5 MB) ──
+    if (contentTypeHeader.includes("application/json")) {
+      const parsed = signedUploadRequestSchema.safeParse(await request.json());
+      if (!parsed.success) {
+        return NextResponse.json({ error: "Geçersiz yükleme isteği." }, { status: 400 });
+      }
+
+      const { contentType, fileSize, durationSeconds } = parsed.data;
+      if (!ALLOWED_VIDEO_TYPES.has(contentType)) {
+        return NextResponse.json(
+          { error: "Kısa tanıtım videoları için yalnızca MP4 veya WEBM formatı desteklenir." },
+          { status: 400 },
+        );
+      }
+
+      if (fileSize > MAX_VIDEO_SIZE_BYTES) {
+        return NextResponse.json(
+          {
+            error: "Kısa tanıtım videosu boyutu en fazla 25 MB olabilir. Uzun videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (typeof durationSeconds === "number" && durationSeconds > MAX_VIDEO_DURATION_SECONDS) {
+        return NextResponse.json(
+          {
+            error: `Kısa tanıtım videoları en fazla ${MAX_VIDEO_DURATION_SECONDS} saniye olabilir. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      const extension = EXTENSION_BY_TYPE.get(contentType) ?? "mp4";
+      const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
+
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from("social-media")
+        .createSignedUploadUrl(objectPath);
+
+      if (signedError || !signedData?.signedUrl) {
+        return NextResponse.json(
+          { error: signedError?.message ?? "Video yükleme bağlantısı oluşturulamadı. Lütfen tekrar deneyin." },
+          { status: 400 },
+        );
+      }
+
+      const lifecycle = supabase as unknown as {
+        from: (table: "media_uploads") => {
+          insert: (value: Record<string, unknown>) => Promise<{ error: { message?: string } | null }>;
+        };
+      };
+      const { error: lifecycleError } = await lifecycle.from("media_uploads").insert({
+        owner_id: profile.id,
+        object_path: objectPath,
+        media_type: "video",
+        byte_size: fileSize,
+      });
+
+      if (lifecycleError) {
+        return NextResponse.json(
+          { error: "Medya kaydı oluşturulamadı. Lütfen tekrar deneyin." },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({
+        data: {
+          signedUrl: signedData.signedUrl,
+          token: signedData.token,
+          mediaUrl: `/api/social/media?path=${encodeURIComponent(objectPath)}`,
+          mediaType: "video" as const,
+          objectPath,
+        },
+      });
+    }
+
+    // ── Mode B: Multipart FormData Upload (images + small short promo videos) ──
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -113,21 +207,35 @@ export async function POST(request: Request) {
 
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: "Desteklenmeyen dosya türü. Lütfen JPG, PNG, WEBP veya GIF seçin. Uzun videolar için YouTube veya benzeri platform bağlantısı ekleyebilirsiniz." },
+        {
+          error: "Desteklenmeyen dosya türü. Fotoğraf (JPG, PNG, WEBP, GIF) veya kısa tanıtım videosu (MP4, WEBM · maks. 30 sn) yükleyebilirsiniz.",
+        },
         { status: 400 },
       );
     }
 
-    const isVideo = file.type.startsWith("video/");
+    const isVideo = ALLOWED_VIDEO_TYPES.has(file.type);
     if (isVideo) {
-      return NextResponse.json(
-        { error: "Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platformların bağlantısını gönderinize ekleyebilirsiniz." },
-        { status: 400 },
-      );
-    }
+      const durationRaw = formData.get("durationSeconds");
+      const durationSeconds = typeof durationRaw === "string" ? Number(durationRaw) : NaN;
+      if (Number.isFinite(durationSeconds) && durationSeconds > MAX_VIDEO_DURATION_SECONDS) {
+        return NextResponse.json(
+          {
+            error: `Kısa tanıtım videoları en fazla ${MAX_VIDEO_DURATION_SECONDS} saniye olabilir. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.`,
+          },
+          { status: 400 },
+        );
+      }
 
-    const maxBytes = MAX_IMAGE_SIZE_BYTES;
-    if (file.size > maxBytes) {
+      if (file.size > MAX_VIDEO_SIZE_BYTES) {
+        return NextResponse.json(
+          {
+            error: "Kısa tanıtım videosu boyutu en fazla 25 MB olabilir. Uzun videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.",
+          },
+          { status: 400 },
+        );
+      }
+    } else if (file.size > MAX_IMAGE_SIZE_BYTES) {
       return NextResponse.json({ error: "Görsel boyutu en fazla 5 MB olabilir." }, { status: 400 });
     }
 
@@ -137,11 +245,10 @@ export async function POST(request: Request) {
 
     const extension = EXTENSION_BY_TYPE.get(file.type) ?? "bin";
     const objectPath = `${profile.id}/${randomUUID()}.${extension}`;
-    const mediaType = file.type.startsWith("video/") ? "video" : "image";
+    const mediaType = isVideo ? "video" : "image";
 
     let mediaUrl = "";
 
-    // 1. Try uploading to 'social-media' storage bucket
     const { error: primaryError } = await supabase.storage.from("social-media").upload(objectPath, file, {
       contentType: file.type,
       upsert: false,
@@ -201,7 +308,7 @@ export async function DELETE(request: Request) {
     }
 
     if (profile.account_status === "closed" || profile.account_status === "suspended") {
-      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya silebilir." }, { status: 403 });
+      return NextResponse.json({ error: "Kısıtlanmış veya kapatılmış hesaplar medya silemez." }, { status: 403 });
     }
 
     const body = cleanupUploadSchema.parse(await request.json());

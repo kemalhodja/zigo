@@ -26,8 +26,9 @@ import { classifyExternalLink } from "@/lib/domain/social/link-helper";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-// Zigo'da uzun video barındırılmaz; uzun ders videoları YouTube, Vimeo veya benzeri platform bağlantısı ile yönlendirilir.
-export const ENABLE_DIRECT_VIDEO_UPLOAD = false;
+// Kullanıcılar fotoğraf ve en fazla 30 saniyelik kısa tanıtım videosu paylaşabilir.
+// Uzun ders videoları Zigo'da barındırılmaz; YouTube, Vimeo veya benzeri platform bağlantısı ile yönlendirilir.
+export const ENABLE_DIRECT_VIDEO_UPLOAD = true;
 const POST_WIZARD_DRAFT_KEY = "zigo:post-wizard-draft";
 
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -68,7 +69,7 @@ export function PostWizard({
 
   // ── Media state ──────────────────────────────────────────────────────
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<{ url: string; type: "image" | "video" }[]>([]);
+  const [previews, setPreviews] = useState<{ url: string; type: "image" | "video"; durationSeconds?: number }[]>([]);
   const [isValidatingMedia, setIsValidatingMedia] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
 
@@ -166,30 +167,37 @@ export function PostWizard({
     setMediaError(null);
 
     const validFiles: File[] = [];
-    const newPreviews: { url: string; type: "image" | "video" }[] = [];
+    const newPreviews: { url: string; type: "image" | "video"; durationSeconds?: number }[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (!ENABLE_DIRECT_VIDEO_UPLOAD && file.type.startsWith("video/")) {
         setMediaError(
-          "Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için aşağıdan YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz."
+          "Doğrudan video yükleme kapalıdır. Uzun ders videolarınız için aşağıdan YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz."
         );
         return;
       }
 
       if (!ALLOWED_TYPES.has(file.type)) {
-        setMediaError("Desteklenmeyen dosya türü tespit edildi. Lütfen sadece JPG, PNG, WEBP veya GIF seçin.");
+        setMediaError(
+          "Desteklenmeyen dosya türü tespit edildi. Lütfen fotoğraf (JPG, PNG, WEBP, GIF) veya kısa tanıtım videosu (MP4, WEBM) seçin."
+        );
         return;
       }
 
+      let durationSeconds: number | undefined;
       if (file.type.startsWith("video/")) {
         setIsValidatingMedia(true);
-        const result = await validateVideoLimits(file);
+        const result = await validateVideoLimits(file, { isReel: true });
         setIsValidatingMedia(false);
         if (!result.valid) {
-          setMediaError(result.error ?? "Video geçersiz.");
+          if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+            navigator.vibrate([30, 40, 30]);
+          }
+          setMediaError(result.error ?? "Kısa tanıtım videosu en fazla 30 saniye ve 25 MB olabilir.");
           return;
         }
+        durationSeconds = result.duration;
       } else {
         const result = validateImageLimits(file);
         if (!result.valid) {
@@ -199,7 +207,11 @@ export function PostWizard({
       }
 
       validFiles.push(file);
-      newPreviews.push({ url: URL.createObjectURL(file), type: file.type.startsWith("video/") ? "video" : "image" });
+      newPreviews.push({
+        url: URL.createObjectURL(file),
+        type: file.type.startsWith("video/") ? "video" : "image",
+        durationSeconds,
+      });
     }
 
     setSelectedFiles(validFiles);
@@ -296,7 +308,7 @@ export function PostWizard({
 
 type MediaPickerStepProps = {
   forceReel: boolean;
-  previews: { url: string; type: "image" | "video" }[];
+  previews: { url: string; type: "image" | "video"; durationSeconds?: number }[];
   isValidating: boolean;
   mediaError: string | null;
   externalUrl: string;
@@ -332,12 +344,19 @@ function MediaPickerStep({
       {hasMedia ? (
         <div className="relative bg-black">
           {isVideo ? (
-            <video
-              className="max-h-[22rem] w-full object-contain"
-              src={previews[0].url}
-              controls
-              playsInline
-            />
+            <div className="relative">
+              <video
+                className="max-h-[22rem] w-full object-contain"
+                src={previews[0].url}
+                controls
+                playsInline
+              />
+              {typeof previews[0].durationSeconds === "number" && (
+                <div className="absolute top-3 left-3 rounded-lg bg-black/70 px-2.5 py-1 text-xs font-black text-white backdrop-blur-sm">
+                  🎬 Kısa Tanıtım · {Math.round(previews[0].durationSeconds)} sn / 30 sn
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar">
               {previews.map((p, idx) => (
@@ -383,7 +402,7 @@ function MediaPickerStep({
         /* Empty picker */
         <label
           className="flex min-h-64 cursor-pointer flex-col items-center justify-center gap-4 bg-gradient-to-br from-night via-violet-900 to-crystal p-6 text-white transition-opacity hover:opacity-95"
-          aria-label="Fotoğraf seç"
+          aria-label="Fotoğraf veya kısa tanıtım videosu seç"
         >
           {isValidating ? (
             <>
@@ -393,18 +412,22 @@ function MediaPickerStep({
           ) : (
             <>
               <span className="flex size-16 items-center justify-center rounded-2xl border-2 border-white/30 bg-white/10 text-3xl backdrop-blur">
-                📸
+                {forceReel ? "🎬" : "📸"}
               </span>
               <div className="text-center">
                 <p className="text-base font-black">
-                  Fotoğraf Seç (Çoklu eklenebilir)
+                  {forceReel
+                    ? "Kısa Tanıtım Videosu Seç (Maks. 30 sn)"
+                    : "Fotoğraf veya Kısa Tanıtım Videosu Seç"}
                 </p>
                 <p className="mt-1 text-xs font-bold text-white/75">
-                  JPG · PNG · WEBP · GIF · Maks 15 MB
+                  {forceReel
+                    ? "MP4 · WEBM · Maks. 30 saniye · Maks. 25 MB"
+                    : "Fotoğraf (JPG, PNG, WEBP, GIF) · Kısa Video (MP4/WEBM · Maks. 30 sn, 25 MB)"}
                 </p>
                 <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-xs">
-                  <span>🎬</span>
-                  <span>Zigo&apos;da uzun video barındırılmaz. Aşağıdan YouTube, Vimeo veya benzeri video linki ekleyerek yönlendirme yapabilirsiniz.</span>
+                  <span>🔗</span>
+                  <span>30 sn üzeri uzun ders videoları için aşağıdan YouTube, Vimeo vb. link ekleyebilirsiniz.</span>
                 </div>
               </div>
             </>
@@ -414,7 +437,7 @@ function MediaPickerStep({
             type="file"
             className="sr-only"
             accept={accept}
-            multiple
+            multiple={!forceReel}
             onChange={(e) => onFilesSelect(e.target.files)}
           />
         </label>

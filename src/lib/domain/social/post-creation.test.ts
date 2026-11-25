@@ -116,24 +116,28 @@ describe("Detailed Post Creation Pipeline & Schema Tests", () => {
     expect(validPrep.premiumPrepUrl).toBe("https://zigo.app/prep/math-exam-1.pdf");
   });
 
-  it("9. Correctly evaluates media limits (Video 100MB, Image Server 5MB, Client Input 15MB, Compress Threshold 25MB)", () => {
-    const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+  it("9. Correctly evaluates short promo video & image limits (Video 25MB / 30s, Compress 12MB, Image Server 5MB, Client 15MB)", () => {
+    const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB (kısa tanıtım videosu)
+    const MAX_VIDEO_DURATION_SECONDS = 30; // 30 sn (kısa tanıtım videosu)
     const MAX_IMAGE_SERVER_BYTES = 5 * 1024 * 1024; // 5 MB
     const MAX_IMAGE_INPUT_BYTES = 15 * 1024 * 1024; // 15 MB
-    const VIDEO_COMPRESS_THRESHOLD_BYTES = 25 * 1024 * 1024; // 25 MB
+    const VIDEO_COMPRESS_THRESHOLD_BYTES = 12 * 1024 * 1024; // 12 MB
 
-    // Video tests
-    const validVideo = 95 * 1024 * 1024; // 95 MB
+    // Short promo video tests
+    const validVideo = 20 * 1024 * 1024; // 20 MB
     expect(validVideo <= MAX_VIDEO_SIZE_BYTES).toBe(true);
 
-    const overVideo = 105 * 1024 * 1024; // 105 MB
+    const overVideo = 30 * 1024 * 1024; // 30 MB
     expect(overVideo > MAX_VIDEO_SIZE_BYTES).toBe(true);
 
+    expect(25 <= MAX_VIDEO_DURATION_SECONDS).toBe(true);
+    expect(45 > MAX_VIDEO_DURATION_SECONDS).toBe(true);
+
     // Video compression trigger
-    const needsCompressionVideo = 30 * 1024 * 1024; // 30 MB
+    const needsCompressionVideo = 18 * 1024 * 1024; // 18 MB
     expect(needsCompressionVideo > VIDEO_COMPRESS_THRESHOLD_BYTES).toBe(true);
 
-    const smallVideo = 15 * 1024 * 1024; // 15 MB
+    const smallVideo = 8 * 1024 * 1024; // 8 MB
     expect(smallVideo > VIDEO_COMPRESS_THRESHOLD_BYTES).toBe(false);
 
     // Image server & client limits

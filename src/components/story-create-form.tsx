@@ -7,6 +7,7 @@ import { SocialMediaFrame } from "@/components/social-media-frame";
 import { compressImage, validateImageLimits } from "@/lib/client/compress-image";
 import { validateVideoLimits } from "@/lib/client/compress-video";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
+import { uploadSocialMedia } from "@/lib/client/upload-media";
 import { displayEducationAreaName } from "@/lib/domain/education-catalog";
 import { useMessages } from "@/lib/i18n/locale-context";
 import type { Messages } from "@/lib/i18n/types";
@@ -33,6 +34,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
   const [message, setMessage] = useState(s.expiresNote);
   const [preview, setPreview] = useState<{ url: string; type: "image" | "video" } | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     try {
@@ -81,11 +83,18 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
     }
 
     if (file.type.startsWith("video/")) {
-      setStatus("error");
-      setMessage("Zigo'da doğrudan video yükleme desteklenmez. Hikaye için lütfen görsel seçin; uzun videolarınızı gönderi olarak YouTube veya benzeri platform bağlantısıyla paylaşabilirsiniz.");
-      setPreview(null);
-      setSelectedFile(null);
-      return;
+      const videoVal = await validateVideoLimits(file, { isReel: true });
+      if (!videoVal.valid) {
+        setStatus("error");
+        setMessage(videoVal.error ?? "Kısa tanıtım videosu en fazla 30 saniye ve 25 MB olabilir.");
+        setPreview(null);
+        setSelectedFile(null);
+        setVideoDurationSeconds(undefined);
+        return;
+      }
+      setVideoDurationSeconds(videoVal.duration);
+    } else {
+      setVideoDurationSeconds(undefined);
     }
 
     if (file.type.startsWith("image/")) {
@@ -123,33 +132,18 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
           fileToUpload = await compressImage(fileToUpload);
         }
 
-        const uploadData = new FormData();
-        uploadData.set("file", fileToUpload);
-
-        let uploadResponse: Response;
         try {
-          uploadResponse = await fetch("/api/social/upload", {
-            method: "POST",
-            body: uploadData,
+          const uploaded = await uploadSocialMedia(fileToUpload, {
+            durationSeconds: videoDurationSeconds,
           });
-        } catch {
+          mediaUrl = uploaded.mediaUrl;
+          uploadedObjectPath = uploaded.objectPath;
+        } catch (err) {
           setStatus("error");
           setStep("idle");
-          setMessage(sc.uploadFailed);
+          setMessage(err instanceof Error && err.message ? err.message : sc.uploadFailed);
           return;
         }
-
-        if (!uploadResponse.ok) {
-          const payload = (await uploadResponse.json().catch(() => null)) as { error?: string } | null;
-          setStatus("error");
-          setStep("idle");
-          setMessage(payload?.error ?? sc.uploadError);
-          return;
-        }
-
-        const payload = (await uploadResponse.json()) as { data: { mediaUrl: string; objectPath: string } };
-        mediaUrl = payload.data.mediaUrl;
-        uploadedObjectPath = payload.data.objectPath;
     }
 
     setStep("publishing");
@@ -232,7 +226,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
             <span className="mt-1 block text-xs font-bold text-white/70">{s.aspectHint}</span>
           </span>
           <input
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
             className="sr-only"
             name="file"
             onChange={(event) => {

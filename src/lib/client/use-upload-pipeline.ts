@@ -25,6 +25,7 @@ import {
 } from "@/lib/client/compress-video";
 import { fetchWithRetry } from "@/lib/client/fetch-with-retry";
 import { cleanupUploadedMedia } from "@/lib/client/media-cleanup";
+import { uploadSocialMedia } from "@/lib/client/upload-media";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -135,18 +136,21 @@ export function useUploadPipeline() {
           fileToUpload = await compressImage(fileToUpload);
         }
 
+        let videoDurationSeconds: number | undefined;
+
         // ── Validate & Compress Videos ─────────────────────────────────────
         if (fileToUpload.type.startsWith("video/")) {
           const videoValidation = await validateVideoLimits(fileToUpload, { isReel: input.isReel });
           if (!videoValidation.valid) {
             console.error(`[POST_PIPELINE] Video validation failed for file ${i + 1}:`, videoValidation.error);
             setPhase("error");
-            setError(videoValidation.error ?? `Video ${i + 1} doğrulanamadı. Lütfen farklı bir video seçin.`);
+            setError(videoValidation.error ?? `Video ${i + 1} doğrulanamadı. Lütfen en fazla 30 saniyelik bir tanıtım videosu seçin.`);
             runningRef.current = false;
             return;
           }
+          videoDurationSeconds = videoValidation.duration;
 
-          // Compress large videos (> 25 MB) before upload
+          // Compress larger short videos (> 12 MB) before upload
           if (fileToUpload.size > VIDEO_COMPRESS_THRESHOLD_BYTES) {
             setPhase("compressing");
             setProgress(10 + (i * 20)); // Approximate progress
@@ -171,7 +175,7 @@ export function useUploadPipeline() {
                 setPhase("error");
                 setError(
                   `Video sıkıştırıldıktan sonra hâlâ ${Math.round(fileToUpload.size / 1024 / 1024)} MB. ` +
-                  "Lütfen daha kısa veya düşük çözünürlüklü bir video seçin.",
+                  "Kısa tanıtım videoları en fazla 25 MB olabilir; uzun videolar için YouTube veya Vimeo linki ekleyebilirsiniz.",
                 );
                 runningRef.current = false;
                 return;
@@ -197,39 +201,23 @@ export function useUploadPipeline() {
         setMessage(isCarousel ? `Medya ${i + 1}/${input.files.length} yükleniyor…` : "Medya yükleniyor…");
 
         let currentMediaUrl = "";
-        {
-          const uploadData = new FormData();
-          uploadData.set("file", fileToUpload);
-
-          let uploadRes: Response;
-          try {
-            uploadRes = await fetchWithRetry("/api/social/upload", {
-              method: "POST",
-              body: uploadData,
-            });
-          } catch (err) {
-            console.error("[POST_PIPELINE_UPLOAD_ERROR] Network error during upload:", err);
-            setPhase("error");
-            setError("Yükleme başarısız oldu. Bağlantınızı kontrol edip tekrar deneyin.");
-            runningRef.current = false;
-            return;
-          }
-
-          if (!uploadRes.ok) {
-            const body = (await uploadRes.json().catch(() => null)) as { error?: string } | null;
-            console.error("[POST_PIPELINE_UPLOAD_FAILED] HTTP", uploadRes.status, body);
-            setPhase("error");
-            setError(body?.error ?? "Medya yüklenemedi. Lütfen tekrar deneyin.");
-            runningRef.current = false;
-            return;
-          }
-
-          const uploadBody = (await uploadRes.json()) as {
-            data: { mediaUrl: string; mediaType: "image" | "video"; objectPath: string };
-          };
-          currentMediaUrl = uploadBody.data.mediaUrl;
-          mediaType = uploadBody.data.mediaType;
-          uploadedObjectPaths.push(uploadBody.data.objectPath);
+        try {
+          const uploaded = await uploadSocialMedia(fileToUpload, {
+            durationSeconds: videoDurationSeconds,
+          });
+          currentMediaUrl = uploaded.mediaUrl;
+          mediaType = uploaded.mediaType;
+          uploadedObjectPaths.push(uploaded.objectPath);
+        } catch (err) {
+          console.error("[POST_PIPELINE_UPLOAD_FAILED]", err);
+          setPhase("error");
+          setError(
+            err instanceof Error && err.message
+              ? err.message
+              : "Medya yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+          );
+          runningRef.current = false;
+          return;
         }
         
         uploadedUrls.push(currentMediaUrl);
