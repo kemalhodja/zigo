@@ -12,6 +12,7 @@ import {
   purchaseGooglePlaySubscription,
   restoreGooglePlayPurchases,
 } from "@/lib/client/google-play-billing";
+import { buildWhatsAppSupportUrl } from "@/lib/domain/support-contact";
 import { createClient } from "@/lib/supabase/client";
 
 const ROLE_PLANS = {
@@ -915,7 +916,24 @@ export default function PricingPage() {
             Reklam yok. Veri satılmaz. Güvenli öğrenme.
           </p>
           <p className="text-xs font-bold text-slate-400">
-            Tüm fiyatlar KDV dahildir. Kurumsal toplu lisanslar için <a href="https://wa.me/905550000000" className="text-crystal hover:underline">WhatsApp</a> ile iletişime geçin.
+            Tüm fiyatlar KDV dahildir. Kurumsal toplu lisanslar için{" "}
+            <a
+              href={
+                buildWhatsAppSupportUrl(
+                  "Merhaba, Zigo kurumsal toplu lisans paketleri hakkında bilgi almak istiyorum.",
+                ) ?? "mailto:destek@zigo.com.tr"
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-crystal hover:underline"
+            >
+              WhatsApp
+            </a>{" "}
+            veya{" "}
+            <a href="mailto:destek@zigo.com.tr" className="text-crystal hover:underline">
+              destek@zigo.com.tr
+            </a>{" "}
+            ile iletişime geçin.
           </p>
         </div>
       </main>

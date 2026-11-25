@@ -34,6 +34,13 @@ export function JsonLd() {
     inLanguage: "tr-TR",
   };
 
+  const verifiedSocialLinks = [
+    GOOGLE_PLAY_STORE_URL,
+    process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM?.trim(),
+    process.env.NEXT_PUBLIC_SOCIAL_TWITTER?.trim(),
+    process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE?.trim(),
+  ].filter((url): url is string => Boolean(url && /^https?:\/\//i.test(url)));
+
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
@@ -43,11 +50,7 @@ export function JsonLd() {
     image: `${SITE_URL}/og-image.jpg`,
     description:
       "Öğrenciler, öğretmenler ve veliler için güvenli, oyunlaştırılmış ve doğrulanmış eğitim platformu.",
-    sameAs: [
-      "https://www.instagram.com/zigoapp",
-      "https://twitter.com/zigoapp",
-      "https://www.youtube.com/@zigoapp",
-    ],
+    sameAs: verifiedSocialLinks,
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",

@@ -50,6 +50,21 @@ export async function POST(request: Request) {
 
     const { topic, grade, count, format } = parsed.data;
     const subscription = await getUserSubscription(supabase, profile.id);
+    const dailyQuota = subscription.isPremium ? 50 : 10;
+    const dailyLimit = await checkRateLimitAsync(
+      `ai-questions:daily:${profile.id}`,
+      dailyQuota,
+      86_400_000,
+    );
+    if (!dailyLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `Günlük AI soru üretme kotana (${dailyQuota} istek) ulaştın. Yarın tekrar deneyebilirsin.`,
+          code: "DAILY_QUOTA_EXCEEDED",
+        },
+        { status: 429, headers: { "Retry-After": String(dailyLimit.retryAfterSeconds) } },
+      );
+    }
     const effectiveCount = subscription.isPremium ? count : Math.min(count, 5);
     const optCount = OPTION_COUNT[format] ?? 4;
     const isTF = format === "true_false";

@@ -25,7 +25,7 @@ import { useEffect, useState } from "react";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
-import { GOOGLE_PLAY_STORE_URL } from "@/components/google-play-badge";
+import { APP_VERSION, GOOGLE_PLAY_STORE_URL } from "@/lib/app-links";
 
 type DesktopSidebarProps = {
   canCreateSocialPost?: boolean;
@@ -351,7 +351,7 @@ export function DesktopSidebar({
           )}
 
           <div className="px-2 flex items-center justify-between text-[11px] font-bold text-slate-400">
-            <span>Zigo v1.3.5</span>
+            <span>Zigo v{APP_VERSION}</span>
             <div className="flex items-center gap-1.5">
               <a
                 href={GOOGLE_PLAY_STORE_URL}

@@ -13,13 +13,33 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <LegalLayout title="Kullanım Şartları">
-      <p>Zigo; öğretmen, veli ve öğrenciler için bir eğitim platformudur. Doğrulanmış öğretmenler atanan eğitim alanlarında içerik yayınlar. Öğrenci ve veliler eşleşen içeriği tüketir; bağımsız gönderi paylaşamaz.</p>
-      <p>Hesap bilgileri doğru olmalıdır. Taciz, öğrencilerin platform dışı iletişim girişimleri ve doğrulanmamış yayın yasaktır. Zigo Plus abonelikleri Stripe üzerinden iptal edilene kadar aylık yenilenir.</p>
-      <p>Beta sürecinde hizmet olduğu gibi sunulur. Kritik güvenlik sorunlarını uygulama içi bildirimle iletin.</p>
+      <p>
+        Zigo; öğrenci, veli, öğretmen, eğitim kurumu, eğitim platformu ve yayınevi rollerine özel olarak tasarlanmış
+        reklamsız bir eğitim platformudur. Öğretmen, kurum, platform ve yayınevi hesapları eğitim alanlarında kamuya
+        açık içerik üretebilir (abonesiz günde en fazla 1 gönderi, Zigo Plus aboneliğiyle sınırsız). Zigo Plus abonesi
+        öğrenci ve veliler ise günde en fazla 2 gönderi paylaşabilir; bu gönderiler Keşfet&apos;e düşmez ve yalnızca
+        karşılıklı takipleşen kişilerin ana sayfasında görünür.
+      </p>
+      <p>
+        Hesap bilgileri doğru olmalıdır. Taciz, öğrencilerin platform dışı iletişim girişimleri, spam ve telif hakkı
+        ihlali yasaktır. Öğretmenler kayıttan itibaren ilk 30 gün, öğrenci ve veliler ise ilk 7 gün tam özellikli
+        ücretsiz deneme hakkına sahiptir. Zigo Plus abonelikleri Android uygulamasında Google Play üzerinden, web
+        sürümünde ise EFT / Havale / FAST veya aktif ödeme yöntemleriyle yönetilir.
+      </p>
+      <p>
+        Kritik güvenlik veya içerik ihlallerini uygulama içi bildirimle ya da destek@zigo.com.tr üzerinden iletebilirsiniz.
+      </p>
 
-      <h2 className="pt-2 text-base font-black text-night">Öğrenci güvenliği</h2>
-      <p>Öğrenciler birbirine doğrudan mesaj gönderemez. Yorumlar ve açık metinler moderasyondan geçer. Uygunsuz içerik bildirimi uygulama içinden yapılabilir. Öğretmenler yalnızca doğrulanmış ve atanmış eğitim alanlarında yayın yapabilir.</p>
-      <p>Sponsorlu eğitim içerikleri açık şekilde etiketlenir; üçüncü taraf reklam ağı kullanılmaz. Veliler bağlı öğrenci profili ve ödül onaylarından sorumludur.</p>
+      <h2 className="pt-2 text-base font-black text-night">Öğrenci güvenliği ve oyun kuralları</h2>
+      <p>
+        Öğrenciler birbirine doğrudan mesaj gönderemez. Yorumlar ve açık metinler otomatik güvenlik filtrelerinden
+        geçer. Zeka oyunları salonuna yalnızca Zigo Plus aboneleri erişebilir; abone öğrenciler günde en fazla 2 saat
+        (120 dakika) ve yalnızca 08:00–22:00 saatleri arasında oyun oynayabilir (22:00–08:00 gece dinlenme kuralı).
+      </p>
+      <p>
+        Platformda üçüncü taraf reklam ağı (AdMob vb.) kullanılmaz. Gönderilerde paylaşılan dış bağlantılara yalnızca
+        Zigo Plus aboneleri erişebilir. Veliler bağlı öğrenci profili ve ödül onaylarından sorumludur.
+      </p>
     </LegalLayout>
   );
 }

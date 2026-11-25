@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getLearningProgressStats } from "@/lib/domain/learning";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 // Comprehensive AI advice catalog categorized by focus area
@@ -77,7 +78,7 @@ function buildRealUserDataAnalysis(userName: string, stats: { reelWatches: numbe
     return `⚔️ ${userName ? userName + ", " : ""}Düello Analizin: ${duelWins} yarış kazandın! Hızlı düşünme kabiliyetin yüksek. Bu ivmeyle günlük quizlerin tamamını çözmeyi hedefle!`;
   }
 
-  return `🚀 ${userName ? userName + ", " : ""}Öğrenme Rrotan: Henüz kayıtlı ders ve quiz verin az. İlk adımı atmak için bugün 1 mikro ders izle ve ardından 1 mini quiz çözerek kişisel AI analizini başlat!`;
+  return `🚀 ${userName ? userName + ", " : ""}Öğrenme Rotan: Henüz kayıtlı ders ve quiz verin az. İlk adımı atmak için bugün 1 mikro ders izle ve ardından 1 mini quiz çözerek kişisel AI analizini başlat!`;
 }
 
 export async function GET() {
@@ -136,6 +137,15 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
+    const rateLimit = await checkRateLimitAsync(`ai-mentor:${ip}`, 30, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık istek gönderdin. Lütfen biraz bekle.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
+
     const body = (await request.json().catch(() => ({}))) as { topic?: string };
     const topic = body.topic?.trim() || "general";
 

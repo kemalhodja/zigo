@@ -10,6 +10,7 @@ import {
   type PlanContext,
 } from "@/lib/domain/study-plan";
 import { captureServerEvent } from "@/lib/server/analytics";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const telemetrySchema = z
@@ -25,6 +26,22 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`ai-study-plan:${profile.id}`, 5, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çalışma planı oluşturma limitine ulaştın. Biraz sonra tekrar dene.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
+    }
+
+    const dailyLimit = await checkRateLimitAsync(`ai-study-plan:daily:${profile.id}`, 15, 86_400_000);
+    if (!dailyLimit.allowed) {
+      return NextResponse.json(
+        { error: "Günlük AI çalışma planı kotana ulaştın. Yarın tekrar oluşturabilirsin.", code: "DAILY_QUOTA_EXCEEDED" },
+        { status: 429, headers: { "Retry-After": String(dailyLimit.retryAfterSeconds) } },
+      );
     }
 
     // Telemetry pass 1: weekly focus minutes (north-star data).

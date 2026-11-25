@@ -32,6 +32,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const dailyLimit = await checkRateLimitAsync(`ai-chat:daily:${profile.id}`, 60, 86_400_000);
+    if (!dailyLimit.allowed) {
+      return NextResponse.json(
+        { error: "Günlük AI sohbet kotana ulaştın. Yarın tekrar devam edebilirsin.", code: "DAILY_QUOTA_EXCEEDED" },
+        { status: 429, headers: { "Retry-After": String(dailyLimit.retryAfterSeconds) } },
+      );
+    }
+
     const parsed = chatRequestSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
       return NextResponse.json({ error: "Mesajlar geçersiz veya çok uzun." }, { status: 400 });
