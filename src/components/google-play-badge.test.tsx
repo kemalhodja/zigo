@@ -12,11 +12,11 @@ describe("GooglePlayBadge component", () => {
     expect(html).toContain("Google Play");
   });
 
-  it("renders custom subText and compact variant", () => {
+  it("renders with custom size and class", () => {
     const html = renderToStaticMarkup(
-      <GooglePlayBadge variant="compact" subText="Android için İndir" />,
+      <GooglePlayBadge size="lg" className="my-custom-badge" />,
     );
-    expect(html).toContain("Android için İndir");
+    expect(html).toContain("my-custom-badge");
     expect(html).toContain("Google Play");
     expect(html).toContain(GOOGLE_PLAY_STORE_URL);
   });

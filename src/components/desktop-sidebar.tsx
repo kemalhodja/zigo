@@ -25,7 +25,7 @@ import { useEffect, useState } from "react";
 import type { ViewerRole } from "@/lib/domain/role-theme";
 import { useMessages } from "@/lib/i18n/locale-context";
 import { ZIGO_PATHS } from "@/lib/zigo-vocabulary";
-import { GooglePlayBadge } from "@/components/google-play-badge";
+import { GOOGLE_PLAY_STORE_URL } from "@/components/google-play-badge";
 
 type DesktopSidebarProps = {
   canCreateSocialPost?: boolean;
@@ -350,13 +350,19 @@ export function DesktopSidebar({
             </button>
           )}
 
-          <div className="pt-0.5">
-            <GooglePlayBadge variant="compact" className="w-full justify-center" />
-          </div>
-
           <div className="px-2 flex items-center justify-between text-[11px] font-bold text-slate-400">
             <span>Zigo v1.3.5</span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-1.5">
+              <a
+                href={GOOGLE_PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-indigo-600 transition"
+                title="Google Play Store Android Uygulaması"
+              >
+                Android
+              </a>
+              <span>·</span>
               <Link href="/legal/terms" className="hover:text-slate-600">Koşullar</Link>
               <span>·</span>
               <Link href="/legal/privacy" className="hover:text-slate-600">Gizlilik</Link>

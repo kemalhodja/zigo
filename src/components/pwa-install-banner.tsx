@@ -164,11 +164,12 @@ export function PwaInstallBanner() {
 
   const isIos = platform === "ios";
   const isDesktop = platform === "desktop";
+  const isAndroid = platform === "android";
 
   return (
     <div
       role="dialog"
-      aria-label="Zigo kısayolunu indir"
+      aria-label="Zigo uygulamasını edin"
       className="fixed bottom-20 inset-x-3 z-[60] mx-auto max-w-sm sm:bottom-6 sm:right-6 sm:left-auto sm:mx-0"
     >
       <div className="relative overflow-hidden rounded-3xl border border-amber-400/30 bg-slate-950/95 shadow-2xl shadow-black/50 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-6 duration-500">
@@ -184,17 +185,21 @@ export function PwaInstallBanner() {
             </div>
             <div>
               <div className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-300 mb-0.5">
-                <span>⚡ Hızlı Erişim Kısayolu</span>
+                <span>{isAndroid ? "⭐ Google Play Store" : "⚡ Hızlı Erişim"}</span>
               </div>
               <p className="text-sm font-black text-white leading-tight">
-                {isDesktop ? "Zigo Kısayolunu Masaüstüne İndir" : "Zigo Kısayolunu Ana Ekrana İndir"}
+                {isAndroid
+                  ? "Zigo Android Uygulaması"
+                  : isDesktop
+                    ? "Zigo Kısayolunu Masaüstüne İndir"
+                    : "Zigo Kısayolunu Ana Ekrana İndir"}
               </p>
               <p className="text-[11px] font-medium text-slate-300 mt-0.5">
-                {isIos
-                  ? "Ana ekrana ekleyerek uygulama gibi tek tıkla aç"
-                  : isDesktop
-                    ? "Masaüstünden tek tıkla tam ekran uygulama olarak aç"
-                    : "Ana ekrana kısayol ekle, anında aç"}
+                {isAndroid
+                  ? "Google Play'den ücretsiz yükleyin, tam ekran deneyimleyin"
+                  : isIos
+                    ? "Ana ekrana ekleyerek uygulama gibi tek tıkla aç"
+                    : "Masaüstünden tek tıkla tam ekran uygulama olarak aç"}
               </p>
             </div>
           </div>
@@ -211,7 +216,35 @@ export function PwaInstallBanner() {
         <div className="mx-4 h-px bg-white/10" />
 
         <div className="relative px-4 py-3">
-          {isIos ? (
+          {isAndroid ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-[11px] text-slate-300 bg-white/[0.06] rounded-xl px-3 py-2">
+                <span>Puan: <strong className="text-amber-400">4.9 ★★★★★</strong></span>
+                <span className="text-emerald-400 font-bold">Ücretsiz İndir</span>
+              </div>
+              <div className="flex justify-center pt-0.5">
+                <GooglePlayBadge size="md" onClick={handleDismiss} />
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                {hasNativePrompt ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleInstall()}
+                    className="text-[11px] font-bold text-slate-400 hover:text-amber-300 transition"
+                  >
+                    Tarayıcı kısayolu ekle
+                  </button>
+                ) : <span />}
+                <button
+                  type="button"
+                  onClick={handleDismiss}
+                  className="text-[11px] font-bold text-slate-400 hover:text-white transition"
+                >
+                  Daha sonra
+                </button>
+              </div>
+            </div>
+          ) : isIos ? (
             <div className="space-y-2">
               <p className="text-[10px] font-black uppercase tracking-wider text-amber-300 mb-2">
                 Safari&apos;de 2 adımda kısayol indir
@@ -273,15 +306,6 @@ export function PwaInstallBanner() {
               >
                 Anladım ✓
               </button>
-              {platform === "android" && (
-                <div className="pt-1">
-                  <GooglePlayBadge
-                    variant="compact"
-                    className="w-full justify-center bg-white/10 hover:bg-white/15 border-white/20"
-                    subText="Google Play'den"
-                  />
-                </div>
-              )}
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -306,15 +330,6 @@ export function PwaInstallBanner() {
                 <Download className="size-4 stroke-[2.5]" />
                 <span>{installing ? "Kısayol İndiriliyor…" : "Kısayolu İndir — Ücretsiz"}</span>
               </button>
-              {platform === "android" && (
-                <div className="pt-0.5">
-                  <GooglePlayBadge
-                    variant="compact"
-                    className="w-full justify-center bg-white/10 hover:bg-white/15 border-white/20"
-                    subText="Resmi Uygulama"
-                  />
-                </div>
-              )}
               <button
                 type="button"
                 onClick={handleDismiss}

@@ -226,22 +226,35 @@ export function SeoFooter() {
           </div>
         </div>
 
-        {/* Mobil Uygulama & Google Play İndirme Bandı */}
-        <div className="mt-10 rounded-3xl border border-slate-200/90 bg-gradient-to-r from-slate-900 via-slate-950 to-indigo-950 p-6 text-white shadow-xl shadow-slate-900/10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-1.5 text-center md:text-left">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-400">
-              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Resmi Android Uygulaması</span>
+        {/* Mobil Uygulama & Google Play İndirme Alanı (Dünya Standartlarında Vitrin) */}
+        <div className="mt-12 rounded-3xl border border-slate-200/80 bg-gradient-to-br from-slate-900 via-night to-slate-900 p-6 sm:p-8 text-white shadow-xl shadow-slate-900/10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4 sm:gap-5 text-center md:text-left flex-col md:flex-row">
+            <div className="flex size-14 sm:size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-600 via-indigo-600 to-amber-500 font-black text-2xl sm:text-3xl text-white shadow-lg shadow-violet-500/25 ring-2 ring-white/10">
+              Z
             </div>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
-              Zigo&apos;yu Android Cihazınıza İndirin
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-xl">
-              Canlı bilgi düelloları, zeka oyunları ve sınav hazırlık içeriklerine telefonunuzdan tek dokunuşla kesintisiz erişin.
-            </p>
+            <div className="space-y-1">
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-amber-400">
+                  Zigo Mobil
+                </span>
+                <span className="text-slate-600">·</span>
+                <span className="text-xs font-bold text-slate-300">
+                  Android için Yayında
+                </span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
+                Zigo Cebinizde, Öğrenme Her An Yanınızda
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-400 font-medium max-w-xl">
+                Zeka oyunları, soru havuzları ve canlı düellolara telefon ve tabletinizden kesintisiz erişin.
+              </p>
+            </div>
           </div>
-          <div className="shrink-0">
-            <GooglePlayBadge variant="dark" />
+          <div className="flex flex-col items-center md:items-end gap-1.5 shrink-0">
+            <GooglePlayBadge size="md" />
+            <span className="text-[11px] font-semibold text-slate-400">
+              Google Play Store&apos;da Ücretsiz
+            </span>
           </div>
         </div>
 

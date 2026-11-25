@@ -887,22 +887,25 @@ export default function PricingPage() {
           </dl>
         </section>
 
-        {/* Google Play Tanıtım Kartı (Web Ziyaretçileri İçin) */}
+        {/* Google Play Güvenli Mobil Ödeme Kartı (Web Ziyaretçileri İçin) */}
         {!isNativeClient && (
-          <div className="mt-12 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 to-indigo-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="mt-12 rounded-3xl border border-slate-200/90 bg-gradient-to-br from-slate-900 via-night to-slate-900 p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center sm:text-left">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-300">
-                <span>📱 Android Cihazlar İçin</span>
+              <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-400">
+                <span>Google Play ile Mobil Ödeme</span>
               </span>
               <h3 className="text-lg sm:text-xl font-black text-white">
-                Mobil Uygulamadan Doğrudan Abone Olun
+                Android Cihazınızdan Tek Dokunuşla Abone Olun
               </h3>
               <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-lg">
-                Zigo Android uygulamasını Google Play Store üzerinden indirerek aboneliğinizi Google Play güvencesi ve tek tıkla başlatabilirsiniz.
+                Zigo Android uygulamasında Zigo Plus aboneliğinizi Google Play hesabınız üzerinden başlatabilir, dilediğiniz an tek tıkla yönetebilirsiniz.
               </p>
             </div>
-            <div className="shrink-0">
-              <GooglePlayBadge variant="dark" />
+            <div className="flex flex-col items-center sm:items-end gap-1.5 shrink-0">
+              <GooglePlayBadge size="md" />
+              <span className="text-[11px] font-semibold text-slate-400">
+                Google Play Güvencesiyle
+              </span>
             </div>
           </div>
         )}
