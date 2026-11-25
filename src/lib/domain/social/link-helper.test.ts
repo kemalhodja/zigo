@@ -24,6 +24,11 @@ describe("link-helper", () => {
       expect(id).toBe("dQw4w9WgXcQ");
     });
 
+    it("extracts ID from YouTube live URL", () => {
+      const id = extractYouTubeVideoId("https://www.youtube.com/live/dQw4w9WgXcQ?si=live123");
+      expect(id).toBe("dQw4w9WgXcQ");
+    });
+
     it("extracts ID from embed URL", () => {
       const id = extractYouTubeVideoId("https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ");
       expect(id).toBe("dQw4w9WgXcQ");
@@ -59,12 +64,39 @@ describe("link-helper", () => {
       expect(res?.youtubeThumbnailUrl).toContain("https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
     });
 
+    it("classifies YouTube playlist URL without video ID as youtube", () => {
+      const res = classifyExternalLink("https://www.youtube.com/playlist?list=PL1234567890");
+      expect(res).not.toBeNull();
+      expect(res?.type).toBe("youtube");
+      expect(res?.label).toBe("YouTube Oynatma Listesi");
+      expect(res?.youtubeId).toBeUndefined();
+    });
+
     it("classifies Instagram reel correctly", () => {
       const res = classifyExternalLink("https://www.instagram.com/reel/C1234567890/");
       expect(res).not.toBeNull();
       expect(res?.type).toBe("instagram");
       expect(res?.isInstagramReel).toBe(true);
       expect(res?.label).toBe("Instagram Reels");
+    });
+
+    it("classifies Vimeo and other external video platforms as video", () => {
+      const vimeo = classifyExternalLink("https://vimeo.com/123456789");
+      expect(vimeo?.type).toBe("video");
+      expect(vimeo?.platformName).toBe("Vimeo");
+      expect(vimeo?.label).toBe("Vimeo Videosu");
+
+      const loom = classifyExternalLink("https://www.loom.com/share/abcdef123456");
+      expect(loom?.type).toBe("video");
+      expect(loom?.platformName).toBe("Loom");
+
+      const dailymotion = classifyExternalLink("https://dai.ly/x8abcde");
+      expect(dailymotion?.type).toBe("video");
+      expect(dailymotion?.displayDomain).toBe("dailymotion.com");
+
+      const khan = classifyExternalLink("https://tr.khanacademy.org/math/algebra");
+      expect(khan?.type).toBe("video");
+      expect(khan?.platformName).toBe("Khan Academy");
     });
 
     it("classifies general website correctly", () => {

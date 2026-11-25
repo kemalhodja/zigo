@@ -90,10 +90,10 @@ export function Composer({ userRole, streakDays = 0, avatarUrl }: ComposerProps)
           </button>
           <button 
             className="group flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            aria-label="Video ekle"
+            aria-label="YouTube veya video linki ekle"
           >
             <VideoIcon className="h-4 w-4 transition-transform group-hover:scale-110" aria-hidden="true" />
-            <span className="hidden sm:inline">Video</span>
+            <span className="hidden sm:inline">Video Linki</span>
           </button>
           <button 
             className="group flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-purple-50 hover:text-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20"

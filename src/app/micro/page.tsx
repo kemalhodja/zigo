@@ -11,6 +11,7 @@ import { hasSupabaseEnv, withSupabaseFallback } from "@/lib/config";
 import { allowDemoContent } from "@/lib/domain/demo-env";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { getFollowingFeed, getReelFeed, getSocialPostById, isFollowing, type SocialFeedPost } from "@/lib/domain/social";
+import { getUserSubscription } from "@/lib/domain/subscription";
 import { getServerMessages } from "@/lib/i18n/server";
 import { classifyExternalLink } from "@/lib/domain/social/link-helper";
 import type { Messages } from "@/lib/i18n/types";
@@ -80,13 +81,19 @@ export default async function ReelsPage({ searchParams }: ReelsPageProps) {
   const activeFeed = params.feed === "following" ? "following" : "for-you";
   const reels = await getReels(activeFeed, params.reelId);
   let viewerRole: UserRole | "guest" = "guest";
+  let viewerIsSubscriber = false;
   if (hasSupabaseEnv()) {
     try {
       const supabase = await createClient();
       const profile = await getCurrentProfile(supabase);
       if (profile?.role) viewerRole = profile.role;
+      if (profile?.id) {
+        const subscription = await getUserSubscription(supabase, profile.id);
+        viewerIsSubscriber = Boolean(subscription?.isPremium || profile.is_premium);
+      }
     } catch {
       viewerRole = "guest";
+      viewerIsSubscriber = false;
     }
   }
 
@@ -105,6 +112,7 @@ export default async function ReelsPage({ searchParams }: ReelsPageProps) {
           <ReelSection
             activeFeed={activeFeed}
             index={index}
+            isSubscriber={viewerIsSubscriber}
             key={reel.id}
             messages={m}
             reel={reel}
@@ -120,12 +128,14 @@ export default async function ReelsPage({ searchParams }: ReelsPageProps) {
 function ReelSection({
   activeFeed,
   index,
+  isSubscriber,
   messages: m,
   reel,
   viewerRole,
 }: {
   activeFeed: "for-you" | "following";
   index: number;
+  isSubscriber: boolean;
   messages: Messages;
   reel: ReelItem;
   viewerRole: UserRole | "guest";
@@ -141,7 +151,7 @@ function ReelSection({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.2),transparent_18rem)]" />
       {reel.mediaUrl && reel.mediaType === "video" ? (
         <ReelVideoPlayer mediaUrl={reel.mediaUrl} reelId={reel.postId ?? reel.id} />
-      ) : parsedLink?.type === "youtube" && parsedLink.youtubeEmbedUrl ? (
+      ) : parsedLink?.type === "youtube" && parsedLink.youtubeEmbedUrl && isSubscriber ? (
         <div className="absolute inset-0 z-0 flex items-center justify-center bg-black">
           <iframe
             src={parsedLink.youtubeEmbedUrl}
@@ -149,6 +159,15 @@ function ReelSection({
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="h-full w-full border-0 pointer-events-auto"
+          />
+        </div>
+      ) : parsedLink?.type === "youtube" && parsedLink.youtubeThumbnailUrl ? (
+        <div className="absolute inset-0 z-0 flex items-center justify-center bg-slate-950">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={parsedLink.youtubeThumbnailUrl}
+            alt={parsedLink.label}
+            className="h-full w-full object-cover opacity-55 blur-[2px]"
           />
         </div>
       ) : !reel.mediaUrl ? (
@@ -202,7 +221,7 @@ function ReelSection({
           <span className="rounded-lg bg-slate-100/80 px-3 py-1 text-xs font-black text-slate-700 backdrop-blur">
             {ru.watchForPoints}
           </span>
-          {parsedLink && <ReelExternalLinkButton parsedLink={parsedLink} />}
+          {parsedLink && <ReelExternalLinkButton canOpenLink={isSubscriber} parsedLink={parsedLink} />}
         </div>
         <ReelLearningDock messages={m} postId={reel.postId} viewerRole={viewerRole} />
         <div className="text-xs font-black text-slate-900/80">

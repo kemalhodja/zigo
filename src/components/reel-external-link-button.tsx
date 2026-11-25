@@ -33,6 +33,8 @@ export function ReelExternalLinkButton({
       ? "🔴 YouTube"
       : parsedLink.type === "instagram"
       ? "📸 Instagram"
+      : parsedLink.type === "video"
+      ? `🎬 ${parsedLink.platformName || "Video"}`
       : "🌐 Bağlantı";
 
   return (
@@ -49,6 +51,8 @@ export function ReelExternalLinkButton({
             ? "bg-red-600 text-white"
             : parsedLink.type === "instagram"
             ? "bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white"
+            : parsedLink.type === "video"
+            ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white"
             : "bg-white text-slate-900"
         }`}
       >

@@ -1091,7 +1091,7 @@ export const catalogEn = {
     mediaReady: "Media ready",
     change: "Change",
     chooseMedia: "Choose media",
-    chooseMediaHint: "Photo or video (Micro: 90s, Lesson: 15 min, max 100 MB)",
+    chooseMediaHint: "Photo (max 15 MB). Long videos are not hosted on Zigo; link to YouTube, Vimeo, or similar platforms.",
     captionPlaceholder: "Write a caption...",
     image: "Image",
     video: "Video",

@@ -82,7 +82,7 @@ export function StoryCreateForm({ areas }: { areas: StoryArea[] }) {
 
     if (file.type.startsWith("video/")) {
       setStatus("error");
-      setMessage("Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Lütfen bir görsel seçin.");
+      setMessage("Zigo'da doğrudan video yükleme desteklenmez. Hikaye için lütfen görsel seçin; uzun videolarınızı gönderi olarak YouTube veya benzeri platform bağlantısıyla paylaşabilirsiniz.");
       setPreview(null);
       setSelectedFile(null);
       return;

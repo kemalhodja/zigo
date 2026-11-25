@@ -26,8 +26,9 @@ import { classifyExternalLink } from "@/lib/domain/social/link-helper";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-// Doğrudan video yükleme geçici olarak bakım ve güncellemede; kullanıcılar YouTube / Instagram linki ekleyebilir.
+// Zigo'da uzun video barındırılmaz; uzun ders videoları YouTube, Vimeo veya benzeri platform bağlantısı ile yönlendirilir.
 export const ENABLE_DIRECT_VIDEO_UPLOAD = false;
+const POST_WIZARD_DRAFT_KEY = "zigo:post-wizard-draft";
 
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -81,6 +82,33 @@ export function PostWizard({
   const [teaserText, setTeaserText] = useState("");
 
   useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(POST_WIZARD_DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as { caption?: string; externalUrl?: string };
+      if (draft.caption) setCaption(draft.caption);
+      if (draft.externalUrl) setExternalUrl(draft.externalUrl);
+    } catch {
+      window.localStorage.removeItem(POST_WIZARD_DRAFT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (!caption && !externalUrl) {
+        window.localStorage.removeItem(POST_WIZARD_DRAFT_KEY);
+        return;
+      }
+      window.localStorage.setItem(
+        POST_WIZARD_DRAFT_KEY,
+        JSON.stringify({ caption, externalUrl }),
+      );
+    } catch {
+      // Optional draft persistence
+    }
+  }, [caption, externalUrl]);
+
+  useEffect(() => {
     if ((!selectedAreaId || selectedAreaId === 0) && areas.length > 0 && areas[0]?.id) {
       setSelectedAreaId(areas[0].id);
     }
@@ -89,6 +117,11 @@ export function PostWizard({
   // Navigate to the new post / reel after success animation
   useEffect(() => {
     if (pipeline.phase !== "done") return;
+    try {
+      window.localStorage.removeItem(POST_WIZARD_DRAFT_KEY);
+    } catch {
+      // ignore storage errors
+    }
     const timer = setTimeout(() => {
       router.refresh();
       router.push(
@@ -139,7 +172,7 @@ export function PostWizard({
       const file = files[i];
       if (!ENABLE_DIRECT_VIDEO_UPLOAD && file.type.startsWith("video/")) {
         setMediaError(
-          "Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Gönderinize YouTube veya Instagram video linkinizi ekleyerek videonuzu kolayca paylaşabilirsiniz."
+          "Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için aşağıdan YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz."
         );
         return;
       }
@@ -370,8 +403,8 @@ function MediaPickerStep({
                   JPG · PNG · WEBP · GIF · Maks 15 MB
                 </p>
                 <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-xs">
-                  <span>💡</span>
-                  <span>Doğrudan video yükleme geçici olarak kapalıdır. Aşağıdan YouTube / Instagram linki ekleyebilirsiniz.</span>
+                  <span>🎬</span>
+                  <span>Zigo&apos;da uzun video barındırılmaz. Aşağıdan YouTube, Vimeo veya benzeri video linki ekleyerek yönlendirme yapabilirsiniz.</span>
                 </div>
               </div>
             </>
@@ -399,16 +432,26 @@ function MediaPickerStep({
         <div className="flex items-center justify-between gap-2 mb-2">
           <label className="text-xs font-black text-slate-700 flex items-center gap-1.5">
             <span>🔗</span>
-            <span>Video veya Web Linki Ekle</span>
+            <span>Uzun Video veya Web Linki Ekle (YouTube, Vimeo vb.)</span>
           </label>
-          <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+          {externalUrl.trim() ? (
+            <button
+              type="button"
+              onClick={() => onExternalUrlChange("")}
+              className="text-[10px] font-black text-rose-600 hover:underline"
+            >
+              Temizle
+            </button>
+          ) : (
+            <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+          )}
         </div>
 
         <input
           type="url"
           value={externalUrl}
           onChange={(e) => onExternalUrlChange(e.target.value)}
-          placeholder="https://youtube.com/..., instagram.com/... veya site linkiniz"
+          placeholder="https://youtube.com/watch?v=..., vimeo.com/... veya site linkiniz"
           className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-medium text-night placeholder:text-slate-400 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
         />
 
@@ -587,9 +630,19 @@ function CaptionStep({
       <div className="px-4 pt-5">
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <label className="block text-xs font-black uppercase tracking-wider text-slate-700">
-            🔗 Dış Bağlantı / Video Linki
+            🔗 Uzun Video / Dış Bağlantı Linki
           </label>
-          <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+          {externalUrl.trim() ? (
+            <button
+              type="button"
+              onClick={() => onExternalUrlChange("")}
+              className="text-[10px] font-black text-rose-600 hover:underline"
+            >
+              Temizle
+            </button>
+          ) : (
+            <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
+          )}
         </div>
 
         {/* Platform shortcuts */}
@@ -601,6 +654,14 @@ function CaptionStep({
           >
             <span>🔴</span>
             <span>YouTube</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onExternalUrlChange("https://vimeo.com/")}
+            className="flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50/70 px-2.5 py-1 text-[11px] font-bold text-indigo-700 transition hover:bg-indigo-100 active:scale-95"
+          >
+            <span>🎬</span>
+            <span>Vimeo</span>
           </button>
           <button
             type="button"
@@ -623,7 +684,7 @@ function CaptionStep({
         <input
           type="url"
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-night placeholder:text-slate-400 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-2 focus:ring-violet-100"
-          placeholder="https://youtube.com/watch?v=... veya https://instagram.com/reel/..."
+          placeholder="https://youtube.com/watch?v=..., https://vimeo.com/... veya ders linkiniz"
           value={externalUrl}
           onChange={(e) => onExternalUrlChange(e.target.value)}
         />
@@ -634,12 +695,14 @@ function CaptionStep({
           if (!parsed) return null;
           return (
             <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[11px] font-black ${
                   parsed.type === "youtube"
                     ? "bg-red-100 text-red-700 border border-red-200"
                     : parsed.type === "instagram"
                     ? "bg-pink-100 text-pink-700 border border-pink-200"
+                    : parsed.type === "video"
+                    ? "bg-violet-100 text-violet-700 border border-violet-200"
                     : "bg-indigo-100 text-indigo-700 border border-indigo-200"
                 }`}>
                   <span>✓</span>
@@ -647,7 +710,9 @@ function CaptionStep({
                 </span>
                 <span className="text-[11px] font-medium text-slate-500">
                   {parsed.type === "youtube"
-                    ? "Feed'de zengin video oynatıcı olarak görünecektir."
+                    ? "Feed'de YouTube video kartı ve yönlendirmesi olarak görünecektir."
+                    : parsed.type === "video"
+                    ? "Feed'de uzun video yönlendirme kartı olarak görünecektir."
                     : parsed.type === "instagram"
                     ? "Feed'de Instagram kartı olarak görüntülenecektir."
                     : "Feed'de site kartı olarak görüntülenecektir."}
@@ -662,7 +727,7 @@ function CaptionStep({
 
         {!externalUrl.trim() && (
           <p className="mt-1.5 text-[0.68rem] font-medium text-slate-400">
-            Doğrudan video yükleme yerine YouTube, Instagram veya web sitenizin linkini ekleyerek içeriğinizi paylaşabilirsiniz.
+            Zigo&apos;da uzun video barındırılmaz. Uzun ders videolarınız için YouTube, Vimeo, Dailymotion, Loom veya eğitim platformu linkinizi ekleyerek öğrencileri doğrudan yönlendirebilirsiniz.
           </p>
         )}
       </div>

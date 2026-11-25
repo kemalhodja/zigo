@@ -136,7 +136,7 @@ export function SocialCreateForm({
 
     if (file.type.startsWith("video/")) {
       setStatus("error");
-      setMessage("Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Gönderinize YouTube veya Instagram video linkinizi ekleyebilirsiniz.");
+      setMessage("Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısı ekleyebilirsiniz.");
       setSelectedFile(null);
       setPreview(null);
       return;
@@ -669,13 +669,20 @@ export function SocialCreateForm({
             <span className="text-xs font-black text-slate-700">🔗 Video / Web Bağlantısı (YouTube, Instagram, Web)</span>
             <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               onClick={() => setExternalUrl("https://youtube.com/watch?v=")}
               className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 hover:bg-red-100"
             >
               🔴 YouTube
+            </button>
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://vimeo.com/")}
+              className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 hover:bg-indigo-100"
+            >
+              🎬 Vimeo
             </button>
             <button
               type="button"
@@ -695,7 +702,7 @@ export function SocialCreateForm({
           <input
             className="w-full rounded-lg bg-white px-4 py-3.5 text-sm font-semibold text-night shadow-sm outline-none ring-1 ring-inset ring-slate-100 placeholder:text-slate-400 focus:bg-slate-50 focus:ring-2 focus:ring-crystal"
             onChange={(event) => setExternalUrl(event.target.value)}
-            placeholder="https://youtube.com/..., https://instagram.com/... veya site linkiniz"
+            placeholder="https://youtube.com/watch?v=..., vimeo.com/... veya site linkiniz"
             type="url"
             value={externalUrl}
           />

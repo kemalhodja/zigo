@@ -417,6 +417,13 @@ export function PostOptionsButton({
                 </button>
                 <button
                   type="button"
+                  onClick={() => setExternalUrl("https://vimeo.com/")}
+                  className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 hover:bg-indigo-100"
+                >
+                  🎬 Vimeo
+                </button>
+                <button
+                  type="button"
                   onClick={() => setExternalUrl("https://instagram.com/reel/")}
                   className="rounded-md border border-pink-200 bg-pink-50 px-2 py-0.5 text-[10px] font-bold text-pink-700 hover:bg-pink-100"
                 >
@@ -435,7 +442,7 @@ export function PostOptionsButton({
                 type="url"
                 className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-medium text-slate-800 focus:border-sky-500 focus:outline-none"
                 onChange={(e) => setExternalUrl(e.target.value)}
-                placeholder="https://youtube.com/... veya https://instagram.com/..."
+                placeholder="https://youtube.com/watch?v=..., vimeo.com/... veya site linkiniz"
                 value={externalUrl}
               />
             </div>

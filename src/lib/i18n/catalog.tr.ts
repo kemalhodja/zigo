@@ -1090,7 +1090,7 @@ export const catalogTr = {
     mediaReady: "Medya hazır",
     change: "Değiştir",
     chooseMedia: "Medya seç",
-    chooseMediaHint: "Fotoğraf veya video (Kısa ders: 90 sn, Uzun ders: 15 dk, maks 100 MB)",
+    chooseMediaHint: "Fotoğraf (maks 15 MB). Zigo'da uzun video barındırılmaz; YouTube, Vimeo vb. link ekleyebilirsiniz.",
     captionPlaceholder: "Bir açıklama yaz…",
     image: "Görsel",
     video: "Video",

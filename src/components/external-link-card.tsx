@@ -215,6 +215,74 @@ export function ExternalLinkCard({
     );
   }
 
+  // ── External Long-Video Platforms (Vimeo, Dailymotion, Loom, EBA, Khan Academy, etc.) ──
+  if (parsed.type === "video") {
+    const platformTitle = sponsoredLabel || parsed.label;
+    const platformName = parsed.platformName || parsed.displayDomain;
+
+    return (
+      <>
+        {allowed ? (
+          <a
+            href={parsed.cleanUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`group flex items-center justify-between gap-3 overflow-hidden rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-violet-50/50 to-sky-50/40 p-3.5 shadow-xs transition-all hover:border-indigo-300 hover:shadow-sm active:scale-[0.99] ${className}`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/25">
+                <PlayIcon className="ml-0.5 size-5 fill-white text-white" />
+              </div>
+              <div className="flex flex-col truncate">
+                <span className="truncate text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">
+                  {platformTitle}
+                </span>
+                <span className="truncate text-xs font-semibold text-indigo-600">
+                  {parsed.displayDomain} · Uzun video bağlantısı ({platformName})
+                </span>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-black text-indigo-700 shadow-xs transition-colors group-hover:bg-indigo-50">
+              <span>İzle</span>
+              <ExternalLinkIcon className="size-3.5" />
+            </div>
+          </a>
+        ) : (
+          <div
+            onClick={handleBlockedClick}
+            className={`cursor-pointer group flex items-center justify-between gap-3 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50/80 via-indigo-50/40 to-fuchsia-50/30 p-3.5 shadow-xs transition-all hover:border-violet-300 hover:shadow-sm active:scale-[0.99] ${className}`}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/25">
+                <LockIcon className="size-5" />
+              </div>
+              <div className="flex flex-col truncate">
+                <span className="truncate text-sm font-black text-slate-900 group-hover:text-violet-700 transition-colors">
+                  {platformTitle}
+                </span>
+                <span className="truncate text-xs font-semibold text-violet-700">
+                  🔒 {parsed.displayDomain} · İzlemek için Zigo Plus gerekir
+                </span>
+              </div>
+            </div>
+
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-700 shadow-xs border border-violet-200 group-hover:bg-violet-200 transition-colors">
+              <LockIcon className="size-4" />
+            </div>
+          </div>
+        )}
+
+        <SharedLinkPaywallModal
+          isOpen={showPaywall}
+          onClose={() => setShowPaywall(false)}
+          targetDomain={parsed.displayDomain}
+          url={parsed.cleanUrl}
+        />
+      </>
+    );
+  }
+
   // ── General Website / Education Portal Presentation ───────────────────────
   return (
     <>

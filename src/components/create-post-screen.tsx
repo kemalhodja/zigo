@@ -30,7 +30,7 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
     }
 
     if (file.type.startsWith("video/")) {
-      setError("Doğrudan video yükleme geçici olarak kapalıdır. Aşağıdan YouTube veya Instagram video bağlantınızı ekleyebilirsiniz.");
+      setError("Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platform bağlantısını aşağıya ekleyebilirsiniz.");
       setMediaFile(null);
       event.target.value = "";
       return;
@@ -148,7 +148,7 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
             className="w-full cursor-pointer rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-700 transition file:mr-3 file:rounded-md file:border-0 file:bg-violet-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-violet-700 disabled:opacity-50"
           />
           <p className="mt-1 text-[11px] text-slate-500 font-medium">
-            💡 Not: Doğrudan video yükleme geçici olarak kapalıdır. YouTube veya Instagram linkinizi aşağıya ekleyebilirsiniz.
+            💡 Not: Zigo&apos;da uzun video barındırılmaz. Uzun ders videolarınızı YouTube, Vimeo veya benzeri platformlara yükleyip aşağıdan yönlendirme linki ekleyebilirsiniz.
           </p>
           {mediaFile && (
             <p className="mt-1 text-xs text-emerald-600 font-medium">
@@ -161,18 +161,25 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
         <div>
           <div className="flex items-center justify-between mb-1">
             <label htmlFor="external-url-input" className="block text-xs font-semibold text-slate-600">
-              🔗 Video veya Web Linki Ekle (YouTube, Instagram, Web Sitesi)
+              🔗 Uzun Video veya Web Linki Ekle (YouTube, Vimeo, Instagram vb.)
             </label>
             <span className="text-[10px] font-bold text-slate-400">İsteğe Bağlı</span>
           </div>
 
-          <div className="flex items-center gap-1.5 mb-2">
+          <div className="flex flex-wrap items-center gap-1.5 mb-2">
             <button
               type="button"
               onClick={() => setExternalUrl("https://youtube.com/watch?v=")}
               className="rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 hover:bg-red-100"
             >
               🔴 YouTube
+            </button>
+            <button
+              type="button"
+              onClick={() => setExternalUrl("https://vimeo.com/")}
+              className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 hover:bg-indigo-100"
+            >
+              🎬 Vimeo
             </button>
             <button
               type="button"
@@ -196,7 +203,7 @@ export function CreatePostScreen({ onSuccess, defaultAreaId = 1 }: CreatePostScr
             value={externalUrl}
             onChange={(e) => setExternalUrl(e.target.value)}
             disabled={isLoading}
-            placeholder="https://youtube.com/... veya https://instagram.com/..."
+            placeholder="https://youtube.com/watch?v=..., vimeo.com/... veya site linkiniz"
             className="w-full rounded-lg border border-slate-200 p-2.5 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
           />
         </div>

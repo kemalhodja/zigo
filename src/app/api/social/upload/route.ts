@@ -112,13 +112,16 @@ export async function POST(request: Request) {
     }
 
     if (!ALLOWED_TYPES.has(file.type)) {
-      return NextResponse.json({ error: "Desteklenmeyen dosya türü. Lütfen JPG, PNG, WEBP, GIF, MP4 veya WEBM kullanın." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Desteklenmeyen dosya türü. Lütfen JPG, PNG, WEBP veya GIF seçin. Uzun videolar için YouTube veya benzeri platform bağlantısı ekleyebilirsiniz." },
+        { status: 400 },
+      );
     }
 
     const isVideo = file.type.startsWith("video/");
     if (isVideo) {
       return NextResponse.json(
-        { error: "Doğrudan video yükleme geçici olarak bakım ve güncellemededir. Gönderinize YouTube veya Instagram video linkinizi ekleyebilirsiniz." },
+        { error: "Zigo'da uzun video barındırılmaz ve doğrudan video yükleme kapalıdır. Uzun ders videolarınız için YouTube, Vimeo veya benzeri platformların bağlantısını gönderinize ekleyebilirsiniz." },
         { status: 400 },
       );
     }
