@@ -63,6 +63,14 @@ export function SeoFooter() {
                   Sınav Sezonu & Geri Sayım
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/konular"
+                  className="transition hover:text-indigo-600"
+                >
+                  LGS & YKS Konu Rehberi
+                </Link>
+              </li>
             </ul>
           </div>
 

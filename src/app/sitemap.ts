@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { hasSupabaseEnv } from "@/lib/config";
+import { getAllTopics } from "@/lib/domain/curriculum-topics";
 import { slugifyEducationArea } from "@/lib/domain/education-area-slug";
 import { getEducationAreas } from "@/lib/domain/profiles";
 import { INDEXABLE_CREATOR_ROLES, SITE_URL } from "@/lib/domain/seo-indexing";
@@ -37,6 +38,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.95,
+    },
+    {
+      url: `${base}/konular`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
       url: `${base}/explore`,
@@ -112,9 +119,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  const topicRoutes: MetadataRoute.Sitemap = getAllTopics().map((t) => ({
+    url: `${base}/konular/${t.exam}/${t.subjectSlug}/${t.topicSlug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.85,
+  }));
+
   if (!hasSupabaseEnv()) {
     return [
       ...staticRoutes,
+      ...topicRoutes,
       {
         url: `${base}/areas/lgs-matematik`,
         lastModified: now,
@@ -203,5 +218,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     postRoutes = [];
   }
 
-  return [...staticRoutes, ...areaRoutes, ...profileRoutes, ...postRoutes];
+  return [...staticRoutes, ...topicRoutes, ...areaRoutes, ...profileRoutes, ...postRoutes];
 }
