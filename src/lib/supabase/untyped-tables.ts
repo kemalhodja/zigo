@@ -119,3 +119,19 @@ export function looseFrom<T = Record<string, unknown>>(
   const fromFn = client.from as unknown as (rel: string) => LooseTableBuilder<T>;
   return fromFn.call(client, relation);
 }
+
+/**
+ * Typed wrapper for RPC functions missing from generated Database types.
+ * Preserves `this` binding via `.call(client, ...)`.
+ */
+export function looseRpc<T = unknown>(
+  client: SupabaseClient<Database>,
+  fn: string,
+  args?: Record<string, unknown>,
+): Promise<{ data: T | null; error: { message: string; code?: string } | null }> {
+  const rpcFn = client.rpc as unknown as (
+    name: string,
+    params?: Record<string, unknown>,
+  ) => Promise<{ data: T | null; error: { message: string; code?: string } | null }>;
+  return rpcFn.call(client, fn, args);
+}

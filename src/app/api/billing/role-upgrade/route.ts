@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { looseRpc, untypedFrom } from "@/lib/supabase/untyped-tables";
 
 function getStripeClient(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY?.trim();
@@ -17,6 +19,14 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`billing-role-upgrade:${profile.id}`, 5, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık rol değişikliği talebi gönderildi. Bir dakika sonra tekrar deneyin.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const { accountKind, organizationType } = (await request.json().catch(() => ({}))) as {
@@ -51,12 +61,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const rpcUpdate = supabase.rpc as unknown as (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: unknown; error: Error | null }>;
-
-      const { error } = await rpcUpdate("update_own_account_kind", {
+      const { error } = await looseRpc(supabase, "update_own_account_kind", {
         next_role: accountKind,
         next_organization_type: organizationType || undefined,
       });
@@ -78,15 +83,14 @@ export async function POST(request: Request) {
     }
 
     if (requiresPayment) {
-      const rpcRequest = supabase.rpc as unknown as (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: string | null; error: Error | null }>;
-
-      const { data: requestData, error: requestError } = await rpcRequest("request_role_change", {
-        next_role: accountKind,
-        next_organization_type: organizationType || null,
-      });
+      const { data: requestData, error: requestError } = await looseRpc<string>(
+        supabase,
+        "request_role_change",
+        {
+          next_role: accountKind,
+          next_organization_type: organizationType || null,
+        },
+      );
 
       if (requestError) {
         return NextResponse.json({ error: requestError.message }, { status: 400 });
@@ -95,16 +99,7 @@ export async function POST(request: Request) {
       requestId = requestData || "";
 
       const dbAdmin = (hasServiceRoleEnv() ? createAdminClient() : supabase)!;
-      const dbTable = dbAdmin as unknown as {
-        from: (table: string) => {
-          update: (data: Record<string, unknown>) => {
-            eq: (col: string, val: string) => Promise<unknown>;
-          };
-        };
-      };
-
-      await dbTable
-        .from("role_change_requests")
+      await untypedFrom(dbAdmin, "role_change_requests")
         .update({ fee_amount: feeAmount })
         .eq("id", requestId);
 
@@ -143,8 +138,7 @@ export async function POST(request: Request) {
         cancel_url: `${origin}/profile?upgrade_canceled=true`,
       });
 
-      await dbTable
-        .from("role_change_requests")
+      await untypedFrom(dbAdmin, "role_change_requests")
         .update({ stripe_session_id: session.id })
         .eq("id", requestId);
 

@@ -1,19 +1,25 @@
 import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
+import dynamic from "next/dynamic";
 import { Inter_Tight,Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { cache } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { AuthSessionKeepAlive } from "@/components/auth-session-keepalive";
-import { PwaInstallBanner } from "@/components/pwa-install-banner";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { JsonLd } from "@/components/seo/json-ld";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
-import { OneSignalProvider } from "@/components/providers/onesignal-provider";
 import { ScrollReset } from "@/components/scroll-reset";
 import { ToastProvider } from "@/components/ui/toast-system";
+
+const PwaInstallBanner = dynamic(
+  () => import("@/components/pwa-install-banner").then((m) => m.PwaInstallBanner),
+);
+const OneSignalProvider = dynamic(
+  () => import("@/components/providers/onesignal-provider").then((m) => m.OneSignalProvider),
+);
 import { hasSupabaseEnv } from "@/lib/config";
 import { isCurrentUserPlatformAdmin } from "@/lib/domain/admin";
 import { getUserInterestAreaIds } from "@/lib/domain/profiles";
@@ -148,17 +154,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const shellState = await getShellState();
-  const locale = await getServerLocale();
-  const messages = await getServerMessages();
+  const [shellState, locale, messages] = await Promise.all([
+    getShellState(),
+    getServerLocale(),
+    getServerMessages(),
+  ]);
 
   return (
     <html lang="tr">
       <head>
         <meta name="color-scheme" content="light only" />
         <meta name="darkreader-lock" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var h=window.location.hash||"";if(h&&(h.indexOf("access_token")!==-1||h.indexOf("type=recovery")!==-1||h.indexOf("error")!==-1)){window.__ZIGO_RECOVERY_HASH__=h;try{sessionStorage.setItem("zigo_recovery_hash",h)}catch(e){}}}catch(e){}})();`,

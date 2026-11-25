@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { redeemChildStoreProduct, redeemStoreProduct } from "@/lib/domain/store";
 import { getUserSubscription } from "@/lib/domain/subscription";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -13,6 +14,14 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`store-redeem:${profile.id}`, 10, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık ödül talebi gönderildi. Lütfen biraz bekleyin.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const subscription = await getUserSubscription(supabase, profile.id);

@@ -8,6 +8,7 @@ import { getCurrentProfile, parseOrganizationType } from "@/lib/domain/profiles"
 import { findPlanGroup } from "@/lib/domain/subscription-plans";
 import { getServerLocale } from "@/lib/i18n/server";
 import { captureServerEvent } from "@/lib/server/analytics";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const checkoutSchema = z.object({
@@ -35,6 +36,14 @@ export async function POST(request: Request) {
     const profile = await getCurrentProfile(supabase);
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`billing-checkout:${profile.id}`, 10, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık ödeme oturumu başlatıldı. Biraz sonra tekrar deneyin.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const body = checkoutSchema.parse(await request.json().catch(() => ({})));

@@ -6,6 +6,7 @@ import { getUserSubscription } from "@/lib/domain/subscription";
 import { requireRole } from "@/lib/server/role-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { untypedFrom } from "@/lib/supabase/untyped-tables";
 
 /**
  * GET /api/games/check-limit
@@ -43,24 +44,13 @@ export async function GET() {
       });
     }
 
-    const { data: usage } = await (admin as unknown as {
-      from: (table: string) => {
-        select: (cols: string) => {
-          eq: (col: string, val: string) => {
-            eq: (col2: string, val2: string) => {
-              maybeSingle: () => Promise<{ data: { seconds_played?: number } | null }>;
-            };
-          };
-        };
-      };
-    })
-      .from("game_daily_usage")
+    const { data: usage } = await untypedFrom(admin, "game_daily_usage")
       .select("seconds_played")
       .eq("user_id", userId)
       .eq("date", todayTR)
       .maybeSingle();
 
-    const secondsPlayed = usage?.seconds_played ?? 0;
+    const secondsPlayed = Number(usage?.seconds_played ?? 0);
     const limitSeconds = limits.dailyLimitMinutes * 60;
     const remaining = Math.max(0, limitSeconds - secondsPlayed);
 

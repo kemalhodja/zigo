@@ -11,6 +11,7 @@ import {
   rejectFollowRequest,
   toggleFollow,
 } from "@/lib/domain/social";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -46,6 +47,14 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: "İşlem yapmak için lütfen giriş yapın." }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`social-follow:${profile.id}`, 30, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık takip işlemi yaptın. Lütfen biraz bekle.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const rawJson = await request.json();

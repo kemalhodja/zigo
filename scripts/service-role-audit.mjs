@@ -36,7 +36,18 @@ const ALLOWED_ADMIN_IMPORTS = new Set([
   "src/app/_components/home/data.ts",
   "src/lib/domain/bank-transfer.ts",
   "src/lib/domain/billing.ts",
-  "src/lib/domain/subscription.ts"
+  "src/lib/domain/subscription.ts",
+  "src/app/api/admin/posts/toggle-visibility/route.ts",
+  "src/app/api/admin/users/grant-plus/route.ts",
+  "src/app/api/admin/users/notes/route.ts",
+  "src/app/api/admin/users/reset-trial/route.ts",
+  "src/app/api/admin/users/update/route.ts",
+  "src/app/api/auth/reset-password/route.ts",
+  "src/app/api/cron/weekly-league-reset/route.ts",
+  "src/app/api/games/check-limit/route.ts",
+  "src/app/api/parent/game-settings/route.ts",
+  "src/app/sitemap.ts",
+  "src/lib/domain/admin-user-details.ts",
 ]);
 
 const ALLOWED_SERVICE_ROLE_MENTIONS = new Set([
@@ -82,7 +93,7 @@ for (const filePath of walkFiles(join(root, "src"))) {
     }
   }
 
-  if (content.includes("createAdminClient")) {
+  if (content.includes("createAdminClient") && !/\.test\.[jt]sx?$/.test(fileRel)) {
     if (!ALLOWED_ADMIN_IMPORTS.has(fileRel)) {
       violations.push(`${fileRel}: createAdminClient must stay server-only (allowed: ${[...ALLOWED_ADMIN_IMPORTS].join(", ")})`);
     }

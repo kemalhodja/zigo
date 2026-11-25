@@ -4,6 +4,7 @@ import { z } from "zod";
 import { respondWithDomainError } from "@/lib/domain/api-errors";
 import { getCurrentProfile, getUserInterestAreaIds } from "@/lib/domain/profiles";
 import { createTeacherAnswer } from "@/lib/domain/questions";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -17,6 +18,14 @@ export async function POST(request: Request) {
 
     if (profile.role !== "teacher" || !profile.is_verified) {
       return NextResponse.json({ error: "Only verified teachers can answer questions." }, { status: 403 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`answers-create:${profile.id}`, 20, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık yanıt gönderdin. Lütfen biraz bekle.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const body = await request.json();

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { extractErrorMessage } from "@/lib/domain/api-errors";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createStory, createStorySchema, getActiveStories } from "@/lib/domain/social";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -28,6 +29,14 @@ export async function POST(request: Request) {
 
     if (profile.role !== "teacher" || !profile.is_verified) {
       return NextResponse.json({ error: "Only verified teachers can create stories." }, { status: 403 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`social-story:${profile.id}`, 10, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık hikaye paylaştın. Lütfen biraz bekle.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const body = createStorySchema.parse(await request.json());

@@ -11,6 +11,7 @@ import {
 import { findPlanGroup, resolveStripePriceId } from "@/lib/domain/subscription-plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database, SubscriptionTier } from "@/lib/supabase/database.types";
+import { untypedFrom } from "@/lib/supabase/untyped-tables";
 
 export function hasStripeConfigured() {
   if (process.env.STRIPE_SECRET_KEY?.trim() && process.env.STRIPE_PRICE_ID_ZIGO_PLUS?.trim()) {
@@ -59,24 +60,21 @@ export async function createZigoPlusCheckoutSession(
   const discountPercent = dynamicPricing.discountPercent;
 
   // Her zaman deneme süresi içindeyse %50 indirim kuponunu uygula
-  // (Global kampanya bitmiş olsa bile, kullanıcının ilk 7 günü içindeyse hak kazanır)
   if (dynamicPricing.isWithinTrialWindow && dynamicPricing.trialDaysRemaining > 0) {
     try {
       await ensureStripeCampaignCoupon(secret);
     } catch {
       // Checkout can still proceed; coupon may already exist in Stripe.
     }
-    const couponId = getSubscriptionCampaignStripeCouponId(50); // %50 indirim
+    const couponId = getSubscriptionCampaignStripeCouponId(50);
     if (couponId) {
       body.set("discounts[0][coupon]", couponId);
       body.set("metadata[campaign_id]", "zigo-trial-50");
       body.set("metadata[auto_discount]", "true");
     }
-    
-    // Deneme süresi içindeyse, kalan gün kadar Stripe Trial ver
+
     body.set("subscription_data[trial_period_days]", dynamicPricing.trialDaysRemaining.toString());
   } else if (isSubscriptionCampaignActive()) {
-    // Global kampanya aktifse standart indirim uygula
     try {
       await ensureStripeCampaignCoupon(secret);
     } catch {
@@ -87,7 +85,7 @@ export async function createZigoPlusCheckoutSession(
       body.set("discounts[0][coupon]", couponId);
       body.set("metadata[campaign_id]", dynamicPricing.isWithinTrialWindow ? "zigo-trial-50" : "zigo-standard-0");
     }
-    
+
     if (dynamicPricing.trialDaysRemaining > 0) {
       body.set("subscription_data[trial_period_days]", dynamicPricing.trialDaysRemaining.toString());
     }
@@ -127,20 +125,16 @@ export async function activateZigoPlus(
 
   // 1. Garantili update: users.is_premium = true (ad_free_until)
   try {
-    await (db.from("users") as unknown as {
-      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
-    })
+    await untypedFrom(db, "users")
       .update({ is_premium: true, ad_free_until: periodEndIso })
       .eq("id", userId);
   } catch (err) {
     console.warn("activateZigoPlus users.is_premium update notice:", err);
   }
 
-  // 2. Garantili upsert: user_subscriptions tablosu (schema: user_id, tier, current_period_end, updated_at)
+  // 2. Garantili upsert: user_subscriptions tablosu
   try {
-    await (db.from("user_subscriptions") as unknown as {
-      upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
-    }).upsert(
+    await untypedFrom(db, "user_subscriptions").upsert(
       {
         user_id: userId,
         tier: "zigo_plus",
@@ -182,9 +176,7 @@ export async function deactivateZigoPlus(supabase: SupabaseClient<Database>, use
   const now = new Date().toISOString();
 
   try {
-    await (db.from("users") as unknown as {
-      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
-    })
+    await untypedFrom(db, "users")
       .update({ is_premium: false })
       .eq("id", userId);
   } catch (err) {
@@ -192,9 +184,7 @@ export async function deactivateZigoPlus(supabase: SupabaseClient<Database>, use
   }
 
   try {
-    await (db.from("user_subscriptions") as unknown as {
-      upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
-    }).upsert(
+    await untypedFrom(db, "user_subscriptions").upsert(
       {
         user_id: userId,
         tier: "free",

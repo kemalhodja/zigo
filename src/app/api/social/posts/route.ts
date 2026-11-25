@@ -9,6 +9,7 @@ import { getCurrentProfile } from "@/lib/domain/profiles";
 import { createSocialPost, createSocialPostSchema, deleteSocialPost, getSocialFeed, SOCIAL_FEED_CACHE_TAG, socialFeedCacheTag, updateSocialPost, updateSocialPostSchema } from "@/lib/domain/social";
 import { getUserSubscription } from "@/lib/domain/subscription";
 import { assertTeacherCreatorPlus, socialPostRequiresTeacherCreatorPlus } from "@/lib/domain/teacher-creator-plus";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -98,6 +99,14 @@ export async function POST(request: Request) {
     if (!ALLOWED_PUBLISHER_ROLES.has(profile.role)) {
       console.warn("[SERVER_POST_REJECTED] Role check failed:", profile.role);
       return NextResponse.json({ error: "Gönderi paylaşmak için öğretmen, yayıncı/kurum, veya Zigo Plus abonesi öğrenci/veli hesabı gereklidir." }, { status: 403 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`social-post:${profile.id}`, 10, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok hızlı gönderi paylaşıyorsun. Lütfen 1 dakika bekle.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const subscription = await getUserSubscription(supabase, profile.id);

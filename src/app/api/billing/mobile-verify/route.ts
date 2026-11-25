@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { verifyAppleSubscription } from "@/lib/server/apple-iap";
 import { DEFAULT_GOOGLE_PLAY_PACKAGE_NAME, resolveTargetPackageName, verifyGooglePlaySubscription } from "@/lib/server/google-play";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createAdminClient, hasServiceRoleEnv } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,6 +15,14 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: "Oturum açmanız gerekiyor." }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`billing-mobile-verify:${profile.id}`, 10, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık doğrulama isteği gönderildi. Lütfen biraz bekleyin.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const body = (await request.json().catch(() => ({}))) as {

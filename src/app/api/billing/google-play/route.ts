@@ -12,6 +12,7 @@ import {
 import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { untypedFrom } from "@/lib/supabase/untyped-tables";
 
 const googlePlaySchema = z.object({
   planId: z.string().trim().min(3).max(80).default("zigo-plus-student-monthly"),
@@ -121,9 +122,7 @@ export async function POST(request: Request) {
 
     // 2. Direct Sync with user_subscriptions table (valid schema: user_id, tier, current_period_end, updated_at)
     const dbClient = adminDb;
-    const { error: upsertErr } = await (dbClient.from("user_subscriptions") as unknown as {
-      upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
-    }).upsert(
+    const { error: upsertErr } = await untypedFrom(dbClient, "user_subscriptions").upsert(
       {
         user_id: profile.id,
         tier: "zigo_plus",
@@ -139,9 +138,7 @@ export async function POST(request: Request) {
 
     // 2.5 Ensure backup row in google_play_purchases
     try {
-      await (dbClient.from("google_play_purchases") as unknown as {
-        upsert: (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<unknown>;
-      }).upsert(
+      await untypedFrom(dbClient, "google_play_purchases").upsert(
         {
           user_id: profile.id,
           plan_id: resolvedPlanId,
@@ -159,9 +156,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Set users.is_premium = true and ad_free_until (users schema does not have updated_at)
-    await (dbClient.from("users") as unknown as {
-      update: (data: Record<string, unknown>) => { eq: (col: string, val: string) => Promise<unknown> };
-    })
+    await untypedFrom(dbClient, "users")
       .update({
         is_premium: true,
         ad_free_until: finalExpiryTime,

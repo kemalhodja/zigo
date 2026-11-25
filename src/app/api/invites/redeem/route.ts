@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { validateInviteCodeFormat } from "@/lib/domain/invite-codes";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const bodySchema = z.object({
@@ -14,6 +15,14 @@ export async function POST(request: Request) {
   const profile = await getCurrentProfile(supabase);
   if (!profile) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rateLimit = await checkRateLimitAsync(`invite-redeem:${profile.id}`, 10, 60_000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Çok sık davet kodu denemesi. Lütfen biraz bekleyin.", code: "RATE_LIMITED" },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+    );
   }
 
   try {

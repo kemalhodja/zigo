@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { DEFAULT_INVITE_MAX_USES, generateInviteCode } from "@/lib/domain/invite-codes";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -34,6 +35,14 @@ export async function POST() {
 
   if (profile.role !== "teacher" && profile.role !== "parent") {
     return NextResponse.json({ error: "Only teachers and parents can create invites.", code: "FORBIDDEN" }, { status: 403 });
+  }
+
+  const rateLimit = await checkRateLimitAsync(`invite-create:${profile.id}`, 10, 60_000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Çok sık davet kodu oluşturuldu. Lütfen biraz bekleyin.", code: "RATE_LIMITED" },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+    );
   }
 
   const code = generateInviteCode(profile.id.replace(/-/g, "").slice(0, 6));

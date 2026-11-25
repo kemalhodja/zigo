@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getCurrentProfile } from "@/lib/domain/profiles";
 import { socialPostActionSchema, toggleLike } from "@/lib/domain/social";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -12,6 +13,14 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: "Beğenmek için lütfen giriş yapın." }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`social-like:${profile.id}`, 60, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok hızlı beğeni işlemi yaptın. Lütfen biraz bekle.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const body = socialPostActionSchema.parse(await request.json());

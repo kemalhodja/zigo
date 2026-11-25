@@ -8,6 +8,7 @@ import {
   getParentPrivateLessonPosts,
 } from "@/lib/domain/private-lessons";
 import { getCurrentProfile } from "@/lib/domain/profiles";
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -48,6 +49,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Özel ders ilanı yalnızca veli hesapları tarafından verilebilir." },
         { status: 403 },
+      );
+    }
+
+    const rateLimit = await checkRateLimitAsync(`private-lesson-post:${profile.id}`, 10, 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık özel ders ilanı oluşturuldu. Lütfen biraz bekleyin.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
       );
     }
 

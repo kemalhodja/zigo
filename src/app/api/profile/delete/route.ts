@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { checkRateLimitAsync } from "@/lib/server/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,6 +11,14 @@ export async function POST() {
 
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateLimit = await checkRateLimitAsync(`profile-delete:${user.id}`, 3, 15 * 60_000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Çok sık hesap silme denemesi. Lütfen biraz bekleyin.", code: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      );
     }
 
     const adminClient = createAdminClient();
