@@ -87,6 +87,9 @@ export async function generateMetadata(): Promise<Metadata> {
     category: "education",
     creator: "Zigo Education Team",
     publisher: "Zigo",
+    verification: {
+      google: "HUPbNacF1mA93uceh0NCkvYNZyEVEcg93dJ1Y4TKgSk",
+    },
     robots: {
       index: true,
       follow: true,
