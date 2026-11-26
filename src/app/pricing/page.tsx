@@ -203,7 +203,7 @@ function PlanCard({
             }`}
         >
           <span>Yıllık Ödeme</span>
-          <span className="text-[10px] bg-slate-950/20 text-slate-950 px-1.5 py-0.5 rounded-full font-black">
+          <span className="whitespace-nowrap text-[10px] bg-slate-950/20 text-slate-950 px-1.5 py-0.5 rounded-full font-black">
             2 Ay Hediye
           </span>
         </button>
@@ -333,7 +333,9 @@ function FeatureMatrix() {
             <tr className="border-b border-slate-200">
               <th className="text-left py-3 px-2 text-slate-500">Özellik</th>
               {Object.keys(ROLE_PLANS).map((role) => (
-                <th key={role} className="py-3 px-2 text-center text-slate-500 capitalize">{role}</th>
+                <th key={role} className="py-3 px-2 text-center text-slate-600 font-black whitespace-nowrap">
+                  {ROLE_PLANS[role as RoleKey].title}
+                </th>
               ))}
             </tr>
           </thead>

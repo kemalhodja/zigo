@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 
-import { APP_VERSION } from "@/lib/app-links";
+export const runtime = "edge";
 
 export async function GET() {
   return NextResponse.json(
     {
       ok: true,
       status: "healthy",
-      appVersion: APP_VERSION,
+      service: "zigo",
       timestamp: new Date().toISOString(),
     },
     {
+      status: 200,
       headers: {
         "Cache-Control": "no-store",
       },

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   calculateYksScore,
@@ -13,19 +13,28 @@ import {
 const YKS_PAGE_STORAGE_KEY = "zigo_exam_calc_yks_v1";
 
 export function YksPageCalculator() {
-  const [yksState, setYksState] = useState<YksFormState>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(YKS_PAGE_STORAGE_KEY);
-        if (saved) return JSON.parse(saved);
-      } catch {
-        // ignore
-      }
-    }
-    return DEFAULT_YKS_STATE;
-  });
+  // Always start with DEFAULT_YKS_STATE on both SSR and initial client render to avoid React Hydration #418
+  const [yksState, setYksState] = useState<YksFormState>(DEFAULT_YKS_STATE);
+  const hasRestoredRef = useRef(false);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(YKS_PAGE_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as YksFormState;
+        if (parsed && typeof parsed === "object") {
+          setYksState(parsed);
+        }
+      }
+    } catch {
+      // ignore corrupted storage
+    } finally {
+      hasRestoredRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasRestoredRef.current) return;
     try {
       localStorage.setItem(YKS_PAGE_STORAGE_KEY, JSON.stringify(yksState));
     } catch {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   calculateLgsScore,
@@ -13,19 +13,28 @@ import {
 const LGS_PAGE_STORAGE_KEY = "zigo_exam_calc_lgs_v1";
 
 export function LgsPageCalculator() {
-  const [lgsState, setLgsState] = useState<LgsFormState>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(LGS_PAGE_STORAGE_KEY);
-        if (saved) return JSON.parse(saved);
-      } catch {
-        // ignore
-      }
-    }
-    return DEFAULT_LGS_STATE;
-  });
+  // Always start with DEFAULT_LGS_STATE on both SSR and initial client render to avoid React Hydration #418
+  const [lgsState, setLgsState] = useState<LgsFormState>(DEFAULT_LGS_STATE);
+  const hasRestoredRef = useRef(false);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LGS_PAGE_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as LgsFormState;
+        if (parsed && typeof parsed === "object") {
+          setLgsState(parsed);
+        }
+      }
+    } catch {
+      // ignore corrupted storage
+    } finally {
+      hasRestoredRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasRestoredRef.current) return;
     try {
       localStorage.setItem(LGS_PAGE_STORAGE_KEY, JSON.stringify(lgsState));
     } catch {

@@ -27,7 +27,8 @@ export function TopicSearchBar({ topics }: { topics: CurriculumTopic[] }) {
       <div className="relative max-w-xl">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
         <input
-          type="search"
+          type="text"
+          inputMode="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Konu veya ders ara... (örn: Türev, Üslü, İnkılap, Optikler)"

@@ -27,7 +27,7 @@ export function LiveFocusPulse() {
       </span>
       <div className="flex items-center gap-1.5 min-w-0">
         <span className="text-xs font-black text-slate-900">
-          {activeCount.toLocaleString()} Öğrenci
+          {activeCount.toLocaleString("tr-TR")} Öğrenci
         </span>
         <span className="text-xs font-semibold text-slate-600 truncate">
           şu an odaklanma modunda ders çalışıyor

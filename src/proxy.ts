@@ -185,7 +185,7 @@ export async function proxy(request: NextRequest) {
 
   if (!user) {
     const authUrl = new URL("/auth", request.url);
-    authUrl.searchParams.set("next", pathname);
+    authUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(authUrl);
   }
 
@@ -255,8 +255,17 @@ function shouldSkipRoute(pathname: string) {
   );
 }
 
+const PUBLIC_ENTITY_DETAIL_REGEX =
+  /^\/(profile|post|questions)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function isProtectedPage(pathname: string) {
   if (publicPagePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return false;
+  }
+
+  // Allow public SEO detail pages (/profile/[uuid], /post/[uuid], /questions/[uuid])
+  // whose own page components enforce privacy, is_private, followers_only, and noindex guards.
+  if (PUBLIC_ENTITY_DETAIL_REGEX.test(pathname)) {
     return false;
   }
 
