@@ -91,6 +91,7 @@ export function UpcomingLessonWidget() {
   const timeStr = today.toLocaleTimeString("tr-TR", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/Istanbul",
   });
 
   return (
@@ -122,7 +123,7 @@ export function UpcomingLessonWidget() {
             <span className="text-[10px] font-black uppercase text-indigo-100">
               Saat
             </span>
-            <span className="text-sm font-black text-white">{timeStr}</span>
+            <span className="text-sm font-black text-white" suppressHydrationWarning>{timeStr}</span>
           </div>
         </div>
       </Link>
@@ -142,7 +143,7 @@ export function RightPanel() {
         <Link href="/about" className="hover:text-slate-600 hover:underline">
           Hakkımızda
         </Link>
-        <Link href="/legal" className="hover:text-slate-600 hover:underline">
+        <Link href="/legal/privacy" className="hover:text-slate-600 hover:underline">
           Gizlilik ve Şartlar
         </Link>
         <Link href="/help" className="hover:text-slate-600 hover:underline">

@@ -6,16 +6,22 @@ import { useEffect, useState } from "react";
 import { formatCountdown, getRoomPhase, type RoomPhase } from "@/lib/domain/focus-rooms";
 
 export function FocusBlockWidget() {
-  const [phase, setPhase] = useState<RoomPhase>(() => getRoomPhase());
+  // Avoid SSR/client Date.now() text mismatch (React Hydration Error #418)
+  const [phase, setPhase] = useState<RoomPhase | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => setPhase(getRoomPhase(Date.now())), 1000);
+    const sync = () => setPhase(getRoomPhase(Date.now()));
+    sync();
+    const timer = setInterval(sync, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const isFocus = phase.phase === "focus";
+  const isFocus = phase ? phase.phase === "focus" : true;
   const totalSeconds = isFocus ? 25 * 60 : 5 * 60;
-  const progressPercent = Math.round(((totalSeconds - phase.secondsRemaining) / totalSeconds) * 100);
+  const secondsRemaining = phase ? phase.secondsRemaining : 25 * 60;
+  const progressPercent = phase
+    ? Math.round(((totalSeconds - secondsRemaining) / totalSeconds) * 100)
+    : 0;
 
   return (
     <div className="overflow-hidden rounded-2xl bg-slate-900 p-5 text-white shadow-md">
@@ -33,7 +39,7 @@ export function FocusBlockWidget() {
       </div>
 
       <p className="mt-2 font-mono text-3xl font-black tabular-nums tracking-wider text-white">
-        {formatCountdown(phase.secondsRemaining)}
+        {formatCountdown(secondsRemaining)}
       </p>
 
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">

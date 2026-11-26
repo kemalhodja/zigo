@@ -47,7 +47,7 @@ const SAMPLE_POSTS: PreviewPost[] = [
 const FEATURES = [
   { icon: "🎯", title: "Odak Odaları", desc: "Herkesin sayacı aynı anda akan canlı çalışma odaları" },
   { icon: "🎮", title: "Öğrenen Oyunlar", desc: "MEB kazanımlarına uygun matematik, kelime ve hafıza oyunları" },
-  { icon: "🏆", title: "Puan & Liga", desc: "Çalıştıkça puan topla, lig yüksel, ödül dükkanında harca" },
+  { icon: "🏆", title: "Puan & Lig", desc: "Çalıştıkça puan topla, lig yüksel, ödül dükkanında harca" },
 ];
 
 export function PublicPreviewFeed() {

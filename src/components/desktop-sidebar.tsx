@@ -350,8 +350,8 @@ export function DesktopSidebar({
             </button>
           )}
 
-          <div className="px-2 flex items-center justify-between text-[11px] font-bold text-slate-400">
-            <span>Zigo v{APP_VERSION}</span>
+          <div className="px-2 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-400">
+            <span className="whitespace-nowrap">Zigo v{APP_VERSION}</span>
             <div className="flex items-center gap-1.5">
               <a
                 href={GOOGLE_PLAY_STORE_URL}

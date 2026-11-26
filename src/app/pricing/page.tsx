@@ -889,7 +889,7 @@ export default function PricingPage() {
             </div>
             <div className="border border-slate-200 rounded-xl p-4">
               <dt className="font-black text-night mb-1">Yıllık planda avantaj var mı?</dt>
-              <dd className="text-slate-600">Evet. Yıllık plan aylığa göre <strong>%15-23</strong> daha uygun (2 ay bedava mantığıyla).</dd>
+              <dd className="text-slate-600">Evet. Yıllık plan aylığa göre <strong>%17-33</strong> daha uygun (2–4 ay bedava avantajıyla).</dd>
             </div>
           </dl>
         </section>
